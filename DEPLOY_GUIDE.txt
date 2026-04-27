@@ -1,0 +1,102 @@
+╔══════════════════════════════════════════════════════════╗
+║          GAA MATCH STATS — DEPLOYMENT GUIDE              ║
+║            Install on iPad & Phone in 10 mins            ║
+╚══════════════════════════════════════════════════════════╝
+
+FILES IN THIS PACKAGE
+─────────────────────
+  index.html       → Your app (rename gaa-stats.html to this)
+  manifest.json    → Tells phones it's an installable app
+  sw.js            → Service worker (enables offline use)
+  icon.svg         → App icon — convert to PNG (see Step 2)
+  icon-192.png     → App icon 192×192 (you create this)
+  icon-512.png     → App icon 512×512 (you create this)
+
+
+STEP 1 — CREATE YOUR ICON PNGS (2 minutes)
+────────────────────────────────────────────
+ Option A (easiest):
+   1. Open icon.svg in any browser
+   2. Take a screenshot, crop to square
+   3. Resize to 192×192 and save as icon-192.png
+   4. Resize to 512×512 and save as icon-512.png
+
+ Option B (best quality):
+   1. Go to https://realfavicongenerator.net
+   2. Upload icon.svg
+   3. Download the generated PNGs
+   4. Rename them icon-192.png and icon-512.png
+
+ Option C (use any square image):
+   Just use any 512×512 PNG as your icon.
+   Save two copies: icon-192.png and icon-512.png
+
+
+STEP 2 — HOST ON NETLIFY (5 minutes, free forever)
+────────────────────────────────────────────────────
+ 1. Go to https://netlify.com → Sign Up (free)
+ 2. On the dashboard, look for the drag-and-drop area:
+    "Drag and drop your site folder here"
+ 3. Put ALL these files in ONE folder:
+      index.html
+      manifest.json
+      sw.js
+      icon-192.png
+      icon-512.png
+ 4. Drag that entire folder onto Netlify
+ 5. Netlify gives you a URL like: gaa-stats-abc123.netlify.app
+ 6. (Optional) Click "Domain settings" to rename it to something
+    like: gaa-stats.netlify.app
+
+ ✅ Your app is now live and installable!
+
+
+STEP 3 — INSTALL ON iPAD / iPHONE
+────────────────────────────────────
+ 1. Open Safari on the iPad/iPhone
+ 2. Go to your Netlify URL
+ 3. Tap the Share button (box with arrow pointing up)
+ 4. Scroll down and tap "Add to Home Screen"
+ 5. Tap "Add" to confirm
+ 6. The GAA Stats icon appears on your home screen!
+
+ ⚠️  MUST use Safari on iPhone/iPad — Chrome won't show
+     the "Add to Home Screen" option on iOS.
+
+
+STEP 4 — INSTALL ON ANDROID TABLET / PHONE
+────────────────────────────────────────────
+ 1. Open Chrome on the device
+ 2. Go to your Netlify URL
+ 3. Chrome will show a banner: "Add GAA Stats to Home Screen"
+    — OR — tap the 3 dots menu → "Add to Home Screen"
+ 4. Tap Install
+ 5. The app icon appears on your home screen!
+
+
+OFFLINE USE
+────────────
+ Once installed, the app works FULLY OFFLINE.
+ Perfect for using at the pitch with no signal.
+ All match data is stored on the device.
+
+
+SHARING WITH YOUR CLUB
+───────────────────────
+ Just share the Netlify URL with anyone.
+ They can use it in a browser OR install it as an app.
+ No App Store. No download fee. No account needed.
+
+
+UPDATING THE APP IN FUTURE
+────────────────────────────
+ If you update your index.html, just drag the new folder
+ onto Netlify again — it deploys in seconds.
+ Update the version in sw.js (change 'gaa-stats-v1' to
+ 'gaa-stats-v2') to force devices to get the new version.
+
+
+NEED HELP?
+───────────
+ Netlify support: https://docs.netlify.com
+ PWA install help: https://web.dev/progressive-web-apps

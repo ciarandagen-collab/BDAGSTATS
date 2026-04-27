@@ -1,0 +1,41 @@
+{
+  "name": "GAA Match Stats",
+  "short_name": "GAA Stats",
+  "description": "Live GAA football match statistics tracker — shots, possession, kickouts, ball won/lost, timeline and trends.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0000",
+  "theme_color": "#e03030",
+  "categories": ["sports", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Record Events",
+      "short_name": "Record",
+      "description": "Jump straight to the recording screen",
+      "url": "./index.html#record"
+    },
+    {
+      "name": "Live Trends",
+      "short_name": "Trends",
+      "description": "View live match trends",
+      "url": "./index.html#trends"
+    }
+  ]
+}
