@@ -555,6 +555,138 @@ select option { background:#1a0505; }
 .shot-summary-table td { padding:8px 10px; text-align:center; color:var(--cream); font-family:'Oswald',sans-serif; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.04); }
 .shot-summary-table td:first-child { text-align:left; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
 .shot-summary-table tr:last-child td { border-bottom:none; }
+/* ── HISTORY PAGE ── */
+.history-empty { text-align:center; padding:48px 20px; color:var(--muted); }
+.history-empty-icon { font-size:48px; display:block; margin-bottom:12px; opacity:0.4; }
+.history-empty-text { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+
+.match-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.match-card:hover { border-color: rgba(224,48,48,0.45); }
+.match-card:active { transform: scale(0.99); }
+
+.match-card-header {
+  background: rgba(0,0,0,0.3);
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.match-card-comp { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
+.match-card-date { font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); }
+
+.match-card-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  padding: 14px;
+  align-items: center;
+  gap: 8px;
+}
+.mcs-team { text-align:center; }
+.mcs-name { font-family:'Oswald',sans-serif; font-size:clamp(11px,3vw,14px); font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:4px; }
+.mcs-score { font-family:'Oswald',sans-serif; font-size:clamp(24px,6vw,36px); font-weight:700; line-height:1; }
+.mcs-score span { color:var(--gold); }
+.mcs-total { font-size:11px; color:var(--red); margin-top:3px; font-style:italic; }
+.mcs-divider { font-family:'Oswald',sans-serif; font-size:16px; color:rgba(245,232,232,0.15); text-align:center; }
+
+.match-card-stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 0;
+}
+.mcs-stat {
+  padding: 10px 8px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+.mcs-stat:last-child { border-right: none; }
+.mcs-stat-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+.mcs-stat-val { font-family:'Oswald',sans-serif; font-size:14px; font-weight:600; }
+.mcs-stat-val .h { color:var(--red-light); }
+.mcs-stat-val .sep { color:var(--muted); font-size:10px; padding:0 2px; }
+.mcs-stat-val .a { color:#7ab8ee; }
+
+.match-card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+.mca-btn {
+  flex:1; padding:9px 8px; border-radius:8px; border:1px solid var(--border);
+  background:rgba(255,255,255,0.04); color:var(--muted);
+  font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; cursor:pointer; transition:all 0.15s;
+}
+.mca-btn:hover { background:rgba(224,48,48,0.1); color:var(--red-light); border-color:var(--red); }
+.mca-btn.danger:hover { background:rgba(255,60,60,0.12); color:#ff8080; border-color:rgba(255,60,60,0.35); }
+
+/* detail modal */
+.detail-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 600;
+  align-items: flex-end;
+  justify-content: center;
+}
+.detail-modal-overlay.open { display:flex; }
+.detail-sheet {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 640px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.detail-sheet-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.detail-handle { width:36px; height:4px; background:rgba(255,255,255,0.15); border-radius:2px; margin:0 auto 12px; }
+.detail-title { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; color:var(--cream); text-transform:uppercase; letter-spacing:1px; }
+.detail-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.detail-close { position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.08); border:none; border-radius:50%; width:32px; height:32px; color:var(--muted); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.detail-close:hover { background:rgba(255,60,60,0.2); color:#ff8080; }
+.detail-body { flex:1; overflow-y:auto; padding:14px; }
+.detail-body::-webkit-scrollbar { display:none; }
+
+/* save banner on stats page */
+.save-match-banner {
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.smb-icon { font-size:22px; }
+.smb-text { flex:1; }
+.smb-title { font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; color:var(--cream); letter-spacing:1px; }
+.smb-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.btn-save-match {
+  background: linear-gradient(135deg,#166534,#22c55e);
+  border:none; border-radius:8px; padding:10px 16px;
+  color:#fff; font-family:'Oswald',sans-serif; font-weight:600;
+  font-size:11px; letter-spacing:1px; cursor:pointer; white-space:nowrap;
+  transition:filter 0.15s;
+}
+.btn-save-match:hover { filter:brightness(1.1); }
 </style>
 </head>
 <body>
@@ -907,6 +1039,15 @@ select option { background:#1a0505; }
   <!-- PAGE: STATS -->
   <div class="page" id="page-stats">
 
+    <div class="save-match-banner">
+      <span class="smb-icon">💾</span>
+      <div class="smb-text">
+        <div class="smb-title">Save to History</div>
+        <div class="smb-sub">Store this match — access it anytime in the History tab</div>
+      </div>
+      <button class="btn-save-match" onclick="saveMatchToHistory()">Save Match</button>
+    </div>
+
     <div class="sec-label">Full Match Stats</div>
     <div class="card">
       <table class="stats-table">
@@ -928,6 +1069,14 @@ select option { background:#1a0505; }
     </div>
 
   </div><!-- /page-stats -->
+
+  <!-- PAGE: HISTORY -->
+  <div class="page" id="page-history">
+
+    <div class="sec-label">Saved Matches</div>
+    <div id="history-list"></div>
+
+  </div><!-- /page-history -->
 
 </div><!-- /scroll-area -->
 
@@ -953,7 +1102,24 @@ select option { background:#1a0505; }
     <span class="nav-icon">📊</span>
     <span class="nav-label">Stats</span>
   </button>
+  <button class="nav-btn" onclick="showPage('history',this)">
+    <span class="nav-icon">🗂️</span>
+    <span class="nav-label">History</span>
+  </button>
 </nav>
+
+<!-- MATCH DETAIL MODAL -->
+<div class="detail-modal-overlay" id="detail-modal" onclick="if(event.target===this)closeDetailModal()">
+  <div class="detail-sheet" style="position:relative">
+    <div class="detail-sheet-header">
+      <div class="detail-handle"></div>
+      <div class="detail-title" id="detail-title">Match Details</div>
+      <div class="detail-sub" id="detail-sub"></div>
+      <button class="detail-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
 
 <!-- SHOT MODAL -->
 <div class="modal-overlay" id="shot-modal" onclick="if(event.target===this)closeShotModal()">
@@ -1024,6 +1190,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
+  if (name === 'history') renderHistory();
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -1534,8 +1701,278 @@ function resetMatch(){
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
 
+// ── HISTORY ────────────────────────────────────────
+const HISTORY_KEY = 'gaa_match_history';
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveHistory(list) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch(e){}
+}
+
+function saveMatchToHistory() {
+  const h = homeName(), a = awayName();
+  const hT = total('home'), aT = total('away');
+  if (hT === 0 && aT === 0 && state.events.length === 0) {
+    alert('No match data to save — record some events first!');
+    return;
+  }
+  const hFP = Object.values(state.shots.home.play).reduce((x,y)=>x+y,0);
+  const aFP = Object.values(state.shots.away.play).reduce((x,y)=>x+y,0);
+  const hFF = Object.values(state.shots.home.free).reduce((x,y)=>x+y,0);
+  const aFF = Object.values(state.shots.away.free).reduce((x,y)=>x+y,0);
+  const hBW = Object.values(state.ballWon.home).reduce((x,y)=>x+y,0);
+  const aBW = Object.values(state.ballWon.away).reduce((x,y)=>x+y,0);
+  const poss = calcPossession();
+
+  const record = {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    home: h, away: a,
+    venue: $('venue').value || '',
+    competition: $('competition').value,
+    homeGoals: state.home.goals, homePoints: state.home.points,
+    awayGoals: state.away.goals, awayPoints: state.away.points,
+    homePoss: poss.h, awayPoss: poss.a,
+    homeShotsPlay: hFP, awayShotsPlay: aFP,
+    homeShotsFree: hFF, awayShotsFree: aFF,
+    homeBallWon: hBW, awayBallWon: aBW,
+    homeWides: state.shots.home.play.wide + state.shots.home.free.wide,
+    awayWides: state.shots.away.play.wide + state.shots.away.free.wide,
+    shots: JSON.parse(JSON.stringify(state.shots)),
+    ballLost: JSON.parse(JSON.stringify(state.ballLost)),
+    ballWon: JSON.parse(JSON.stringify(state.ballWon)),
+    kickout: JSON.parse(JSON.stringify(state.kickout)),
+    events: [...state.events],
+    players: [...state.players]
+  };
+
+  const list = loadHistory();
+  list.unshift(record);
+  saveHistory(list);
+
+  const btn = document.querySelector('.btn-save-match');
+  if (btn) { btn.textContent = '✓ Saved!'; setTimeout(()=>btn.textContent='Save Match', 2000); }
+}
+
+function renderHistory() {
+  const list = loadHistory();
+  const container = $('history-list');
+  if (!list.length) {
+    container.innerHTML = `<div class="history-empty">
+      <span class="history-empty-icon">🗂️</span>
+      <div class="history-empty-text">No saved matches yet</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;font-style:italic">Record a match and tap Save on the Stats tab</div>
+    </div>`;
+    return;
+  }
+  container.innerHTML = list.map(m => {
+    const d = new Date(m.savedAt);
+    const dateStr = d.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    const hT = m.homeGoals*3 + m.homePoints;
+    const aT = m.awayGoals*3 + m.awayPoints;
+    const winner = hT > aT ? m.home : hT < aT ? m.away : 'Draw';
+    const winnerClass = hT > aT ? 'home-color' : hT < aT ? 'away-color' : '';
+    return `<div class="match-card" onclick="openDetailModal(${m.id})">
+      <div class="match-card-header">
+        <span class="match-card-comp">${m.competition}${m.venue ? ' · ' + m.venue : ''}</span>
+        <span class="match-card-date">${dateStr}</span>
+      </div>
+      <div class="match-card-score">
+        <div class="mcs-team">
+          <div class="mcs-name">${m.home}</div>
+          <div class="mcs-score"><span>${m.homeGoals}</span>-${String(m.homePoints).padStart(2,'0')}</div>
+          <div class="mcs-total">(${hT})</div>
+        </div>
+        <div class="mcs-divider">|</div>
+        <div class="mcs-team">
+          <div class="mcs-name">${m.away}</div>
+          <div class="mcs-score"><span>${m.awayGoals}</span>-${String(m.awayPoints).padStart(2,'0')}</div>
+          <div class="mcs-total">(${aT})</div>
+        </div>
+      </div>
+      <div class="match-card-stats">
+        <div class="mcs-stat">
+          <div class="mcs-stat-label">Possession</div>
+          <div class="mcs-stat-val"><span class="h">${m.homePoss}%</span><span class="sep">·</span><span class="a">${m.awayPoss}%</span></div>
+        </div>
+        <div class="mcs-stat">
+          <div class="mcs-stat-label">Shots (Play)</div>
+          <div class="mcs-stat-val"><span class="h">${m.homeShotsPlay}</span><span class="sep">·</span><span class="a">${m.awayShotsPlay}</span></div>
+        </div>
+        <div class="mcs-stat">
+          <div class="mcs-stat-label">Ball Won</div>
+          <div class="mcs-stat-val"><span class="h">${m.homeBallWon}</span><span class="sep">·</span><span class="a">${m.awayBallWon}</span></div>
+        </div>
+        <div class="mcs-stat">
+          <div class="mcs-stat-label">Wides</div>
+          <div class="mcs-stat-val"><span class="h">${m.homeWides}</span><span class="sep">·</span><span class="a">${m.awayWides}</span></div>
+        </div>
+      </div>
+      <div class="match-card-actions" onclick="event.stopPropagation()">
+        <button class="mca-btn" onclick="openDetailModal(${m.id})">📊 Full Stats</button>
+        <button class="mca-btn" onclick="loadMatchIntoTracker(${m.id})">↩ Reload</button>
+        <button class="mca-btn danger" onclick="deleteMatch(${m.id})">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteMatch(id) {
+  if (!confirm('Delete this match from history?')) return;
+  const list = loadHistory().filter(m => m.id !== id);
+  saveHistory(list);
+  renderHistory();
+}
+
+function openDetailModal(id) {
+  const m = loadHistory().find(m => m.id === id);
+  if (!m) return;
+  const hT = m.homeGoals*3 + m.homePoints;
+  const aT = m.awayGoals*3 + m.awayPoints;
+  const d = new Date(m.savedAt);
+  const dateStr = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  $('detail-title').textContent = `${m.home} v ${m.away}`;
+  $('detail-sub').textContent = `${m.competition}${m.venue?' · '+m.venue:''} · ${dateStr}`;
+
+  const sec = label => `<div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)">${label}</div>`;
+  const row = (label, hv, av) => {
+    const hw = parseFloat(hv) > parseFloat(av), aw = parseFloat(av) > parseFloat(hv);
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase">${label}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-align:center;color:${hw?'var(--gold)':'var(--cream)'}">${hv}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-align:center;color:${aw?'var(--gold)':'var(--cream)'}">${av}</span>
+    </div>`;
+  };
+
+  const hS = m.homeGoals + m.homePoints, aS = m.awayGoals + m.awayPoints;
+  const hAcc = hS ? Math.round((hT/(hS*3))*100) : 0;
+  const aAcc = aS ? Math.round((aT/(aS*3))*100) : 0;
+  const hBL = m.ballLost ? Object.values(m.ballLost.home).reduce((a,b)=>a+b,0) : 0;
+  const aBL = m.ballLost ? Object.values(m.ballLost.away).reduce((a,b)=>a+b,0) : 0;
+  const hKO = m.kickout ? Object.values(m.kickout.home).reduce((a,b)=>a+b,0) : 0;
+  const aKO = m.kickout ? Object.values(m.kickout.away).reduce((a,b)=>a+b,0) : 0;
+
+  let html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <span></span>
+      <span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;text-align:center">${m.home}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:#7ab8ee;text-transform:uppercase;text-align:center">${m.away}</span>
+    </div>`;
+
+  html += sec('⚽ Scoring');
+  html += row('Goals', m.homeGoals, m.awayGoals);
+  html += row('Points', m.homePoints, m.awayPoints);
+  html += row('Total Score', hT, aT);
+  html += row('Scores Taken', hS, aS);
+  html += row('Scoring Eff.', hAcc+'%', aAcc+'%');
+  html += row('Possession', m.homePoss+'%', m.awayPoss+'%');
+
+  if (m.shots) {
+    const hFP = Object.values(m.shots.home.play).reduce((a,b)=>a+b,0);
+    const aFP = Object.values(m.shots.away.play).reduce((a,b)=>a+b,0);
+    const hFF = Object.values(m.shots.home.free).reduce((a,b)=>a+b,0);
+    const aFF = Object.values(m.shots.away.free).reduce((a,b)=>a+b,0);
+    html += sec('🎯 Shots from Play');
+    html += row('Total', hFP, aFP);
+    html += row('Point', m.shots.home.play.point, m.shots.away.play.point);
+    html += row('Goal', m.shots.home.play.goal, m.shots.away.play.goal);
+    html += row('Blocked', m.shots.home.play.blocked, m.shots.away.play.blocked);
+    html += row('Wide', m.shots.home.play.wide, m.shots.away.play.wide);
+    html += row('Saved', m.shots.home.play.saved, m.shots.away.play.saved);
+    html += row('Short', m.shots.home.play.short, m.shots.away.play.short);
+    html += sec('🎯 Shots from Free');
+    html += row('Total', hFF, aFF);
+    html += row('Point', m.shots.home.free.point, m.shots.away.free.point);
+    html += row('Goal', m.shots.home.free.goal, m.shots.away.free.goal);
+    html += row('Blocked', m.shots.home.free.blocked, m.shots.away.free.blocked);
+    html += row('Wide', m.shots.home.free.wide, m.shots.away.free.wide);
+    html += row('Saved', m.shots.home.free.saved, m.shots.away.free.saved);
+    html += row('Short', m.shots.home.free.short, m.shots.away.free.short);
+  }
+  if (m.ballLost) {
+    html += sec('📤 Ball Lost');
+    html += row('Total', hBL, aBL);
+    html += row('Hand Pass', m.ballLost.home.handPass, m.ballLost.away.handPass);
+    html += row('Kick Pass', m.ballLost.home.kickPass, m.ballLost.away.kickPass);
+    html += row('In Contact', m.ballLost.home.inContact, m.ballLost.away.inContact);
+    html += row('Handling', m.ballLost.home.handling, m.ballLost.away.handling);
+    html += row('Over Carrying', m.ballLost.home.overCarrying, m.ballLost.away.overCarrying);
+  }
+  if (m.ballWon) {
+    html += sec('📥 Ball Won');
+    html += row('Total', m.homeBallWon, m.awayBallWon);
+    html += row('In Contact', m.ballWon.home.inContact, m.ballWon.away.inContact);
+    html += row('Tackle', m.ballWon.home.tackle, m.ballWon.away.tackle);
+    html += row('Interception', m.ballWon.home.interception, m.ballWon.away.interception);
+  }
+  if (m.kickout) {
+    html += sec('🦶 Kickout');
+    html += row('Total', hKO, aKO);
+    html += row('Won Clean', m.kickout.home.wonClean, m.kickout.away.wonClean);
+    html += row('Break Won', m.kickout.home.breakWon, m.kickout.away.breakWon);
+    html += row('Loss Clean', m.kickout.home.lossClean, m.kickout.away.lossClean);
+    html += row('Break Loss', m.kickout.home.breakLoss, m.kickout.away.breakLoss);
+    html += row('Short Won', m.kickout.home.shortWon, m.kickout.away.shortWon);
+    html += row('Short Loss', m.kickout.home.shortLoss, m.kickout.away.shortLoss);
+  }
+  if (m.players && m.players.length) {
+    html += sec('👥 Players');
+    m.players.forEach(p => {
+      const teamName = p.team === 'home' ? m.home : m.away;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <span style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--muted);min-width:24px">#${p.num}</span>
+        <span style="font-size:13px;flex:1">${p.name}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted)">${teamName}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--gold)">${p.goals}G</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--red-light)">${p.points}P</span>
+      </div>`;
+    });
+  }
+
+  $('detail-body').innerHTML = html;
+  $('detail-modal').classList.add('open');
+}
+
+function closeDetailModal() {
+  $('detail-modal').classList.remove('open');
+}
+
+function loadMatchIntoTracker(id) {
+  const m = loadHistory().find(m => m.id === id);
+  if (!m) return;
+  if (!confirm(`Reload "${m.home} v ${m.away}" into the tracker? Current match data will be replaced.`)) return;
+
+  $('home-name').value = m.home;
+  $('away-name').value = m.away;
+  if (m.venue) $('venue').value = m.venue;
+
+  state.home = { goals: m.homeGoals, points: m.homePoints };
+  state.away = { goals: m.awayGoals, points: m.awayPoints };
+  state.events = m.events || [];
+  state.players = m.players || [];
+  state.shots = m.shots ? JSON.parse(JSON.stringify(m.shots)) : state.shots;
+  state.ballLost = m.ballLost ? JSON.parse(JSON.stringify(m.ballLost)) : state.ballLost;
+  state.ballWon = m.ballWon ? JSON.parse(JSON.stringify(m.ballWon)) : state.ballWon;
+  state.kickout = m.kickout ? JSON.parse(JSON.stringify(m.kickout)) : state.kickout;
+  state.scoreline = []; state.possHistory = []; state.half = 1;
+  clockReset(); $('current-min').value = 1;
+
+  updateNames(); updateScoreboard(); renderTimeline(); renderPlayers();
+  renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
+  closeDetailModal();
+
+  // switch to match tab
+  const matchBtn = document.querySelector('.nav-btn');
+  showPage('match', matchBtn);
+}
+
 // ── INIT ───────────────────────────────────────────
-updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends(); renderClock();
+updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends(); renderClock(); renderHistory();
 
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
