@@ -344,7 +344,7 @@ select option { background:#1a0505; }
 .trigger-btn::before {
   content:'';
   position:absolute;
-  inset:0;
+  top:0; right:0; bottom:0; left:0;
   background:rgba(224,48,48,0.06);
   opacity:0;
   transition:opacity 0.18s;
@@ -1600,6 +1600,12 @@ if (!Array.prototype.find) {
     return undefined;
   };
 }
+if (typeof NodeList !== 'undefined' && !NodeList.prototype.forEach) {
+  NodeList.prototype.forEach = Array.prototype.forEach;
+}
+if (!Array.from) {
+  Array.from = function(obj) { return Array.prototype.slice.call(obj); };
+}
 
 // ── STATE ─────────────────────────────────────────
 const state = {
@@ -1626,8 +1632,8 @@ const bumpMin = () => { $('current-min').value = Math.min(80, parseInt($('curren
 
 // ── NAVIGATION ─────────────────────────────────────
 function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  Array.prototype.slice.call(document.querySelectorAll('.page')).forEach(function(p){p.classList.remove('active');});
+  Array.prototype.slice.call(document.querySelectorAll('.nav-btn')).forEach(function(b){b.classList.remove('active');});
   $('page-'+name).classList.add('active');
   btn.classList.add('active');
   $('scroll-area').scrollTop = 0;
@@ -1879,22 +1885,38 @@ function updateStats() {
   const aKO=Object.values(state.kickout.away).reduce((a,b)=>a+b,0);
   const sec=l=>`<tr class="stats-section-row"><td colspan="3">${l}</td></tr>`;
   const row=([l,h,a])=>{const hw=parseFloat(h)>parseFloat(a),aw=parseFloat(a)>parseFloat(h);return`<tr><td>${l}</td><td><span class="stat-val ${hw?'stat-leader':''}">${h}</span></td><td><span class="stat-val ${aw?'stat-leader':''}">${a}</span></td></tr>`;};
-  $('stats-body').innerHTML=[
-    sec('⚽ Scoring'),
-    ...[['Goals',hG,aG],['Points',hP,aP],['Total Score',hT,aT],['Scores Taken',hS,aS],['Scoring Eff.',hAcc+'%',aAcc+'%'],
-        (()=>{const p=calcPossession();return['Possession',p.h+'%',p.a+'%'];})(),
-        ['1st Half Goals',countHalf('home','goal',1),countHalf('away','goal',1)],['1st Half Points',countHalf('home','point',1),countHalf('away','point',1)],['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]].map(row),
-    sec('🎯 Shots from Play'),
-    ...[['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],['Blocked',state.shots.home.play.blocked,state.shots.away.play.blocked],['Wide',state.shots.home.play.wide,state.shots.away.play.wide],['Saved',state.shots.home.play.saved,state.shots.away.play.saved],['Short',state.shots.home.play.short,state.shots.away.play.short]].map(row),
-    sec('🎯 Shots from Free'),
-    ...[['Total',hFF,aFF],['Point',state.shots.home.free.point,state.shots.away.free.point],['Goal',state.shots.home.free.goal,state.shots.away.free.goal],['Blocked',state.shots.home.free.blocked,state.shots.away.free.blocked],['Wide',state.shots.home.free.wide,state.shots.away.free.wide],['Saved',state.shots.home.free.saved,state.shots.away.free.saved],['Short',state.shots.home.free.short,state.shots.away.free.short]].map(row),
-    sec('📤 Ball Lost'),
-    ...[['Total',hBL,aBL],['Hand Pass',state.ballLost.home.handPass,state.ballLost.away.handPass],['Kick Pass',state.ballLost.home.kickPass,state.ballLost.away.kickPass],['In Contact',state.ballLost.home.inContact,state.ballLost.away.inContact],['Handling',state.ballLost.home.handling,state.ballLost.away.handling],['Over Carrying',state.ballLost.home.overCarrying,state.ballLost.away.overCarrying]].map(row),
-    sec('📥 Ball Won'),
-    ...[['Total',hBW,aBW],['In Contact',state.ballWon.home.inContact,state.ballWon.away.inContact],['Tackle',state.ballWon.home.tackle,state.ballWon.away.tackle],['Interception',state.ballWon.home.interception,state.ballWon.away.interception]].map(row),
-    sec('🦶 Kickout'),
-    ...[['Total',hKO,aKO],['Won Clean',state.kickout.home.wonClean,state.kickout.away.wonClean],['Break Won',state.kickout.home.breakWon,state.kickout.away.breakWon],['Loss Clean',state.kickout.home.lossClean,state.kickout.away.lossClean],['Break Loss',state.kickout.home.breakLoss,state.kickout.away.breakLoss],['Short Won',state.kickout.home.shortWon,state.kickout.away.shortWon],['Short Loss',state.kickout.home.shortLoss,state.kickout.away.shortLoss]].map(row),
-  ].join('');
+  var statsRows=[];
+  statsRows.push(sec('⚽ Scoring'));
+  [['Goals',hG,aG],['Points',hP,aP],['Total Score',hT,aT],['Scores Taken',hS,aS],['Scoring Eff.',hAcc+'%',aAcc+'%'],
+   (function(){var p=calcPossession();return['Possession',p.h+'%',p.a+'%'];}()),
+   ['1st Half Goals',countHalf('home','goal',1),countHalf('away','goal',1)],['1st Half Points',countHalf('home','point',1),countHalf('away','point',1)],
+   ['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]
+  ].forEach(function(r){statsRows.push(row(r));});
+  statsRows.push(sec('🎯 Shots from Play'));
+  [['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],
+   ['Blocked',state.shots.home.play.blocked,state.shots.away.play.blocked],['Wide',state.shots.home.play.wide,state.shots.away.play.wide],
+   ['Saved',state.shots.home.play.saved,state.shots.away.play.saved],['Short',state.shots.home.play.short,state.shots.away.play.short]
+  ].forEach(function(r){statsRows.push(row(r));});
+  statsRows.push(sec('🎯 Shots from Free'));
+  [['Total',hFF,aFF],['Point',state.shots.home.free.point,state.shots.away.free.point],['Goal',state.shots.home.free.goal,state.shots.away.free.goal],
+   ['Blocked',state.shots.home.free.blocked,state.shots.away.free.blocked],['Wide',state.shots.home.free.wide,state.shots.away.free.wide],
+   ['Saved',state.shots.home.free.saved,state.shots.away.free.saved],['Short',state.shots.home.free.short,state.shots.away.free.short]
+  ].forEach(function(r){statsRows.push(row(r));});
+  statsRows.push(sec('📤 Ball Lost'));
+  [['Total',hBL,aBL],['Hand Pass',state.ballLost.home.handPass,state.ballLost.away.handPass],['Kick Pass',state.ballLost.home.kickPass,state.ballLost.away.kickPass],
+   ['In Contact',state.ballLost.home.inContact,state.ballLost.away.inContact],['Handling',state.ballLost.home.handling,state.ballLost.away.handling],
+   ['Over Carrying',state.ballLost.home.overCarrying,state.ballLost.away.overCarrying]
+  ].forEach(function(r){statsRows.push(row(r));});
+  statsRows.push(sec('📥 Ball Won'));
+  [['Total',hBW,aBW],['In Contact',state.ballWon.home.inContact,state.ballWon.away.inContact],
+   ['Tackle',state.ballWon.home.tackle,state.ballWon.away.tackle],['Interception',state.ballWon.home.interception,state.ballWon.away.interception]
+  ].forEach(function(r){statsRows.push(row(r));});
+  statsRows.push(sec('🦶 Kickout'));
+  [['Total',hKO,aKO],['Won Clean',state.kickout.home.wonClean,state.kickout.away.wonClean],['Break Won',state.kickout.home.breakWon,state.kickout.away.breakWon],
+   ['Loss Clean',state.kickout.home.lossClean,state.kickout.away.lossClean],['Break Loss',state.kickout.home.breakLoss,state.kickout.away.breakLoss],
+   ['Short Won',state.kickout.home.shortWon,state.kickout.away.shortWon],['Short Loss',state.kickout.home.shortLoss,state.kickout.away.shortLoss]
+  ].forEach(function(r){statsRows.push(row(r));});
+  $('stats-body').innerHTML=statsRows.join('');
 }
 
 // ── POSSESSION CALC ────────────────────────────────
@@ -1954,7 +1976,7 @@ function renderTrends() {
   const bwA=bwEvents.filter(e=>e.team==='away').length;
   $('tr-poss-home').textContent=bwH; $('tr-poss-away').textContent=bwA;
   const bwHTrend=[], bwATrend=[]; let ch=0,ca=0;
-  [...bwEvents].reverse().forEach(e=>{ if(e.team==='home')ch++;else ca++; bwHTrend.push(ch); bwATrend.push(ca); });
+  bwEvents.slice().reverse().forEach(e=>{ if(e.team==='home')ch++;else ca++; bwHTrend.push(ch); bwATrend.push(ca); });
   drawSpark('spark-possession', bwHTrend, bwATrend);
 
   // ── MOMENTUM ──
@@ -2026,9 +2048,9 @@ function drawSpark(canvasId, homeData, awayData) {
   const W=canvas.offsetWidth||200, H=canvas.offsetHeight||40;
   canvas.width=W; canvas.height=H;
   ctx.clearRect(0,0,W,H);
-  const allData=[...homeData,...awayData];
+  const allData=homeData.concat(awayData);
   if(allData.length<2)return;
-  const max=Math.max(...allData,1);
+  const max=Math.max.apply(null, allData.concat([1]));
   const drawLine=(data,color)=>{
     if(data.length<2)return;
     ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round';
@@ -2128,7 +2150,7 @@ function exportSummary(){
   let txt=`GAA MATCH SUMMARY\n${comp} — ${venue}\n\n`;
   txt+=`${h}: ${state.home.goals}-${pad(state.home.points)} (${total('home')})\n`;
   txt+=`${a}: ${state.away.goals}-${pad(state.away.points)} (${total('away')})\n\nEVENTS:\n`;
-  [...state.events].reverse().forEach(e=>{const td=e.team==='home'?h:a;const desc=e.type==='shot'?`${e.outcome.toUpperCase()}(${e.shotMode})`:catLabels[e.type]?`${catLabels[e.type]}: ${e.outcomeLabel}`:e.type.toUpperCase();txt+=`${e.min}' ${desc} — ${td} H${e.half}\n`;});
+  state.events.slice().reverse().forEach(e=>{const td=e.team==='home'?h:a;const desc=e.type==='shot'?`${e.outcome.toUpperCase()}(${e.shotMode})`:catLabels[e.type]?`${catLabels[e.type]}: ${e.outcomeLabel}`:e.type.toUpperCase();txt+=`${e.min}' ${desc} — ${td} H${e.half}\n`;});
   navigator.clipboard.writeText(txt).then(()=>{const btn=$('copy-btn');btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy Summary',2000);});
 }
 
@@ -2190,8 +2212,8 @@ function saveMatchToHistory() {
     ballLost: JSON.parse(JSON.stringify(state.ballLost)),
     ballWon: JSON.parse(JSON.stringify(state.ballWon)),
     kickout: JSON.parse(JSON.stringify(state.kickout)),
-    events: [...state.events],
-    players: [...state.players]
+    events: state.events.slice(),
+    players: state.players.slice()
   };
 
   const list = loadHistory();
