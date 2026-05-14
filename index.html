@@ -3037,7 +3037,20 @@ function selectTeam() {}
 function filterPicker() {}
 
 // ── INIT ───────────────────────────────────────────
-updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); try{renderTrends();}catch(e){} renderClock(); renderHistory(); buildTeamSelects();
+// Wrap everything in DOMContentLoaded - Safari requires DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  updateNames();
+  updateScoreboard();
+  renderTimeline();
+  renderPlayers();
+  renderShotCounts();
+  renderShotSummary();
+  renderGenericTallies();
+  try { renderTrends(); } catch(e) {}
+  renderClock();
+  renderHistory();
+  buildTeamSelects();
+});
 
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
