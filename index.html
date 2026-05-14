@@ -1995,8 +1995,8 @@ function buildBars(rows) {
 }
 
 function drawSpark(canvasId, homeData, awayData) {
-  const canvas=$(canvasId); if(!canvas)return;
-  const ctx=canvas.getContext('2d');
+  const canvas=$(canvasId); if(!canvas||!canvas.getContext)return;
+  let ctx; try{ctx=canvas.getContext('2d');}catch(e){return;}
   const W=canvas.offsetWidth||200, H=canvas.offsetHeight||40;
   canvas.width=W; canvas.height=H;
   ctx.clearRect(0,0,W,H);
@@ -2014,8 +2014,8 @@ function drawSpark(canvasId, homeData, awayData) {
 }
 
 function drawPossTimeline(canvasId, possHistory) {
-  const canvas=$(canvasId); if(!canvas)return;
-  const ctx=canvas.getContext('2d');
+  const canvas=$(canvasId); if(!canvas||!canvas.getContext)return;
+  let ctx; try{ctx=canvas.getContext('2d');}catch(e){return;}
   const W=canvas.offsetWidth||300, H=60;
   canvas.width=W; canvas.height=H;
   ctx.clearRect(0,0,W,H);
@@ -3037,7 +3037,7 @@ function selectTeam() {}
 function filterPicker() {}
 
 // ── INIT ───────────────────────────────────────────
-updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends(); renderClock(); renderHistory(); buildTeamSelects();
+updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); try{renderTrends();}catch(e){} renderClock(); renderHistory(); buildTeamSelects();
 
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
