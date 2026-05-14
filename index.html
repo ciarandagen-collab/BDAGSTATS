@@ -1576,6 +1576,31 @@ select option { background:#1a0505; }
 </div>
 
 <script>
+// ── POLYFILLS (older Safari/iOS compatibility) ─────
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function(s) {
+    var el = this;
+    do { if (el.matches(s)) return el; el = el.parentElement || el.parentNode; } while (el !== null && el.nodeType === 1);
+    return null;
+  };
+}
+if (!Object.entries) {
+  Object.entries = function(obj) {
+    return Object.keys(obj).map(function(k) { return [k, obj[k]]; });
+  };
+}
+if (!Object.values) {
+  Object.values = function(obj) {
+    return Object.keys(obj).map(function(k) { return obj[k]; });
+  };
+}
+if (!Array.prototype.find) {
+  Array.prototype.find = function(fn) {
+    for (var i=0;i<this.length;i++) { if (fn(this[i],i,this)) return this[i]; }
+    return undefined;
+  };
+}
+
 // ── STATE ─────────────────────────────────────────
 const state = {
   home:{goals:0,points:0}, away:{goals:0,points:0},
@@ -1740,7 +1765,8 @@ function selectGenericOutcome(key) {
   if(!gmodal.team||!gmodal.category)return;
   const cfg=GENERIC_CONFIG[gmodal.category];
   state[gmodal.category][gmodal.team][key]++;
-  const outcomeLabel=cfg.outcomes.find(o=>o.key===key)?.label||key;
+  const foundOutcome = cfg.outcomes.find(function(o){return o.key===key;});
+  const outcomeLabel = foundOutcome ? foundOutcome.label : key;
   state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel,min:getMin(),half:state.half});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
 }
@@ -3006,7 +3032,8 @@ function buildTeamSelects() {
     if (!sel) return;
     const isHome = id === 'home-select';
     sel.innerHTML = `<option value="">Select ${isHome ? 'Home' : 'Away'} Team</option>`;
-    Object.entries(groups).forEach(function([group, clubs]) {
+    Object.keys(groups).forEach(function(group) {
+      var clubs = groups[group];
       const og = document.createElement('optgroup');
       og.label = group;
       clubs.forEach(function(c) {
@@ -3037,19 +3064,27 @@ function selectTeam() {}
 function filterPicker() {}
 
 // ── INIT ───────────────────────────────────────────
-// Wrap everything in DOMContentLoaded - Safari requires DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-  updateNames();
-  updateScoreboard();
-  renderTimeline();
-  renderPlayers();
-  renderShotCounts();
-  renderShotSummary();
-  renderGenericTallies();
-  try { renderTrends(); } catch(e) {}
-  renderClock();
-  renderHistory();
-  buildTeamSelects();
+  var dbg = document.createElement('div');
+  dbg.id = 'debug-bar';
+  dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a0000;color:#ff6;font-size:11px;padding:4px 8px;z-index:99999;font-family:monospace;';
+  dbg.textContent = 'Starting...';
+  document.body.appendChild(dbg);
+  function log(msg) { dbg.textContent = msg; }
+
+  try { log('updateNames...'); updateNames(); } catch(e) { log('FAIL updateNames: '+e.message); return; }
+  try { log('updateScoreboard...'); updateScoreboard(); } catch(e) { log('FAIL updateScoreboard: '+e.message); return; }
+  try { log('renderTimeline...'); renderTimeline(); } catch(e) { log('FAIL renderTimeline: '+e.message); return; }
+  try { log('renderPlayers...'); renderPlayers(); } catch(e) { log('FAIL renderPlayers: '+e.message); return; }
+  try { log('renderShotCounts...'); renderShotCounts(); } catch(e) { log('FAIL renderShotCounts: '+e.message); return; }
+  try { log('renderShotSummary...'); renderShotSummary(); } catch(e) { log('FAIL renderShotSummary: '+e.message); return; }
+  try { log('renderGenericTallies...'); renderGenericTallies(); } catch(e) { log('FAIL renderGenericTallies: '+e.message); return; }
+  try { log('renderTrends...'); renderTrends(); } catch(e) { log('renderTrends skipped: '+e.message); }
+  try { log('renderClock...'); renderClock(); } catch(e) { log('FAIL renderClock: '+e.message); return; }
+  try { log('renderHistory...'); renderHistory(); } catch(e) { log('FAIL renderHistory: '+e.message); return; }
+  try { log('buildTeamSelects...'); buildTeamSelects(); } catch(e) { log('FAIL buildTeamSelects: '+e.message); return; }
+  setTimeout(function() { var d = document.getElementById('debug-bar'); if(d) d.remove(); }, 3000);
+  log('✅ All init complete - ' + CLUBS.length + ' clubs loaded');
 });
 
 // ── PWA: SERVICE WORKER ────────────────────────────
