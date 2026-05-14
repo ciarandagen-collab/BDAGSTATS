@@ -861,8 +861,25 @@ select option { background:#1a0505; }
   cursor: pointer;
   flex-shrink: 0;
 }
+/* Team native select - works on all iOS */
+.team-select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(224,48,48,0.35);
+  border-radius: 8px;
+  padding: 11px 12px;
+  color: var(--cream);
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.team-select:focus { outline: none; border-color: var(--red); }
+.team-select option { background: #1a0505; color: #f5e8e8; font-weight: normal; }
+.team-select optgroup { background: #0d0000; color: #e03030; }
 </style>
-</head>
 <body>
 
 <!-- TOP BAR -->
@@ -897,8 +914,9 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="home-name-display">Select Home Team</button>
-              <span class="team-picker-chevron">▼</span>
+              <select class="team-select" id="home-select" onchange="onTeamSelect('home',this.value)">
+                <option value="">Select Home Team</option>
+              </select>
               <input type="hidden" id="home-name" value="">
             </div>
           </div>
@@ -906,8 +924,9 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="away-name-display">Select Away Team</button>
-              <span class="team-picker-chevron">▼</span>
+              <select class="team-select" id="away-select" onchange="onTeamSelect('away',this.value)">
+                <option value="">Select Away Team</option>
+              </select>
               <input type="hidden" id="away-name" value="">
             </div>
           </div>
@@ -1594,8 +1613,8 @@ function showPage(name, btn) {
 // ── NAMES ──────────────────────────────────────────
 function updateNames() {
   const h=homeName(), a=awayName();
-  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','undo-home-label'];
-  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label'];
+  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','undo-home-label','poss-home-name','ptl-home-name'];
+  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label','poss-away-name','ptl-away-name'];
   hIds.forEach(id=>{const el=$(id);if(el)el.textContent=h;});
   aIds.forEach(id=>{const el=$(id);if(el)el.textContent=a;});
   $('player-home-opt').textContent=h;
@@ -2974,119 +2993,51 @@ const CLUBS = [
   {g:"🟡 Ulster — Fermanagh", n:"Enniskillen Gaels Ladies", badge:"LGFA"},
 ];
 
-let pickerTarget = null;
-
-function openPicker(team) {
-  pickerTarget = team;
-  $('picker-title').textContent = team === 'home' ? 'Select Home Team' : 'Select Away Team';
-  $('picker-search').value = '';
-  filterPicker('');
-  $('team-picker-overlay').classList.add('open');
-}
-
-function closePicker() {
-  $('team-picker-overlay').classList.remove('open');
-  pickerTarget = null;
-}
-
-function selectTeam(name) {
-  if (!pickerTarget || !name) return;
-  $(pickerTarget + '-name').value = name;
-  $(pickerTarget + '-name-display').textContent = name;
-  updateNames();
-  closePicker();
-}
-
-// Safari-safe: attach events after DOM ready
-window.addEventListener('load', function() {
-  // Team picker buttons — use both click and touchend for Safari
-  ['home', 'away'].forEach(function(team) {
-    var btn = $(team + '-name-display');
-    if (!btn) return;
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      openPicker(team);
-    });
-    btn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      openPicker(team);
-    });
-  });
-
-  // Picker list — event delegation for item selection
-  var list = $('picker-list');
-  if (list) {
-    function handlePickerTap(e) {
-      var item = e.target.closest('[data-name]');
-      if (item) { e.preventDefault(); selectTeam(item.getAttribute('data-name')); return; }
-      var custom = e.target.closest('[data-custom]');
-      if (custom) { e.preventDefault(); selectTeam(custom.getAttribute('data-custom')); }
-    }
-    list.addEventListener('click', handlePickerTap);
-    list.addEventListener('touchend', handlePickerTap);
-  }
-
-  // Close picker when tapping overlay background
-  var overlay = $('team-picker-overlay');
-  if (overlay) {
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) closePicker(); });
-    overlay.addEventListener('touchend', function(e) { if (e.target === overlay) { e.preventDefault(); closePicker(); } });
-  }
-
-  // Cancel button
-  var cancelBtn = document.querySelector('.picker-close-btn');
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', closePicker);
-    cancelBtn.addEventListener('touchend', function(e) { e.preventDefault(); closePicker(); });
-  }
-});
-
-function filterPicker(query) {
-  const q = query.toLowerCase().trim();
-  const list = $('picker-list');
-
-  const filtered = q
-    ? CLUBS.filter(c => c.n.toLowerCase().includes(q) || c.g.toLowerCase().includes(q))
-    : CLUBS;
-
-  const badgeColor = b => b === 'LGFA' ? 'color:#a78bfa' : 'color:var(--red-light)';
-
-  // Custom entry when searching
-  const customRow = q
-    ? `<div class="picker-item" data-custom="${q.replace(/"/g,'&quot;')}" style="border-bottom:1px solid rgba(255,255,255,0.08)">
-        <span style="font-style:italic;color:var(--muted)">Use &ldquo;<strong style="color:var(--cream)">${q}</strong>&rdquo;</span>
-        <span class="picker-item-badge" style="color:var(--gold)">CUSTOM</span>
-      </div>` : '';
-
-  if (!filtered.length) {
-    list.innerHTML = customRow + '<div class="picker-empty">No matching clubs — use custom entry above</div>';
-    return;
-  }
-
-  // Group
+// ── TEAM SELECT (native - works on all iOS) ────────
+function buildTeamSelects() {
   const groups = {};
-  filtered.forEach(c => {
+  CLUBS.forEach(c => {
     if (!groups[c.g]) groups[c.g] = [];
     groups[c.g].push(c);
   });
 
-  let html = customRow;
-  Object.entries(groups).forEach(([group, clubs]) => {
-    html += `<div class="picker-group-label">${group}</div>`;
-    clubs.forEach(c => {
-      const escaped = c.n.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-      html += `<div class="picker-item" data-name="${escaped}">
-        <span>${c.n}</span>
-        <span class="picker-item-badge" style="${badgeColor(c.badge)}">${c.badge}</span>
-      </div>`;
+  ['home-select','away-select'].forEach(function(id) {
+    const sel = $(id);
+    if (!sel) return;
+    const isHome = id === 'home-select';
+    sel.innerHTML = `<option value="">Select ${isHome ? 'Home' : 'Away'} Team</option>`;
+    Object.entries(groups).forEach(function([group, clubs]) {
+      const og = document.createElement('optgroup');
+      og.label = group;
+      clubs.forEach(function(c) {
+        const opt = document.createElement('option');
+        opt.value = c.n;
+        opt.textContent = c.n + ' (' + c.badge + ')';
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
     });
   });
-
-  list.innerHTML = html;
 }
 
+function onTeamSelect(team, value) {
+  if (!value) return;
+  $(team + '-name').value = value;
+  // Update display labels
+  const displayId = team + '-name-display';
+  const el = $(displayId);
+  if (el) el.textContent = value;
+  updateNames();
+}
+
+// Keep old picker functions as no-ops for safety
+function openPicker() {}
+function closePicker() {}
+function selectTeam() {}
+function filterPicker() {}
+
 // ── INIT ───────────────────────────────────────────
-updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends(); renderClock(); renderHistory();
+updateNames(); updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends(); renderClock(); renderHistory(); buildTeamSelects();
 
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
