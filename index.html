@@ -364,15 +364,23 @@ select option { background:#1a0505; }
 
 /* ── MODAL BOTTOM SHEET ── */
 .modal-overlay {
-  display: none;
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.75);
-  z-index: 500;
+  z-index: 5000;
+  display: flex;
   align-items: flex-end;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
-.modal-overlay.open { display: flex; }
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
 .modal-sheet {
   background: var(--panel2);
   border: 1px solid var(--border);
@@ -381,7 +389,14 @@ select option { background:#1a0505; }
   padding: 20px 16px calc(20px + var(--safe-bottom));
   width: 100%;
   max-width: 640px;
-  animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+  -webkit-transform: translateY(100%);
+  -webkit-transition: -webkit-transform 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.modal-overlay.open .modal-sheet {
+  transform: translateY(0);
+  -webkit-transform: translateY(0);
 }
 @keyframes sheetUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
 .sheet-handle { width:36px; height:4px; background:rgba(255,255,255,0.15); border-radius:2px; margin:0 auto 16px; }
@@ -630,15 +645,23 @@ select option { background:#1a0505; }
 
 /* detail modal */
 .detail-modal-overlay {
-  display: none;
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.8);
-  z-index: 600;
+  z-index: 5000;
+  display: flex;
   align-items: flex-end;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
-.detail-modal-overlay.open { display:flex; }
+.detail-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
 .detail-sheet {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -649,7 +672,14 @@ select option { background:#1a0505; }
   height: 85vh;
   display: flex;
   flex-direction: column;
-  animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+  -webkit-transform: translateY(100%);
+  -webkit-transition: -webkit-transform 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.detail-modal-overlay.open .detail-sheet {
+  transform: translateY(0);
+  -webkit-transform: translateY(0);
 }
 .detail-sheet-header {
   padding: 16px 16px 12px;
@@ -718,17 +748,25 @@ select option { background:#1a0505; }
   pointer-events: none;
 }
 
-/* picker modal */
+/* picker modal - Safari compatible */
 .picker-overlay {
-  display: none;
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.78);
-  z-index: 700;
+  z-index: 9999;
+  display: flex;
   align-items: flex-end;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
-.picker-overlay.open { display: flex; }
+.picker-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
 .picker-sheet {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -739,7 +777,14 @@ select option { background:#1a0505; }
   height: 80vh;
   display: flex;
   flex-direction: column;
-  animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+  -webkit-transform: translateY(100%);
+  -webkit-transition: -webkit-transform 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.picker-overlay.open .picker-sheet {
+  transform: translateY(0);
+  -webkit-transform: translateY(0);
 }
 .picker-header {
   padding: 14px 14px 10px;
@@ -763,8 +808,10 @@ select option { background:#1a0505; }
 .picker-search::placeholder { color: var(--muted); }
 .picker-list {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  min-height: 0;
 }
 .picker-list::-webkit-scrollbar { display: none; }
 .picker-group-label {
@@ -850,7 +897,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="home-name-display" onclick="openPicker('home')">Select Home Team</button>
+              <button class="team-picker-input" id="home-name-display">Select Home Team</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="home-name" value="">
             </div>
@@ -859,7 +906,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="away-name-display" onclick="openPicker('away')">Select Away Team</button>
+              <button class="team-picker-input" id="away-name-display">Select Away Team</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="away-name" value="">
             </div>
@@ -2935,7 +2982,6 @@ function openPicker(team) {
   $('picker-search').value = '';
   filterPicker('');
   $('team-picker-overlay').classList.add('open');
-  // Don't auto-focus on Safari — causes keyboard issues
 }
 
 function closePicker() {
@@ -2951,27 +2997,48 @@ function selectTeam(name) {
   closePicker();
 }
 
-// Event delegation on the list — works in all browsers including Safari
-document.addEventListener('DOMContentLoaded', function() {
-  const list = $('picker-list');
-  if (list) {
-    list.addEventListener('click', function(e) {
-      const item = e.target.closest('[data-name]');
-      if (item) selectTeam(item.getAttribute('data-name'));
+// Safari-safe: attach events after DOM ready
+window.addEventListener('load', function() {
+  // Team picker buttons — use both click and touchend for Safari
+  ['home', 'away'].forEach(function(team) {
+    var btn = $(team + '-name-display');
+    if (!btn) return;
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openPicker(team);
     });
-    list.addEventListener('touchend', function(e) {
-      const item = e.target.closest('[data-name]');
-      if (item) {
-        e.preventDefault();
-        selectTeam(item.getAttribute('data-name'));
-      }
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      openPicker(team);
     });
-  }
-  // Also handle custom entry clicks
-  list && list.addEventListener('click', function(e) {
-    const custom = e.target.closest('[data-custom]');
-    if (custom) selectTeam(custom.getAttribute('data-custom'));
   });
+
+  // Picker list — event delegation for item selection
+  var list = $('picker-list');
+  if (list) {
+    function handlePickerTap(e) {
+      var item = e.target.closest('[data-name]');
+      if (item) { e.preventDefault(); selectTeam(item.getAttribute('data-name')); return; }
+      var custom = e.target.closest('[data-custom]');
+      if (custom) { e.preventDefault(); selectTeam(custom.getAttribute('data-custom')); }
+    }
+    list.addEventListener('click', handlePickerTap);
+    list.addEventListener('touchend', handlePickerTap);
+  }
+
+  // Close picker when tapping overlay background
+  var overlay = $('team-picker-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closePicker(); });
+    overlay.addEventListener('touchend', function(e) { if (e.target === overlay) { e.preventDefault(); closePicker(); } });
+  }
+
+  // Cancel button
+  var cancelBtn = document.querySelector('.picker-close-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closePicker);
+    cancelBtn.addEventListener('touchend', function(e) { e.preventDefault(); closePicker(); });
+  }
 });
 
 function filterPicker(query) {
