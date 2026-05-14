@@ -850,18 +850,18 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="home-name-display" onclick="openPicker('home')">Killarney</button>
+              <button class="team-picker-input" id="home-name-display" onclick="openPicker('home')">Select Home Team</button>
               <span class="team-picker-chevron">▼</span>
-              <input type="hidden" id="home-name" value="Killarney">
+              <input type="hidden" id="home-name" value="">
             </div>
           </div>
           <div class="vs-mid">VS</div>
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="away-name-display" onclick="openPicker('away')">Tralee</button>
+              <button class="team-picker-input" id="away-name-display" onclick="openPicker('away')">Select Away Team</button>
               <span class="team-picker-chevron">▼</span>
-              <input type="hidden" id="away-name" value="Tralee">
+              <input type="hidden" id="away-name" value="">
             </div>
           </div>
         </div>
@@ -913,7 +913,7 @@ select option { background:#1a0505; }
       </div>
       <div class="sb-body">
         <div class="sb-team">
-          <div class="sb-team-name" id="home-display">Killarney</div>
+          <div class="sb-team-name" id="home-display">Home</div>
           <div class="sb-score-row">
             <span class="sb-goals" id="home-goals">0</span>
             <span class="sb-sep">–</span>
@@ -923,7 +923,7 @@ select option { background:#1a0505; }
         </div>
         <div class="sb-divider">|</div>
         <div class="sb-team">
-          <div class="sb-team-name" id="away-display">Tralee</div>
+          <div class="sb-team-name" id="away-display">Away</div>
           <div class="sb-score-row">
             <span class="sb-goals" id="away-goals">0</span>
             <span class="sb-sep">–</span>
@@ -948,13 +948,13 @@ select option { background:#1a0505; }
       <button class="trigger-btn" onclick="openShotModal('home','play')">
         <span class="trig-icon">⚽</span>
         <span class="trig-type">Shot from Play</span>
-        <span class="trig-team" id="sfp-home-h">Killarney</span>
+        <span class="trig-team" id="sfp-home-h">Home</span>
         <span class="trig-count" id="sfp-home-tally">0</span>
       </button>
       <button class="trigger-btn" onclick="openShotModal('away','play')">
         <span class="trig-icon">⚽</span>
         <span class="trig-type">Shot from Play</span>
-        <span class="trig-team" id="sfp-away-h">Tralee</span>
+        <span class="trig-team" id="sfp-away-h">Away</span>
         <span class="trig-count" id="sfp-away-tally">0</span>
       </button>
     </div>
@@ -964,13 +964,13 @@ select option { background:#1a0505; }
       <button class="trigger-btn" onclick="openShotModal('home','free')">
         <span class="trig-icon">🎯</span>
         <span class="trig-type">Shot from Free</span>
-        <span class="trig-team" id="sff-home-h">Killarney</span>
+        <span class="trig-team" id="sff-home-h">Home</span>
         <span class="trig-count" id="sff-home-tally">0</span>
       </button>
       <button class="trigger-btn" onclick="openShotModal('away','free')">
         <span class="trig-icon">🎯</span>
         <span class="trig-type">Shot from Free</span>
-        <span class="trig-team" id="sff-away-h">Tralee</span>
+        <span class="trig-team" id="sff-away-h">Away</span>
         <span class="trig-count" id="sff-away-tally">0</span>
       </button>
     </div>
@@ -980,13 +980,13 @@ select option { background:#1a0505; }
       <button class="trigger-btn" onclick="openGenericModal('home','ballLost')">
         <span class="trig-icon">📤</span>
         <span class="trig-type">Ball Lost</span>
-        <span class="trig-team" id="bl-home-h">Killarney</span>
+        <span class="trig-team" id="bl-home-h">Home</span>
         <span class="trig-count" id="bl-home-tally">0</span>
       </button>
       <button class="trigger-btn" onclick="openGenericModal('away','ballLost')">
         <span class="trig-icon">📤</span>
         <span class="trig-type">Ball Lost</span>
-        <span class="trig-team" id="bl-away-h">Tralee</span>
+        <span class="trig-team" id="bl-away-h">Away</span>
         <span class="trig-count" id="bl-away-tally">0</span>
       </button>
     </div>
@@ -996,13 +996,13 @@ select option { background:#1a0505; }
       <button class="trigger-btn" onclick="openGenericModal('home','ballWon')">
         <span class="trig-icon">📥</span>
         <span class="trig-type">Ball Won</span>
-        <span class="trig-team" id="bw-home-h">Killarney</span>
+        <span class="trig-team" id="bw-home-h">Home</span>
         <span class="trig-count" id="bw-home-tally">0</span>
       </button>
       <button class="trigger-btn" onclick="openGenericModal('away','ballWon')">
         <span class="trig-icon">📥</span>
         <span class="trig-type">Ball Won</span>
-        <span class="trig-team" id="bw-away-h">Tralee</span>
+        <span class="trig-team" id="bw-away-h">Away</span>
         <span class="trig-count" id="bw-away-tally">0</span>
       </button>
     </div>
@@ -1012,13 +1012,13 @@ select option { background:#1a0505; }
       <button class="trigger-btn" onclick="openGenericModal('home','kickout')">
         <span class="trig-icon">🦶</span>
         <span class="trig-type">Kickout</span>
-        <span class="trig-team" id="ko-home-h">Killarney</span>
+        <span class="trig-team" id="ko-home-h">Home</span>
         <span class="trig-count" id="ko-home-tally">0</span>
       </button>
       <button class="trigger-btn" onclick="openGenericModal('away','kickout')">
         <span class="trig-icon">🦶</span>
         <span class="trig-type">Kickout</span>
-        <span class="trig-team" id="ko-away-h">Tralee</span>
+        <span class="trig-team" id="ko-away-h">Away</span>
         <span class="trig-count" id="ko-away-tally">0</span>
       </button>
     </div>
@@ -1149,8 +1149,8 @@ select option { background:#1a0505; }
           <input type="text" id="player-name-input" placeholder="Player name" onkeypress="if(event.key==='Enter')addPlayer()">
           <input type="number" id="player-num-input" placeholder="#" min="1" max="30" style="text-align:center;padding:11px 6px;">
           <select id="player-team-input">
-            <option value="home" id="player-home-opt">Killarney</option>
-            <option value="away" id="player-away-opt">Tralee</option>
+            <option value="home" id="player-home-opt">Home</option>
+            <option value="away" id="player-away-opt">Away</option>
           </select>
           <button class="btn-add-player" onclick="addPlayer()">+ Add</button>
         </div>
@@ -1189,8 +1189,8 @@ select option { background:#1a0505; }
         <thead>
           <tr>
             <th>Stat</th>
-            <th id="stats-home-h">Killarney</th>
-            <th id="stats-away-h">Tralee</th>
+            <th id="stats-home-h">Home</th>
+            <th id="stats-away-h">Away</th>
           </tr>
         </thead>
         <tbody id="stats-body"></tbody>
@@ -2206,7 +2206,7 @@ const CLUBS = [
   {g:"🟢 Connacht — Galway", n:"Moycullen", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Oranmore-Maree", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Salthill-Knocknacarra", badge:"GAA"},
-  {g:'🟢 Connacht — Galway', n:'St Brendan's', badge:'GAA'},
+  {g:"🟢 Connacht — Galway", n:"St Brendan's", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Tuam Stars", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Tubbercurry", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Annaghdown", badge:"LGFA"},
@@ -2721,37 +2721,45 @@ function filterPicker(query) {
   const q = query.toLowerCase().trim();
   const list = $('picker-list');
 
-  const filtered = q ? CLUBS.filter(c => c.n.toLowerCase().includes(q) || c.g.toLowerCase().includes(q)) : CLUBS;
+  const filtered = q
+    ? CLUBS.filter(c => c.n.toLowerCase().includes(q) || c.g.toLowerCase().includes(q))
+    : CLUBS;
 
-  const badgeColor = b => b === 'LGFA' ? 'color:#a78bfa' : b === 'GAA' ? 'color:var(--red-light)' : '';
+  const badgeColor = b => b === 'LGFA' ? 'color:#a78bfa' : 'color:var(--red-light)';
 
-  // Custom entry row always shown when searching
-  const customRow = q ? `<div class="picker-item" style="border-bottom:1px solid rgba(255,255,255,0.08)" onclick="selectTeam('${q.replace(/'/g,"\\'")}')">
-    <span style="font-style:italic;color:var(--muted)">Use "<strong style="color:var(--cream)">${q}</strong>"</span>
-    <span class="picker-item-badge" style="color:var(--gold)">CUSTOM</span>
-  </div>` : '';
+  // Custom entry row when searching
+  const customRow = q
+    ? `<div class="picker-item" style="border-bottom:1px solid rgba(255,255,255,0.08)" onclick="selectTeam(\`${q.replace(/`/g,'\\`')}\`)">
+        <span style="font-style:italic;color:var(--muted)">Use "<strong style="color:var(--cream)">${q}</strong>"</span>
+        <span class="picker-item-badge" style="color:var(--gold)">CUSTOM</span>
+      </div>` : '';
 
   if (!filtered.length) {
     list.innerHTML = customRow + '<div class="picker-empty">No matching clubs — use custom entry above</div>';
     return;
   }
 
-  // Group
+  // Group by section
   const groups = {};
   filtered.forEach(c => {
     if (!groups[c.g]) groups[c.g] = [];
     groups[c.g].push(c);
   });
 
-  list.innerHTML = customRow + Object.entries(groups).map(([group, clubs]) =>
-    `<div class="picker-group-label">${group}</div>` +
-    clubs.map(c =>
-      `<div class="picker-item" onclick="selectTeam('${c.n.replace(/'/g, "\\'")}')">
+  let html = customRow;
+  Object.entries(groups).forEach(([group, clubs]) => {
+    html += `<div class="picker-group-label">${group}</div>`;
+    clubs.forEach(c => {
+      // Use data-name attribute and a global handler to avoid quote issues entirely
+      const escaped = c.n.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      html += `<div class="picker-item" data-name="${escaped}" onclick="selectTeam(this.dataset.name)">
         <span>${c.n}</span>
         <span class="picker-item-badge" style="${badgeColor(c.badge)}">${c.badge}</span>
-      </div>`
-    ).join('')
-  ).join('');
+      </div>`;
+    });
+  });
+
+  list.innerHTML = html;
 }
 
 // ── INIT ───────────────────────────────────────────
