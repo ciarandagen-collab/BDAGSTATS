@@ -701,12 +701,14 @@ select option { background:#1a0505; }
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.15s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
+  -webkit-appearance: none;
 }
-.team-picker-input:focus { outline: none; border-color: var(--red); }
+.team-picker-input:active, .team-picker-input:focus { outline: none; border-color: var(--red); background: rgba(224,48,48,0.1); }
 .team-picker-chevron {
   position: absolute;
   right: 10px; top: 50%;
@@ -848,7 +850,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <div class="team-picker-input" id="home-name-display" onclick="openPicker('home')">Killarney</div>
+              <button class="team-picker-input" id="home-name-display" onclick="openPicker('home')">Killarney</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="home-name" value="Killarney">
             </div>
@@ -857,7 +859,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <div class="team-picker-input" id="away-name-display" onclick="openPicker('away')">Tralee</div>
+              <button class="team-picker-input" id="away-name-display" onclick="openPicker('away')">Tralee</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="away-name" value="Tralee">
             </div>
