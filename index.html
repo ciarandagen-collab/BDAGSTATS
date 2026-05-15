@@ -861,7 +861,68 @@ select option { background:#1a0505; }
   cursor: pointer;
   flex-shrink: 0;
 }
-/* Team native select - works on all iOS */
+/* ── SQUAD ── */
+.squad-sub-tabs { display:flex; gap:0; margin-bottom:16px; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+.squad-sub-btn { flex:1; padding:10px 6px; background:rgba(255,255,255,0.04); border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; border-right:1px solid var(--border); }
+.squad-sub-btn:last-child { border-right:none; }
+.squad-sub-btn.active { background:var(--red); color:#fff; font-weight:600; }
+
+.squad-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:8px; margin-bottom:14px; }
+.squad-slot {
+  background:var(--panel); border:1px solid var(--border); border-radius:10px;
+  padding:12px 10px; display:flex; flex-direction:column; gap:4px;
+  cursor:pointer; transition:all 0.18s; position:relative;
+}
+.squad-slot:hover, .squad-slot:active { border-color:var(--red); background:rgba(224,48,48,0.08); }
+.squad-slot.filled { border-color:rgba(224,48,48,0.4); }
+.squad-slot.filled:hover { border-color:var(--red); }
+.squad-num { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--gold); line-height:1; }
+.squad-name { font-size:13px; font-weight:500; color:var(--cream); }
+.squad-pos { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+.squad-empty-name { font-size:12px; color:rgba(245,232,232,0.2); font-style:italic; }
+.squad-slot-actions { display:flex; gap:4px; position:absolute; top:6px; right:6px; }
+.squad-slot-del { background:none; border:none; color:rgba(255,80,80,0.3); font-size:13px; cursor:pointer; padding:2px; }
+.squad-slot-del:hover { color:#ff6060; }
+
+/* Player edit modal */
+.player-edit-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:20px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); }
+.modal-overlay.open .player-edit-sheet { transform:translateY(0); }
+
+.edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
+.pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.pos-btn { padding:10px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
+.pos-btn.selected, .pos-btn:hover { background:var(--red); border-color:var(--red); color:#fff; }
+.btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
+.btn-save-player:hover { filter:brightness(1.1); }
+.btn-clear-player { width:100%; padding:11px; background:rgba(255,60,60,0.07); border:1px solid rgba(255,60,60,0.2); border-radius:10px; color:rgba(255,120,120,0.65); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:8px; }
+
+/* Player stats view */
+.player-stat-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
+.psc-header { background:rgba(0,0,0,0.3); padding:12px 14px; display:flex; align-items:center; gap:12px; }
+.psc-num { font-family:'Oswald',sans-serif; font-size:28px; font-weight:700; color:var(--gold); min-width:36px; }
+.psc-info { flex:1; }
+.psc-name { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; color:var(--cream); text-transform:uppercase; letter-spacing:1px; }
+.psc-pos { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
+.psc-body { padding:12px 14px; }
+.psc-stat-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
+.psc-stat { text-align:center; background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 6px; }
+.psc-stat-val { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--cream); line-height:1; }
+.psc-stat-val.goals { color:var(--gold); }
+.psc-stat-val.points { color:var(--red-light); }
+.psc-stat-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:3px; }
+.psc-matches { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:right; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05); }
+
+/* Squad player attribution in outcome modal */
+.player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+.player-attr-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+.player-attr-list { display:flex; flex-wrap:wrap; gap:6px; max-height:120px; overflow-y:auto; }
+.player-attr-btn { padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; cursor:pointer; transition:all 0.15s; }
+.player-attr-btn:hover, .player-attr-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
+.player-attr-none { padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; cursor:pointer; }
+.player-attr-none:hover { border-color:var(--muted); }
+</style>
+
 .team-select {
   width: 100%;
   background: rgba(255,255,255,0.05);
@@ -1408,37 +1469,64 @@ select option { background:#1a0505; }
 
   </div><!-- /page-trends -->
 
-  <!-- PAGE: PLAYERS & TIMELINE -->
+  <!-- PAGE: SQUAD -->
   <div class="page" id="page-players">
 
-    <div class="sec-label">Players</div>
-    <div class="card">
-      <div class="card-inner">
-        <div class="add-player-row">
-          <input type="text" id="player-name-input" placeholder="Player name" onkeypress="if(event.key==='Enter')addPlayer()">
-          <input type="number" id="player-num-input" placeholder="#" min="1" max="30" style="text-align:center;padding:11px 6px;">
-          <select id="player-team-input">
-            <option value="home" id="player-home-opt">Home</option>
-            <option value="away" id="player-away-opt">Away</option>
-          </select>
-          <button class="btn-add-player" onclick="addPlayer()">+ Add</button>
-        </div>
-        <div class="player-list" id="players-list">
-          <div class="empty-note">No players added yet</div>
+    <div class="squad-sub-tabs">
+      <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 My Squad</button>
+      <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Player Stats</button>
+      <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
+    </div>
+
+    <!-- SQUAD LIST -->
+    <div id="squad-view-squad">
+      <div class="sec-label">Squad — tap a slot to add/edit</div>
+      <div class="squad-grid" id="squad-grid"></div>
+    </div>
+
+    <!-- PLAYER STATS -->
+    <div id="squad-view-stats" style="display:none">
+      <div class="sec-label">Player Stats</div>
+      <div id="player-stats-list"></div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div id="squad-view-timeline" style="display:none">
+      <div class="sec-label">Match Timeline</div>
+      <div class="card">
+        <div class="card-inner">
+          <div id="timeline-list">
+            <div class="empty-note">No events yet</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="sec-label">Match Timeline</div>
-    <div class="card">
-      <div class="card-inner">
-        <div id="timeline-list">
-          <div class="empty-note">No events yet</div>
-        </div>
-      </div>
-    </div>
+  </div><!-- /page-squad -->
 
-  </div><!-- /page-players -->
+  <!-- PLAYER EDIT MODAL -->
+  <div class="modal-overlay" id="player-edit-modal" onclick="if(event.target===this)closePlayerEdit()">
+    <div class="player-edit-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title" id="player-edit-title">Add Player</div>
+          <div class="sheet-sub" id="player-edit-sub">Enter player details</div>
+        </div>
+        <button class="sheet-close" onclick="closePlayerEdit()">✕</button>
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Name</div>
+        <input type="text" id="edit-player-name" placeholder="Player name" style="font-size:16px">
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Position</div>
+        <div class="pos-grid" id="pos-grid"></div>
+      </div>
+      <button class="btn-save-player" onclick="savePlayerEdit()">Save Player</button>
+      <button class="btn-clear-player" id="btn-clear-player" onclick="clearPlayerSlot()" style="display:none">Remove Player</button>
+    </div>
+  </div>
 
   <!-- PAGE: STATS -->
   <div class="page" id="page-stats">
@@ -1500,7 +1588,7 @@ select option { background:#1a0505; }
   </button>
   <button class="nav-btn" onclick="showPage('players',this)">
     <span class="nav-icon">👥</span>
-    <span class="nav-label">Players</span>
+    <span class="nav-label">Squad</span>
   </button>
   <button class="nav-btn" onclick="showPage('stats',this)">
     <span class="nav-icon">📊</span>
@@ -1557,6 +1645,10 @@ select option { background:#1a0505; }
       <button class="outcome-btn ob-saved"   onclick="selectShotOutcome('saved')"><span class="o-icon">🧤</span><span class="o-label">Saved</span></button>
       <button class="outcome-btn ob-short"   onclick="selectShotOutcome('short')"><span class="o-icon">⬇️</span><span class="o-label">Short</span></button>
     </div>
+    <div class="player-attr-section">
+      <div class="player-attr-label">Tag Player (optional)</div>
+      <div class="player-attr-list" id="shot-player-attr-list"></div>
+    </div>
   </div>
 </div>
 
@@ -1572,6 +1664,10 @@ select option { background:#1a0505; }
       <button class="sheet-close" onclick="closeGenericModal()">✕</button>
     </div>
     <div class="outcome-grid" id="gmodal-outcomes"></div>
+    <div class="player-attr-section">
+      <div class="player-attr-label">Tag Player (optional)</div>
+      <div class="player-attr-list" id="gen-player-attr-list"></div>
+    </div>
   </div>
 </div>
 
@@ -1639,6 +1735,7 @@ function showPage(name, btn) {
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
   if (name === 'history') renderHistory();
+  if (name === 'players') renderSquadGrid();
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -1704,14 +1801,23 @@ const shotModal = {team:null, mode:null};
 
 function openShotModal(team,mode) {
   shotModal.team=team; shotModal.mode=mode;
-  const icon = mode==='play'?'⚽':'🎯';
-  $('modal-title').textContent=`${icon} ${team==='home'?homeName():awayName()}`;
-  $('modal-subtitle').textContent=`Shot ${mode==='play'?'from Play':'from Free'} — select outcome`;
-  $('shot-modal').classList.add('open');
+  var icon = mode==='play'?'⚽':'🎯';
+  document.getElementById('modal-title').textContent = icon + ' ' + (team==='home'?homeName():awayName());
+  document.getElementById('modal-subtitle').textContent = 'Shot ' + (mode==='play'?'from Play':'from Free') + ' — select outcome';
+  buildPlayerAttrList(team, 'shot-player-attr-list');
+  document.getElementById('shot-modal').classList.add('open');
 }
 function closeShotModal() { $('shot-modal').classList.remove('open'); shotModal.team=null; shotModal.mode=null; }
 function selectShotOutcome(outcome) {
   if(!shotModal.team||!shotModal.mode)return;
+  // Record against tagged player
+  if (selectedAttrPlayer !== null) {
+    var mode = shotModal.mode === 'play' ? 'shotsPlay' : 'shotsFree';
+    addStatToPlayer(selectedAttrPlayer, mode, outcome);
+    if (outcome === 'goal' || outcome === 'point') {
+      addStatToPlayer(selectedAttrPlayer, 'shots', outcome);
+    }
+  }
   addShot(shotModal.team,shotModal.mode,outcome);
   closeShotModal();
 }
@@ -1760,11 +1866,14 @@ const gmodal = {team:null,category:null};
 
 function openGenericModal(team,category) {
   gmodal.team=team; gmodal.category=category;
-  const cfg=GENERIC_CONFIG[category];
-  $('gmodal-title').textContent=`${cfg.title} — ${team==='home'?homeName():awayName()}`;
-  $('gmodal-subtitle').textContent=cfg.sub;
-  $('gmodal-outcomes').innerHTML=cfg.outcomes.map(o=>`<button class="outcome-btn ob-gen" onclick="selectGenericOutcome('${o.key}')"><span class="o-icon">${o.icon}</span><span class="o-label">${o.label}</span></button>`).join('');
-  $('generic-modal').classList.add('open');
+  var cfg=GENERIC_CONFIG[category];
+  document.getElementById('gmodal-title').textContent = cfg.title + ' — ' + (team==='home'?homeName():awayName());
+  document.getElementById('gmodal-subtitle').textContent = cfg.sub;
+  document.getElementById('gmodal-outcomes').innerHTML=cfg.outcomes.map(function(o) {
+    return '<button class="outcome-btn ob-gen" onclick="selectGenericOutcome(\'' + o.key + '\')"><span class="o-icon">' + o.icon + '</span><span class="o-label">' + o.label + '</span></button>';
+  }).join('');
+  buildPlayerAttrList(team, 'gen-player-attr-list');
+  document.getElementById('generic-modal').classList.add('open');
 }
 function closeGenericModal() { $('generic-modal').classList.remove('open'); gmodal.team=null; gmodal.category=null; }
 function selectGenericOutcome(key) {
@@ -1773,7 +1882,11 @@ function selectGenericOutcome(key) {
   state[gmodal.category][gmodal.team][key]++;
   const foundOutcome = cfg.outcomes.find(function(o){return o.key===key;});
   const outcomeLabel = foundOutcome ? foundOutcome.label : key;
-  state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel,min:getMin(),half:state.half});
+  // Record against tagged player
+  if (selectedAttrPlayer !== null) {
+    addStatToPlayer(selectedAttrPlayer, gmodal.category, key);
+  }
+  state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
 }
 
@@ -1837,35 +1950,222 @@ function setHalf(h) {
   $('h2-btn').classList.toggle('active',h===2);
 }
 
-// ── PLAYERS ────────────────────────────────────────
-function addPlayer() {
-  const nEl=$('player-name-input'),numEl=$('player-num-input'),tEl=$('player-team-input');
-  const name=nEl.value.trim(); if(!name){nEl.focus();return;}
-  state.players.push({id:state.nextPlayerId++,name,num:numEl.value||'—',team:tEl.value,goals:0,points:0});
-  nEl.value=''; numEl.value=''; renderPlayers();
+// ── SQUAD ──────────────────────────────────────────
+const SQUAD_KEY = 'gaa_squad';
+const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
+
+var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
+var editingSlot = null;
+var selectedAttrPlayer = null; // currently selected player for attribution
+
+function loadSquad() {
+  try {
+    var saved = localStorage.getItem(SQUAD_KEY);
+    var s = saved ? JSON.parse(saved) : [];
+    // Ensure 34 slots
+    while (s.length < 34) s.push(null);
+    return s;
+  } catch(e) {
+    var s = [];
+    for (var i=0;i<34;i++) s.push(null);
+    return s;
+  }
 }
-function addPlayerScore(pid,type) {
-  const p=state.players.find(p=>p.id===pid); if(!p)return;
-  if(type==='goal')p.goals++; else p.points++;
-  addScore(p.team,type); renderPlayers();
+
+function saveSquad() {
+  try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
 }
-function removePlayer(pid) { state.players=state.players.filter(p=>p.id!==pid); renderPlayers(); }
-function renderPlayers() {
-  const list=$('players-list');
-  if(!state.players.length){list.innerHTML='<div class="empty-note">No players added yet</div>';return;}
-  list.innerHTML=state.players.map(p=>{
-    const tl=p.team==='home'?homeName():awayName();
-    return `<div class="player-row">
-      <span class="player-num">${p.num}</span>
-      <div><div class="player-name">${p.name}</div><div class="player-team-tag">${tl}</div></div>
-      <span style="font-family:'Oswald';font-size:13px;color:var(--gold)">${p.goals}G</span>
-      <span style="font-family:'Oswald';font-size:13px;color:#ff8080">${p.points}P</span>
-      <button class="psb psb-g" onclick="addPlayerScore(${p.id},'goal')">+G</button>
-      <button class="psb" onclick="addPlayerScore(${p.id},'point')">+P</button>
-      <button class="del-btn" onclick="removePlayer(${p.id})">✕</button>
-    </div>`;
-  }).join('');
+
+function renderSquadGrid() {
+  var grid = document.getElementById('squad-grid');
+  if (!grid) return;
+  var html = '';
+  for (var i = 0; i < 34; i++) {
+    var num = i + 1;
+    var p = squad[i];
+    if (p && p.name) {
+      html += '<div class="squad-slot filled" onclick="openPlayerEdit(' + i + ')">' +
+        '<div class="squad-num">' + num + '</div>' +
+        '<div class="squad-name">' + p.name + '</div>' +
+        '<div class="squad-pos">' + (p.pos || '') + '</div>' +
+        '</div>';
+    } else {
+      html += '<div class="squad-slot" onclick="openPlayerEdit(' + i + ')">' +
+        '<div class="squad-num" style="color:rgba(245,232,232,0.2)">' + num + '</div>' +
+        '<div class="squad-empty-name">+ Add player</div>' +
+        '</div>';
+    }
+  }
+  grid.innerHTML = html;
 }
+
+function openPlayerEdit(slotIndex) {
+  editingSlot = slotIndex;
+  var num = slotIndex + 1;
+  var p = squad[slotIndex];
+  document.getElementById('player-edit-title').textContent = 'Player #' + num;
+  document.getElementById('player-edit-sub').textContent = p && p.name ? 'Edit player' : 'Add player to slot ' + num;
+  document.getElementById('edit-player-name').value = p && p.name ? p.name : '';
+
+  // Build position grid
+  var posGrid = document.getElementById('pos-grid');
+  var currentPos = p ? p.pos : '';
+  var posHtml = '';
+  POSITIONS.forEach(function(pos) {
+    posHtml += '<button class="pos-btn' + (currentPos === pos ? ' selected' : '') + '" onclick="selectPos(this,\'' + pos + '\')">' + pos + '</button>';
+  });
+  posGrid.innerHTML = posHtml;
+
+  var clearBtn = document.getElementById('btn-clear-player');
+  if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
+
+  document.getElementById('player-edit-modal').classList.add('open');
+  setTimeout(function() { document.getElementById('edit-player-name').focus(); }, 300);
+}
+
+function selectPos(btn, pos) {
+  var btns = document.querySelectorAll('.pos-btn');
+  for (var i=0;i<btns.length;i++) btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+}
+
+function savePlayerEdit() {
+  if (editingSlot === null) return;
+  var name = document.getElementById('edit-player-name').value.trim();
+  if (!name) { document.getElementById('edit-player-name').focus(); return; }
+  var selectedPosBtn = document.querySelector('.pos-btn.selected');
+  var pos = selectedPosBtn ? selectedPosBtn.textContent : '';
+  squad[editingSlot] = { name: name, pos: pos, stats: {} };
+  saveSquad();
+  closePlayerEdit();
+  renderSquadGrid();
+}
+
+function clearPlayerSlot() {
+  if (editingSlot === null) return;
+  if (!confirm('Remove this player from the squad?')) return;
+  squad[editingSlot] = null;
+  saveSquad();
+  closePlayerEdit();
+  renderSquadGrid();
+}
+
+function closePlayerEdit() {
+  document.getElementById('player-edit-modal').classList.remove('open');
+  editingSlot = null;
+}
+
+function switchSquadTab(tab, btn) {
+  var tabs = ['squad','stats','timeline'];
+  tabs.forEach(function(t) {
+    var view = document.getElementById('squad-view-' + t);
+    var tabBtn = document.getElementById('squad-tab-' + t);
+    if (view) view.style.display = t === tab ? '' : 'none';
+    if (tabBtn) { tabBtn.classList.toggle('active', t === tab); }
+  });
+  if (tab === 'stats') renderPlayerStats();
+}
+
+// ── PLAYER ATTRIBUTION ─────────────────────────────
+function buildPlayerAttrList(team, listId) {
+  var list = document.getElementById(listId);
+  if (!list) return;
+  var squadPlayers = squad.filter(function(p) { return p && p.name; });
+  if (!squadPlayers.length) {
+    list.innerHTML = '<span style="font-size:11px;color:var(--muted);font-style:italic">Add players to your squad to tag them</span>';
+    return;
+  }
+  var html = '<button class="player-attr-none" onclick="selectAttrPlayer(null,\'' + listId + '\')">None</button>';
+  squad.forEach(function(p, i) {
+    if (!p || !p.name) return;
+    html += '<button class="player-attr-btn" data-pid="' + i + '" onclick="selectAttrPlayer(' + i + ',\'' + listId + '\')">#' + (i+1) + ' ' + p.name + '</button>';
+  });
+  list.innerHTML = html;
+  selectedAttrPlayer = null;
+}
+
+function selectAttrPlayer(slotIndex, listId) {
+  selectedAttrPlayer = slotIndex;
+  var list = document.getElementById(listId);
+  if (!list) return;
+  var btns = list.querySelectorAll('.player-attr-btn');
+  for (var i=0;i<btns.length;i++) {
+    btns[i].classList.toggle('selected', parseInt(btns[i].getAttribute('data-pid')) === slotIndex);
+  }
+}
+
+// ── PLAYER STATS ───────────────────────────────────
+function addStatToPlayer(slotIndex, statKey, statSubKey) {
+  if (slotIndex === null || slotIndex === undefined) return;
+  var p = squad[slotIndex];
+  if (!p) return;
+  if (!p.stats) p.stats = {};
+  if (!p.stats[statKey]) p.stats[statKey] = {};
+  if (!p.stats[statKey][statSubKey]) p.stats[statKey][statSubKey] = 0;
+  p.stats[statKey][statSubKey]++;
+  saveSquad();
+}
+
+function renderPlayerStats() {
+  var container = document.getElementById('player-stats-list');
+  if (!container) return;
+  var activePlayers = squad.map(function(p,i) { return {p:p, i:i}; }).filter(function(x) { return x.p && x.p.name; });
+  if (!activePlayers.length) {
+    container.innerHTML = '<div class="empty-note">Add players to your squad first</div>';
+    return;
+  }
+
+  var html = '';
+  activePlayers.forEach(function(x) {
+    var p = x.p;
+    var num = x.i + 1;
+    var s = p.stats || {};
+    var goals = (s.shots && s.shots.goal) || 0;
+    var points = (s.shots && s.shots.point) || 0;
+    var shotsPlay = Object.keys((s.shotsPlay||{})).reduce(function(a,k){return a+(s.shotsPlay[k]||0);},0);
+    var shotsFree = Object.keys((s.shotsFree||{})).reduce(function(a,k){return a+(s.shotsFree[k]||0);},0);
+    var ballWon = Object.keys((s.ballWon||{})).reduce(function(a,k){return a+(s.ballWon[k]||0);},0);
+    var ballLost = Object.keys((s.ballLost||{})).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
+    var wides = ((s.shotsPlay && s.shotsPlay.wide)||0) + ((s.shotsFree && s.shotsFree.wide)||0);
+    var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
+    var matches = p.matchCount || 0;
+
+    html += '<div class="player-stat-card">' +
+      '<div class="psc-header">' +
+        '<div class="psc-num">' + num + '</div>' +
+        '<div class="psc-info">' +
+          '<div class="psc-name">' + p.name + '</div>' +
+          '<div class="psc-pos">' + (p.pos || 'No position') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="psc-body">' +
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val goals">' + goals + '</div><div class="psc-stat-label">Goals</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val points">' + points + '</div><div class="psc-stat-label">Points</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (goals*3+points) + '</div><div class="psc-stat-label">Total</div></div>' +
+        '</div>' +
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + shotsPlay + '</div><div class="psc-stat-label">Shots Play</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + shotsFree + '</div><div class="psc-stat-label">Shots Free</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + wides + '</div><div class="psc-stat-label">Wides</div></div>' +
+        '</div>' +
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + ballWon + '</div><div class="psc-stat-label">Ball Won</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + ballLost + '</div><div class="psc-stat-label">Ball Lost</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + kickouts + '</div><div class="psc-stat-label">Kickouts</div></div>' +
+        '</div>' +
+        '<div class="psc-matches">' + matches + ' match' + (matches !== 1 ? 'es' : '') + '</div>' +
+      '</div>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ── OLD PLAYER FUNCS (kept for compatibility) ──────
+function addPlayer() {}
+function addPlayerScore(pid,type) {}
+function removePlayer(pid) {}
+function renderPlayers() { renderSquadGrid(); }
 
 // ── STATS ──────────────────────────────────────────
 function countHalf(team,type,half){ return state.events.filter(e=>e.team===team&&e.type===type&&e.half===half).length; }
@@ -3095,26 +3395,17 @@ function filterPicker() {}
 
 // ── INIT ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  var dbg = document.createElement('div');
-  dbg.id = 'debug-bar';
-  dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a0000;color:#ff6;font-size:11px;padding:4px 8px;z-index:99999;font-family:monospace;';
-  dbg.textContent = 'Starting...';
-  document.body.appendChild(dbg);
-  function log(msg) { dbg.textContent = msg; }
-
-  try { log('updateNames...'); updateNames(); } catch(e) { log('FAIL updateNames: '+e.message); return; }
-  try { log('updateScoreboard...'); updateScoreboard(); } catch(e) { log('FAIL updateScoreboard: '+e.message); return; }
-  try { log('renderTimeline...'); renderTimeline(); } catch(e) { log('FAIL renderTimeline: '+e.message); return; }
-  try { log('renderPlayers...'); renderPlayers(); } catch(e) { log('FAIL renderPlayers: '+e.message); return; }
-  try { log('renderShotCounts...'); renderShotCounts(); } catch(e) { log('FAIL renderShotCounts: '+e.message); return; }
-  try { log('renderShotSummary...'); renderShotSummary(); } catch(e) { log('FAIL renderShotSummary: '+e.message); return; }
-  try { log('renderGenericTallies...'); renderGenericTallies(); } catch(e) { log('FAIL renderGenericTallies: '+e.message); return; }
-  try { log('renderTrends...'); renderTrends(); } catch(e) { log('renderTrends skipped: '+e.message); }
-  try { log('renderClock...'); renderClock(); } catch(e) { log('FAIL renderClock: '+e.message); return; }
-  try { log('renderHistory...'); renderHistory(); } catch(e) { log('FAIL renderHistory: '+e.message); return; }
-  try { log('buildTeamSelects...'); buildTeamSelects(); } catch(e) { log('FAIL buildTeamSelects: '+e.message); return; }
-  setTimeout(function() { var d = document.getElementById('debug-bar'); if(d) d.remove(); }, 3000);
-  log('✅ All init complete - ' + CLUBS.length + ' clubs loaded');
+  try { updateNames(); } catch(e) {}
+  try { updateScoreboard(); } catch(e) {}
+  try { renderTimeline(); } catch(e) {}
+  try { renderSquadGrid(); } catch(e) {}
+  try { renderShotCounts(); } catch(e) {}
+  try { renderShotSummary(); } catch(e) {}
+  try { renderGenericTallies(); } catch(e) {}
+  try { renderTrends(); } catch(e) {}
+  try { renderClock(); } catch(e) {}
+  try { renderHistory(); } catch(e) {}
+  try { buildTeamSelects(); } catch(e) {}
 });
 
 // ── PWA: SERVICE WORKER ────────────────────────────
