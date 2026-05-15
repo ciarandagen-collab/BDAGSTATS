@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>GAA Match Stats</title>
- 
+
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#e03030">
@@ -47,7 +47,7 @@ body {
   display: flex;
   flex-direction: column;
 }
- 
+
 /* ── TOP BAR ── */
 .topbar {
   background: var(--panel);
@@ -103,7 +103,7 @@ body {
   margin-top: 2px;
 }
 .tb-clock-status.live { color: var(--green); }
- 
+
 /* ── SCROLL AREA ── */
 .scroll-area {
   flex: 1;
@@ -112,7 +112,7 @@ body {
   padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
 }
 .scroll-area::-webkit-scrollbar { display: none; }
- 
+
 /* ── BOTTOM NAV ── */
 .bottom-nav {
   position: fixed;
@@ -162,11 +162,11 @@ body {
   background: var(--red);
   border-radius: 2px 2px 0 0;
 }
- 
+
 /* ── PAGE VIEWS ── */
 .page { display: none; padding: 14px 12px; }
 .page.active { display: block; }
- 
+
 /* ── SECTION LABEL ── */
 .sec-label {
   font-family: 'Oswald', sans-serif;
@@ -181,7 +181,7 @@ body {
 }
 .sec-label::after { content:''; flex:1; height:1px; background: var(--border); }
 .sec-label:first-child { margin-top: 4px; }
- 
+
 /* ── CARD ── */
 .card {
   background: var(--panel);
@@ -191,7 +191,7 @@ body {
   margin-bottom: 14px;
 }
 .card-inner { padding: 14px; }
- 
+
 /* ── MATCH SETUP ── */
 .team-row { display: grid; grid-template-columns: 1fr 32px 1fr; gap: 8px; align-items: end; margin-bottom: 12px; }
 .team-col { display: flex; flex-direction: column; gap: 5px; }
@@ -212,7 +212,7 @@ select option { background:#1a0505; }
 .team-name-input { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; text-align:center; border-color:rgba(224,48,48,0.3); }
 .vs-mid { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); text-align:center; padding-bottom:11px; }
 .meta-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
- 
+
 /* ── CLOCK ── */
 .clock-card { background: var(--panel); border: 1px solid var(--border); border-radius:14px; margin-bottom:14px; }
 .clock-main {
@@ -275,7 +275,7 @@ select option { background:#1a0505; }
   font-size:10px; letter-spacing:1px; padding:6px 14px; cursor:pointer; transition:all 0.2s;
 }
 .half-btn.active, .half-btn:hover { background:var(--red); color:#fff; }
- 
+
 /* ── SCOREBOARD ── */
 .scoreboard-card {
   background: var(--panel);
@@ -330,7 +330,7 @@ select option { background:#1a0505; }
   text-align:center;
 }
 .undo-btn:hover { background:rgba(255,60,60,0.12); color:#ff8080; border-color:rgba(255,60,60,0.3); }
- 
+
 /* ── ACTION TRIGGER BUTTONS ── */
 .trigger-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
 .trigger-btn {
@@ -369,7 +369,7 @@ select option { background:#1a0505; }
   color:var(--gold);
   line-height:1;
 }
- 
+
 /* ── MODAL BOTTOM SHEET ── */
 .modal-overlay {
   position: fixed;
@@ -442,7 +442,7 @@ select option { background:#1a0505; }
 .ob-saved   { background:rgba(30,100,160,0.18);  border-color:rgba(60,140,220,0.35);  color:#7ab8ee; }
 .ob-short   { background:rgba(80,80,80,0.22);    border-color:rgba(160,160,160,0.3);  color:#aaaaaa; }
 .ob-gen     { background:rgba(160,50,50,0.15);   border-color:rgba(200,80,80,0.3);    color:#ffcccc; }
- 
+
 /* ── PLAYERS ── */
 .add-player-row { display:grid; grid-template-columns:1fr 52px 1fr auto; gap:8px; margin-bottom:12px; align-items:center; }
 .btn-add-player {
@@ -471,7 +471,7 @@ select option { background:#1a0505; }
 .psb-g:hover { background:rgba(245,166,35,0.15); border-color:var(--gold); color:var(--gold); }
 .del-btn { background:none; border:none; color:rgba(255,80,80,0.35); cursor:pointer; font-size:15px; padding:4px; border-radius:4px; transition:all 0.15s; }
 .del-btn:hover { color:#ff6060; background:rgba(255,0,0,0.1); }
- 
+
 /* ── TIMELINE ── */
 .event-item {
   display:flex; align-items:center; gap:10px;
@@ -490,7 +490,7 @@ select option { background:#1a0505; }
 .event-text { font-size:13px; color:rgba(245,232,232,0.85); flex:1; font-weight:500; }
 .event-team-tag { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
 .empty-note { text-align:center; padding:28px; color:rgba(245,232,232,0.2); font-style:italic; font-size:14px; }
- 
+
 /* ── STATS TABLE ── */
 .stats-table { width:100%; border-collapse:collapse; }
 .stats-table thead tr { background:rgba(0,0,0,0.4); }
@@ -503,7 +503,7 @@ select option { background:#1a0505; }
 .stat-val { font-family:'Oswald',sans-serif; font-size:18px; font-weight:700; }
 .stat-leader { color:var(--gold); }
 .stats-section-row td { background:rgba(224,48,48,0.1); border-top:1px solid rgba(224,48,48,0.2); padding:8px 14px; font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; font-weight:600; }
- 
+
 /* ── TRENDS PAGE ── */
 .trend-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
 .trend-card {
@@ -540,7 +540,7 @@ select option { background:#1a0505; }
 .lead-home { color:var(--red-light); }
 .lead-away { color:#7ab8ee; }
 .lead-draw { color:var(--muted); }
- 
+
 /* ── EXPORT ── */
 .export-row { display:flex; gap:10px; margin-top:4px; }
 .btn-export {
@@ -551,7 +551,7 @@ select option { background:#1a0505; }
 .btn-export:hover { background:rgba(224,48,48,0.1); border-color:var(--red); color:var(--red-light); }
 .btn-reset { background:rgba(255,60,60,0.06); border-color:rgba(255,60,60,0.2); color:rgba(255,120,120,0.6); }
 .btn-reset:hover { background:rgba(255,60,60,0.14); border-color:rgba(255,60,60,0.4); color:#ff8080; }
- 
+
 /* POSSESSION SPLIT BAR */
 .poss-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; }
 .poss-team-label { display:flex; flex-direction:column; gap:3px; }
@@ -570,7 +570,7 @@ select option { background:#1a0505; }
 .poss-timeline-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
 .poss-timeline-canvas { width:100%; height:60px; display:block; }
 .poss-timeline-legend { display:flex; justify-content:center; gap:16px; margin-top:8px; font-size:11px; color:var(--muted); }
- 
+
 /* SHOT SUMMARY TABLE */
 .shot-summary-table { width:100%; border-collapse:collapse; }
 .shot-summary-table th { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; padding:7px 10px; text-align:center; background:rgba(0,0,0,0.3); border-bottom:1px solid rgba(255,255,255,0.06); }
@@ -582,7 +582,7 @@ select option { background:#1a0505; }
 .history-empty { text-align:center; padding:48px 20px; color:var(--muted); }
 .history-empty-icon { font-size:48px; display:block; margin-bottom:12px; opacity:0.4; }
 .history-empty-text { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
- 
+
 .match-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -594,7 +594,7 @@ select option { background:#1a0505; }
 }
 .match-card:hover { border-color: rgba(224,48,48,0.45); }
 .match-card:active { transform: scale(0.99); }
- 
+
 .match-card-header {
   background: rgba(0,0,0,0.3);
   padding: 8px 14px;
@@ -604,7 +604,7 @@ select option { background:#1a0505; }
 }
 .match-card-comp { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
 .match-card-date { font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); }
- 
+
 .match-card-score {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -618,7 +618,7 @@ select option { background:#1a0505; }
 .mcs-score span { color:var(--gold); }
 .mcs-total { font-size:11px; color:var(--red); margin-top:3px; font-style:italic; }
 .mcs-divider { font-family:'Oswald',sans-serif; font-size:16px; color:rgba(245,232,232,0.15); text-align:center; }
- 
+
 .match-card-stats {
   display: grid;
   grid-template-columns: repeat(4,1fr);
@@ -636,7 +636,7 @@ select option { background:#1a0505; }
 .mcs-stat-val .h { color:var(--red-light); }
 .mcs-stat-val .sep { color:var(--muted); font-size:10px; padding:0 2px; }
 .mcs-stat-val .a { color:#7ab8ee; }
- 
+
 .match-card-actions {
   display: flex;
   gap: 8px;
@@ -650,7 +650,7 @@ select option { background:#1a0505; }
 }
 .mca-btn:hover { background:rgba(224,48,48,0.1); color:var(--red-light); border-color:var(--red); }
 .mca-btn.danger:hover { background:rgba(255,60,60,0.12); color:#ff8080; border-color:rgba(255,60,60,0.35); }
- 
+
 /* detail modal */
 .detail-modal-overlay {
   position: fixed;
@@ -701,7 +701,7 @@ select option { background:#1a0505; }
 .detail-close:hover { background:rgba(255,60,60,0.2); color:#ff8080; }
 .detail-body { flex:1; overflow-y:auto; padding:14px; }
 .detail-body::-webkit-scrollbar { display:none; }
- 
+
 /* save banner on stats page */
 .save-match-banner {
   background: rgba(34,197,94,0.1);
@@ -755,7 +755,7 @@ select option { background:#1a0505; }
   color: var(--muted);
   pointer-events: none;
 }
- 
+
 /* picker modal - Safari compatible */
 .picker-overlay {
   position: fixed;
@@ -874,7 +874,7 @@ select option { background:#1a0505; }
 .squad-sub-btn { flex:1; padding:10px 6px; background:rgba(255,255,255,0.04); border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; border-right:1px solid var(--border); }
 .squad-sub-btn:last-child { border-right:none; }
 .squad-sub-btn.active { background:var(--red); color:#fff; font-weight:600; }
- 
+
 .squad-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:8px; margin-bottom:14px; }
 .squad-slot {
   background:var(--panel); border:1px solid var(--border); border-radius:10px;
@@ -891,11 +891,11 @@ select option { background:#1a0505; }
 .squad-slot-actions { display:flex; gap:4px; position:absolute; top:6px; right:6px; }
 .squad-slot-del { background:none; border:none; color:rgba(255,80,80,0.3); font-size:13px; cursor:pointer; padding:2px; }
 .squad-slot-del:hover { color:#ff6060; }
- 
+
 /* Player edit modal */
 .player-edit-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:20px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); }
 .modal-overlay.open .player-edit-sheet { transform:translateY(0); }
- 
+
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
 .pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
@@ -904,7 +904,7 @@ select option { background:#1a0505; }
 .btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
 .btn-save-player:hover { filter:brightness(1.1); }
 .btn-clear-player { width:100%; padding:11px; background:rgba(255,60,60,0.07); border:1px solid rgba(255,60,60,0.2); border-radius:10px; color:rgba(255,120,120,0.65); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:8px; }
- 
+
 /* Player stats view */
 .player-stat-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
 .psc-header { background:rgba(0,0,0,0.3); padding:12px 14px; display:flex; align-items:center; gap:12px; }
@@ -920,7 +920,7 @@ select option { background:#1a0505; }
 .psc-stat-val.points { color:var(--red-light); }
 .psc-stat-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:3px; }
 .psc-matches { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:right; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05); }
- 
+
 /* Squad player attribution in outcome modal */
 .player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
 .player-attr-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
@@ -929,7 +929,7 @@ select option { background:#1a0505; }
 .player-attr-btn:hover, .player-attr-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
 .player-attr-none { padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; cursor:pointer; }
 .player-attr-none:hover { border-color:var(--muted); }
- 
+
 .team-select {
   width: 100%;
   background: rgba(255,255,255,0.05);
@@ -949,7 +949,7 @@ select option { background:#1a0505; }
 .team-select optgroup { background: #0d0000; color: #e03030; }
 </style>
 <body>
- 
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-score">
@@ -968,13 +968,13 @@ select option { background:#1a0505; }
     <div class="tb-clock-status" id="tb-clock-status">Ready</div>
   </div>
 </div>
- 
+
 <!-- SCROLL AREA -->
 <div class="scroll-area" id="scroll-area">
- 
+
   <!-- PAGE: MATCH -->
   <div class="page active" id="page-match">
- 
+
     <div class="sec-label">Match Info</div>
     <div class="card">
       <div class="card-inner">
@@ -1003,7 +1003,7 @@ select option { background:#1a0505; }
           <input type="text" id="venue" placeholder="Venue">
           <select id="competition" onchange="updateCompDisplay()">
             <option value="" disabled selected>Select Competition</option>
- 
+
             <!-- ═══ GAA INTER-COUNTY ═══ -->
             <optgroup label="── GAA Inter-County Senior ──">
               <option>GAA All-Ireland SFC</option>
@@ -1017,7 +1017,7 @@ select option { background:#1a0505; }
               <option>GAA Munster SFC</option>
               <option>GAA Ulster SFC</option>
             </optgroup>
- 
+
             <optgroup label="── GAA Inter-County U20 ──">
               <option>GAA All-Ireland U20 FC</option>
               <option>GAA Eirgrid U20 FC</option>
@@ -1026,7 +1026,7 @@ select option { background:#1a0505; }
               <option>GAA Munster U20 FC</option>
               <option>GAA Ulster U20 FC</option>
             </optgroup>
- 
+
             <optgroup label="── GAA Inter-County Minor (U18) ──">
               <option>GAA All-Ireland Minor FC</option>
               <option>GAA Connacht Minor FC</option>
@@ -1034,7 +1034,7 @@ select option { background:#1a0505; }
               <option>GAA Munster Minor FC</option>
               <option>GAA Ulster Minor FC</option>
             </optgroup>
- 
+
             <!-- ═══ LGFA INTER-COUNTY ═══ -->
             <optgroup label="── LGFA Inter-County Senior ──">
               <option>LGFA All-Ireland SFC</option>
@@ -1049,7 +1049,7 @@ select option { background:#1a0505; }
               <option>LGFA Munster SFC</option>
               <option>LGFA Ulster SFC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA Inter-County U20 ──">
               <option>LGFA All-Ireland U20 FC</option>
               <option>LGFA Connacht U20 FC</option>
@@ -1057,7 +1057,7 @@ select option { background:#1a0505; }
               <option>LGFA Munster U20 FC</option>
               <option>LGFA Ulster U20 FC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA Inter-County Minor (U18) ──">
               <option>LGFA All-Ireland Minor FC</option>
               <option>LGFA Connacht Minor FC</option>
@@ -1065,7 +1065,7 @@ select option { background:#1a0505; }
               <option>LGFA Munster Minor FC</option>
               <option>LGFA Ulster Minor FC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA Inter-County U16 ──">
               <option>LGFA All-Ireland U16 FC A</option>
               <option>LGFA All-Ireland U16 FC B</option>
@@ -1074,7 +1074,7 @@ select option { background:#1a0505; }
               <option>LGFA Munster U16 FC</option>
               <option>LGFA Ulster U16 FC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA Inter-County U14 ──">
               <option>LGFA All-Ireland U14 FC A</option>
               <option>LGFA All-Ireland U14 FC B</option>
@@ -1084,7 +1084,7 @@ select option { background:#1a0505; }
               <option>LGFA Munster U14 FC</option>
               <option>LGFA Ulster U14 FC</option>
             </optgroup>
- 
+
             <!-- ═══ GAA COUNTY CLUB ═══ -->
             <optgroup label="── GAA County Club Senior ──">
               <option>GAA County SFC</option>
@@ -1095,14 +1095,14 @@ select option { background:#1a0505; }
               <option>GAA County Junior FC A</option>
               <option>GAA County Junior FC B</option>
             </optgroup>
- 
+
             <optgroup label="── GAA County Club U20 / Minor ──">
               <option>GAA County U20 FC</option>
               <option>GAA County Minor FC</option>
               <option>GAA County Minor FC A</option>
               <option>GAA County Minor FC B</option>
             </optgroup>
- 
+
             <optgroup label="── GAA County Club Underage ──">
               <option>GAA County U18 FC</option>
               <option>GAA County U16 FC</option>
@@ -1114,7 +1114,7 @@ select option { background:#1a0505; }
               <option>GAA County U13 FC</option>
               <option>GAA County U12 FC</option>
             </optgroup>
- 
+
             <optgroup label="── GAA County Leagues ──">
               <option>GAA County Senior League</option>
               <option>GAA County Intermediate League</option>
@@ -1126,7 +1126,7 @@ select option { background:#1a0505; }
               <option>GAA County U13 League</option>
               <option>GAA County U12 League</option>
             </optgroup>
- 
+
             <!-- ═══ LGFA COUNTY CLUB ═══ -->
             <optgroup label="── LGFA County Club Senior ──">
               <option>LGFA County SFC</option>
@@ -1137,14 +1137,14 @@ select option { background:#1a0505; }
               <option>LGFA County Junior FC A</option>
               <option>LGFA County Junior FC B</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA County Club U20 / Minor ──">
               <option>LGFA County U20 FC</option>
               <option>LGFA County Minor FC</option>
               <option>LGFA County Minor FC A</option>
               <option>LGFA County Minor FC B</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA County Club Underage ──">
               <option>LGFA County U18 FC</option>
               <option>LGFA County U16 FC</option>
@@ -1158,7 +1158,7 @@ select option { background:#1a0505; }
               <option>LGFA County U13 FC</option>
               <option>LGFA County U12 FC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA County Leagues ──">
               <option>LGFA County Senior League</option>
               <option>LGFA County Intermediate League</option>
@@ -1170,7 +1170,7 @@ select option { background:#1a0505; }
               <option>LGFA County U13 League</option>
               <option>LGFA County U12 League</option>
             </optgroup>
- 
+
             <!-- ═══ PROVINCIAL CLUB ═══ -->
             <optgroup label="── GAA Provincial Club ──">
               <option>GAA Ulster Club SFC</option>
@@ -1183,7 +1183,7 @@ select option { background:#1a0505; }
               <option>GAA Munster Club SFC</option>
               <option>GAA Munster Club IFC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA Provincial Club ──">
               <option>LGFA Ulster Club SFC</option>
               <option>LGFA Ulster Club IFC</option>
@@ -1192,20 +1192,20 @@ select option { background:#1a0505; }
               <option>LGFA Leinster Club SFC</option>
               <option>LGFA Munster Club SFC</option>
             </optgroup>
- 
+
             <!-- ═══ ALL-IRELAND CLUB ═══ -->
             <optgroup label="── GAA All-Ireland Club ──">
               <option>GAA All-Ireland Club SFC</option>
               <option>GAA All-Ireland Club IFC</option>
               <option>GAA All-Ireland Club JFC</option>
             </optgroup>
- 
+
             <optgroup label="── LGFA All-Ireland Club ──">
               <option>LGFA All-Ireland Club SFC</option>
               <option>LGFA All-Ireland Club IFC</option>
               <option>LGFA All-Ireland Club JFC</option>
             </optgroup>
- 
+
             <!-- ═══ OTHER ═══ -->
             <optgroup label="── Other ──">
               <option>Tournament</option>
@@ -1218,7 +1218,7 @@ select option { background:#1a0505; }
         </div>
       </div>
     </div>
- 
+
     <div class="sec-label">Clock</div>
     <div class="clock-card">
       <div class="clock-main">
@@ -1242,7 +1242,7 @@ select option { background:#1a0505; }
         </div>
       </div>
     </div>
- 
+
     <div class="sec-label">Scoreboard</div>
     <div class="scoreboard-card">
       <div class="sb-header">
@@ -1274,12 +1274,12 @@ select option { background:#1a0505; }
         <button class="undo-btn" onclick="undoLast('away')">↩ Undo <span id="undo-away-label">Away</span></button>
       </div>
     </div>
- 
+
   </div><!-- /page-match -->
- 
+
   <!-- PAGE: RECORD -->
   <div class="page" id="page-record">
- 
+
     <div class="sec-label">Shots from Play</div>
     <div class="trigger-grid">
       <button class="trigger-btn" onclick="openShotModal('home','play')">
@@ -1295,7 +1295,7 @@ select option { background:#1a0505; }
         <span class="trig-count" id="sfp-away-tally">0</span>
       </button>
     </div>
- 
+
     <div class="sec-label">Shots from Free</div>
     <div class="trigger-grid">
       <button class="trigger-btn" onclick="openShotModal('home','free')">
@@ -1311,7 +1311,7 @@ select option { background:#1a0505; }
         <span class="trig-count" id="sff-away-tally">0</span>
       </button>
     </div>
- 
+
     <div class="sec-label">Ball Lost</div>
     <div class="trigger-grid">
       <button class="trigger-btn" onclick="openGenericModal('home','ballLost')">
@@ -1327,7 +1327,7 @@ select option { background:#1a0505; }
         <span class="trig-count" id="bl-away-tally">0</span>
       </button>
     </div>
- 
+
     <div class="sec-label">Ball Won</div>
     <div class="trigger-grid">
       <button class="trigger-btn" onclick="openGenericModal('home','ballWon')">
@@ -1343,7 +1343,7 @@ select option { background:#1a0505; }
         <span class="trig-count" id="bw-away-tally">0</span>
       </button>
     </div>
- 
+
     <div class="sec-label">Kickout</div>
     <div class="trigger-grid">
       <button class="trigger-btn" onclick="openGenericModal('home','kickout')">
@@ -1359,7 +1359,7 @@ select option { background:#1a0505; }
         <span class="trig-count" id="ko-away-tally">0</span>
       </button>
     </div>
- 
+
     <div class="sec-label">Shot Summary</div>
     <div class="card">
       <table class="shot-summary-table">
@@ -1377,12 +1377,12 @@ select option { background:#1a0505; }
         <tbody id="shot-summary-body"></tbody>
       </table>
     </div>
- 
+
   </div><!-- /page-record -->
- 
+
   <!-- PAGE: TRENDS -->
   <div class="page" id="page-trends">
- 
+
     <div class="sec-label">Team Possession</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div class="poss-header">
@@ -1410,7 +1410,7 @@ select option { background:#1a0505; }
         <span><span style="display:inline-block;width:12px;height:2px;background:var(--blue);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-away-name">Away</span></span>
       </div>
     </div>
- 
+
     <div class="sec-label">Live Score</div>
     <div class="trend-grid">
       <div class="trend-card">
@@ -1442,7 +1442,7 @@ select option { background:#1a0505; }
         <canvas class="trend-spark" id="spark-possession"></canvas>
       </div>
     </div>
- 
+
     <div class="sec-label">Momentum</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div class="trend-label" style="margin-bottom:12px">Score Momentum (last 5 scores)</div>
@@ -1458,45 +1458,45 @@ select option { background:#1a0505; }
         <span class="momentum-lead" id="momentum-lead-text">—</span>
       </div>
     </div>
- 
+
     <div class="sec-label">Attacking Stats</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div id="attack-bars"></div>
     </div>
- 
+
     <div class="sec-label">Possession & Turnovers</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div id="poss-bars"></div>
     </div>
- 
+
     <div class="sec-label">Kickout Breakdown</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div id="kickout-bars"></div>
     </div>
- 
+
   </div><!-- /page-trends -->
- 
+
   <!-- PAGE: SQUAD -->
   <div class="page" id="page-players">
- 
+
     <div class="squad-sub-tabs">
       <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 My Squad</button>
       <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Player Stats</button>
       <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
     </div>
- 
+
     <!-- SQUAD LIST -->
     <div id="squad-view-squad">
       <div class="sec-label">Squad — tap a slot to add/edit</div>
       <div class="squad-grid" id="squad-grid"></div>
     </div>
- 
+
     <!-- PLAYER STATS -->
     <div id="squad-view-stats" style="display:none">
       <div class="sec-label">Player Stats</div>
       <div id="player-stats-list"></div>
     </div>
- 
+
     <!-- TIMELINE -->
     <div id="squad-view-timeline" style="display:none">
       <div class="sec-label">Match Timeline</div>
@@ -1508,9 +1508,9 @@ select option { background:#1a0505; }
         </div>
       </div>
     </div>
- 
+
   </div><!-- /page-squad -->
- 
+
   <!-- PLAYER EDIT MODAL -->
   <div class="modal-overlay" id="player-edit-modal" onclick="if(event.target===this)closePlayerEdit()">
     <div class="player-edit-sheet">
@@ -1534,10 +1534,10 @@ select option { background:#1a0505; }
       <button class="btn-clear-player" id="btn-clear-player" onclick="clearPlayerSlot()" style="display:none">Remove Player</button>
     </div>
   </div>
- 
+
   <!-- PAGE: STATS -->
   <div class="page" id="page-stats">
- 
+
     <div class="save-match-banner">
       <span class="smb-icon">💾</span>
       <div class="smb-text">
@@ -1546,7 +1546,7 @@ select option { background:#1a0505; }
       </div>
       <button class="btn-save-match" onclick="saveMatchToHistory()">Save Match</button>
     </div>
- 
+
     <div class="sec-label">Full Match Stats</div>
     <div class="card">
       <table class="stats-table">
@@ -1560,25 +1560,25 @@ select option { background:#1a0505; }
         <tbody id="stats-body"></tbody>
       </table>
     </div>
- 
+
     <div class="sec-label">Export</div>
     <div class="export-row">
       <button class="btn-export" id="copy-btn" onclick="exportSummary()">📋 Copy Summary</button>
       <button class="btn-export btn-reset" onclick="resetMatch()">↺ Reset</button>
     </div>
- 
+
   </div><!-- /page-stats -->
- 
+
   <!-- PAGE: HISTORY -->
   <div class="page" id="page-history">
- 
+
     <div class="sec-label">Saved Matches</div>
     <div id="history-list"></div>
- 
+
   </div><!-- /page-history -->
- 
+
 </div><!-- /scroll-area -->
- 
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('match',this)">
@@ -1606,7 +1606,7 @@ select option { background:#1a0505; }
     <span class="nav-label">History</span>
   </button>
 </nav>
- 
+
 <!-- TEAM PICKER MODAL -->
 <div class="picker-overlay" id="team-picker-overlay" onclick="if(event.target===this)closePicker()">
   <div class="picker-sheet">
@@ -1619,7 +1619,7 @@ select option { background:#1a0505; }
     <button class="picker-close-btn" onclick="closePicker()">Cancel</button>
   </div>
 </div>
- 
+
 <!-- MATCH DETAIL MODAL -->
 <div class="detail-modal-overlay" id="detail-modal" onclick="if(event.target===this)closeDetailModal()">
   <div class="detail-sheet" style="position:relative">
@@ -1632,7 +1632,7 @@ select option { background:#1a0505; }
     <div class="detail-body" id="detail-body"></div>
   </div>
 </div>
- 
+
 <!-- SHOT MODAL -->
 <div class="modal-overlay" id="shot-modal" onclick="if(event.target===this)closeShotModal()">
   <div class="modal-sheet">
@@ -1658,7 +1658,7 @@ select option { background:#1a0505; }
     </div>
   </div>
 </div>
- 
+
 <!-- GENERIC MODAL -->
 <div class="modal-overlay" id="generic-modal" onclick="if(event.target===this)closeGenericModal()">
   <div class="modal-sheet">
@@ -1677,7 +1677,7 @@ select option { background:#1a0505; }
     </div>
   </div>
 </div>
- 
+
 <script>
 // ── POLYFILLS (older Safari/iOS compatibility) ─────
 if (!Element.prototype.closest) {
@@ -1709,7 +1709,7 @@ if (typeof NodeList !== 'undefined' && !NodeList.prototype.forEach) {
 if (!Array.from) {
   Array.from = function(obj) { return Array.prototype.slice.call(obj); };
 }
- 
+
 // ── STATE ─────────────────────────────────────────
 const state = {
   home:{goals:0,points:0}, away:{goals:0,points:0},
@@ -1724,7 +1724,7 @@ const state = {
   scoreline:[], // [{min, h, a}]
   possHistory:[] // [homePercent 0-100] after each possession event
 };
- 
+
 const $ = id => document.getElementById(id);
 const homeName = () => $('home-name').value || 'Home';
 const awayName = () => $('away-name').value || 'Away';
@@ -1732,7 +1732,7 @@ const total = t => state[t].goals*3 + state[t].points;
 const pad = n => String(n).padStart(2,'0');
 const getMin = () => parseInt($('current-min').value)||1;
 const bumpMin = () => { $('current-min').value = Math.min(80, parseInt($('current-min').value)+1); };
- 
+
 // ── NAVIGATION ─────────────────────────────────────
 function showPage(name, btn) {
   Array.prototype.slice.call(document.querySelectorAll('.page')).forEach(function(p){p.classList.remove('active');});
@@ -1744,7 +1744,7 @@ function showPage(name, btn) {
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
 }
- 
+
 // ── NAMES ──────────────────────────────────────────
 function updateNames() {
   const h=homeName(), a=awayName();
@@ -1756,12 +1756,12 @@ function updateNames() {
   $('player-away-opt').textContent=a;
   updateStats(); renderShotSummary();
 }
- 
+
 function updateCompDisplay() {
   const val = $('competition').value;
   $('comp-display').textContent = val || 'Select Competition';
 }
- 
+
 // ── SCOREBOARD ─────────────────────────────────────
 function updateScoreboard() {
   const hT=total('home'), aT=total('away');
@@ -1784,7 +1784,7 @@ function updateScoreboard() {
   state.scoreline.push({min:getMin(), h:hT, a:aT});
   updateStats();
 }
- 
+
 // ── SCORE ──────────────────────────────────────────
 function addScore(team, type) {
   if(type==='goal') state[team].goals++; else state[team].points++;
@@ -1792,7 +1792,7 @@ function addScore(team, type) {
   snapPossession();
   updateScoreboard(); renderTimeline(); bumpMin();
 }
- 
+
 function undoLast(team) {
   const idx=state.events.findIndex(e=>e.team===team&&(e.type==='goal'||e.type==='point'));
   if(idx===-1)return;
@@ -1802,10 +1802,10 @@ function undoLast(team) {
   state.events.splice(idx,1);
   updateScoreboard(); renderTimeline();
 }
- 
+
 // ── SHOTS ──────────────────────────────────────────
 const shotModal = {team:null, mode:null};
- 
+
 function openShotModal(team,mode) {
   shotModal.team=team; shotModal.mode=mode;
   var icon = mode==='play'?'⚽':'🎯';
@@ -1828,7 +1828,7 @@ function selectShotOutcome(outcome) {
   addShot(shotModal.team,shotModal.mode,outcome);
   closeShotModal();
 }
- 
+
 function addShot(team,mode,outcome) {
   state.shots[team][mode][outcome]++;
   if(outcome==='goal') addScore(team,'goal');
@@ -1839,7 +1839,7 @@ function addShot(team,mode,outcome) {
   }
   renderShotCounts(); renderShotSummary();
 }
- 
+
 function renderShotCounts() {
   ['home','away'].forEach(t=>['play','free'].forEach(m=>
     ['point','goal','blocked','wide','saved','short'].forEach(o=>{
@@ -1853,7 +1853,7 @@ function renderShotCounts() {
   [['sfp-home-tally',sfpH],['sfp-away-tally',sfpA],['sff-home-tally',sffH],['sff-away-tally',sffA]].forEach(([id,v])=>{ const el=$(id); if(el) el.textContent=v; });
   updateStats();
 }
- 
+
 function renderShotSummary() {
   const outcomes=[['point','✦ Point'],['goal','🥅 Goal'],['blocked','🛡 Blocked'],['wide','↗ Wide'],['saved','🧤 Saved'],['short','⬇ Short']];
   $('shot-summary-body').innerHTML=outcomes.map(([k,label])=>{
@@ -1862,7 +1862,7 @@ function renderShotSummary() {
     return `<tr><td>${label}</td><td>${hp}</td><td>${ap}</td><td style="border-left:1px solid rgba(255,255,255,0.07)">${hf}</td><td>${af}</td></tr>`;
   }).join('');
 }
- 
+
 // ── GENERIC MODAL ──────────────────────────────────
 const GENERIC_CONFIG = {
   ballLost:{title:'📤 Ball Lost',sub:'How was possession lost?',outcomes:[{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'inContact',icon:'💥',label:'In Contact'},{key:'handling',icon:'🖐️',label:'Handling'},{key:'overCarrying',icon:'🏃',label:'Over Carrying'}]},
@@ -1870,7 +1870,7 @@ const GENERIC_CONFIG = {
   kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]}
 };
 const gmodal = {team:null,category:null};
- 
+
 function openGenericModal(team,category) {
   gmodal.team=team; gmodal.category=category;
   var cfg=GENERIC_CONFIG[category];
@@ -1896,7 +1896,7 @@ function selectGenericOutcome(key) {
   state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
 }
- 
+
 function renderGenericTallies() {
   [['ballLost','bl'],['ballWon','bw'],['kickout','ko']].forEach(([cat,pfx])=>{
     const h=Object.values(state[cat].home).reduce((a,b)=>a+b,0);
@@ -1909,12 +1909,12 @@ function renderGenericTallies() {
   snapPossession();
   updateStats();
 }
- 
+
 // ── TIMELINE ──────────────────────────────────────
 const shotIcons={point:'✦',goal:'🥅',blocked:'🛡️',wide:'↗️',saved:'🧤',short:'⬇️'};
 const catIcons={ballLost:'📤',ballWon:'📥',kickout:'🦶'};
 const catLabels={ballLost:'BALL LOST',ballWon:'BALL WON',kickout:'KICKOUT'};
- 
+
 function renderTimeline() {
   const list=$('timeline-list');
   if(!state.events.length){list.innerHTML='<div class="empty-note">No events yet</div>';return;}
@@ -1938,7 +1938,7 @@ function renderTimeline() {
     </div>`;
   }).join('');
 }
- 
+
 function deleteEvent(id) {
   const idx=state.events.findIndex(e=>e.id===id); if(idx===-1)return;
   const ev=state.events[idx];
@@ -1949,22 +1949,22 @@ function deleteEvent(id) {
   state.events.splice(idx,1);
   updateScoreboard(); renderTimeline();
 }
- 
+
 // ── HALF ───────────────────────────────────────────
 function setHalf(h) {
   state.half=h;
   $('h1-btn').classList.toggle('active',h===1);
   $('h2-btn').classList.toggle('active',h===2);
 }
- 
+
 // ── SQUAD ──────────────────────────────────────────
 const SQUAD_KEY = 'gaa_squad';
 const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
- 
+
 var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
 var editingSlot = null;
 var selectedAttrPlayer = null; // currently selected player for attribution
- 
+
 function loadSquad() {
   try {
     var saved = localStorage.getItem(SQUAD_KEY);
@@ -1978,11 +1978,11 @@ function loadSquad() {
     return s;
   }
 }
- 
+
 function saveSquad() {
   try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
 }
- 
+
 function renderSquadGrid() {
   var grid = document.getElementById('squad-grid');
   if (!grid) return;
@@ -2005,7 +2005,7 @@ function renderSquadGrid() {
   }
   grid.innerHTML = html;
 }
- 
+
 function openPlayerEdit(slotIndex) {
   editingSlot = slotIndex;
   var num = slotIndex + 1;
@@ -2013,7 +2013,7 @@ function openPlayerEdit(slotIndex) {
   document.getElementById('player-edit-title').textContent = 'Player #' + num;
   document.getElementById('player-edit-sub').textContent = p && p.name ? 'Edit player' : 'Add player to slot ' + num;
   document.getElementById('edit-player-name').value = p && p.name ? p.name : '';
- 
+
   // Build position grid
   var posGrid = document.getElementById('pos-grid');
   var currentPos = p ? p.pos : '';
@@ -2022,20 +2022,20 @@ function openPlayerEdit(slotIndex) {
     posHtml += '<button class="pos-btn' + (currentPos === pos ? ' selected' : '') + '" onclick="selectPos(this,\'' + pos + '\')">' + pos + '</button>';
   });
   posGrid.innerHTML = posHtml;
- 
+
   var clearBtn = document.getElementById('btn-clear-player');
   if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
- 
+
   document.getElementById('player-edit-modal').classList.add('open');
   setTimeout(function() { document.getElementById('edit-player-name').focus(); }, 300);
 }
- 
+
 function selectPos(btn, pos) {
   var btns = document.querySelectorAll('.pos-btn');
   for (var i=0;i<btns.length;i++) btns[i].classList.remove('selected');
   btn.classList.add('selected');
 }
- 
+
 function savePlayerEdit() {
   if (editingSlot === null) return;
   var name = document.getElementById('edit-player-name').value.trim();
@@ -2047,7 +2047,7 @@ function savePlayerEdit() {
   closePlayerEdit();
   renderSquadGrid();
 }
- 
+
 function clearPlayerSlot() {
   if (editingSlot === null) return;
   if (!confirm('Remove this player from the squad?')) return;
@@ -2056,12 +2056,12 @@ function clearPlayerSlot() {
   closePlayerEdit();
   renderSquadGrid();
 }
- 
+
 function closePlayerEdit() {
   document.getElementById('player-edit-modal').classList.remove('open');
   editingSlot = null;
 }
- 
+
 function switchSquadTab(tab, btn) {
   var tabs = ['squad','stats','timeline'];
   tabs.forEach(function(t) {
@@ -2072,7 +2072,7 @@ function switchSquadTab(tab, btn) {
   });
   if (tab === 'stats') renderPlayerStats();
 }
- 
+
 // ── PLAYER ATTRIBUTION ─────────────────────────────
 function buildPlayerAttrList(team, listId) {
   var list = document.getElementById(listId);
@@ -2090,7 +2090,7 @@ function buildPlayerAttrList(team, listId) {
   list.innerHTML = html;
   selectedAttrPlayer = null;
 }
- 
+
 function selectAttrPlayer(slotIndex, listId) {
   selectedAttrPlayer = slotIndex;
   var list = document.getElementById(listId);
@@ -2100,7 +2100,7 @@ function selectAttrPlayer(slotIndex, listId) {
     btns[i].classList.toggle('selected', parseInt(btns[i].getAttribute('data-pid')) === slotIndex);
   }
 }
- 
+
 // ── PLAYER STATS ───────────────────────────────────
 function addStatToPlayer(slotIndex, statKey, statSubKey) {
   if (slotIndex === null || slotIndex === undefined) return;
@@ -2112,7 +2112,7 @@ function addStatToPlayer(slotIndex, statKey, statSubKey) {
   p.stats[statKey][statSubKey]++;
   saveSquad();
 }
- 
+
 function renderPlayerStats() {
   var container = document.getElementById('player-stats-list');
   if (!container) return;
@@ -2121,7 +2121,7 @@ function renderPlayerStats() {
     container.innerHTML = '<div class="empty-note">Add players to your squad first</div>';
     return;
   }
- 
+
   var html = '';
   activePlayers.forEach(function(x) {
     var p = x.p;
@@ -2136,7 +2136,7 @@ function renderPlayerStats() {
     var wides = ((s.shotsPlay && s.shotsPlay.wide)||0) + ((s.shotsFree && s.shotsFree.wide)||0);
     var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
     var matches = p.matchCount || 0;
- 
+
     html += '<div class="player-stat-card">' +
       '<div class="psc-header">' +
         '<div class="psc-num">' + num + '</div>' +
@@ -2167,13 +2167,13 @@ function renderPlayerStats() {
   });
   container.innerHTML = html;
 }
- 
+
 // ── OLD PLAYER FUNCS (kept for compatibility) ──────
 function addPlayer() {}
 function addPlayerScore(pid,type) {}
 function removePlayer(pid) {}
 function renderPlayers() { renderSquadGrid(); }
- 
+
 // ── STATS ──────────────────────────────────────────
 function countHalf(team,type,half){ return state.events.filter(e=>e.team===team&&e.type===type&&e.half===half).length; }
 function updateStats() {
@@ -2225,7 +2225,7 @@ function updateStats() {
   ].forEach(function(r){statsRows.push(row(r));});
   $('stats-body').innerHTML=statsRows.join('');
 }
- 
+
 // ── POSSESSION CALC ────────────────────────────────
 function calcPossession() {
   // Possession points:
@@ -2245,7 +2245,7 @@ function calcPossession() {
   if (tot === 0) return { h: 50, a: 50 };
   return { h: Math.round((hScore / tot) * 100), a: Math.round((aScore / tot) * 100) };
 }
- 
+
 function snapPossession() {
   const p = calcPossession();
   state.possHistory.push(p.h);
@@ -2254,7 +2254,7 @@ function renderTrends() {
   const hT=total('home'), aT=total('away');
   $('tr-home-total').textContent=hT;
   $('tr-away-total').textContent=aT;
- 
+
   // ── POSSESSION SPLIT ──
   const poss = calcPossession();
   const pH = poss.h, pA = poss.a;
@@ -2270,13 +2270,13 @@ function renderTrends() {
   if (pH > pA + 4) { leadEl.textContent = homeName() + ' dominating'; leadEl.className = 'poss-center-label home-lead'; }
   else if (pA > pH + 4) { leadEl.textContent = awayName() + ' dominating'; leadEl.className = 'poss-center-label away-lead'; }
   else { leadEl.textContent = 'Evenly matched'; leadEl.className = 'poss-center-label level'; }
- 
+
   // ── POSSESSION TIMELINE ──
   drawPossTimeline('spark-poss-timeline', state.possHistory);
- 
+
   // ── SCORE SPARK ──
   drawSpark('spark-score', state.scoreline.map(s=>s.h), state.scoreline.map(s=>s.a));
- 
+
   // ── BALL WON SPARK ──
   const bwEvents=state.events.filter(e=>e.type==='ballWon');
   const bwH=bwEvents.filter(e=>e.team==='home').length;
@@ -2285,7 +2285,7 @@ function renderTrends() {
   const bwHTrend=[], bwATrend=[]; let ch=0,ca=0;
   bwEvents.slice().reverse().forEach(e=>{ if(e.team==='home')ch++;else ca++; bwHTrend.push(ch); bwATrend.push(ca); });
   drawSpark('spark-possession', bwHTrend, bwATrend);
- 
+
   // ── MOMENTUM ──
   const scoreEvts=state.events.filter(e=>e.type==='goal'||e.type==='point'||(e.type==='shot'&&(e.outcome==='goal'||e.outcome==='point'))).slice(0,5);
   const mH=scoreEvts.filter(e=>e.team==='home').length, mA=scoreEvts.filter(e=>e.team==='away').length;
@@ -2294,7 +2294,7 @@ function renderTrends() {
   if(mH>mA){ momFill.style.cssText=`width:${(mH/total5)*50}%;margin-left:${50-(mH/total5)*50}%;background:var(--red);`; momText.textContent=`${homeName()} leading momentum`; momText.className='momentum-lead lead-home'; }
   else if(mA>mH){ momFill.style.cssText=`width:${(mA/total5)*50}%;margin-left:50%;background:var(--blue);`; momText.textContent=`${awayName()} leading momentum`; momText.className='momentum-lead lead-away'; }
   else { momFill.style.cssText=`width:2px;margin-left:calc(50% - 1px);background:var(--muted);`; momText.textContent='Evenly balanced'; momText.className='momentum-lead lead-draw'; }
- 
+
   // ── ATTACK BARS ──
   const hFP=Object.values(state.shots.home.play).reduce((a,b)=>a+b,0);
   const aFP=Object.values(state.shots.away.play).reduce((a,b)=>a+b,0);
@@ -2305,7 +2305,7 @@ function renderTrends() {
     ['Goals',state.home.goals,state.away.goals],['Points',state.home.points,state.away.points],
     ['Scoring Eff.',(hFP+hFF)?Math.round(total('home')/((hFP+hFF)*3)*100):0,(aFP+aFF)?Math.round(total('away')/((aFP+aFF)*3)*100):0,'%'],
   ]);
- 
+
   // ── POSSESSION BARS ──
   const hBL=Object.values(state.ballLost.home).reduce((a,b)=>a+b,0);
   const aBL=Object.values(state.ballLost.away).reduce((a,b)=>a+b,0);
@@ -2320,7 +2320,7 @@ function renderTrends() {
     ['Handling Err.',state.ballLost.home.handling,state.ballLost.away.handling],
     ['Over Carrying',state.ballLost.home.overCarrying,state.ballLost.away.overCarrying],
   ]);
- 
+
   // ── KICKOUT BARS ──
   const hKO=Object.values(state.kickout.home).reduce((a,b)=>a+b,0);
   const aKO=Object.values(state.kickout.away).reduce((a,b)=>a+b,0);
@@ -2334,7 +2334,7 @@ function renderTrends() {
     ['Short Loss',state.kickout.home.shortLoss,state.kickout.away.shortLoss],
   ]);
 }
- 
+
 function buildBars(rows) {
   return rows.map(([label,h,a,suffix=''])=>{
     const max=Math.max(h,a,1); const hw=Math.round((h/max)*50); const aw=Math.round((a/max)*50);
@@ -2348,7 +2348,7 @@ function buildBars(rows) {
     </div>`;
   }).join('');
 }
- 
+
 function drawSpark(canvasId, homeData, awayData) {
   const canvas=$(canvasId); if(!canvas||!canvas.getContext)return;
   let ctx; try{ctx=canvas.getContext('2d');}catch(e){return;}
@@ -2367,25 +2367,25 @@ function drawSpark(canvasId, homeData, awayData) {
   drawLine(homeData,'rgba(224,48,48,0.8)');
   drawLine(awayData,'rgba(59,130,246,0.8)');
 }
- 
+
 function drawPossTimeline(canvasId, possHistory) {
   const canvas=$(canvasId); if(!canvas||!canvas.getContext)return;
   let ctx; try{ctx=canvas.getContext('2d');}catch(e){return;}
   const W=canvas.offsetWidth||300, H=60;
   canvas.width=W; canvas.height=H;
   ctx.clearRect(0,0,W,H);
- 
+
   // 50% midline
   ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
   ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke(); ctx.setLineDash([]);
- 
+
   if(possHistory.length<2){ 
     // no data — show placeholder text
     ctx.fillStyle='rgba(245,232,232,0.2)'; ctx.font='11px Inter,sans-serif'; ctx.textAlign='center';
     ctx.fillText('Record events to see possession trend', W/2, H/2+4);
     return;
   }
- 
+
   // draw home possession % as a filled area around 50%
   ctx.beginPath();
   possHistory.forEach((hPct,i)=>{
@@ -2396,7 +2396,7 @@ function drawPossTimeline(canvasId, possHistory) {
   // close path along bottom for fill
   ctx.lineTo(W,H/2); ctx.lineTo(0,H/2); ctx.closePath();
   ctx.fillStyle='rgba(224,48,48,0.15)'; ctx.fill();
- 
+
   // home line
   ctx.beginPath(); ctx.strokeStyle='rgba(224,48,48,0.85)'; ctx.lineWidth=2; ctx.lineJoin='round';
   possHistory.forEach((hPct,i)=>{
@@ -2405,7 +2405,7 @@ function drawPossTimeline(canvasId, possHistory) {
     i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   });
   ctx.stroke();
- 
+
   // away (mirror — 100-hPct)
   ctx.beginPath(); ctx.strokeStyle='rgba(59,130,246,0.6)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
   possHistory.forEach((hPct,i)=>{
@@ -2415,14 +2415,14 @@ function drawPossTimeline(canvasId, possHistory) {
     i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   });
   ctx.stroke(); ctx.setLineDash([]);
- 
+
   // labels
   ctx.fillStyle='rgba(224,48,48,0.7)'; ctx.font='bold 9px Oswald,sans-serif'; ctx.textAlign='left';
   ctx.fillText(possHistory[possHistory.length-1]+'%', 4, 12);
   ctx.fillStyle='rgba(59,130,246,0.7)'; ctx.textAlign='right';
   ctx.fillText((100-possHistory[possHistory.length-1])+'%', W-4, H-4);
 }
- 
+
 // ── CLOCK ──────────────────────────────────────────
 const clock={seconds:0,running:false,interval:null};
 function clockTick(){
@@ -2449,7 +2449,7 @@ function renderClock(){
 function clockStart(){ if(clock.running)return; clock.running=true; clock.interval=setInterval(clockTick,1000); $('clock-start-btn').style.display='none'; $('clock-pause-btn').style.display=''; renderClock(); }
 function clockPause(){ if(!clock.running)return; clock.running=false; clearInterval(clock.interval); $('clock-start-btn').style.display=''; $('clock-pause-btn').style.display='none'; const m=Math.floor(clock.seconds/60); if(m>=1)$('current-min').value=Math.min(80,m); renderClock(); }
 function clockReset(){ clockPause(); clock.seconds=0; renderClock(); }
- 
+
 // ── EXPORT ─────────────────────────────────────────
 function exportSummary(){
   const h=homeName(),a=awayName();
@@ -2460,7 +2460,7 @@ function exportSummary(){
   state.events.slice().reverse().forEach(e=>{const td=e.team==='home'?h:a;const desc=e.type==='shot'?`${e.outcome.toUpperCase()}(${e.shotMode})`:catLabels[e.type]?`${catLabels[e.type]}: ${e.outcomeLabel}`:e.type.toUpperCase();txt+=`${e.min}' ${desc} — ${td} H${e.half}\n`;});
   navigator.clipboard.writeText(txt).then(()=>{const btn=$('copy-btn');btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy Summary',2000);});
 }
- 
+
 // ── RESET ──────────────────────────────────────────
 function resetMatch(){
   if(!confirm('Reset all match data?'))return;
@@ -2473,19 +2473,19 @@ function resetMatch(){
   setHalf(1); $('current-min').value=1; clockReset();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
- 
+
 // ── HISTORY ────────────────────────────────────────
 const HISTORY_KEY = 'gaa_match_history';
- 
+
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
   catch(e) { return []; }
 }
- 
+
 function saveHistory(list) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch(e){}
 }
- 
+
 function saveMatchToHistory() {
   const h = homeName(), a = awayName();
   const hT = total('home'), aT = total('away');
@@ -2500,7 +2500,7 @@ function saveMatchToHistory() {
   const hBW = Object.values(state.ballWon.home).reduce((x,y)=>x+y,0);
   const aBW = Object.values(state.ballWon.away).reduce((x,y)=>x+y,0);
   const poss = calcPossession();
- 
+
   const record = {
     id: Date.now(),
     savedAt: new Date().toISOString(),
@@ -2522,15 +2522,15 @@ function saveMatchToHistory() {
     events: state.events.slice(),
     players: state.players.slice()
   };
- 
+
   const list = loadHistory();
   list.unshift(record);
   saveHistory(list);
- 
+
   const btn = document.querySelector('.btn-save-match');
   if (btn) { btn.textContent = '✓ Saved!'; setTimeout(()=>btn.textContent='Save Match', 2000); }
 }
- 
+
 function renderHistory() {
   const list = loadHistory();
   const container = $('history-list');
@@ -2593,14 +2593,14 @@ function renderHistory() {
     </div>`;
   }).join('');
 }
- 
+
 function deleteMatch(id) {
   if (!confirm('Delete this match from history?')) return;
   const list = loadHistory().filter(m => m.id !== id);
   saveHistory(list);
   renderHistory();
 }
- 
+
 function openDetailModal(id) {
   const m = loadHistory().find(m => m.id === id);
   if (!m) return;
@@ -2608,10 +2608,10 @@ function openDetailModal(id) {
   const aT = m.awayGoals*3 + m.awayPoints;
   const d = new Date(m.savedAt);
   const dateStr = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
- 
+
   $('detail-title').textContent = `${m.home} v ${m.away}`;
   $('detail-sub').textContent = `${m.competition}${m.venue?' · '+m.venue:''} · ${dateStr}`;
- 
+
   const sec = label => `<div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)">${label}</div>`;
   const row = (label, hv, av) => {
     const hw = parseFloat(hv) > parseFloat(av), aw = parseFloat(av) > parseFloat(hv);
@@ -2621,7 +2621,7 @@ function openDetailModal(id) {
       <span style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-align:center;color:${aw?'var(--gold)':'var(--cream)'}">${av}</span>
     </div>`;
   };
- 
+
   const hS = m.homeGoals + m.homePoints, aS = m.awayGoals + m.awayPoints;
   const hAcc = hS ? Math.round((hT/(hS*3))*100) : 0;
   const aAcc = aS ? Math.round((aT/(aS*3))*100) : 0;
@@ -2629,14 +2629,14 @@ function openDetailModal(id) {
   const aBL = m.ballLost ? Object.values(m.ballLost.away).reduce((a,b)=>a+b,0) : 0;
   const hKO = m.kickout ? Object.values(m.kickout.home).reduce((a,b)=>a+b,0) : 0;
   const aKO = m.kickout ? Object.values(m.kickout.away).reduce((a,b)=>a+b,0) : 0;
- 
+
   let html = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
       <span></span>
       <span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;text-align:center">${m.home}</span>
       <span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:#7ab8ee;text-transform:uppercase;text-align:center">${m.away}</span>
     </div>`;
- 
+
   html += sec('⚽ Scoring');
   html += row('Goals', m.homeGoals, m.awayGoals);
   html += row('Points', m.homePoints, m.awayPoints);
@@ -2644,7 +2644,7 @@ function openDetailModal(id) {
   html += row('Scores Taken', hS, aS);
   html += row('Scoring Eff.', hAcc+'%', aAcc+'%');
   html += row('Possession', m.homePoss+'%', m.awayPoss+'%');
- 
+
   if (m.shots) {
     const hFP = Object.values(m.shots.home.play).reduce((a,b)=>a+b,0);
     const aFP = Object.values(m.shots.away.play).reduce((a,b)=>a+b,0);
@@ -2706,24 +2706,24 @@ function openDetailModal(id) {
       </div>`;
     });
   }
- 
+
   $('detail-body').innerHTML = html;
   $('detail-modal').classList.add('open');
 }
- 
+
 function closeDetailModal() {
   $('detail-modal').classList.remove('open');
 }
- 
+
 function loadMatchIntoTracker(id) {
   const m = loadHistory().find(m => m.id === id);
   if (!m) return;
   if (!confirm(`Reload "${m.home} v ${m.away}" into the tracker? Current match data will be replaced.`)) return;
- 
+
   $('home-name').value = m.home;
   $('away-name').value = m.away;
   if (m.venue) $('venue').value = m.venue;
- 
+
   state.home = { goals: m.homeGoals, points: m.homePoints };
   state.away = { goals: m.awayGoals, points: m.awayPoints };
   state.events = m.events || [];
@@ -2734,16 +2734,16 @@ function loadMatchIntoTracker(id) {
   state.kickout = m.kickout ? JSON.parse(JSON.stringify(m.kickout)) : state.kickout;
   state.scoreline = []; state.possHistory = []; state.half = 1;
   clockReset(); $('current-min').value = 1;
- 
+
   updateNames(); updateScoreboard(); renderTimeline(); renderPlayers();
   renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
   closeDetailModal();
- 
+
   // switch to match tab
   const matchBtn = document.querySelector('.nav-btn');
   showPage('match', matchBtn);
 }
- 
+
 // ── TEAM PICKER ────────────────────────────────────
 const CLUBS = [
   // ── COUNTY TEAMS ──────────────────────────────
@@ -2779,7 +2779,7 @@ const CLUBS = [
   {g:"🏆 GAA County Teams", n:"Westmeath", badge:"GAA"},
   {g:"🏆 GAA County Teams", n:"Wexford", badge:"GAA"},
   {g:"🏆 GAA County Teams", n:"Wicklow", badge:"GAA"},
- 
+
   // ── LGFA COUNTY TEAMS ──────────────────────────
   {g:"🏆 LGFA County Teams", n:"Antrim Ladies", badge:"LGFA"},
   {g:"🏆 LGFA County Teams", n:"Armagh Ladies", badge:"LGFA"},
@@ -2812,7 +2812,7 @@ const CLUBS = [
   {g:"🏆 LGFA County Teams", n:"Westmeath Ladies", badge:"LGFA"},
   {g:"🏆 LGFA County Teams", n:"Wexford Ladies", badge:"LGFA"},
   {g:"🏆 LGFA County Teams", n:"Wicklow Ladies", badge:"LGFA"},
- 
+
   // ── CONNACHT ──────────────────────────────────
   {g:"🟢 Connacht — Galway", n:"Annaghdown", badge:"GAA"},
   {g:"🟢 Connacht — Galway", n:"Athenry", badge:"GAA"},
@@ -2907,7 +2907,7 @@ const CLUBS = [
   {g:"🟢 Connacht — Leitrim", n:"Leitrim Gaels", badge:"GAA"},
   {g:"🟢 Connacht — Leitrim", n:"Mohill", badge:"GAA"},
   {g:"🟢 Connacht — Leitrim", n:"St Mary's Kiltoghert", badge:"GAA"},
- 
+
   // ── MUNSTER ───────────────────────────────────
   {g:"🔴 Munster — Kerry", n:"Austin Stacks", badge:"GAA"},
   {g:"🔴 Munster — Kerry", n:"Ballydonoghue", badge:"GAA"},
@@ -3017,7 +3017,7 @@ const CLUBS = [
   {g:"🔴 Munster — Waterford", n:"Tramore", badge:"GAA"},
   {g:"🔴 Munster — Waterford", n:"Kilrossanty Ladies", badge:"LGFA"},
   {g:"🔴 Munster — Waterford", n:"Rathgormack Ladies", badge:"LGFA"},
- 
+
   // ── LEINSTER ──────────────────────────────────
   {g:"🔵 Leinster — Dublin", n:"Ballyboden St Enda's", badge:"GAA"},
   {g:"🔵 Leinster — Dublin", n:"Castleknock", badge:"GAA"},
@@ -3167,7 +3167,7 @@ const CLUBS = [
   {g:"🔵 Leinster — Longford", n:"Longford Slashers", badge:"GAA"},
   {g:"🔵 Leinster — Longford", n:"Mostrim", badge:"GAA"},
   {g:"🔵 Leinster — Longford", n:"St Brigid's Ladies Longford", badge:"LGFA"},
- 
+
   // ── ULSTER ────────────────────────────────────
   {g:"🟡 Ulster — Tyrone", n:"Ardboe", badge:"GAA"},
   {g:"🟡 Ulster — Tyrone", n:"Carrickmore", badge:"GAA"},
@@ -3347,9 +3347,9 @@ const CLUBS = [
   {g:"🟡 Ulster — Fermanagh", n:"Derrygonnelly Ladies", badge:"LGFA"},
   {g:"🟡 Ulster — Fermanagh", n:"Enniskillen Gaels Ladies", badge:"LGFA"},
 ];
- 
- 
- 
+
+
+
 // ── TEAM SELECT (native - works on all iOS) ────────
 function buildTeamSelects() {
   var groups = {};
@@ -3357,7 +3357,7 @@ function buildTeamSelects() {
     if (!groups[c.g]) groups[c.g] = [];
     groups[c.g].push(c);
   });
- 
+
   var teamIds = [['home-select','home'],['away-select','away']];
   teamIds.forEach(function(pair) {
     var id = pair[0];
@@ -3383,7 +3383,7 @@ function buildTeamSelects() {
     });
   });
 }
- 
+
 function onTeamSelect(team, value) {
   if (!value) return;
   $(team + '-name').value = value;
@@ -3393,13 +3393,13 @@ function onTeamSelect(team, value) {
   if (el) el.textContent = value;
   updateNames();
 }
- 
+
 // Keep old picker functions as no-ops for safety
 function openPicker() {}
 function closePicker() {}
 function selectTeam() {}
 function filterPicker() {}
- 
+
 // ── INIT ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   try { updateNames(); } catch(e) {}
@@ -3414,14 +3414,14 @@ document.addEventListener('DOMContentLoaded', function() {
   try { renderHistory(); } catch(e) {}
   try { buildTeamSelects(); } catch(e) {}
 });
- 
+
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
- 
+
 // ── PWA: INSTALL PROMPT ────────────────────────────
 let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
@@ -3429,7 +3429,7 @@ window.addEventListener('beforeinstallprompt', e => {
   deferredInstallPrompt = e;
   showInstallBanner();
 });
- 
+
 function showInstallBanner() {
   if ($('install-banner')) return;
   const banner = document.createElement('div');
@@ -3451,7 +3451,7 @@ function showInstallBanner() {
     </div>`;
   document.body.appendChild(banner);
 }
- 
+
 function installApp() {
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
@@ -3460,12 +3460,12 @@ function installApp() {
     dismissInstall();
   });
 }
- 
+
 function dismissInstall() {
   const b = $('install-banner');
   if (b) b.remove();
 }
- 
+
 window.addEventListener('appinstalled', () => {
   dismissInstall();
   deferredInstallPrompt = null;
@@ -3473,4 +3473,3 @@ window.addEventListener('appinstalled', () => {
 </script>
 </body>
 </html>
- 
