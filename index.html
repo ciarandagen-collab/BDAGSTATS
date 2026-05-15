@@ -914,7 +914,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <select class="team-select" id="home-select" onchange="onTeamSelect('home',this.value)">
+              <select class="team-select" id="home-select">
                 <option value="">Select Home Team</option>
               </select>
               <input type="hidden" id="home-name" value="">
@@ -924,7 +924,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <select class="team-select" id="away-select" onchange="onTeamSelect('away',this.value)">
+              <select class="team-select" id="away-select">
                 <option value="">Select Away Team</option>
               </select>
               <input type="hidden" id="away-name" value="">
@@ -3045,28 +3045,34 @@ const CLUBS = [
 
 // ── TEAM SELECT (native - works on all iOS) ────────
 function buildTeamSelects() {
-  const groups = {};
-  CLUBS.forEach(c => {
+  var groups = {};
+  CLUBS.forEach(function(c) {
     if (!groups[c.g]) groups[c.g] = [];
     groups[c.g].push(c);
   });
 
-  ['home-select','away-select'].forEach(function(id) {
-    const sel = $(id);
+  var teamIds = [['home-select','home'],['away-select','away']];
+  teamIds.forEach(function(pair) {
+    var id = pair[0];
+    var team = pair[1];
+    var sel = $(id);
     if (!sel) return;
-    const isHome = id === 'home-select';
-    sel.innerHTML = `<option value="">Select ${isHome ? 'Home' : 'Away'} Team</option>`;
+    sel.innerHTML = '<option value="">Select ' + (team === 'home' ? 'Home' : 'Away') + ' Team</option>';
     Object.keys(groups).forEach(function(group) {
       var clubs = groups[group];
-      const og = document.createElement('optgroup');
+      var og = document.createElement('optgroup');
       og.label = group;
       clubs.forEach(function(c) {
-        const opt = document.createElement('option');
+        var opt = document.createElement('option');
         opt.value = c.n;
         opt.textContent = c.n + ' (' + c.badge + ')';
         og.appendChild(opt);
       });
       sel.appendChild(og);
+    });
+    // Wire up change event here — no inline onchange needed
+    sel.addEventListener('change', function() {
+      onTeamSelect(team, this.value);
     });
   });
 }
