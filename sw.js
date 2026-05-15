@@ -1,7 +1,7 @@
 // GAA Match Stats — Service Worker
 // Caches the app shell so it works fully offline at the pitch
 
-const CACHE_NAME = 'gaa-stats-v1';
+const CACHE_NAME = 'gaa-stats-v3';
 
 // Files to cache on install
 const PRECACHE_URLS = [
