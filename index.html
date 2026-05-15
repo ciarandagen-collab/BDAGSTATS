@@ -982,9 +982,8 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <select class="team-select" id="home-select">
-                <option value="">Select Home Team</option>
-              </select>
+              <button class="team-picker-input" id="home-name-display">Select Home Team</button>
+              <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="home-name" value="">
             </div>
           </div>
@@ -992,9 +991,8 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <select class="team-select" id="away-select">
-                <option value="">Select Away Team</option>
-              </select>
+              <button class="team-picker-input" id="away-name-display">Select Away Team</button>
+              <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="away-name" value="">
             </div>
           </div>
@@ -1613,7 +1611,10 @@ select option { background:#1a0505; }
     <div class="picker-header">
       <div class="picker-handle"></div>
       <div class="picker-title" id="picker-title">Select Team</div>
-      <input class="picker-search" id="picker-search" type="text" placeholder="Search clubs or counties..." oninput="filterPicker(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="picker-search" id="picker-search" type="search" placeholder="Search or type a team name..." oninput="filterPicker(this.value)" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" style="flex:1">
+        <button onclick="addCustomTeamFromPicker()" style="background:var(--red);border:none;border-radius:8px;padding:10px 12px;color:#fff;font-family:Oswald,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;white-space:nowrap;cursor:pointer;flex-shrink:0">+ Add New</button>
+      </div>
     </div>
     <div class="picker-list" id="picker-list"></div>
     <button class="picker-close-btn" onclick="closePicker()">Cancel</button>
@@ -3350,55 +3351,214 @@ const CLUBS = [
 
 
 
-// ── TEAM SELECT (native - works on all iOS) ────────
-function buildTeamSelects() {
-  var groups = {};
-  CLUBS.forEach(function(c) {
-    if (!groups[c.g]) groups[c.g] = [];
-    groups[c.g].push(c);
+// ── TEAM PICKER ────────────────────────────────────
+var CUSTOM_TEAMS_KEY = 'gaa_custom_teams';
+var pickerTarget = null;
+
+function loadCustomTeams() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_TEAMS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveCustomTeams(teams) {
+  try { localStorage.setItem(CUSTOM_TEAMS_KEY, JSON.stringify(teams)); } catch(e) {}
+}
+
+function getAllClubs() {
+  var custom = loadCustomTeams();
+  var all = CLUBS.slice();
+  custom.forEach(function(n) {
+    all.push({g:'⭐ My Custom Teams', n:n, badge:'CUSTOM'});
+  });
+  return all;
+}
+
+function openPicker(team) {
+  pickerTarget = team;
+  var title = $('picker-title');
+  var search = $('picker-search');
+  var overlay = $('team-picker-overlay');
+  if (!overlay) return;
+  if (title) title.textContent = team === 'home' ? 'Select Home Team' : 'Select Away Team';
+  if (search) search.value = '';
+  filterPicker('');
+  overlay.classList.add('open');
+  // Focus search after sheet animates in
+  setTimeout(function() { if (search) search.focus(); }, 350);
+}
+
+function closePicker() {
+  var overlay = $('team-picker-overlay');
+  if (overlay) overlay.classList.remove('open');
+  pickerTarget = null;
+}
+
+function selectTeam(name) {
+  if (!pickerTarget || !name) return;
+  $(pickerTarget + '-name').value = name;
+  var display = $(pickerTarget + '-name-display');
+  if (display) display.textContent = name;
+  updateNames();
+  closePicker();
+}
+
+function addCustomTeamFromPicker() {
+  var search = $('picker-search');
+  var query = search ? search.value.trim() : '';
+  var name = prompt('Enter team name:' + (query ? '\n\nSuggestion: ' + query : ''), query || '');
+  if (!name || !name.trim()) return;
+  name = name.trim();
+  var customs = loadCustomTeams();
+  if (customs.indexOf(name) === -1) {
+    customs.unshift(name);
+    saveCustomTeams(customs);
+  }
+  selectTeam(name);
+}
+
+function filterPicker(query) {
+  var list = $('picker-list');
+  if (!list) return;
+  var q = query.toLowerCase().trim();
+  var allClubs = getAllClubs();
+
+  // Custom "use this text" row when typing
+  var customRow = q ? '<div class="picker-item" style="border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(224,48,48,0.06)" data-name="' + query.replace(/"/g,'&quot;') + '">' +
+    '<span style="flex:1;font-style:italic;color:var(--muted)">Use <strong style="color:var(--cream)">' + query + '</strong></span>' +
+    '<span class="picker-item-badge" style="color:var(--gold)">CUSTOM</span></div>' : '';
+
+  if (!q) {
+    // No search — show all grouped normally
+    var groups = {};
+    allClubs.forEach(function(c) {
+      if (!groups[c.g]) groups[c.g] = [];
+      groups[c.g].push(c);
+    });
+    var html = '';
+    Object.keys(groups).forEach(function(group) {
+      html += '<div class="picker-group-label">' + group + '</div>';
+      groups[group].forEach(function(c) {
+        html += pickerItemHTML(c);
+      });
+    });
+    list.innerHTML = html;
+    return;
+  }
+
+  // Search — check if query matches a county name
+  // Extract county from group label e.g. "🔴 Munster — Kerry" -> "Kerry"
+  var countyMatch = null;
+  var countyGroups = {};
+  allClubs.forEach(function(c) {
+    // Check if query matches the county part of the group (last word after —)
+    var groupParts = c.g.split('—');
+    var county = groupParts.length > 1 ? groupParts[groupParts.length-1].trim() : '';
+    // Also check if the club name matches the county (for county teams group)
+    if (county && county.toLowerCase().indexOf(q) !== -1) {
+      if (!countyGroups[county]) countyGroups[county] = [];
+      countyGroups[county].push(c);
+    }
   });
 
-  var teamIds = [['home-select','home'],['away-select','away']];
-  teamIds.forEach(function(pair) {
-    var id = pair[0];
-    var team = pair[1];
-    var sel = $(id);
-    if (!sel) return;
-    sel.innerHTML = '<option value="">Select ' + (team === 'home' ? 'Home' : 'Away') + ' Team</option>';
-    Object.keys(groups).forEach(function(group) {
-      var clubs = groups[group];
-      var og = document.createElement('optgroup');
-      og.label = group;
-      clubs.forEach(function(c) {
-        var opt = document.createElement('option');
-        opt.value = c.n;
-        opt.textContent = c.n + ' (' + c.badge + ')';
-        og.appendChild(opt);
-      });
-      sel.appendChild(og);
-    });
-    // Wire up change event here — no inline onchange needed
-    sel.addEventListener('change', function() {
-      onTeamSelect(team, this.value);
-    });
+  // Also do plain text search
+  var textMatches = allClubs.filter(function(c) {
+    return c.n.toLowerCase().indexOf(q) !== -1;
   });
+
+  // If county matches found, show county team first then all county clubs
+  var html = customRow;
+
+  if (Object.keys(countyGroups).length > 0) {
+    Object.keys(countyGroups).forEach(function(county) {
+      var clubs = countyGroups[county];
+      // Sort: county/inter-county teams first, then clubs alphabetically
+      clubs.sort(function(a, b) {
+        var aIsCounty = a.g.indexOf('County Teams') !== -1;
+        var bIsCounty = b.g.indexOf('County Teams') !== -1;
+        if (aIsCounty && !bIsCounty) return -1;
+        if (!aIsCounty && bIsCounty) return 1;
+        return a.n.localeCompare(b.n);
+      });
+      html += '<div class="picker-group-label">📍 ' + county + ' — ' + clubs.length + ' teams</div>';
+      clubs.forEach(function(c) { html += pickerItemHTML(c); });
+    });
+  }
+
+  // Add any text matches not already shown via county groups
+  var shownNames = {};
+  if (Object.keys(countyGroups).length > 0) {
+    Object.keys(countyGroups).forEach(function(county) {
+      countyGroups[county].forEach(function(c) { shownNames[c.n] = true; });
+    });
+  }
+  var extraMatches = textMatches.filter(function(c) { return !shownNames[c.n]; });
+  if (extraMatches.length > 0) {
+    if (Object.keys(countyGroups).length > 0) {
+      html += '<div class="picker-group-label">🔍 Other matches</div>';
+    }
+    extraMatches.forEach(function(c) { html += pickerItemHTML(c); });
+  }
+
+  if (!Object.keys(countyGroups).length && !extraMatches.length) {
+    html += '<div class="picker-empty">No clubs found — tap "+ Add New" or use the entry above</div>';
+  }
+
+  list.innerHTML = html;
+}
+
+function pickerItemHTML(c) {
+  var escaped = c.n.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  var badgeColor = c.badge === 'LGFA' ? 'color:#a78bfa' : c.badge === 'CUSTOM' ? 'color:var(--gold)' : 'color:var(--red-light)';
+  return '<div class="picker-item" data-name="' + escaped + '">' +
+    '<span>' + c.n + '</span>' +
+    '<span class="picker-item-badge" style="' + badgeColor + '">' + c.badge + '</span>' +
+    '</div>';
+}
+
+function buildTeamSelects() {
+  // Wire up the trigger buttons
+  var pairs = [['home-name-display','home'],['away-name-display','away']];
+  pairs.forEach(function(pair) {
+    var btn = $(pair[0]);
+    var team = pair[1];
+    if (!btn) return;
+    btn.addEventListener('click', function(e) { e.preventDefault(); openPicker(team); });
+    btn.addEventListener('touchend', function(e) { e.preventDefault(); openPicker(team); });
+  });
+
+  // Wire up picker list clicks via event delegation
+  var list = $('picker-list');
+  if (list) {
+    function handlePick(e) {
+      var item = e.target;
+      // Walk up to find data-name
+      while (item && item !== list) {
+        if (item.getAttribute && item.getAttribute('data-name')) {
+          e.preventDefault();
+          selectTeam(item.getAttribute('data-name'));
+          return;
+        }
+        item = item.parentElement;
+      }
+    }
+    list.addEventListener('click', handlePick);
+    list.addEventListener('touchend', handlePick);
+  }
+
+  // Close on overlay tap
+  var overlay = $('team-picker-overlay');
+  if (overlay) {
+    overlay.addEventListener('touchend', function(e) {
+      if (e.target === overlay) { e.preventDefault(); closePicker(); }
+    });
+  }
 }
 
 function onTeamSelect(team, value) {
   if (!value) return;
   $(team + '-name').value = value;
-  // Update display labels
-  const displayId = team + '-name-display';
-  const el = $(displayId);
+  var el = $(team + '-name-display');
   if (el) el.textContent = value;
   updateNames();
 }
-
-// Keep old picker functions as no-ops for safety
-function openPicker() {}
-function closePicker() {}
-function selectTeam() {}
-function filterPicker() {}
 
 // ── INIT ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
