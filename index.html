@@ -947,6 +947,32 @@ select option { background:#1a0505; }
 .team-select:focus { outline: none; border-color: var(--red); }
 .team-select option { background: #1a0505; color: #f5e8e8; font-weight: normal; }
 .team-select optgroup { background: #0d0000; color: #e03030; }
+
+/* ── TEAM SHEET ── */
+.teamsheet-actions { display:flex; gap:10px; margin-bottom:14px; }
+.btn-print-sheet, .btn-share-sheet { flex:1; padding:12px; border-radius:10px; border:none; cursor:pointer; font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+.btn-print-sheet { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; }
+.btn-share-sheet { background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--cream); }
+.teamsheet-wrap { background:#1a6b2f; border-radius:14px; overflow:hidden; padding:12px; position:relative; }
+.ts-header { text-align:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.15); }
+.ts-team-name { font-family:'Oswald',sans-serif; font-size:clamp(16px,5vw,24px); font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:2px; }
+.ts-match-info { font-size:11px; color:rgba(255,255,255,0.6); margin-top:3px; font-style:italic; }
+.ts-pitch { background:#1a6b2f; border:2px solid rgba(255,255,255,0.3); border-radius:8px; position:relative; padding:8px 4px; margin-bottom:10px; }
+.ts-pitch::before { content:''; position:absolute; top:50%; left:10%; right:10%; height:1px; background:rgba(255,255,255,0.2); }
+.ts-pitch::after { content:''; position:absolute; top:50%; left:50%; width:60px; height:60px; border:1px solid rgba(255,255,255,0.2); border-radius:50%; transform:translate(-50%,-50%); }
+.ts-row { display:flex; justify-content:center; gap:6px; margin-bottom:8px; position:relative; z-index:1; }
+.ts-player { display:flex; flex-direction:column; align-items:center; min-width:52px; max-width:70px; }
+.ts-player-circle { width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:#fff; margin-bottom:3px; flex-shrink:0; }
+.ts-player-circle.filled { background:rgba(255,255,255,0.25); border-color:#fff; }
+.ts-player-name { font-family:'Oswald',sans-serif; font-size:8px; color:rgba(255,255,255,0.9); text-align:center; text-transform:uppercase; letter-spacing:0.5px; line-height:1.2; max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ts-player-pos { font-size:7px; color:rgba(255,255,255,0.5); text-align:center; text-transform:uppercase; }
+.ts-subs-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase; text-align:center; margin:6px 0 8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.15); }
+.ts-subs-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; padding:0 4px; }
+.ts-sub-item { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.ts-sub-circle { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; color:rgba(255,255,255,0.8); }
+.ts-sub-circle.filled { background:rgba(255,255,255,0.2); border-color:rgba(255,255,255,0.6); color:#fff; }
+.ts-sub-name { font-family:'Oswald',sans-serif; font-size:7px; color:rgba(255,255,255,0.7); text-align:center; text-transform:uppercase; max-width:48px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.2; }
+@media print { body > *:not(#print-frame) { display:none !important; } #print-frame { display:block !important; position:fixed; inset:0; z-index:99999; } @page { margin:10mm; size:A4 portrait; } }
 </style>
 <body>
 
@@ -1481,6 +1507,7 @@ select option { background:#1a0505; }
       <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 My Squad</button>
       <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Player Stats</button>
       <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
+      <button class="squad-sub-btn" id="squad-tab-print" onclick="switchSquadTab('print',this)">🖨️ Team Sheet</button>
     </div>
 
     <!-- SQUAD LIST -->
@@ -1504,6 +1531,18 @@ select option { background:#1a0505; }
             <div class="empty-note">No events yet</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- TEAM SHEET / PRINT -->
+    <div id="squad-view-print" style="display:none">
+      <div class="sec-label">Team Sheet</div>
+      <div class="teamsheet-actions">
+        <button class="btn-print-sheet" onclick="printTeamSheet()">🖨️ Print / Save PDF</button>
+        <button class="btn-share-sheet" onclick="shareTeamSheet()">📤 Share</button>
+      </div>
+      <div id="teamsheet-preview" class="teamsheet-wrap">
+        <!-- rendered by JS -->
       </div>
     </div>
 
@@ -1958,7 +1997,181 @@ function setHalf(h) {
   $('h2-btn').classList.toggle('active',h===2);
 }
 
-// ── SQUAD ──────────────────────────────────────────
+// ── TEAM SHEET ─────────────────────────────────────
+function switchSquadTab(tab, btn) {
+  var tabs = ['squad','stats','timeline','print'];
+  tabs.forEach(function(t) {
+    var view = document.getElementById('squad-view-' + t);
+    var tabBtn = document.getElementById('squad-tab-' + t);
+    if (view) view.style.display = t === tab ? '' : 'none';
+    if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'stats') renderPlayerStats();
+  if (tab === 'print') renderTeamSheet();
+}
+
+function playerSlot(num) {
+  // num is 1-based shirt number
+  var p = squad[num - 1];
+  var filled = p && p.name;
+  return '<div class="ts-player">' +
+    '<div class="ts-player-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
+    '<div class="ts-player-name">' + (filled ? p.name : '') + '</div>' +
+    '<div class="ts-player-pos">' + (filled && p.pos ? p.pos : '') + '</div>' +
+    '</div>';
+}
+
+function subSlot(num) {
+  var p = squad[num - 1];
+  var filled = p && p.name;
+  return '<div class="ts-sub-item">' +
+    '<div class="ts-sub-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
+    '<div class="ts-sub-name">' + (filled ? p.name : '') + '</div>' +
+    '</div>';
+}
+
+function renderTeamSheet() {
+  var preview = document.getElementById('teamsheet-preview');
+  if (!preview) return;
+
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
+  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
+  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
+
+  var html =
+    '<div class="ts-header">' +
+      '<div class="ts-team-name">' + teamName + '</div>' +
+      (matchInfo ? '<div class="ts-match-info">' + matchInfo + '</div>' : '') +
+    '</div>' +
+    '<div class="ts-pitch">' +
+      // GK - 1
+      '<div class="ts-row">' + playerSlot(1) + '</div>' +
+      // Full backs - 2, 3, 4
+      '<div class="ts-row">' + playerSlot(2) + playerSlot(3) + playerSlot(4) + '</div>' +
+      // Half backs - 5, 6, 7
+      '<div class="ts-row">' + playerSlot(5) + playerSlot(6) + playerSlot(7) + '</div>' +
+      // Midfield - 8, 9
+      '<div class="ts-row">' + playerSlot(8) + playerSlot(9) + '</div>' +
+      // Half forwards - 10, 11, 12
+      '<div class="ts-row">' + playerSlot(10) + playerSlot(11) + playerSlot(12) + '</div>' +
+      // Full forwards - 13, 14, 15
+      '<div class="ts-row">' + playerSlot(13) + playerSlot(14) + playerSlot(15) + '</div>' +
+    '</div>' +
+    '<div class="ts-subs-label">Substitutes</div>' +
+    '<div class="ts-subs-grid">';
+
+  for (var i = 16; i <= 34; i++) {
+    html += subSlot(i);
+  }
+  html += '</div>';
+
+  preview.innerHTML = html;
+}
+
+function printTeamSheet() {
+  renderTeamSheet();
+  var preview = document.getElementById('teamsheet-preview');
+  if (!preview) return;
+
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
+  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
+  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
+
+  // Build printable page
+  var printWin = window.open('', '_blank');
+  if (!printWin) {
+    alert('Please allow popups to print the team sheet');
+    return;
+  }
+
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">');
+  printWin.document.write('<title>' + teamName + ' — Team Sheet</title>');
+  printWin.document.write('<style>');
+  printWin.document.write('* { margin:0; padding:0; box-sizing:border-box; }');
+  printWin.document.write('body { background:#1a6b2f; font-family:Arial,sans-serif; padding:12px; min-height:100vh; }');
+  printWin.document.write('.ts-header { text-align:center; margin-bottom:12px; padding-bottom:10px; border-bottom:2px solid rgba(255,255,255,0.3); }');
+  printWin.document.write('.ts-team-name { font-size:28px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:3px; }');
+  printWin.document.write('.ts-match-info { font-size:12px; color:rgba(255,255,255,0.65); margin-top:4px; font-style:italic; }');
+  printWin.document.write('.ts-pitch { border:2px solid rgba(255,255,255,0.4); border-radius:8px; padding:10px 6px; position:relative; margin-bottom:12px; }');
+  printWin.document.write('.ts-row { display:flex; justify-content:center; gap:8px; margin-bottom:10px; }');
+  printWin.document.write('.ts-player { display:flex; flex-direction:column; align-items:center; width:64px; }');
+  printWin.document.write('.ts-player-circle { width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:900; color:#fff; margin-bottom:3px; }');
+  printWin.document.write('.ts-player-circle.filled { background:rgba(255,255,255,0.28); border-color:#fff; }');
+  printWin.document.write('.ts-player-name { font-size:8px; color:#fff; text-align:center; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; line-height:1.2; }');
+  printWin.document.write('.ts-player-pos { font-size:7px; color:rgba(255,255,255,0.55); text-align:center; text-transform:uppercase; margin-top:1px; }');
+  printWin.document.write('.ts-subs-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.55); text-transform:uppercase; text-align:center; margin:8px 0; padding-top:8px; border-top:1px solid rgba(255,255,255,0.2); }');
+  printWin.document.write('.ts-subs-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:0 4px; }');
+  printWin.document.write('.ts-sub-item { display:flex; flex-direction:column; align-items:center; gap:3px; }');
+  printWin.document.write('.ts-sub-circle { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.75); }');
+  printWin.document.write('.ts-sub-circle.filled { background:rgba(255,255,255,0.22); border-color:rgba(255,255,255,0.7); color:#fff; }');
+  printWin.document.write('.ts-sub-name { font-size:7px; color:rgba(255,255,255,0.75); text-align:center; text-transform:uppercase; max-width:54px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }');
+  printWin.document.write('@media print { @page { margin:8mm; size:A4 portrait; } body { padding:0; } }');
+  printWin.document.write('</style></head><body>');
+
+  // Header
+  printWin.document.write('<div class="ts-header"><div class="ts-team-name">' + teamName + '</div>');
+  if (matchInfo) printWin.document.write('<div class="ts-match-info">' + matchInfo + '</div>');
+  printWin.document.write('</div>');
+
+  // Pitch
+  function pSlot(num) {
+    var p = squad[num-1]; var filled = p && p.name;
+    return '<div class="ts-player"><div class="ts-player-circle' + (filled?' filled':'') + '">' + num + '</div>' +
+      '<div class="ts-player-name">' + (filled?p.name:'') + '</div>' +
+      '<div class="ts-player-pos">' + (filled&&p.pos?p.pos:'') + '</div></div>';
+  }
+  function sSlot(num) {
+    var p = squad[num-1]; var filled = p && p.name;
+    return '<div class="ts-sub-item"><div class="ts-sub-circle' + (filled?' filled':'') + '">' + num + '</div>' +
+      '<div class="ts-sub-name">' + (filled?p.name:'') + '</div></div>';
+  }
+
+  printWin.document.write('<div class="ts-pitch">');
+  printWin.document.write('<div class="ts-row">' + pSlot(1) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(2) + pSlot(3) + pSlot(4) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(5) + pSlot(6) + pSlot(7) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(8) + pSlot(9) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(10) + pSlot(11) + pSlot(12) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(13) + pSlot(14) + pSlot(15) + '</div>');
+  printWin.document.write('</div>');
+  printWin.document.write('<div class="ts-subs-label">Substitutes</div>');
+  printWin.document.write('<div class="ts-subs-grid">');
+  for (var i = 16; i <= 34; i++) { printWin.document.write(sSlot(i)); }
+  printWin.document.write('</div>');
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+
+  setTimeout(function() { printWin.focus(); printWin.print(); }, 500);
+}
+
+function shareTeamSheet() {
+  renderTeamSheet();
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var lines = [teamName + ' — Team Sheet', ''];
+  lines.push('STARTING 15:');
+  for (var i = 1; i <= 15; i++) {
+    var p = squad[i-1];
+    lines.push(i + '. ' + (p && p.name ? p.name + (p.pos ? ' (' + p.pos + ')' : '') : '—'));
+  }
+  lines.push('');
+  lines.push('SUBS:');
+  for (var j = 16; j <= 34; j++) {
+    var s = squad[j-1];
+    if (s && s.name) lines.push(j + '. ' + s.name);
+  }
+  var text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: teamName + ' Team Sheet', text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert('Team sheet copied to clipboard!');
+    });
+  } else {
+    alert(text);
+  }
+}
 const SQUAD_KEY = 'gaa_squad';
 const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
 
@@ -2061,17 +2274,6 @@ function clearPlayerSlot() {
 function closePlayerEdit() {
   document.getElementById('player-edit-modal').classList.remove('open');
   editingSlot = null;
-}
-
-function switchSquadTab(tab, btn) {
-  var tabs = ['squad','stats','timeline'];
-  tabs.forEach(function(t) {
-    var view = document.getElementById('squad-view-' + t);
-    var tabBtn = document.getElementById('squad-tab-' + t);
-    if (view) view.style.display = t === tab ? '' : 'none';
-    if (tabBtn) { tabBtn.classList.toggle('active', t === tab); }
-  });
-  if (tab === 'stats') renderPlayerStats();
 }
 
 // ── PLAYER ATTRIBUTION ─────────────────────────────
