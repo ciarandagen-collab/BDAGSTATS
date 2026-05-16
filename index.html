@@ -976,6 +976,70 @@ select option { background:#1a0505; }
 </style>
 <body>
 
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" style="
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:#0d0000;
+  z-index:99999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  font-family:'Oswald',sans-serif;
+">
+  <div style="width:100%;max-width:360px;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:48px;margin-bottom:8px;">🏐</div>
+      <div style="font-size:28px;font-weight:700;color:#e03030;letter-spacing:3px;text-transform:uppercase;">Coach Stats</div>
+      <div style="font-size:11px;color:rgba(245,232,232,0.4);letter-spacing:3px;margin-top:4px;text-transform:uppercase;">GAA Match Statistics</div>
+    </div>
+
+    <!-- Login card -->
+    <div style="
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(224,48,48,0.25);
+      border-radius:16px;
+      padding:28px 24px;
+    ">
+      <div style="font-size:11px;letter-spacing:3px;color:#e03030;text-transform:uppercase;margin-bottom:20px;text-align:center;">Sign In</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Email</div>
+        <input id="login-user" type="email" autocomplete="username" placeholder="Enter your email"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Password</div>
+        <input id="login-pass" type="password" autocomplete="current-password" placeholder="Enter your password"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;"
+          onkeydown="if(event.key==='Enter')attemptLogin()">
+      </div>
+
+      <div id="login-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;letter-spacing:0.5px;">
+        Incorrect email or password. Please try again.
+      </div>
+
+      <button onclick="attemptLogin()" style="
+        width:100%;padding:14px;
+        background:linear-gradient(135deg,#991b1b,#e03030);
+        border:none;border-radius:10px;
+        color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+        cursor:pointer;
+      ">Sign In</button>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:10px;color:rgba(245,232,232,0.2);letter-spacing:1px;">
+      Authorised users only
+    </div>
+  </div>
+</div>
+
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-score">
@@ -4381,8 +4445,54 @@ function onTeamSelect(team, value) {
   updateNames();
 }
 
+// ── LOGIN ──────────────────────────────────────────
+var SESSION_KEY = 'cs_auth';
+
+function checkSession() {
+  try {
+    var s = sessionStorage.getItem(SESSION_KEY);
+    if (s === 'ok') {
+      document.getElementById('login-screen').style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+function attemptLogin() {
+  var u = document.getElementById('login-user').value.trim().toLowerCase();
+  var p = document.getElementById('login-pass').value;
+  var err = document.getElementById('login-error');
+
+  var validUser = 'ciarandagen@icloud.com';
+  var validPass = 'CDwbot22oo83?';
+
+  if (u === validUser && p === validPass) {
+    err.style.display = 'none';
+    try { sessionStorage.setItem(SESSION_KEY, 'ok'); } catch(e) {}
+    var screen = document.getElementById('login-screen');
+    screen.style.opacity = '0';
+    screen.style.transition = 'opacity 0.4s ease';
+    setTimeout(function() { screen.style.display = 'none'; }, 400);
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+    // Shake animation
+    var card = screen ? screen.querySelector('div > div:nth-child(2)') : null;
+    if (!card) return;
+    card.style.transition = 'transform 0.1s';
+    var shakes = ['-8px','8px','-6px','6px','-3px','0px'];
+    var i = 0;
+    var shake = setInterval(function() {
+      card.style.transform = 'translateX(' + shakes[i] + ')';
+      i++;
+      if (i >= shakes.length) { clearInterval(shake); card.style.transform = ''; }
+    }, 60);
+  }
+}
+
 // ── INIT ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  checkSession();
   try { updateNames(); } catch(e) {}
   try { updateScoreboard(); } catch(e) {}
   try { renderTimeline(); } catch(e) {}
