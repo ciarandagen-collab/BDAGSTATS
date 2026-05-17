@@ -2741,6 +2741,252 @@ function resetMatch(){
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
 
+// ── MATCH REPORT GENERATOR ─────────────────────────
+function generateMatchReport(id) {
+  var m = loadHistory().find(function(x){ return x.id === id; });
+  if (!m) return;
+
+  var hT = m.homeGoals*3 + m.homePoints;
+  var aT = m.awayGoals*3 + m.awayPoints;
+  var d = new Date(m.savedAt);
+  var dateStr = d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  var result = hT > aT ? m.home + ' Win' : hT < aT ? m.away + ' Win' : 'Draw';
+  var margin = Math.abs(hT - aT);
+
+  // ── Calculate stats ──
+  var hFP = m.shots ? Object.values(m.shots.home.play).reduce(function(a,b){return a+b;},0) : 0;
+  var aFP = m.shots ? Object.values(m.shots.away.play).reduce(function(a,b){return a+b;},0) : 0;
+  var hFF = m.shots ? Object.values(m.shots.home.free).reduce(function(a,b){return a+b;},0) : 0;
+  var aFF = m.shots ? Object.values(m.shots.away.free).reduce(function(a,b){return a+b;},0) : 0;
+  var hShots = hFP + hFF;
+  var aShots = aFP + aFF;
+  var hScores = m.homeGoals + m.homePoints;
+  var aScores = m.awayGoals + m.awayPoints;
+  var hConv = hShots ? Math.round((hScores/hShots)*100) : 0;
+  var aConv = aShots ? Math.round((aScores/aShots)*100) : 0;
+  var hWides = m.shots ? (m.shots.home.play.wide + m.shots.home.free.wide) : 0;
+  var aWides = m.shots ? (m.shots.away.play.wide + m.shots.away.free.wide) : 0;
+  var hShort = m.shots ? (m.shots.home.play.short + m.shots.home.free.short) : 0;
+  var aShort = m.shots ? (m.shots.away.play.short + m.shots.away.free.short) : 0;
+  var hBlocked = m.shots ? (m.shots.home.play.blocked + m.shots.home.free.blocked) : 0;
+  var aBlocked = m.shots ? (m.shots.away.play.blocked + m.shots.away.free.blocked) : 0;
+  var hBL = m.ballLost ? Object.values(m.ballLost.home).reduce(function(a,b){return a+b;},0) : 0;
+  var aBL = m.ballLost ? Object.values(m.ballLost.away).reduce(function(a,b){return a+b;},0) : 0;
+  var hBW = m.ballWon ? Object.values(m.ballWon.home).reduce(function(a,b){return a+b;},0) : 0;
+  var aBW = m.ballWon ? Object.values(m.ballWon.away).reduce(function(a,b){return a+b;},0) : 0;
+  var hKO = m.kickout ? Object.values(m.kickout.home).reduce(function(a,b){return a+b;},0) : 0;
+  var aKO = m.kickout ? Object.values(m.kickout.away).reduce(function(a,b){return a+b;},0) : 0;
+  var hKOWon = m.kickout ? (m.kickout.home.wonClean + m.kickout.home.breakWon + m.kickout.home.shortWon) : 0;
+  var aKOWon = m.kickout ? (m.kickout.away.wonClean + m.kickout.away.breakWon + m.kickout.away.shortWon) : 0;
+  var hKOPct = hKO ? Math.round((hKOWon/hKO)*100) : 0;
+  var aKOPct = aKO ? Math.round((aKOWon/aKO)*100) : 0;
+
+  // ── HTML helpers ──
+  var RED = '#C0392B';
+  var DARK = '#1a1a1a';
+  var LGRAY = '#f8f8f8';
+  var MGRAY = '#e8e8e8';
+
+  function th(txt, color) {
+    return '<th style="padding:8px 10px;text-align:left;background:' + (color||RED) + ';color:#fff;font-size:12px;letter-spacing:1px;text-transform:uppercase;">' + txt + '</th>';
+  }
+  function td(txt, bold, center, bg) {
+    return '<td style="padding:7px 10px;font-size:13px;' + (bold?'font-weight:700;':'') + (center?'text-align:center;':'') + (bg?'background:'+bg+';':'') + 'border-bottom:1px solid #eee;">' + (txt !== undefined && txt !== null ? txt : '—') + '</td>';
+  }
+  function statRow(label, hv, av) {
+    var hWin = parseFloat(hv) > parseFloat(av);
+    var aWin = parseFloat(av) > parseFloat(hv);
+    return '<tr><td style="padding:7px 10px;font-size:12px;color:#666;border-bottom:1px solid #eee;text-transform:uppercase;letter-spacing:0.5px;">' + label + '</td>' +
+      '<td style="padding:7px 10px;font-size:14px;font-weight:700;text-align:center;border-bottom:1px solid #eee;color:' + (hWin?RED:DARK) + '">' + hv + '</td>' +
+      '<td style="padding:7px 10px;font-size:14px;font-weight:700;text-align:center;border-bottom:1px solid #eee;color:' + (aWin?RED:DARK) + '">' + av + '</td>' +
+      '</tr>';
+  }
+  function section(title) {
+    return '<h2 style="font-size:15px;font-weight:700;color:' + RED + ';text-transform:uppercase;letter-spacing:2px;margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid ' + RED + ';">' + title + '</h2>';
+  }
+  function note(txt) {
+    return '<p style="font-size:12px;color:#555;line-height:1.6;margin:6px 0;padding-left:14px;border-left:3px solid ' + MGRAY + ';">' + txt + '</p>';
+  }
+
+  // ── Build report HTML ──
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+  html += '<title>' + m.home + ' v ' + m.away + ' — Match Report</title>';
+  html += '<style>';
+  html += 'body{font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:0;background:#fff;}';
+  html += '.page{max-width:760px;margin:0 auto;padding:32px 28px;}';
+  html += 'table{width:100%;border-collapse:collapse;margin-bottom:16px;}';
+  html += 'h1,h2,h3{margin:0;}';
+  html += '.cover{background:' + RED + ';color:#fff;padding:32px 28px 28px;margin-bottom:0;}';
+  html += '.cover-title{font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:3px;margin-bottom:4px;}';
+  html += '.cover-sub{font-size:13px;opacity:0.8;letter-spacing:1px;}';
+  html += '.score-block{background:#f0f0f0;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}';
+  html += '.score-team{text-align:center;flex:1;}';
+  html += '.score-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:6px;}';
+  html += '.score-val{font-size:40px;font-weight:900;color:' + DARK + ';line-height:1;}';
+  html += '.score-total{font-size:14px;color:' + RED + ';margin-top:4px;}';
+  html += '.score-vs{font-size:22px;font-weight:900;color:#ccc;padding:0 16px;}';
+  html += '.meta-bar{background:#222;color:#aaa;padding:8px 28px;font-size:11px;letter-spacing:1px;display:flex;gap:24px;}';
+  html += '.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e0e0e0;margin-bottom:20px;}';
+  html += '.kpi-cell{background:#fff;padding:12px 8px;text-align:center;}';
+  html += '.kpi-val{font-size:22px;font-weight:900;color:' + RED + ';}';
+  html += '.kpi-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}';
+  html += '.col-heads th{text-align:center;}';
+  html += '.print-btn{position:fixed;bottom:20px;right:20px;background:' + RED + ';color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);}';
+  html += '@media print{.print-btn{display:none;}@page{margin:12mm;size:A4;}}';
+  html += '</style></head><body>';
+  html += '<button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>';
+
+  // Cover
+  html += '<div class="cover">';
+  html += '<div class="cover-title">Match Analysis Report</div>';
+  html += '<div class="cover-sub">' + m.home + ' v ' + m.away + '&nbsp;&nbsp;|&nbsp;&nbsp;' + (m.competition||'') + '</div>';
+  html += '</div>';
+
+  // Meta bar
+  html += '<div class="meta-bar">';
+  html += '<span>📅 ' + dateStr + '</span>';
+  if (m.venue) html += '<span>📍 ' + m.venue + '</span>';
+  html += '<span>🏆 ' + (m.competition||'') + '</span>';
+  html += '<span>Result: <strong style="color:#fff">' + result + (margin ? ' by ' + margin : '') + '</strong></span>';
+  html += '</div>';
+
+  // Score
+  html += '<div class="score-block">';
+  html += '<div class="score-team"><div class="score-name">' + m.home + '</div>';
+  html += '<div class="score-val">' + m.homeGoals + '-' + String(m.homePoints).padStart(2,'0') + '</div>';
+  html += '<div class="score-total">(' + hT + ' pts)</div></div>';
+  html += '<div class="score-vs">v</div>';
+  html += '<div class="score-team"><div class="score-name">' + m.away + '</div>';
+  html += '<div class="score-val">' + m.awayGoals + '-' + String(m.awayPoints).padStart(2,'0') + '</div>';
+  html += '<div class="score-total">(' + aT + ' pts)</div></div>';
+  html += '</div>';
+
+  html += '<div class="page">';
+
+  // KPIs
+  html += '<div class="kpi-grid">';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + hConv + '%</div><div class="kpi-label">' + m.home + ' Conv.</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + aConv + '%</div><div class="kpi-label">' + m.away + ' Conv.</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + m.homePoss + '%</div><div class="kpi-label">' + m.home + ' Poss.</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + m.awayPoss + '%</div><div class="kpi-label">' + m.away + ' Poss.</div></div>';
+  html += '</div>';
+
+  // 1. Full stats comparison
+  html += section('1. Full Match Statistics');
+  html += '<table><thead><tr class="col-heads">' + th('') + th(m.home, '#333') + th(m.away, '#333') + '</tr></thead><tbody>';
+  html += statRow('Goals', m.homeGoals, m.awayGoals);
+  html += statRow('Points', m.homePoints, m.awayPoints);
+  html += statRow('Total Score', hT, aT);
+  html += statRow('Possession %', m.homePoss+'%', m.awayPoss+'%');
+  html += statRow('Total Shots', hShots, aShots);
+  html += statRow('Shot Conversion', hConv+'%', aConv+'%');
+  html += statRow('Shots from Play', hFP, aFP);
+  html += statRow('Shots from Free', hFF, aFF);
+  html += statRow('Wides', hWides, aWides);
+  html += statRow('Shorts', hShort, aShort);
+  html += statRow('Blocked/Saved', hBlocked, aBlocked);
+  html += statRow('Ball Won', hBW, aBW);
+  html += statRow('Ball Lost', hBL, aBL);
+  html += statRow('Kickout Retention', hKOPct+'%', aKOPct+'%');
+  html += '</tbody></table>';
+
+  // 2. Shooting breakdown
+  if (m.shots) {
+    html += section('2. Shooting Breakdown');
+    html += '<table><thead><tr>' + th('Outcome') + th(m.home) + th(m.home+' %') + th(m.away) + th(m.away+' %') + '</tr></thead><tbody>';
+    var outcomes = [
+      ['Goal (3pt)', m.shots.home.play.goal+m.shots.home.free.goal, m.shots.away.play.goal+m.shots.away.free.goal],
+      ['Point', m.shots.home.play.point+m.shots.home.free.point, m.shots.away.play.point+m.shots.away.free.point],
+      ['Wide', hWides, aWides],
+      ['Short', hShort, aShort],
+      ['Blocked/Saved', hBlocked, aBlocked],
+    ];
+    outcomes.forEach(function(o) {
+      var hp = hShots ? Math.round((o[1]/hShots)*100) : 0;
+      var ap = aShots ? Math.round((o[2]/aShots)*100) : 0;
+      html += '<tr><td style="padding:7px 10px;font-size:13px;border-bottom:1px solid #eee;">' + o[0] + '</td>' +
+        '<td style="padding:7px 10px;font-size:13px;font-weight:700;text-align:center;border-bottom:1px solid #eee;">' + o[1] + '</td>' +
+        '<td style="padding:7px 10px;font-size:12px;text-align:center;color:#888;border-bottom:1px solid #eee;">' + hp + '%</td>' +
+        '<td style="padding:7px 10px;font-size:13px;font-weight:700;text-align:center;border-bottom:1px solid #eee;">' + o[2] + '</td>' +
+        '<td style="padding:7px 10px;font-size:12px;text-align:center;color:#888;border-bottom:1px solid #eee;">' + ap + '%</td>' +
+        '</tr>';
+    });
+    html += '<tr style="background:#f8f8f8;"><td style="padding:7px 10px;font-size:13px;font-weight:700;border-top:2px solid #ddd;">TOTAL</td>' +
+      '<td style="padding:7px 10px;font-size:14px;font-weight:900;text-align:center;border-top:2px solid #ddd;">' + hShots + '</td>' +
+      '<td style="padding:7px 10px;font-size:12px;text-align:center;border-top:2px solid #ddd;color:' + RED + ';font-weight:700;">' + hConv + '%</td>' +
+      '<td style="padding:7px 10px;font-size:14px;font-weight:900;text-align:center;border-top:2px solid #ddd;">' + aShots + '</td>' +
+      '<td style="padding:7px 10px;font-size:12px;text-align:center;border-top:2px solid #ddd;color:' + RED + ';font-weight:700;">' + aConv + '%</td></tr>';
+    html += '</tbody></table>';
+  }
+
+  // 3. Ball Lost breakdown
+  if (m.ballLost) {
+    html += section('3. Ball Lost');
+    html += '<table><thead><tr>' + th('Type') + th(m.home) + th(m.away) + '</tr></thead><tbody>';
+    var blTypes = [['Hand Pass', 'handPass'], ['Kick Pass', 'kickPass'], ['In Contact', 'inContact'], ['Handling', 'handling'], ['Over Carrying', 'overCarrying']];
+    blTypes.forEach(function(bt) {
+      html += statRow(bt[0], m.ballLost.home[bt[1]], m.ballLost.away[bt[1]]);
+    });
+    html += statRow('TOTAL', hBL, aBL);
+    html += '</tbody></table>';
+  }
+
+  // 4. Ball Won breakdown
+  if (m.ballWon) {
+    html += section('4. Ball Won');
+    html += '<table><thead><tr>' + th('Type') + th(m.home) + th(m.away) + '</tr></thead><tbody>';
+    var bwTypes = [['In Contact', 'inContact'], ['Tackle', 'tackle'], ['Interception', 'interception']];
+    bwTypes.forEach(function(bt) {
+      html += statRow(bt[0], m.ballWon.home[bt[1]], m.ballWon.away[bt[1]]);
+    });
+    html += statRow('TOTAL', hBW, aBW);
+    html += '</tbody></table>';
+  }
+
+  // 5. Kickout breakdown
+  if (m.kickout) {
+    html += section('5. Kickout Battle');
+    html += '<table><thead><tr>' + th('Outcome') + th(m.home) + th(m.away) + '</tr></thead><tbody>';
+    var koTypes = [['Won Clean', 'wonClean'], ['Break Won', 'breakWon'], ['Short Won', 'shortWon'], ['Loss Clean', 'lossClean'], ['Break Loss', 'breakLoss'], ['Short Loss', 'shortLoss']];
+    koTypes.forEach(function(kt) {
+      html += statRow(kt[0], m.kickout.home[kt[1]], m.kickout.away[kt[1]]);
+    });
+    html += statRow('Retention %', hKOPct+'%', aKOPct+'%');
+    html += '</tbody></table>';
+  }
+
+  // 6. Player contributions (if tagged events exist)
+  if (m.players && m.players.length) {
+    html += section('6. Player Contributions');
+    html += '<table><thead><tr>' + th('#') + th('Player') + th('Team') + th('Goals') + th('Points') + th('Total') + '</tr></thead><tbody>';
+    m.players.forEach(function(p) {
+      var total = (p.goals||0)*3 + (p.points||0);
+      if (total > 0) {
+        html += '<tr>' +
+          td(p.num) + td(p.name, true) +
+          td(p.team === 'home' ? m.home : m.away) +
+          td(p.goals||0, false, true) +
+          td(p.points||0, false, true) +
+          td(total, true, true) +
+          '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+  }
+
+  // Footer
+  html += '<p style="font-size:11px;color:#aaa;margin-top:32px;padding-top:12px;border-top:1px solid #eee;text-align:center;">';
+  html += 'Report generated by Coach Stats &nbsp;|&nbsp; ' + m.home + ' v ' + m.away + ' &nbsp;|&nbsp; ' + (m.competition||'') + ' &nbsp;|&nbsp; ' + dateStr;
+  html += '</p>';
+  html += '</div></body></html>';
+
+  // Open in new window
+  var win = window.open('', '_blank');
+  if (!win) { alert('Please allow popups to generate the report'); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
 // ── HISTORY ────────────────────────────────────────
 const HISTORY_KEY = 'gaa_match_history';
 
@@ -2854,6 +3100,7 @@ function renderHistory() {
       </div>
       <div class="match-card-actions" onclick="event.stopPropagation()">
         <button class="mca-btn" onclick="openDetailModal(${m.id})">📊 Full Stats</button>
+        <button class="mca-btn" onclick="generateMatchReport(${m.id})">📄 Report</button>
         <button class="mca-btn" onclick="loadMatchIntoTracker(${m.id})">↩ Reload</button>
         <button class="mca-btn danger" onclick="deleteMatch(${m.id})">🗑 Delete</button>
       </div>
