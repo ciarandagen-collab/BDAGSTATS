@@ -437,6 +437,7 @@ select option { background:#1a0505; }
 .o-label { font-size:9px; letter-spacing:1px; opacity:0.85; text-align:center; line-height:1.3; }
 .ob-point   { background:rgba(224,48,48,0.18);   border-color:rgba(224,48,48,0.45);   color:#ff8080; }
 .ob-goal    { background:rgba(255,107,107,0.18); border-color:rgba(255,107,107,0.45); color:#ffaaaa; }
+.ob-twoptr  { background:rgba(255,180,0,0.18);   border-color:rgba(255,180,0,0.45);   color:#ffd060; }
 .ob-blocked { background:rgba(180,100,20,0.18);  border-color:rgba(220,150,50,0.4);   color:#e8b86b; }
 .ob-wide    { background:rgba(100,100,140,0.18); border-color:rgba(140,140,200,0.35); color:#aaaaee; }
 .ob-saved   { background:rgba(30,100,160,0.18);  border-color:rgba(60,140,220,0.35);  color:#7ab8ee; }
@@ -1448,6 +1449,22 @@ select option { background:#1a0505; }
       </button>
     </div>
 
+    <div class="sec-label">45</div>
+    <div class="trigger-grid">
+      <button class="trigger-btn" onclick="openGenericModal('home','fortyFive')">
+        <span class="trig-icon">🏐</span>
+        <span class="trig-type">45</span>
+        <span class="trig-team" id="ff-home-h">Home</span>
+        <span class="trig-count" id="ff-home-tally">0</span>
+      </button>
+      <button class="trigger-btn" onclick="openGenericModal('away','fortyFive')">
+        <span class="trig-icon">🏐</span>
+        <span class="trig-type">45</span>
+        <span class="trig-team" id="ff-away-h">Away</span>
+        <span class="trig-count" id="ff-away-tally">0</span>
+      </button>
+    </div>
+
     <div class="sec-label">Shot Summary</div>
     <div class="card">
       <table class="shot-summary-table">
@@ -1750,6 +1767,7 @@ select option { background:#1a0505; }
     </div>
     <div class="outcome-grid">
       <button class="outcome-btn ob-point"   onclick="selectShotOutcome('point')"><span class="o-icon">✦</span><span class="o-label">Point</span></button>
+      <button class="outcome-btn ob-twoptr"  onclick="selectShotOutcome('twopointer')"><span class="o-icon">⭐</span><span class="o-label">2 Pointer</span></button>
       <button class="outcome-btn ob-goal"    onclick="selectShotOutcome('goal')"><span class="o-icon">🥅</span><span class="o-label">Goal</span></button>
       <button class="outcome-btn ob-blocked" onclick="selectShotOutcome('blocked')"><span class="o-icon">🛡️</span><span class="o-label">Blocked</span></button>
       <button class="outcome-btn ob-wide"    onclick="selectShotOutcome('wide')"><span class="o-icon">↗️</span><span class="o-label">Wide</span></button>
@@ -1819,9 +1837,10 @@ const state = {
   home:{goals:0,points:0}, away:{goals:0,points:0},
   events:[], players:[], half:1, nextPlayerId:1,
   shots:{
-    home:{play:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0}},
-    away:{play:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0}}
+    home:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}},
+    away:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}}
   },
+  fortyFive:{home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}},
   ballLost:{home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}},
   ballWon:{home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}},
   kickout:{home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}},
@@ -1852,8 +1871,8 @@ function showPage(name, btn) {
 // ── NAMES ──────────────────────────────────────────
 function updateNames() {
   const h=homeName(), a=awayName();
-  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','undo-home-label','poss-home-name','ptl-home-name'];
-  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label','poss-away-name','ptl-away-name'];
+  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','ff-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','undo-home-label','poss-home-name','ptl-home-name'];
+  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','ff-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label','poss-away-name','ptl-away-name'];
   hIds.forEach(id=>{const el=$(id);if(el)el.textContent=h;});
   aIds.forEach(id=>{const el=$(id);if(el)el.textContent=a;});
   $('player-home-opt').textContent=h;
@@ -1925,7 +1944,7 @@ function selectShotOutcome(outcome) {
   if (selectedAttrPlayer !== null) {
     var mode = shotModal.mode === 'play' ? 'shotsPlay' : 'shotsFree';
     addStatToPlayer(selectedAttrPlayer, mode, outcome);
-    if (outcome === 'goal' || outcome === 'point') {
+    if (outcome === 'goal' || outcome === 'point' || outcome === 'twopointer') {
       addStatToPlayer(selectedAttrPlayer, 'shots', outcome);
     }
   }
@@ -1934,11 +1953,15 @@ function selectShotOutcome(outcome) {
 }
 
 function addShot(team,mode,outcome) {
+  if (!state.shots[team][mode][outcome] && state.shots[team][mode][outcome] !== 0) {
+    state.shots[team][mode][outcome] = 0;
+  }
   state.shots[team][mode][outcome]++;
   if(outcome==='goal') addScore(team,'goal');
   else if(outcome==='point') addScore(team,'point');
+  else if(outcome==='twopointer') { addScore(team,'point'); addScore(team,'point'); }
   else {
-    state.events.unshift({id:Date.now(),team,type:'shot',shotMode:mode,outcome,min:getMin(),half:state.half});
+    state.events.unshift({id:Date.now(),team:team,type:'shot',shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
     renderTimeline(); bumpMin();
   }
   renderShotCounts(); renderShotSummary();
@@ -1946,7 +1969,7 @@ function addShot(team,mode,outcome) {
 
 function renderShotCounts() {
   ['home','away'].forEach(t=>['play','free'].forEach(m=>
-    ['point','goal','blocked','wide','saved','short'].forEach(o=>{
+    ['point','twopointer','goal','blocked','wide','saved','short'].forEach(o=>{
       const el=$(`sh-${t}-${m}-${o}`); if(el) el.textContent=state.shots[t][m][o];
     })
   ));
@@ -1959,10 +1982,10 @@ function renderShotCounts() {
 }
 
 function renderShotSummary() {
-  const outcomes=[['point','✦ Point'],['goal','🥅 Goal'],['blocked','🛡 Blocked'],['wide','↗ Wide'],['saved','🧤 Saved'],['short','⬇ Short']];
+  const outcomes=[['point','✦ Point'],['twopointer','⭐ 2 Ptr'],['goal','🥅 Goal'],['blocked','🛡 Blocked'],['wide','↗ Wide'],['saved','🧤 Saved'],['short','⬇ Short']];
   $('shot-summary-body').innerHTML=outcomes.map(([k,label])=>{
-    const hp=state.shots.home.play[k],ap=state.shots.away.play[k];
-    const hf=state.shots.home.free[k],af=state.shots.away.free[k];
+    const hp=state.shots.home.play[k]||0,ap=state.shots.away.play[k]||0;
+    const hf=state.shots.home.free[k]||0,af=state.shots.away.free[k]||0;
     return `<tr><td>${label}</td><td>${hp}</td><td>${ap}</td><td style="border-left:1px solid rgba(255,255,255,0.07)">${hf}</td><td>${af}</td></tr>`;
   }).join('');
 }
@@ -1971,7 +1994,8 @@ function renderShotSummary() {
 const GENERIC_CONFIG = {
   ballLost:{title:'📤 Ball Lost',sub:'How was possession lost?',outcomes:[{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'inContact',icon:'💥',label:'In Contact'},{key:'handling',icon:'🖐️',label:'Handling'},{key:'overCarrying',icon:'🏃',label:'Over Carrying'}]},
   ballWon:{title:'📥 Ball Won',sub:'How was possession won?',outcomes:[{key:'inContact',icon:'💥',label:'In Contact'},{key:'tackle',icon:'🤼',label:'Tackle'},{key:'interception',icon:'🙌',label:'Interception'}]},
-  kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]}
+  kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]},
+  fortyFive:{title:'🏐 45',sub:'What was the result of the 45?',outcomes:[{key:'scored',icon:'✦',label:'Scored'},{key:'wide',icon:'↗️',label:'Wide'},{key:'short',icon:'⬇️',label:'Short'},{key:'pass',icon:'👟',label:'Pass'},{key:'ballLost',icon:'❌',label:'Ball Lost'}]}
 };
 const gmodal = {team:null,category:null};
 
@@ -1997,6 +2021,14 @@ function selectGenericOutcome(key) {
   if (selectedAttrPlayer !== null) {
     addStatToPlayer(selectedAttrPlayer, gmodal.category, key);
   }
+  // 45 scored = add 1 point to scoreboard
+  if (gmodal.category === 'fortyFive' && key === 'scored') {
+    addScore(gmodal.team, 'point');
+  } else {
+    state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
+    renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
+    return;
+  }
   state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
 }
@@ -2010,6 +2042,14 @@ function renderGenericTallies() {
     // poss trends
     if(cat==='ballWon') { const phEl=$('tr-poss-home'), paEl=$('tr-poss-away'); if(phEl)phEl.textContent=h; if(paEl)paEl.textContent=a; }
   });
+  // 45 tallies
+  if (state.fortyFive) {
+    const ffh = Object.values(state.fortyFive.home).reduce((a,b)=>a+b,0);
+    const ffa = Object.values(state.fortyFive.away).reduce((a,b)=>a+b,0);
+    const ffhEl = $('ff-home-tally'), ffaEl = $('ff-away-tally');
+    if(ffhEl) ffhEl.textContent = ffh;
+    if(ffaEl) ffaEl.textContent = ffa;
+  }
   snapPossession();
   updateStats();
 }
@@ -2467,12 +2507,12 @@ function updateStats() {
    ['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]
   ].forEach(function(r){statsRows.push(row(r));});
   statsRows.push(sec('🎯 Shots from Play'));
-  [['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],
+  [['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['2 Pointer',state.shots.home.play.twopointer||0,state.shots.away.play.twopointer||0],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],
    ['Blocked',state.shots.home.play.blocked,state.shots.away.play.blocked],['Wide',state.shots.home.play.wide,state.shots.away.play.wide],
    ['Saved',state.shots.home.play.saved,state.shots.away.play.saved],['Short',state.shots.home.play.short,state.shots.away.play.short]
   ].forEach(function(r){statsRows.push(row(r));});
   statsRows.push(sec('🎯 Shots from Free'));
-  [['Total',hFF,aFF],['Point',state.shots.home.free.point,state.shots.away.free.point],['Goal',state.shots.home.free.goal,state.shots.away.free.goal],
+  [['Total',hFF,aFF],['Point',state.shots.home.free.point,state.shots.away.free.point],['2 Pointer',state.shots.home.free.twopointer||0,state.shots.away.free.twopointer||0],['Goal',state.shots.home.free.goal,state.shots.away.free.goal],
    ['Blocked',state.shots.home.free.blocked,state.shots.away.free.blocked],['Wide',state.shots.home.free.wide,state.shots.away.free.wide],
    ['Saved',state.shots.home.free.saved,state.shots.away.free.saved],['Short',state.shots.home.free.short,state.shots.away.free.short]
   ].forEach(function(r){statsRows.push(row(r));});
@@ -2490,6 +2530,18 @@ function updateStats() {
    ['Loss Clean',state.kickout.home.lossClean,state.kickout.away.lossClean],['Break Loss',state.kickout.home.breakLoss,state.kickout.away.breakLoss],
    ['Short Won',state.kickout.home.shortWon,state.kickout.away.shortWon],['Short Loss',state.kickout.home.shortLoss,state.kickout.away.shortLoss]
   ].forEach(function(r){statsRows.push(row(r));});
+  // 45s
+  if (state.fortyFive) {
+    var ff45h = Object.values(state.fortyFive.home).reduce(function(a,b){return a+b;},0);
+    var ff45a = Object.values(state.fortyFive.away).reduce(function(a,b){return a+b;},0);
+    if (ff45h + ff45a > 0) {
+      statsRows.push(sec('🏐 45'));
+      [['Total',ff45h,ff45a],['Scored',state.fortyFive.home.scored,state.fortyFive.away.scored],
+       ['Wide',state.fortyFive.home.wide,state.fortyFive.away.wide],['Short',state.fortyFive.home.short,state.fortyFive.away.short],
+       ['Pass',state.fortyFive.home.pass,state.fortyFive.away.pass],['Ball Lost',state.fortyFive.home.ballLost,state.fortyFive.away.ballLost]
+      ].forEach(function(r){statsRows.push(row(r));});
+    }
+  }
   $('stats-body').innerHTML=statsRows.join('');
 }
 
@@ -2733,10 +2785,11 @@ function resetMatch(){
   if(!confirm('Reset all match data?'))return;
   state.home={goals:0,points:0}; state.away={goals:0,points:0};
   state.events=[]; state.players=[]; state.half=1; state.scoreline=[]; state.possHistory=[];
-  state.shots={home:{play:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0}},away:{play:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,goal:0,blocked:0,wide:0,saved:0,short:0}}};
+  state.shots={home:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}},away:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}}};
   state.ballLost={home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}};
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
+  state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
   setHalf(1); $('current-min').value=1; clockReset();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
@@ -3032,6 +3085,7 @@ function saveMatchToHistory() {
     ballLost: JSON.parse(JSON.stringify(state.ballLost)),
     ballWon: JSON.parse(JSON.stringify(state.ballWon)),
     kickout: JSON.parse(JSON.stringify(state.kickout)),
+    fortyFive: JSON.parse(JSON.stringify(state.fortyFive || {home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}})),
     events: state.events.slice(),
     players: state.players.slice()
   };
