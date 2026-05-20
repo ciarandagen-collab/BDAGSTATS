@@ -275,6 +275,10 @@ select option { background:#1a0505; }
   font-size:10px; letter-spacing:1px; padding:6px 14px; cursor:pointer; transition:all 0.2s;
 }
 .half-btn.active, .half-btn:hover { background:var(--red); color:#fff; }
+.btn-end-game { background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.4); border-radius:8px; padding:8px 10px; color:#fca5a5; font-family:'Oswald',sans-serif; font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+.btn-end-game:hover { background:rgba(220,38,38,0.3); color:#fff; }
+.btn-halftime { background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.35); border-radius:8px; padding:8px 10px; color:#fde68a; font-family:'Oswald',sans-serif; font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+.btn-halftime:hover { background:rgba(251,191,36,0.22); }
 
 /* ── SCOREBOARD ── */
 .scoreboard-card {
@@ -1469,16 +1473,14 @@ select option { background:#1a0505; }
       </div>
     </div>
 
-    <div class="sec-label">Clock</div>
+    <div class="sec-label">Game Control</div>
     <div class="clock-card">
       <div class="clock-main">
         <div class="clock-big" id="clock-display">00:00</div>
         <div class="clock-right">
           <div class="clock-status-badge" id="clock-status-badge">Ready</div>
-          <div class="clock-btns">
-            <button class="clock-action-btn btn-start" id="clock-start-btn" onclick="clockStart()">▶ Start</button>
-            <button class="clock-action-btn btn-pause" id="clock-pause-btn" onclick="clockPause()" style="display:none">⏸ Pause</button>
-            <button class="clock-action-btn btn-clock-reset" onclick="clockReset()">↺</button>
+          <div class="clock-btns" id="clock-btns-area">
+            <!-- populated by renderGameControls() -->
           </div>
         </div>
       </div>
@@ -1489,6 +1491,7 @@ select option { background:#1a0505; }
         <div class="half-row">
           <button class="half-btn active" id="h1-btn" onclick="setHalf(1)">1st</button>
           <button class="half-btn" id="h2-btn" onclick="setHalf(2)">2nd</button>
+          <button class="half-btn" id="het-btn" onclick="setHalf(3)">ET</button>
         </div>
       </div>
     </div>
@@ -2257,9 +2260,11 @@ function deleteEvent(id) {
 
 // ── HALF ───────────────────────────────────────────
 function setHalf(h) {
-  state.half=h;
-  $('h1-btn').classList.toggle('active',h===1);
-  $('h2-btn').classList.toggle('active',h===2);
+  state.half = h;
+  $('h1-btn').classList.toggle('active', h===1);
+  $('h2-btn').classList.toggle('active', h===2);
+  var etBtn = $('het-btn');
+  if (etBtn) etBtn.classList.toggle('active', h===3);
 }
 
 // ── TEAM SHEET ─────────────────────────────────────
@@ -2905,32 +2910,169 @@ function drawPossTimeline(canvasId, possHistory) {
   ctx.fillText((100-possHistory[possHistory.length-1])+'%', W-4, H-4);
 }
 
-// ── CLOCK ──────────────────────────────────────────
-const clock={seconds:0,running:false,interval:null};
-function clockTick(){
+// ── CLOCK & GAME FLOW ──────────────────────────────
+const clock = { seconds:0, running:false, interval:null };
+
+// Game phases: 'pregame' | 'first_half' | 'half_time' | 'second_half' | 'full_time' | 'extra_time' | 'finished'
+var gamePhase = 'pregame';
+
+function clockTick() {
   clock.seconds++;
   renderClock();
-  const mins=Math.floor(clock.seconds/60);
-  if(clock.seconds%60===0&&mins>=1) $('current-min').value=Math.min(80,mins);
+  const mins = Math.floor(clock.seconds/60);
+  if (clock.seconds % 60 === 0 && mins >= 1) {
+    $('current-min').value = Math.min(80, mins);
+  }
 }
-function renderClock(){
-  const m=Math.floor(clock.seconds/60),s=clock.seconds%60;
-  const str=`${pad(m)}:${pad(s)}`;
-  const running=clock.running, ot=m>=35;
-  [$('clock-display'),$('tb-clock')].forEach(el=>{
-    if(!el)return;
-    el.textContent=str;
-    el.classList.toggle('running',running&&!ot);
-    el.classList.toggle('overtime',ot);
+
+function renderClock() {
+  const m = Math.floor(clock.seconds/60), s = clock.seconds%60;
+  const str = pad(m) + ':' + pad(s);
+  const running = clock.running;
+  const ot = m >= 35;
+
+  [$('clock-display'), $('tb-clock')].forEach(function(el) {
+    if (!el) return;
+    el.textContent = str;
+    el.classList.toggle('running', running && !ot);
+    el.classList.toggle('overtime', ot);
   });
-  const badge=$('clock-status-badge'), tbStatus=$('tb-clock-status');
-  if(running){ const txt=ot?'⏱ Injury Time':'⏱ Live'; const cls=ot?'overtime':'live'; if(badge){badge.textContent=txt;badge.className='clock-status-badge '+cls;} if(tbStatus){tbStatus.textContent=ot?'Injury Time':'Live';tbStatus.className='tb-clock-status live';} }
-  else if(clock.seconds>0){ if(badge){badge.textContent='Paused';badge.className='clock-status-badge paused';} if(tbStatus){tbStatus.textContent='Paused';tbStatus.className='tb-clock-status';} }
-  else { if(badge){badge.textContent='Ready';badge.className='clock-status-badge';} if(tbStatus){tbStatus.textContent='Ready';tbStatus.className='tb-clock-status';} }
+
+  const badge = $('clock-status-badge');
+  const tbStatus = $('tb-clock-status');
+  var badgeText = '';
+  var badgeClass = '';
+
+  if (gamePhase === 'pregame') { badgeText = 'Ready'; badgeClass = ''; }
+  else if (gamePhase === 'first_half') { badgeText = running ? (ot ? '⏱ Injury Time' : '⏱ 1st Half') : 'Paused'; badgeClass = running ? (ot ? 'overtime' : 'live') : 'paused'; }
+  else if (gamePhase === 'half_time') { badgeText = '⏸ Half Time'; badgeClass = 'paused'; }
+  else if (gamePhase === 'second_half') { badgeText = running ? (ot ? '⏱ Injury Time' : '⏱ 2nd Half') : 'Paused'; badgeClass = running ? (ot ? 'overtime' : 'live') : 'paused'; }
+  else if (gamePhase === 'full_time') { badgeText = '⏹ Full Time'; badgeClass = 'paused'; }
+  else if (gamePhase === 'extra_time') { badgeText = running ? '⏱ Extra Time' : 'Paused'; badgeClass = running ? 'overtime' : 'paused'; }
+  else if (gamePhase === 'finished') { badgeText = '✓ Finished'; badgeClass = ''; }
+
+  if (badge) { badge.textContent = badgeText; badge.className = 'clock-status-badge ' + badgeClass; }
+  if (tbStatus) { tbStatus.textContent = badgeText; tbStatus.className = 'tb-clock-status' + (badgeClass ? ' ' + badgeClass : ''); }
+
+  renderGameControls();
 }
-function clockStart(){ if(clock.running)return; clock.running=true; clock.interval=setInterval(clockTick,1000); $('clock-start-btn').style.display='none'; $('clock-pause-btn').style.display=''; renderClock(); }
-function clockPause(){ if(!clock.running)return; clock.running=false; clearInterval(clock.interval); $('clock-start-btn').style.display=''; $('clock-pause-btn').style.display='none'; const m=Math.floor(clock.seconds/60); if(m>=1)$('current-min').value=Math.min(80,m); renderClock(); }
-function clockReset(){ clockPause(); clock.seconds=0; renderClock(); }
+
+function renderGameControls() {
+  var area = $('clock-btns-area');
+  if (!area) return;
+  var html = '';
+
+  if (gamePhase === 'pregame') {
+    html = '<button class="clock-action-btn btn-start" onclick="startGame()">▶ Start Game</button>';
+  } else if (gamePhase === 'first_half') {
+    html = '<button class="clock-action-btn btn-halftime" onclick="endFirstHalf()">⏸ Half Time</button>';
+    if (clock.running) {
+      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+    } else {
+      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+    }
+  } else if (gamePhase === 'half_time') {
+    html = '<button class="clock-action-btn btn-start" onclick="startSecondHalf()">▶ 2nd Half</button>';
+  } else if (gamePhase === 'second_half') {
+    html = '<button class="clock-action-btn btn-end-game" onclick="endFullTime()">⏹ Full Time</button>';
+    if (clock.running) {
+      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+    } else {
+      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+    }
+  } else if (gamePhase === 'full_time') {
+    html = '<button class="clock-action-btn btn-start" onclick="startExtraTime()">▶ Extra Time</button>';
+    html += '<button class="btn-end-game" onclick="endGame()">🏁 End Game</button>';
+  } else if (gamePhase === 'extra_time') {
+    html = '<button class="btn-end-game" onclick="endGame()">🏁 End Game</button>';
+    if (clock.running) {
+      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+    } else {
+      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+    }
+  } else if (gamePhase === 'finished') {
+    html = '<button class="clock-action-btn btn-clock-reset" onclick="resetMatch()">↺ New Game</button>';
+  }
+
+  area.innerHTML = html;
+}
+
+// ── GAME FLOW FUNCTIONS ────────────────────────────
+function startGame() {
+  gamePhase = 'first_half';
+  setHalf(1);
+  $('current-min').value = 1;
+  clockReset();
+  clockStart();
+  showSync('▶ Game started — 1st Half', 2000);
+}
+
+function endFirstHalf() {
+  clockPause();
+  gamePhase = 'half_time';
+  renderClock();
+  showSync('⏸ Half Time', 0);
+}
+
+function startSecondHalf() {
+  gamePhase = 'second_half';
+  setHalf(2);
+  clock.seconds = 0;
+  $('current-min').value = 1;
+  clockStart();
+  var b = $('sync-banner');
+  if (b) b.style.display = 'none';
+  showSync('▶ 2nd Half started', 2000);
+}
+
+function endFullTime() {
+  clockPause();
+  gamePhase = 'full_time';
+  renderClock();
+  showSync('⏹ Full Time', 0);
+}
+
+function startExtraTime() {
+  gamePhase = 'extra_time';
+  setHalf(3);
+  clock.seconds = 0;
+  $('current-min').value = 1;
+  clockStart();
+  showSync('▶ Extra Time started', 2000);
+}
+
+function endGame() {
+  clockPause();
+  gamePhase = 'finished';
+  renderClock();
+  // Auto-save the match
+  if (confirm('End game and save match to history?')) {
+    saveMatchToHistory();
+  }
+  showSync('🏁 Game finished', 3000);
+}
+
+function clockStart() {
+  if (clock.running) return;
+  clock.running = true;
+  clock.interval = setInterval(clockTick, 1000);
+  renderClock();
+}
+
+function clockPause() {
+  if (!clock.running) return;
+  clock.running = false;
+  clearInterval(clock.interval);
+  const m = Math.floor(clock.seconds/60);
+  if (m >= 1) $('current-min').value = Math.min(80, m);
+  renderClock();
+}
+
+function clockReset() {
+  clockPause();
+  clock.seconds = 0;
+  renderClock();
+}
 
 // ── EXPORT ─────────────────────────────────────────
 function exportSummary(){
@@ -2953,7 +3095,7 @@ function resetMatch(){
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
-  setHalf(1); $('current-min').value=1; clockReset();
+  setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
 
@@ -3466,7 +3608,7 @@ function loadMatchIntoTracker(id) {
   state.ballWon = m.ballWon ? JSON.parse(JSON.stringify(m.ballWon)) : state.ballWon;
   state.kickout = m.kickout ? JSON.parse(JSON.stringify(m.kickout)) : state.kickout;
   state.scoreline = []; state.possHistory = []; state.half = 1;
-  clockReset(); $('current-min').value = 1;
+  clockReset(); gamePhase = 'pregame'; $('current-min').value = 1;
 
   updateNames(); updateScoreboard(); renderTimeline(); renderPlayers();
   renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
