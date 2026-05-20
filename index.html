@@ -1037,11 +1037,163 @@ select option { background:#1a0505; }
   </div>
 </div>
 
-<!-- ── USER BADGE (shown when logged in) ── -->
+<!-- ── CLUB SETUP SCREEN ── -->
+<div id="club-screen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0000;z-index:99998;overflow-y:auto;padding:24px;font-family:'Oswald',sans-serif;">
+  <div style="max-width:400px;margin:0 auto;padding-top:40px;">
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:48px;margin-bottom:8px;">🏟</div>
+      <div style="font-size:24px;font-weight:700;color:#e03030;letter-spacing:3px;text-transform:uppercase;">Club Setup</div>
+      <div style="font-size:11px;color:rgba(245,232,232,0.4);letter-spacing:2px;margin-top:4px;">Set up your club or join an existing one</div>
+    </div>
+
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid rgba(224,48,48,0.25);">
+      <button id="club-tab-create" onclick="switchClubTab('create')" style="flex:1;padding:10px;background:#e03030;border:none;color:#fff;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Create Club</button>
+      <button id="club-tab-join" onclick="switchClubTab('join')" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(245,232,232,0.5);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Join Club</button>
+    </div>
+
+    <!-- Create Club -->
+    <div id="club-create-form" style="background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.25);border-radius:16px;padding:24px;">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Club Name</div>
+        <input id="club-name-input" type="text" placeholder="e.g. Teconnaught GAA" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">County</div>
+        <input id="club-county-input" type="text" placeholder="e.g. Down" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;">
+      </div>
+      <div id="club-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;"></div>
+      <button onclick="createClub()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#e03030);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Create Club</button>
+    </div>
+
+    <!-- Join Club -->
+    <div id="club-join-form" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.25);border-radius:16px;padding:24px;">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Invite Code</div>
+        <input id="club-invite-input" type="text" placeholder="Enter 8-character invite code" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;text-transform:uppercase;letter-spacing:4px;">
+      </div>
+      <div id="club-join-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;"></div>
+      <button onclick="joinClub()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#e03030);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Join Club</button>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button onclick="skipClubSetup()" style="background:none;border:none;color:rgba(245,232,232,0.3);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;text-decoration:underline;">Skip for now — use personal account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLUB DASHBOARD MODAL ── -->
+<div id="club-dashboard" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0000;z-index:9998;overflow-y:auto;font-family:'Oswald',sans-serif;">
+  <div style="max-width:640px;margin:0 auto;padding:16px 16px calc(80px + var(--safe-bottom));">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0 20px;">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#e03030;letter-spacing:2px;text-transform:uppercase;" id="club-dash-name">My Club</div>
+        <div style="font-size:10px;color:rgba(245,232,232,0.4);letter-spacing:2px;margin-top:2px;" id="club-dash-county"></div>
+      </div>
+      <button onclick="closeClubDashboard()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;color:rgba(245,232,232,0.6);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;">✕ Close</button>
+    </div>
+
+    <!-- Admin tabs -->
+    <div id="club-admin-tabs" style="display:none;margin-bottom:16px;">
+      <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(224,48,48,0.25);">
+        <button class="club-dash-tab active" onclick="switchDashTab('squads',this)" style="flex:1;padding:10px;background:#e03030;border:none;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Squads</button>
+        <button class="club-dash-tab" onclick="switchDashTab('members',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(245,232,232,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Members</button>
+        <button class="club-dash-tab" onclick="switchDashTab('reports',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(245,232,232,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Reports</button>
+        <button class="club-dash-tab" onclick="switchDashTab('settings',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(245,232,232,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Settings</button>
+      </div>
+    </div>
+
+    <!-- Squads view -->
+    <div id="dash-view-squads">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:9px;letter-spacing:3px;color:rgba(245,232,232,0.4);text-transform:uppercase;">Club Squads</div>
+        <button id="btn-add-squad" onclick="openAddSquad()" style="display:none;background:#e03030;border:none;border-radius:6px;padding:7px 12px;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;">+ Add Squad</button>
+      </div>
+      <div id="club-squads-list"></div>
+    </div>
+
+    <!-- Members view -->
+    <div id="dash-view-members" style="display:none;">
+      <div style="margin-bottom:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.2);border-radius:12px;padding:16px;">
+        <div style="font-size:9px;letter-spacing:3px;color:#e03030;text-transform:uppercase;margin-bottom:8px;">Invite Code</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="club-invite-display" style="font-size:24px;font-weight:700;letter-spacing:8px;color:#f5e8e8;font-family:monospace;"></div>
+          <button onclick="copyInviteCode()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 12px;color:rgba(245,232,232,0.6);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;">Copy</button>
+        </div>
+        <div style="font-size:10px;color:rgba(245,232,232,0.3);margin-top:6px;">Share this code with coaches to let them join your club</div>
+      </div>
+      <div id="club-members-list"></div>
+    </div>
+
+    <!-- Reports view -->
+    <div id="dash-view-reports" style="display:none;">
+      <div style="font-size:9px;letter-spacing:3px;color:rgba(245,232,232,0.4);text-transform:uppercase;margin-bottom:12px;">Match Reports by Squad</div>
+      <div id="club-reports-list"></div>
+    </div>
+
+    <!-- Settings view -->
+    <div id="dash-view-settings" style="display:none;">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.2);border-radius:12px;padding:20px;margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:3px;color:#e03030;text-transform:uppercase;margin-bottom:14px;">Club Details</div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.4);text-transform:uppercase;margin-bottom:6px;">Club Name</div>
+          <input id="club-edit-name" type="text" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:#f5e8e8;font-size:14px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.4);text-transform:uppercase;margin-bottom:6px;">County</div>
+          <input id="club-edit-county" type="text" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:#f5e8e8;font-size:14px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;">
+        </div>
+        <button onclick="saveClubSettings()" style="background:#e03030;border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;">Save Changes</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── ADD SQUAD MODAL ── -->
+<div id="add-squad-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:99997;align-items:flex-end;justify-content:center;">
+  <div style="background:#1a0505;border:1px solid rgba(224,48,48,0.3);border-radius:20px 20px 0 0;width:100%;max-width:640px;padding:24px 20px calc(24px + var(--safe-bottom));">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;"></div>
+    <div style="font-size:14px;font-weight:700;color:#f5e8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">Add Squad</div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Grade</div>
+      <select id="squad-grade-select" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 12px;color:#f5e8e8;font-size:14px;font-family:'Oswald',sans-serif;box-sizing:border-box;" onchange="onSquadGradeChange()">
+        <option value="">Select grade...</option>
+        <option>Senior Men</option>
+        <option>Senior Ladies</option>
+        <option>U20 Men</option>
+        <option>U20 Ladies</option>
+        <option>Minor Men</option>
+        <option>Minor Ladies</option>
+        <option>U16 Men</option>
+        <option>U16 Ladies</option>
+        <option>U14 Men</option>
+        <option>U14 Ladies</option>
+        <option>U12 Men</option>
+        <option>U12 Ladies</option>
+        <option value="custom">Custom name...</option>
+      </select>
+    </div>
+    <div id="squad-custom-name-field" style="display:none;margin-bottom:12px;">
+      <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Custom Name</div>
+      <input id="squad-custom-name" type="text" placeholder="e.g. Development Squad" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 12px;color:#f5e8e8;font-size:14px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="closeAddSquad()" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(245,232,232,0.6);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">Cancel</button>
+      <button onclick="saveNewSquad()" style="flex:2;padding:12px;background:#e03030;border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;">Add Squad</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="user-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:9000;display:none;align-items:center;gap:8px;">
   <div style="background:rgba(13,0,0,0.85);border:1px solid rgba(224,48,48,0.3);border-radius:20px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:8px;">
     <div style="width:24px;height:24px;border-radius:50%;background:#e03030;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
-    <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <button onclick="openClubDashboard()" style="background:rgba(224,48,48,0.15);border:1px solid rgba(224,48,48,0.3);border-radius:6px;padding:3px 8px;color:#ff8080;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club">🏟</button>
     <button onclick="signOut()" style="background:none;border:none;color:rgba(245,232,232,0.3);font-size:13px;cursor:pointer;padding:0;line-height:1;" title="Sign out">⏻</button>
   </div>
 </div>
@@ -2309,6 +2461,7 @@ function loadSquad() {
 function saveSquad() {
   try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
   syncSquad();
+  if (currentClubSquadId) syncClubSquad();
 }
 
 function renderSquadGrid() {
@@ -4977,6 +5130,9 @@ function onSignedIn() {
   if (displayEl) displayEl.textContent = name || email;
   if (avatarEl) avatarEl.textContent = (name || email).charAt(0).toUpperCase();
 
+  // Restore club session
+  loadClubSession();
+
   loadUserData();
 }
 
@@ -5064,6 +5220,7 @@ function syncSquad() {
 // ── SAVE MATCH TO SUPABASE ─────────────────────────
 function syncMatchToSupabase(record) {
   if (!currentUser || !currentToken) return;
+  // Save to personal matches
   supaDB('matches', 'POST', {
     user_id: currentUser.id,
     match_id: record.id,
@@ -5071,6 +5228,16 @@ function syncMatchToSupabase(record) {
   }, currentToken)
     .then(function() { showSync('✓ Match saved to your account', 2500); })
     .catch(function() {});
+  // Also save to club matches if a club squad is active
+  if (currentClub && currentClubSquadId) {
+    supaDB('club_matches', 'POST', {
+      club_id: currentClub.id,
+      squad_id: currentClubSquadId,
+      recorded_by: currentUser.id,
+      match_id: record.id,
+      data: record
+    }, currentToken).catch(function() {});
+  }
 }
 
 // ── DELETE MATCH FROM SUPABASE ─────────────────────
@@ -5096,7 +5263,393 @@ function switchAuthTab(tab) {
 }
 
 
-// ── INIT ───────────────────────────────────────────
+// ── CLUB MANAGEMENT ────────────────────────────────
+var currentClub = null;
+var currentClubRole = null;
+var clubSquads = [];
+var clubMembers = [];
+
+var PRESET_GRADES = ['Senior Men','Senior Ladies','U20 Men','U20 Ladies',
+  'Minor Men','Minor Ladies','U16 Men','U16 Ladies',
+  'U14 Men','U14 Ladies','U12 Men','U12 Ladies'];
+
+// ── CLUB SETUP TAB SWITCHER ────────────────────────
+function switchClubTab(tab) {
+  var isJoin = tab === 'join';
+  document.getElementById('club-tab-create').style.background = isJoin ? 'rgba(255,255,255,0.04)' : '#e03030';
+  document.getElementById('club-tab-create').style.color = isJoin ? 'rgba(245,232,232,0.5)' : '#fff';
+  document.getElementById('club-tab-join').style.background = isJoin ? '#e03030' : 'rgba(255,255,255,0.04)';
+  document.getElementById('club-tab-join').style.color = isJoin ? '#fff' : 'rgba(245,232,232,0.5)';
+  document.getElementById('club-create-form').style.display = isJoin ? 'none' : '';
+  document.getElementById('club-join-form').style.display = isJoin ? '' : 'none';
+}
+
+// ── CREATE CLUB ────────────────────────────────────
+function createClub() {
+  var name = document.getElementById('club-name-input').value.trim();
+  var county = document.getElementById('club-county-input').value.trim();
+  var errEl = document.getElementById('club-error');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Please enter a club name.'; errEl.style.display = 'block'; return; }
+
+  supaDB('clubs', 'POST', {
+    name: name,
+    county: county || null,
+    created_by: currentUser.id
+  }, currentToken).then(function(data) {
+    if (data.error || !data[0]) {
+      errEl.textContent = data.error || data.message || 'Failed to create club.';
+      errEl.style.display = 'block';
+      return;
+    }
+    currentClub = data[0];
+    currentClubRole = 'admin';
+    // Add creator as admin member
+    return supaDB('club_members', 'POST', {
+      club_id: currentClub.id,
+      user_id: currentUser.id,
+      role: 'admin',
+      name: (currentUser.user_metadata && currentUser.user_metadata.name) || currentUser.email
+    }, currentToken);
+  }).then(function() {
+    saveClubSession();
+    document.getElementById('club-screen').style.display = 'none';
+    showSync('✓ Club created: ' + currentClub.name, 3000);
+    openClubDashboard();
+  }).catch(function(e) {
+    errEl.textContent = 'Error: ' + (e && e.message ? e.message : 'Unknown');
+    errEl.style.display = 'block';
+  });
+}
+
+// ── JOIN CLUB ──────────────────────────────────────
+function joinClub() {
+  var code = document.getElementById('club-invite-input').value.trim().toLowerCase();
+  var errEl = document.getElementById('club-join-error');
+  errEl.style.display = 'none';
+  if (!code) { errEl.textContent = 'Please enter an invite code.'; errEl.style.display = 'block'; return; }
+
+  supaDB('clubs?invite_code=eq.' + code + '&select=*', 'GET', null, currentToken)
+    .then(function(data) {
+      if (!data || !data.length) {
+        errEl.textContent = 'Invalid invite code — please check and try again.';
+        errEl.style.display = 'block';
+        return;
+      }
+      currentClub = data[0];
+      currentClubRole = 'coach';
+      return supaDB('club_members', 'POST', {
+        club_id: currentClub.id,
+        user_id: currentUser.id,
+        role: 'coach',
+        name: (currentUser.user_metadata && currentUser.user_metadata.name) || currentUser.email
+      }, currentToken);
+    }).then(function() {
+      if (!currentClub) return;
+      saveClubSession();
+      document.getElementById('club-screen').style.display = 'none';
+      showSync('✓ Joined ' + currentClub.name, 3000);
+      openClubDashboard();
+    }).catch(function(e) {
+      errEl.textContent = 'Error: ' + (e && e.message ? e.message : 'Unknown');
+      errEl.style.display = 'block';
+    });
+}
+
+function skipClubSetup() {
+  document.getElementById('club-screen').style.display = 'none';
+}
+
+// ── SESSION SAVE/RESTORE ───────────────────────────
+function saveClubSession() {
+  try {
+    localStorage.setItem('cs_club', JSON.stringify(currentClub));
+    localStorage.setItem('cs_club_role', currentClubRole);
+  } catch(e) {}
+}
+
+function loadClubSession() {
+  try {
+    var c = localStorage.getItem('cs_club');
+    var r = localStorage.getItem('cs_club_role');
+    if (c) { currentClub = JSON.parse(c); currentClubRole = r || 'coach'; }
+  } catch(e) {}
+}
+
+// ── OPEN CLUB DASHBOARD ────────────────────────────
+function openClubDashboard() {
+  if (!currentClub) {
+    // Check if user has a club
+    supaDB('club_members?user_id=eq.' + currentUser.id + '&select=club_id,role,clubs(*)', 'GET', null, currentToken)
+      .then(function(data) {
+        if (data && data.length && data[0].clubs) {
+          currentClub = data[0].clubs;
+          currentClubRole = data[0].role;
+          saveClubSession();
+          renderClubDashboard();
+        } else {
+          // No club — show setup screen
+          document.getElementById('club-screen').style.display = 'block';
+        }
+      }).catch(function() {
+        document.getElementById('club-screen').style.display = 'block';
+      });
+    return;
+  }
+  renderClubDashboard();
+}
+
+function closeClubDashboard() {
+  document.getElementById('club-dashboard').style.display = 'none';
+}
+
+function renderClubDashboard() {
+  var dash = document.getElementById('club-dashboard');
+  dash.style.display = 'block';
+
+  document.getElementById('club-dash-name').textContent = currentClub.name;
+  document.getElementById('club-dash-county').textContent = currentClub.county || '';
+
+  var isAdmin = currentClubRole === 'admin';
+  document.getElementById('club-admin-tabs').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-add-squad').style.display = isAdmin ? '' : 'none';
+
+  if (isAdmin) {
+    document.getElementById('club-invite-display').textContent = (currentClub.invite_code || '').toUpperCase();
+    document.getElementById('club-edit-name').value = currentClub.name;
+    document.getElementById('club-edit-county').value = currentClub.county || '';
+    loadClubMembers();
+    loadClubReports();
+  }
+  loadClubSquads();
+}
+
+// ── SQUADS ─────────────────────────────────────────
+function loadClubSquads() {
+  supaDB('club_squads?club_id=eq.' + currentClub.id + '&select=*&order=created_at', 'GET', null, currentToken)
+    .then(function(data) {
+      clubSquads = data || [];
+      renderClubSquads();
+    }).catch(function() {});
+}
+
+function renderClubSquads() {
+  var list = document.getElementById('club-squads-list');
+  if (!clubSquads.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(245,232,232,0.3);font-size:12px;font-style:italic;">No squads yet' + (currentClubRole === 'admin' ? ' — tap + Add Squad to create one' : '') + '</div>';
+    return;
+  }
+  list.innerHTML = clubSquads.map(function(sq) {
+    var players = sq.players ? sq.players.length : 0;
+    var filled = sq.players ? sq.players.filter(function(p){return p && p.name;}).length : 0;
+    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.2);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="openSquad(\'' + sq.id + '\')">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<div>' +
+          '<div style="font-family:\'Oswald\',sans-serif;font-size:15px;font-weight:600;color:#f5e8e8;text-transform:uppercase;letter-spacing:1px;">' + sq.name + '</div>' +
+          '<div style="font-size:11px;color:rgba(245,232,232,0.4);margin-top:3px;">' + filled + ' players</div>' +
+        '</div>' +
+        '<div style="font-size:22px;color:rgba(224,48,48,0.5);">›</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openSquad(squadId) {
+  var sq = clubSquads.find(function(s){ return s.id === squadId; });
+  if (!sq) return;
+  // Load this squad into the main app as the active squad
+  squad = sq.players || [];
+  while (squad.length < 34) squad.push(null);
+  currentClubSquadId = squadId;
+  closeClubDashboard();
+  renderSquadGrid();
+  // Switch to squad tab
+  var btn = document.querySelector('.nav-btn:nth-child(4)');
+  if (btn) showPage('players', btn);
+  showSync('Squad: ' + sq.name, 2000);
+}
+
+// ── ADD SQUAD ──────────────────────────────────────
+function openAddSquad() {
+  document.getElementById('add-squad-modal').style.display = 'flex';
+  document.getElementById('squad-grade-select').value = '';
+  document.getElementById('squad-custom-name-field').style.display = 'none';
+  document.getElementById('squad-custom-name').value = '';
+}
+
+function closeAddSquad() {
+  document.getElementById('add-squad-modal').style.display = 'none';
+}
+
+function onSquadGradeChange() {
+  var val = document.getElementById('squad-grade-select').value;
+  document.getElementById('squad-custom-name-field').style.display = val === 'custom' ? '' : 'none';
+}
+
+function saveNewSquad() {
+  var grade = document.getElementById('squad-grade-select').value;
+  var customName = document.getElementById('squad-custom-name').value.trim();
+  if (!grade) { alert('Please select a grade.'); return; }
+  var name = grade === 'custom' ? customName : grade;
+  if (!name) { alert('Please enter a squad name.'); return; }
+
+  supaDB('club_squads', 'POST', {
+    club_id: currentClub.id,
+    name: name,
+    grade: grade === 'custom' ? customName : grade,
+    players: []
+  }, currentToken).then(function(data) {
+    if (data && data[0]) {
+      clubSquads.push(data[0]);
+      renderClubSquads();
+      closeAddSquad();
+      showSync('✓ Squad added: ' + name, 2000);
+    }
+  }).catch(function() {});
+}
+
+// ── MEMBERS ────────────────────────────────────────
+function loadClubMembers() {
+  supaDB('club_members?club_id=eq.' + currentClub.id + '&select=*&order=created_at', 'GET', null, currentToken)
+    .then(function(data) {
+      clubMembers = data || [];
+      renderClubMembers();
+    }).catch(function() {});
+}
+
+function renderClubMembers() {
+  var list = document.getElementById('club-members-list');
+  if (!clubMembers.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(245,232,232,0.3);font-size:12px;">No members yet</div>';
+    return;
+  }
+  list.innerHTML = '<div style="font-size:9px;letter-spacing:3px;color:rgba(245,232,232,0.4);text-transform:uppercase;margin:16px 0 10px;">Members (' + clubMembers.length + ')</div>' +
+    clubMembers.map(function(m) {
+      var isAdmin = m.role === 'admin';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px;">' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:' + (isAdmin ? '#e03030' : 'rgba(255,255,255,0.1)') + ';display:flex;align-items:center;justify-content:center;font-family:\'Oswald\',sans-serif;font-size:13px;font-weight:700;color:#fff;">' +
+          (m.name || '?').charAt(0).toUpperCase() +
+        '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-family:\'Oswald\',sans-serif;font-size:13px;color:#f5e8e8;">' + (m.name || 'Unknown') + '</div>' +
+          '<div style="font-size:10px;color:rgba(245,232,232,0.4);text-transform:uppercase;letter-spacing:1px;">' + m.role + '</div>' +
+        '</div>' +
+        (m.user_id !== currentUser.id ? '<button onclick="removeMember(\'' + m.id + '\')" style="background:none;border:none;color:rgba(255,80,80,0.4);font-size:16px;cursor:pointer;" title="Remove">✕</button>' : '') +
+      '</div>';
+    }).join('');
+}
+
+function removeMember(memberId) {
+  if (!confirm('Remove this member from the club?')) return;
+  supaDB('club_members?id=eq.' + memberId, 'DELETE', null, currentToken)
+    .then(function() {
+      clubMembers = clubMembers.filter(function(m){ return m.id !== memberId; });
+      renderClubMembers();
+      showSync('Member removed', 2000);
+    }).catch(function() {});
+}
+
+function copyInviteCode() {
+  var code = (currentClub.invite_code || '').toUpperCase();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(function() { showSync('✓ Invite code copied: ' + code, 2500); });
+  } else {
+    alert('Invite code: ' + code);
+  }
+}
+
+// ── REPORTS ────────────────────────────────────────
+function loadClubReports() {
+  supaDB('club_matches?club_id=eq.' + currentClub.id + '&select=squad_id,data,saved_at&order=saved_at.desc', 'GET', null, currentToken)
+    .then(function(data) {
+      renderClubReports(data || []);
+    }).catch(function() {});
+}
+
+function renderClubReports(matches) {
+  var list = document.getElementById('club-reports-list');
+  if (!matches.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(245,232,232,0.3);font-size:12px;font-style:italic;">No matches saved yet</div>';
+    return;
+  }
+  // Group by squad
+  var bySquad = {};
+  matches.forEach(function(m) {
+    var sqId = m.squad_id || 'unknown';
+    if (!bySquad[sqId]) bySquad[sqId] = [];
+    bySquad[sqId].push(m);
+  });
+  var html = '';
+  Object.keys(bySquad).forEach(function(sqId) {
+    var sq = clubSquads.find(function(s){ return s.id === sqId; });
+    var sqName = sq ? sq.name : 'Unknown Squad';
+    var sqMatches = bySquad[sqId];
+    html += '<div style="margin-bottom:20px;">' +
+      '<div style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;color:#e03030;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(224,48,48,0.2);">' + sqName + ' — ' + sqMatches.length + ' matches</div>';
+    sqMatches.slice(0, 5).forEach(function(m) {
+      var d = m.data;
+      var hT = (d.homeGoals||0)*3 + (d.homePoints||0);
+      var aT = (d.awayGoals||0)*3 + (d.awayPoints||0);
+      var date = new Date(m.saved_at).toLocaleDateString('en-GB', {day:'numeric',month:'short'});
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;cursor:pointer;" onclick="generateMatchReport(' + d.id + ')">' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:12px;color:#f5e8e8;">' + (d.home||'Home') + ' v ' + (d.away||'Away') + '</div>' +
+          '<div style="font-size:10px;color:rgba(245,232,232,0.4);">' + date + ' · ' + (d.competition||'') + '</div>' +
+        '</div>' +
+        '<div style="font-family:\'Oswald\',sans-serif;font-size:13px;font-weight:700;color:#f5e8e8;">' + hT + ' – ' + aT + '</div>' +
+        '<div style="font-size:16px;color:rgba(245,232,232,0.3);">📄</div>' +
+      '</div>';
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+// ── SETTINGS ───────────────────────────────────────
+function saveClubSettings() {
+  var name = document.getElementById('club-edit-name').value.trim();
+  var county = document.getElementById('club-edit-county').value.trim();
+  if (!name) return;
+  supaDB('clubs?id=eq.' + currentClub.id, 'PATCH', { name: name, county: county || null }, currentToken)
+    .then(function() {
+      currentClub.name = name;
+      currentClub.county = county;
+      saveClubSession();
+      document.getElementById('club-dash-name').textContent = name;
+      document.getElementById('club-dash-county').textContent = county;
+      showSync('✓ Club settings saved', 2000);
+    }).catch(function() {});
+}
+
+// ── DASH TAB SWITCHER ──────────────────────────────
+function switchDashTab(tab, btn) {
+  var tabs = ['squads','members','reports','settings'];
+  tabs.forEach(function(t) {
+    var el = document.getElementById('dash-view-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+  var allBtns = document.querySelectorAll('.club-dash-tab');
+  for (var i=0; i<allBtns.length; i++) {
+    allBtns[i].style.background = 'rgba(255,255,255,0.04)';
+    allBtns[i].style.color = 'rgba(245,232,232,0.5)';
+  }
+  if (btn) { btn.style.background = '#e03030'; btn.style.color = '#fff'; }
+}
+
+// ── SAVE SQUAD CHANGES TO CLUB ─────────────────────
+var currentClubSquadId = null;
+
+function syncClubSquad() {
+  if (!currentClub || !currentClubSquadId || !currentToken) return;
+  supaDB('club_squads?id=eq.' + currentClubSquadId, 'PATCH',
+    { players: squad }, currentToken)
+    .then(function() { showSync('✓ Squad synced to club', 1800); })
+    .catch(function() {});
+}
+
+// ── HOOK SQUAD SAVE INTO CLUB SYNC ────────────────
+// Override saveSquad to also sync to club if active
+var _origSaveSquad = null;
 document.addEventListener('DOMContentLoaded', function() {
   initSupabase();
   checkSession();
