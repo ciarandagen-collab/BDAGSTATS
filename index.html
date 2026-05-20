@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>GAA Match Stats</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -4762,27 +4762,52 @@ var supabase = null;
 var currentUser = null;
 var authTab = 'signin';
 
-// Initialise client once supabase-js is loaded
+// Initialise client — handle all CDN namespace variants
 function initSupabase() {
-  if (window.supabase && window.supabase.createClient) {
-    supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-    // Listen for auth state changes
-    supabase.auth.onAuthStateChange(function(event, session) {
-      if (event === 'SIGNED_IN' && session) {
-        currentUser = session.user;
-        onSignedIn();
-      } else if (event === 'SIGNED_OUT') {
-        currentUser = null;
-      }
-    });
-    // Check for existing session
-    supabase.auth.getSession().then(function(result) {
-      if (result.data && result.data.session) {
-        currentUser = result.data.session.user;
-        onSignedIn();
-      }
-    });
+  var factory = null;
+  // supabase-js v2 CDN exposes as window.supabase.createClient
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    factory = window.supabase.createClient;
   }
+  // Some CDN builds expose it at window.supabase directly as a function
+  else if (typeof window.supabase === 'function') {
+    factory = window.supabase;
+  }
+  // Older builds
+  else if (window.Supabase && window.Supabase.createClient) {
+    factory = window.Supabase.createClient;
+  }
+
+  if (!factory) {
+    // Not loaded yet — retry in 300ms
+    setTimeout(initSupabase, 300);
+    return;
+  }
+
+  try {
+    supabase = factory(SUPA_URL, SUPA_KEY);
+  } catch(e) {
+    setTimeout(initSupabase, 300);
+    return;
+  }
+
+  // Listen for auth state changes
+  supabase.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      onSignedIn();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+    }
+  });
+
+  // Check for existing session
+  supabase.auth.getSession().then(function(result) {
+    if (result.data && result.data.session) {
+      currentUser = result.data.session.user;
+      onSignedIn();
+    }
+  });
 }
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
@@ -4802,7 +4827,12 @@ function switchAuthTab(tab) {
 
 // ── ATTEMPT LOGIN / REGISTER ───────────────────────
 function attemptLogin() {
-  if (!supabase) { showAuthError('App still loading — please wait a moment and try again.'); return; }
+  if (!supabase) {
+    showAuthError('Still connecting — please wait 2 seconds and try again.');
+    // Try to init again
+    initSupabase();
+    return;
+  }
   var email = document.getElementById('login-user').value.trim().toLowerCase();
   var pass = document.getElementById('login-pass').value;
   var name = document.getElementById('login-name').value.trim();
