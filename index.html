@@ -1030,6 +1030,10 @@ select option { background:#1a0505; }
     </div>
 
     <div style="text-align:center;margin-top:16px;font-size:10px;color:rgba(245,232,232,0.2);letter-spacing:1px;">Your data is private and secure</div>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="testConnection()" style="background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 12px;color:rgba(245,232,232,0.3);font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;">Test Connection</button>
+    </div>
+    <div id="test-result" style="text-align:center;margin-top:8px;font-size:11px;color:rgba(245,232,232,0.5);font-family:monospace;word-break:break-all;padding:0 8px;"></div>
   </div>
 </div>
 
@@ -4755,7 +4759,7 @@ function onTeamSelect(team, value) {
 }
 
 // ── SUPABASE CONFIG ────────────────────────────────
-var SUPA_URL = 'https://sbruzfczhdoboxgsabs.supabase.co';
+var SUPA_URL = 'https://sbruzfczhdooboxgsabs.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8';
 
 var currentUser = null;
@@ -4775,7 +4779,10 @@ function supaHeaders(token) {
 function supaAuthPost(path, body) {
   return fetch(SUPA_URL + '/auth/v1/' + path, {
     method: 'POST',
-    headers: supaHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_KEY
+    },
     body: JSON.stringify(body)
   }).then(function(r) {
     return r.json().then(function(data) {
@@ -4840,6 +4847,23 @@ function initSupabase() {
       });
     }
   } catch(e) {}
+}
+
+// ── CONNECTION TEST ────────────────────────────────
+function testConnection() {
+  var el = document.getElementById('test-result');
+  el.textContent = 'Testing...';
+  el.style.color = 'rgba(245,232,232,0.5)';
+  fetch('https://sbruzfczhdooboxgsabs.supabase.co/auth/v1/settings', {
+    method: 'GET',
+    headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8' }
+  }).then(function(r) {
+    el.textContent = 'OK HTTP ' + r.status;
+    el.style.color = '#86efac';
+  }).catch(function(e) {
+    el.textContent = 'FAIL: ' + (e && e.message ? e.message : 'unknown');
+    el.style.color = '#fca5a5';
+  });
 }
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
