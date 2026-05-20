@@ -4768,8 +4768,7 @@ function supaHeaders(token) {
   return {
     'Content-Type': 'application/json',
     'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + (token || SUPA_KEY),
-    'x-client-info': 'coach-stats/1.0'
+    'Authorization': 'Bearer ' + (token || SUPA_KEY)
   };
 }
 
@@ -4891,9 +4890,9 @@ function attemptLogin() {
       s.textContent = 'Account created! Check your email to confirm, then sign in.';
       s.style.display = 'block';
       switchAuthTab('signin');
-    }).catch(function() {
+    }).catch(function(e) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
-      showAuthError('Network error — please check your connection and try again.');
+      showAuthError('Error: ' + (e && e.message ? e.message : 'Unknown. Check console.'));
     });
   } else {
     supaAuthPost('token?grant_type=password', {
@@ -4910,9 +4909,9 @@ function attemptLogin() {
       currentUser = data.user;
       saveSession(currentToken, currentUser);
       onSignedIn();
-    }).catch(function() {
+    }).catch(function(e) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
-      showAuthError('Network error — please check your connection and try again.');
+      showAuthError('Error: ' + (e && e.message ? e.message : 'Unknown. Check console.'));
     });
   }
 }
