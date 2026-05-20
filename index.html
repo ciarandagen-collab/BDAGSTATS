@@ -978,17 +978,7 @@ select option { background:#1a0505; }
 <body>
 
 <!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="
-  position:fixed; top:0; left:0; right:0; bottom:0;
-  background:#0d0000;
-  z-index:99999;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  font-family:'Oswald',sans-serif;
-">
+<div id="login-screen" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0000;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Oswald',sans-serif;">
   <div style="width:100%;max-width:360px;">
 
     <!-- Logo -->
@@ -998,14 +988,22 @@ select option { background:#1a0505; }
       <div style="font-size:11px;color:rgba(245,232,232,0.4);letter-spacing:3px;margin-top:4px;text-transform:uppercase;">GAA Match Statistics</div>
     </div>
 
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid rgba(224,48,48,0.25);">
+      <button id="tab-signin" onclick="switchAuthTab('signin')" style="flex:1;padding:10px;background:#e03030;border:none;color:#fff;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Sign In</button>
+      <button id="tab-register" onclick="switchAuthTab('register')" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(245,232,232,0.5);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Register</button>
+    </div>
+
     <!-- Login card -->
-    <div style="
-      background:rgba(255,255,255,0.04);
-      border:1px solid rgba(224,48,48,0.25);
-      border-radius:16px;
-      padding:28px 24px;
-    ">
-      <div style="font-size:11px;letter-spacing:3px;color:#e03030;text-transform:uppercase;margin-bottom:20px;text-align:center;">Sign In</div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(224,48,48,0.25);border-radius:16px;padding:28px 24px;">
+
+      <!-- Register name (hidden by default) -->
+      <div id="register-name-field" style="display:none;margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Your Name</div>
+        <input id="login-name" type="text" autocomplete="name" placeholder="Enter your name"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f5e8e8;font-size:15px;font-family:'Oswald',sans-serif;box-sizing:border-box;outline:none;"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-user').focus()">
+      </div>
 
       <div style="margin-bottom:14px;">
         <div style="font-size:9px;letter-spacing:2px;color:rgba(245,232,232,0.45);text-transform:uppercase;margin-bottom:6px;">Email</div>
@@ -1021,24 +1019,31 @@ select option { background:#1a0505; }
           onkeydown="if(event.key==='Enter')attemptLogin()">
       </div>
 
-      <div id="login-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;letter-spacing:0.5px;">
-        Incorrect email or password. Please try again.
+      <div id="login-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;letter-spacing:0.5px;"></div>
+      <div id="login-success" style="display:none;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#86efac;text-align:center;letter-spacing:0.5px;"></div>
+
+      <button id="login-btn" onclick="attemptLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#991b1b,#e03030);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Sign In</button>
+
+      <div id="forgot-link" style="text-align:center;margin-top:14px;">
+        <button onclick="sendPasswordReset()" style="background:none;border:none;color:rgba(245,232,232,0.35);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;text-decoration:underline;">Forgot password?</button>
       </div>
-
-      <button onclick="attemptLogin()" style="
-        width:100%;padding:14px;
-        background:linear-gradient(135deg,#991b1b,#e03030);
-        border:none;border-radius:10px;
-        color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-        cursor:pointer;
-      ">Sign In</button>
     </div>
 
-    <div style="text-align:center;margin-top:20px;font-size:10px;color:rgba(245,232,232,0.2);letter-spacing:1px;">
-      Authorised users only
-    </div>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:rgba(245,232,232,0.2);letter-spacing:1px;">Your data is private and secure</div>
   </div>
 </div>
+
+<!-- ── USER BADGE (shown when logged in) ── -->
+<div id="user-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:9000;display:none;align-items:center;gap:8px;">
+  <div style="background:rgba(13,0,0,0.85);border:1px solid rgba(224,48,48,0.3);border-radius:20px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:8px;">
+    <div style="width:24px;height:24px;border-radius:50%;background:#e03030;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
+    <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <button onclick="signOut()" style="background:none;border:none;color:rgba(245,232,232,0.3);font-size:13px;cursor:pointer;padding:0;line-height:1;" title="Sign out">⏻</button>
+  </div>
+</div>
+
+<!-- ── SYNC STATUS BANNER ── -->
+<div id="sync-banner" style="display:none;position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px);left:12px;right:12px;background:#1e3a2f;border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 14px;z-index:8000;font-family:'Oswald',sans-serif;font-size:11px;color:#86efac;letter-spacing:1px;text-align:center;"></div>
 
 
 <!-- TOP BAR -->
@@ -2299,6 +2304,7 @@ function loadSquad() {
 
 function saveSquad() {
   try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
+  syncSquad();
 }
 
 function renderSquadGrid() {
@@ -3093,6 +3099,7 @@ function saveMatchToHistory() {
   const list = loadHistory();
   list.unshift(record);
   saveHistory(list);
+  syncMatchToSupabase(record);
 
   const btn = document.querySelector('.btn-save-match');
   if (btn) { btn.textContent = '✓ Saved!'; setTimeout(()=>btn.textContent='Save Match', 2000); }
@@ -3166,6 +3173,7 @@ function deleteMatch(id) {
   if (!confirm('Delete this match from history?')) return;
   const list = loadHistory().filter(m => m.id !== id);
   saveHistory(list);
+  deleteMatchFromSupabase(id);
   renderHistory();
 }
 
@@ -4746,49 +4754,257 @@ function onTeamSelect(team, value) {
   updateNames();
 }
 
-// ── LOGIN ──────────────────────────────────────────
-var SESSION_KEY = 'cs_auth';
+// ── SUPABASE CONFIG ────────────────────────────────
+var SUPA_URL = 'https://sbruzfczhdoboxgsabs.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8';
 
+var currentUser = null;
+var authToken = null;
+var authTab = 'signin';
+
+// ── AUTH TAB SWITCHER ──────────────────────────────
+function switchAuthTab(tab) {
+  authTab = tab;
+  var isRegister = tab === 'register';
+  document.getElementById('tab-signin').style.background = isRegister ? 'rgba(255,255,255,0.04)' : '#e03030';
+  document.getElementById('tab-signin').style.color = isRegister ? 'rgba(245,232,232,0.5)' : '#fff';
+  document.getElementById('tab-register').style.background = isRegister ? '#e03030' : 'rgba(255,255,255,0.04)';
+  document.getElementById('tab-register').style.color = isRegister ? '#fff' : 'rgba(245,232,232,0.5)';
+  document.getElementById('register-name-field').style.display = isRegister ? '' : 'none';
+  document.getElementById('login-btn').textContent = isRegister ? 'Create Account' : 'Sign In';
+  document.getElementById('forgot-link').style.display = isRegister ? 'none' : '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-success').style.display = 'none';
+}
+
+// ── SUPABASE API HELPERS ───────────────────────────
+function supaFetch(path, method, body, token) {
+  var headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + (token || SUPA_KEY)
+  };
+  if (method !== 'GET') headers['Prefer'] = 'return=representation';
+  return fetch(SUPA_URL + path, {
+    method: method || 'GET',
+    headers: headers,
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function(r) { return r.json(); });
+}
+
+function supaAuth(path, body) {
+  return fetch(SUPA_URL + '/auth/v1/' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
+}
+
+// ── ATTEMPT LOGIN / REGISTER ───────────────────────
+function attemptLogin() {
+  var email = document.getElementById('login-user').value.trim().toLowerCase();
+  var pass = document.getElementById('login-pass').value;
+  var name = document.getElementById('login-name').value.trim();
+  var errEl = document.getElementById('login-error');
+  var sucEl = document.getElementById('login-success');
+  var btn = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email || !pass) { showAuthError('Please enter your email and password.'); return; }
+  if (authTab === 'register' && !name) { showAuthError('Please enter your name.'); return; }
+  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+
+  btn.textContent = authTab === 'register' ? 'Creating...' : 'Signing in...';
+  btn.style.opacity = '0.7';
+
+  if (authTab === 'register') {
+    supaAuth('signup', { email: email, password: pass, data: { name: name } })
+      .then(function(data) {
+        btn.style.opacity = '1';
+        if (data.error) { showAuthError(data.error.message || data.error.msg || 'Registration failed.'); btn.textContent = 'Create Account'; return; }
+        sucEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+        sucEl.style.display = 'block';
+        btn.textContent = 'Create Account';
+        switchAuthTab('signin');
+      }).catch(function() { btn.style.opacity='1'; btn.textContent='Create Account'; showAuthError('Network error. Please try again.'); });
+  } else {
+    supaAuth('token?grant_type=password', { email: email, password: pass })
+      .then(function(data) {
+        btn.style.opacity = '1';
+        btn.textContent = 'Sign In';
+        if (data.error || !data.access_token) {
+          showAuthError(data.error_description || data.error || 'Incorrect email or password.');
+          document.getElementById('login-pass').value = '';
+          return;
+        }
+        authToken = data.access_token;
+        currentUser = data.user;
+        onSignedIn();
+      }).catch(function() { btn.style.opacity='1'; btn.textContent='Sign In'; showAuthError('Network error. Please try again.'); });
+  }
+}
+
+function showAuthError(msg) {
+  var el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function sendPasswordReset() {
+  var email = document.getElementById('login-user').value.trim();
+  if (!email) { showAuthError('Enter your email address first.'); return; }
+  supaAuth('recover', { email: email })
+    .then(function() {
+      var s = document.getElementById('login-success');
+      s.textContent = 'Password reset email sent — check your inbox.';
+      s.style.display = 'block';
+    });
+}
+
+// ── ON SIGNED IN ───────────────────────────────────
+function onSignedIn() {
+  // Hide login screen
+  var screen = document.getElementById('login-screen');
+  screen.style.opacity = '0';
+  screen.style.transition = 'opacity 0.4s ease';
+  setTimeout(function() { screen.style.display = 'none'; }, 400);
+
+  // Show user badge
+  var badge = document.getElementById('user-badge');
+  badge.style.display = 'flex';
+  var email = currentUser.email || '';
+  var name = (currentUser.user_metadata && currentUser.user_metadata.name) || '';
+  document.getElementById('user-email-display').textContent = name || email;
+  document.getElementById('user-avatar').textContent = (name || email).charAt(0).toUpperCase();
+
+  // Save token to localStorage for session persistence
+  try {
+    localStorage.setItem('cs_supa_token', authToken);
+    localStorage.setItem('cs_supa_user', JSON.stringify(currentUser));
+  } catch(e) {}
+
+  // Load user's data from Supabase
+  loadUserData();
+}
+
+function signOut() {
+  if (!confirm('Sign out of Coach Stats?')) return;
+  fetch(SUPA_URL + '/auth/v1/logout', {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + authToken }
+  });
+  authToken = null;
+  currentUser = null;
+  try {
+    localStorage.removeItem('cs_supa_token');
+    localStorage.removeItem('cs_supa_user');
+  } catch(e) {}
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.opacity = '1';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ── SESSION RESTORE ────────────────────────────────
 function checkSession() {
   try {
-    var s = sessionStorage.getItem(SESSION_KEY);
-    if (s === 'ok') {
-      document.getElementById('login-screen').style.display = 'none';
+    var token = localStorage.getItem('cs_supa_token');
+    var user = localStorage.getItem('cs_supa_user');
+    if (token && user) {
+      authToken = token;
+      currentUser = JSON.parse(user);
+      // Verify token is still valid
+      fetch(SUPA_URL + '/auth/v1/user', {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
+      }).then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.id) {
+            currentUser = data;
+            onSignedIn();
+          } else {
+            // Token expired — show login
+            document.getElementById('login-screen').style.display = 'flex';
+          }
+        }).catch(function() {
+          document.getElementById('login-screen').style.display = 'flex';
+        });
     }
   } catch(e) {}
 }
 
-function attemptLogin() {
-  var u = document.getElementById('login-user').value.trim().toLowerCase();
-  var p = document.getElementById('login-pass').value;
-  var err = document.getElementById('login-error');
-
-  var validUser = 'ciarandagen@icloud.com';
-  var validPass = 'CDwbot22oo83?';
-
-  if (u === validUser && p === validPass) {
-    err.style.display = 'none';
-    try { sessionStorage.setItem(SESSION_KEY, 'ok'); } catch(e) {}
-    var screen = document.getElementById('login-screen');
-    screen.style.opacity = '0';
-    screen.style.transition = 'opacity 0.4s ease';
-    setTimeout(function() { screen.style.display = 'none'; }, 400);
-  } else {
-    err.style.display = 'block';
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
-    // Shake animation
-    var card = screen ? screen.querySelector('div > div:nth-child(2)') : null;
-    if (!card) return;
-    card.style.transition = 'transform 0.1s';
-    var shakes = ['-8px','8px','-6px','6px','-3px','0px'];
-    var i = 0;
-    var shake = setInterval(function() {
-      card.style.transform = 'translateX(' + shakes[i] + ')';
-      i++;
-      if (i >= shakes.length) { clearInterval(shake); card.style.transform = ''; }
-    }, 60);
+// ── SYNC STATUS ────────────────────────────────────
+function showSync(msg, duration) {
+  var b = document.getElementById('sync-banner');
+  b.textContent = msg;
+  b.style.display = 'block';
+  if (duration !== 0) {
+    setTimeout(function() { b.style.display = 'none'; }, duration || 2500);
   }
+}
+
+// ── LOAD USER DATA FROM SUPABASE ───────────────────
+function loadUserData() {
+  showSync('⟳ Loading your data...', 0);
+
+  // Load squad
+  supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id + '&select=squad', 'GET', null, authToken)
+    .then(function(data) {
+      if (data && data.length && data[0].squad) {
+        squad = data[0].squad;
+        while (squad.length < 34) squad.push(null);
+        renderSquadGrid();
+      }
+    }).catch(function() {});
+
+  // Load match history
+  supaFetch('/rest/v1/matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, authToken)
+    .then(function(data) {
+      if (data && data.length) {
+        var matches = data.map(function(r) { return r.data; });
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(matches)); } catch(e) {}
+        renderHistory();
+        showSync('✓ Data loaded', 2000);
+      } else {
+        showSync('✓ Ready', 1500);
+      }
+    }).catch(function() { showSync('⚠ Could not load data', 2500); });
+}
+
+// ── SAVE SQUAD TO SUPABASE ─────────────────────────
+function syncSquad() {
+  if (!currentUser || !authToken) return;
+  supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id, 'GET', null, authToken)
+    .then(function(existing) {
+      if (existing && existing.length) {
+        return supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id, 'PATCH',
+          { squad: squad }, authToken);
+      } else {
+        return supaFetch('/rest/v1/squads', 'POST',
+          { user_id: currentUser.id, squad: squad }, authToken);
+      }
+    })
+    .then(function() { showSync('✓ Squad saved', 1800); })
+    .catch(function() {});
+}
+
+// ── SAVE MATCH TO SUPABASE ─────────────────────────
+function syncMatchToSupabase(record) {
+  if (!currentUser || !authToken) return;
+  supaFetch('/rest/v1/matches', 'POST',
+    { user_id: currentUser.id, match_id: record.id, data: record },
+    authToken)
+    .then(function() { showSync('✓ Match saved to your account', 2500); })
+    .catch(function() {});
+}
+
+// ── DELETE MATCH FROM SUPABASE ─────────────────────
+function deleteMatchFromSupabase(id) {
+  if (!currentUser || !authToken) return;
+  supaFetch('/rest/v1/matches?user_id=eq.' + currentUser.id + '&match_id=eq.' + id,
+    'DELETE', null, authToken).catch(function() {});
 }
 
 // ── INIT ───────────────────────────────────────────
