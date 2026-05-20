@@ -7,7 +7,6 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>GAA Match Stats</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -4758,56 +4757,90 @@ function onTeamSelect(team, value) {
 // ── SUPABASE CONFIG ────────────────────────────────
 var SUPA_URL = 'https://sbruzfczhdoboxgsabs.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8';
-var supabase = null;
+
 var currentUser = null;
+var currentToken = null;
 var authTab = 'signin';
+var supabase = true; // always ready — no external library needed
 
-// Initialise client — handle all CDN namespace variants
-function initSupabase() {
-  var factory = null;
-  // supabase-js v2 CDN exposes as window.supabase.createClient
-  if (window.supabase && typeof window.supabase.createClient === 'function') {
-    factory = window.supabase.createClient;
-  }
-  // Some CDN builds expose it at window.supabase directly as a function
-  else if (typeof window.supabase === 'function') {
-    factory = window.supabase;
-  }
-  // Older builds
-  else if (window.Supabase && window.Supabase.createClient) {
-    factory = window.Supabase.createClient;
-  }
+// ── SUPABASE FETCH HELPERS ─────────────────────────
+function supaHeaders(token) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + (token || SUPA_KEY),
+    'x-client-info': 'coach-stats/1.0'
+  };
+}
 
-  if (!factory) {
-    // Not loaded yet — retry in 300ms
-    setTimeout(initSupabase, 300);
-    return;
-  }
+function supaAuthPost(path, body) {
+  return fetch(SUPA_URL + '/auth/v1/' + path, {
+    method: 'POST',
+    headers: supaHeaders(),
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    return r.json().then(function(data) {
+      data._status = r.status;
+      return data;
+    });
+  });
+}
 
+function supaAuthGet(path, token) {
+  return fetch(SUPA_URL + '/auth/v1/' + path, {
+    method: 'GET',
+    headers: supaHeaders(token)
+  }).then(function(r) { return r.json(); });
+}
+
+function supaDB(path, method, body, token) {
+  var headers = supaHeaders(token);
+  if (method === 'POST' || method === 'PATCH') headers['Prefer'] = 'return=representation';
+  return fetch(SUPA_URL + '/rest/v1/' + path, {
+    method: method || 'GET',
+    headers: headers,
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function(r) { return r.json(); });
+}
+
+// ── SESSION STORAGE ────────────────────────────────
+function saveSession(token, user) {
   try {
-    supabase = factory(SUPA_URL, SUPA_KEY);
-  } catch(e) {
-    setTimeout(initSupabase, 300);
-    return;
-  }
+    localStorage.setItem('cs_token', token);
+    localStorage.setItem('cs_user', JSON.stringify(user));
+  } catch(e) {}
+}
 
-  // Listen for auth state changes
-  supabase.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_IN' && session) {
-      currentUser = session.user;
-      onSignedIn();
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
-    }
-  });
+function clearSession() {
+  try {
+    localStorage.removeItem('cs_token');
+    localStorage.removeItem('cs_user');
+  } catch(e) {}
+}
 
-  // Check for existing session
-  supabase.auth.getSession().then(function(result) {
-    if (result.data && result.data.session) {
-      currentUser = result.data.session.user;
-      onSignedIn();
+// ── INIT ──────────────────────────────────────────
+function initSupabase() {
+  // Restore session from localStorage
+  try {
+    var token = localStorage.getItem('cs_token');
+    var userStr = localStorage.getItem('cs_user');
+    if (token && userStr) {
+      currentToken = token;
+      currentUser = JSON.parse(userStr);
+      // Verify token is still valid
+      supaAuthGet('user', token).then(function(data) {
+        if (data && data.id) {
+          currentUser = data;
+          onSignedIn();
+        } else {
+          clearSession();
+        }
+      }).catch(function() {
+        // Offline — use cached session
+        onSignedIn();
+      });
     }
-  });
+  } catch(e) {}
 }
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
@@ -4827,12 +4860,6 @@ function switchAuthTab(tab) {
 
 // ── ATTEMPT LOGIN / REGISTER ───────────────────────
 function attemptLogin() {
-  if (!supabase) {
-    showAuthError('Still connecting — please wait 2 seconds and try again.');
-    // Try to init again
-    initSupabase();
-    return;
-  }
   var email = document.getElementById('login-user').value.trim().toLowerCase();
   var pass = document.getElementById('login-pass').value;
   var name = document.getElementById('login-name').value.trim();
@@ -4850,38 +4877,42 @@ function attemptLogin() {
   btn.disabled = true;
 
   if (authTab === 'register') {
-    supabase.auth.signUp({
+    supaAuthPost('signup', {
       email: email,
       password: pass,
-      options: { data: { name: name } }
-    }).then(function(result) {
+      data: { name: name }
+    }).then(function(data) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
-      if (result.error) { showAuthError(result.error.message); return; }
+      if (data.error || data.msg) {
+        showAuthError(data.error_description || data.msg || data.error || 'Registration failed.');
+        return;
+      }
       var s = document.getElementById('login-success');
-      s.textContent = result.data.user && !result.data.user.confirmed_at
-        ? 'Account created! Check your email to confirm, then sign in.'
-        : 'Account created! You can now sign in.';
+      s.textContent = 'Account created! Check your email to confirm, then sign in.';
       s.style.display = 'block';
       switchAuthTab('signin');
-    }).catch(function(e) {
+    }).catch(function() {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
-      showAuthError('Network error — check your connection and try again.');
+      showAuthError('Network error — please check your connection and try again.');
     });
   } else {
-    supabase.auth.signInWithPassword({
+    supaAuthPost('token?grant_type=password', {
       email: email,
       password: pass
-    }).then(function(result) {
+    }).then(function(data) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
-      if (result.error) {
-        showAuthError(result.error.message || 'Incorrect email or password.');
+      if (data.error || !data.access_token) {
+        showAuthError(data.error_description || data.error || 'Incorrect email or password.');
         document.getElementById('login-pass').value = '';
         return;
       }
-      // onSignedIn called via onAuthStateChange
-    }).catch(function(e) {
+      currentToken = data.access_token;
+      currentUser = data.user;
+      saveSession(currentToken, currentUser);
+      onSignedIn();
+    }).catch(function() {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
-      showAuthError('Network error — check your connection and try again.');
+      showAuthError('Network error — please check your connection and try again.');
     });
   }
 }
@@ -4893,12 +4924,9 @@ function showAuthError(msg) {
 }
 
 function sendPasswordReset() {
-  if (!supabase) return;
   var email = document.getElementById('login-user').value.trim();
   if (!email) { showAuthError('Enter your email address first.'); return; }
-  supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://ciarandagen-collab.github.io/BDAGSTATS/'
-  }).then(function() {
+  supaAuthPost('recover', { email: email }).then(function() {
     var s = document.getElementById('login-success');
     s.textContent = 'Password reset email sent — check your inbox.';
     s.style.display = 'block';
@@ -4931,8 +4959,15 @@ function onSignedIn() {
 
 function signOut() {
   if (!confirm('Sign out of Coach Stats?')) return;
-  if (supabase) supabase.auth.signOut();
+  if (currentToken) {
+    fetch(SUPA_URL + '/auth/v1/logout', {
+      method: 'POST',
+      headers: supaHeaders(currentToken)
+    }).catch(function() {});
+  }
+  currentToken = null;
   currentUser = null;
+  clearSession();
   var badge = document.getElementById('user-badge');
   if (badge) badge.style.display = 'none';
   var screen = document.getElementById('login-screen');
@@ -4959,24 +4994,24 @@ function showSync(msg, duration) {
 
 // ── LOAD USER DATA FROM SUPABASE ───────────────────
 function loadUserData() {
-  if (!supabase || !currentUser) return;
+  if (!currentUser || !currentToken) return;
   showSync('⟳ Loading your data...', 0);
 
   // Load squad
-  supabase.from('squads').select('squad').eq('user_id', currentUser.id).single()
-    .then(function(result) {
-      if (result.data && result.data.squad) {
-        squad = result.data.squad;
+  supaDB('squads?user_id=eq.' + currentUser.id + '&select=squad', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].squad) {
+        squad = data[0].squad;
         while (squad.length < 34) squad.push(null);
         renderSquadGrid();
       }
     }).catch(function() {});
 
   // Load match history
-  supabase.from('matches').select('data').eq('user_id', currentUser.id).order('saved_at', { ascending: false })
-    .then(function(result) {
-      if (result.data && result.data.length) {
-        var matches = result.data.map(function(r) { return r.data; });
+  supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length) {
+        var matches = data.map(function(r) { return r.data; });
         try { localStorage.setItem(HISTORY_KEY, JSON.stringify(matches)); } catch(e) {}
         renderHistory();
         showSync('✓ Data loaded', 2000);
@@ -4988,14 +5023,15 @@ function loadUserData() {
 
 // ── SAVE SQUAD TO SUPABASE ─────────────────────────
 function syncSquad() {
-  if (!supabase || !currentUser) return;
-  supabase.from('squads').select('id').eq('user_id', currentUser.id).single()
-    .then(function(result) {
-      if (result.data) {
-        return supabase.from('squads').update({ squad: squad, updated_at: new Date().toISOString() })
-          .eq('user_id', currentUser.id);
+  if (!currentUser || !currentToken) return;
+  supaDB('squads?user_id=eq.' + currentUser.id + '&select=id', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length) {
+        return supaDB('squads?user_id=eq.' + currentUser.id, 'PATCH',
+          { squad: squad, updated_at: new Date().toISOString() }, currentToken);
       } else {
-        return supabase.from('squads').insert({ user_id: currentUser.id, squad: squad });
+        return supaDB('squads', 'POST',
+          { user_id: currentUser.id, squad: squad }, currentToken);
       }
     })
     .then(function() { showSync('✓ Squad saved', 1800); })
@@ -5004,22 +5040,21 @@ function syncSquad() {
 
 // ── SAVE MATCH TO SUPABASE ─────────────────────────
 function syncMatchToSupabase(record) {
-  if (!supabase || !currentUser) return;
-  supabase.from('matches').insert({
+  if (!currentUser || !currentToken) return;
+  supaDB('matches', 'POST', {
     user_id: currentUser.id,
     match_id: record.id,
     data: record
-  }).then(function() { showSync('✓ Match saved to your account', 2500); })
+  }, currentToken)
+    .then(function() { showSync('✓ Match saved to your account', 2500); })
     .catch(function() {});
 }
 
 // ── DELETE MATCH FROM SUPABASE ─────────────────────
 function deleteMatchFromSupabase(id) {
-  if (!supabase || !currentUser) return;
-  supabase.from('matches').delete()
-    .eq('user_id', currentUser.id)
-    .eq('match_id', id)
-    .catch(function() {});
+  if (!currentUser || !currentToken) return;
+  supaDB('matches?user_id=eq.' + currentUser.id + '&match_id=eq.' + id,
+    'DELETE', null, currentToken).catch(function() {});
 }
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
