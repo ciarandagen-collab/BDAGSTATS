@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>GAA Match Stats</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -4757,10 +4758,32 @@ function onTeamSelect(team, value) {
 // ── SUPABASE CONFIG ────────────────────────────────
 var SUPA_URL = 'https://sbruzfczhdoboxgsabs.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8';
-
+var supabase = null;
 var currentUser = null;
-var authToken = null;
 var authTab = 'signin';
+
+// Initialise client once supabase-js is loaded
+function initSupabase() {
+  if (window.supabase && window.supabase.createClient) {
+    supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    // Listen for auth state changes
+    supabase.auth.onAuthStateChange(function(event, session) {
+      if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        onSignedIn();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+      }
+    });
+    // Check for existing session
+    supabase.auth.getSession().then(function(result) {
+      if (result.data && result.data.session) {
+        currentUser = result.data.session.user;
+        onSignedIn();
+      }
+    });
+  }
+}
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
 function switchAuthTab(tab) {
@@ -4777,40 +4800,16 @@ function switchAuthTab(tab) {
   document.getElementById('login-success').style.display = 'none';
 }
 
-// ── SUPABASE API HELPERS ───────────────────────────
-function supaFetch(path, method, body, token) {
-  var headers = {
-    'Content-Type': 'application/json',
-    'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + (token || SUPA_KEY)
-  };
-  if (method !== 'GET') headers['Prefer'] = 'return=representation';
-  return fetch(SUPA_URL + path, {
-    method: method || 'GET',
-    headers: headers,
-    body: body ? JSON.stringify(body) : undefined
-  }).then(function(r) { return r.json(); });
-}
-
-function supaAuth(path, body) {
-  return fetch(SUPA_URL + '/auth/v1/' + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
-    body: JSON.stringify(body)
-  }).then(function(r) { return r.json(); });
-}
-
 // ── ATTEMPT LOGIN / REGISTER ───────────────────────
 function attemptLogin() {
+  if (!supabase) { showAuthError('App still loading — please wait a moment and try again.'); return; }
   var email = document.getElementById('login-user').value.trim().toLowerCase();
   var pass = document.getElementById('login-pass').value;
   var name = document.getElementById('login-name').value.trim();
-  var errEl = document.getElementById('login-error');
-  var sucEl = document.getElementById('login-success');
   var btn = document.getElementById('login-btn');
 
-  errEl.style.display = 'none';
-  sucEl.style.display = 'none';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-success').style.display = 'none';
 
   if (!email || !pass) { showAuthError('Please enter your email and password.'); return; }
   if (authTab === 'register' && !name) { showAuthError('Please enter your name.'); return; }
@@ -4818,31 +4817,42 @@ function attemptLogin() {
 
   btn.textContent = authTab === 'register' ? 'Creating...' : 'Signing in...';
   btn.style.opacity = '0.7';
+  btn.disabled = true;
 
   if (authTab === 'register') {
-    supaAuth('signup', { email: email, password: pass, data: { name: name } })
-      .then(function(data) {
-        btn.style.opacity = '1';
-        if (data.error) { showAuthError(data.error.message || data.error.msg || 'Registration failed.'); btn.textContent = 'Create Account'; return; }
-        sucEl.textContent = 'Account created! Check your email to confirm, then sign in.';
-        sucEl.style.display = 'block';
-        btn.textContent = 'Create Account';
-        switchAuthTab('signin');
-      }).catch(function() { btn.style.opacity='1'; btn.textContent='Create Account'; showAuthError('Network error. Please try again.'); });
+    supabase.auth.signUp({
+      email: email,
+      password: pass,
+      options: { data: { name: name } }
+    }).then(function(result) {
+      btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
+      if (result.error) { showAuthError(result.error.message); return; }
+      var s = document.getElementById('login-success');
+      s.textContent = result.data.user && !result.data.user.confirmed_at
+        ? 'Account created! Check your email to confirm, then sign in.'
+        : 'Account created! You can now sign in.';
+      s.style.display = 'block';
+      switchAuthTab('signin');
+    }).catch(function(e) {
+      btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
+      showAuthError('Network error — check your connection and try again.');
+    });
   } else {
-    supaAuth('token?grant_type=password', { email: email, password: pass })
-      .then(function(data) {
-        btn.style.opacity = '1';
-        btn.textContent = 'Sign In';
-        if (data.error || !data.access_token) {
-          showAuthError(data.error_description || data.error || 'Incorrect email or password.');
-          document.getElementById('login-pass').value = '';
-          return;
-        }
-        authToken = data.access_token;
-        currentUser = data.user;
-        onSignedIn();
-      }).catch(function() { btn.style.opacity='1'; btn.textContent='Sign In'; showAuthError('Network error. Please try again.'); });
+    supabase.auth.signInWithPassword({
+      email: email,
+      password: pass
+    }).then(function(result) {
+      btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
+      if (result.error) {
+        showAuthError(result.error.message || 'Incorrect email or password.');
+        document.getElementById('login-pass').value = '';
+        return;
+      }
+      // onSignedIn called via onAuthStateChange
+    }).catch(function(e) {
+      btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
+      showAuthError('Network error — check your connection and try again.');
+    });
   }
 }
 
@@ -4853,91 +4863,63 @@ function showAuthError(msg) {
 }
 
 function sendPasswordReset() {
+  if (!supabase) return;
   var email = document.getElementById('login-user').value.trim();
   if (!email) { showAuthError('Enter your email address first.'); return; }
-  supaAuth('recover', { email: email })
-    .then(function() {
-      var s = document.getElementById('login-success');
-      s.textContent = 'Password reset email sent — check your inbox.';
-      s.style.display = 'block';
-    });
+  supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://ciarandagen-collab.github.io/BDAGSTATS/'
+  }).then(function() {
+    var s = document.getElementById('login-success');
+    s.textContent = 'Password reset email sent — check your inbox.';
+    s.style.display = 'block';
+  });
 }
 
 // ── ON SIGNED IN ───────────────────────────────────
 function onSignedIn() {
-  // Hide login screen
   var screen = document.getElementById('login-screen');
-  screen.style.opacity = '0';
-  screen.style.transition = 'opacity 0.4s ease';
-  setTimeout(function() { screen.style.display = 'none'; }, 400);
+  if (screen && screen.style.display !== 'none') {
+    screen.style.opacity = '0';
+    screen.style.transition = 'opacity 0.4s ease';
+    setTimeout(function() { screen.style.display = 'none'; }, 400);
+  } else if (screen) {
+    screen.style.display = 'none';
+  }
 
   // Show user badge
   var badge = document.getElementById('user-badge');
-  badge.style.display = 'flex';
+  if (badge) badge.style.display = 'flex';
   var email = currentUser.email || '';
   var name = (currentUser.user_metadata && currentUser.user_metadata.name) || '';
-  document.getElementById('user-email-display').textContent = name || email;
-  document.getElementById('user-avatar').textContent = (name || email).charAt(0).toUpperCase();
+  var displayEl = document.getElementById('user-email-display');
+  var avatarEl = document.getElementById('user-avatar');
+  if (displayEl) displayEl.textContent = name || email;
+  if (avatarEl) avatarEl.textContent = (name || email).charAt(0).toUpperCase();
 
-  // Save token to localStorage for session persistence
-  try {
-    localStorage.setItem('cs_supa_token', authToken);
-    localStorage.setItem('cs_supa_user', JSON.stringify(currentUser));
-  } catch(e) {}
-
-  // Load user's data from Supabase
   loadUserData();
 }
 
 function signOut() {
   if (!confirm('Sign out of Coach Stats?')) return;
-  fetch(SUPA_URL + '/auth/v1/logout', {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + authToken }
-  });
-  authToken = null;
+  if (supabase) supabase.auth.signOut();
   currentUser = null;
-  try {
-    localStorage.removeItem('cs_supa_token');
-    localStorage.removeItem('cs_supa_user');
-  } catch(e) {}
-  document.getElementById('user-badge').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-screen').style.opacity = '1';
+  var badge = document.getElementById('user-badge');
+  if (badge) badge.style.display = 'none';
+  var screen = document.getElementById('login-screen');
+  if (screen) { screen.style.display = 'flex'; screen.style.opacity = '1'; }
   document.getElementById('login-pass').value = '';
   document.getElementById('login-error').style.display = 'none';
 }
 
-// ── SESSION RESTORE ────────────────────────────────
+// ── SESSION CHECK ──────────────────────────────────
 function checkSession() {
-  try {
-    var token = localStorage.getItem('cs_supa_token');
-    var user = localStorage.getItem('cs_supa_user');
-    if (token && user) {
-      authToken = token;
-      currentUser = JSON.parse(user);
-      // Verify token is still valid
-      fetch(SUPA_URL + '/auth/v1/user', {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
-      }).then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.id) {
-            currentUser = data;
-            onSignedIn();
-          } else {
-            // Token expired — show login
-            document.getElementById('login-screen').style.display = 'flex';
-          }
-        }).catch(function() {
-          document.getElementById('login-screen').style.display = 'flex';
-        });
-    }
-  } catch(e) {}
+  // Handled by onAuthStateChange in initSupabase
 }
 
 // ── SYNC STATUS ────────────────────────────────────
 function showSync(msg, duration) {
   var b = document.getElementById('sync-banner');
+  if (!b) return;
   b.textContent = msg;
   b.style.display = 'block';
   if (duration !== 0) {
@@ -4947,23 +4929,24 @@ function showSync(msg, duration) {
 
 // ── LOAD USER DATA FROM SUPABASE ───────────────────
 function loadUserData() {
+  if (!supabase || !currentUser) return;
   showSync('⟳ Loading your data...', 0);
 
   // Load squad
-  supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id + '&select=squad', 'GET', null, authToken)
-    .then(function(data) {
-      if (data && data.length && data[0].squad) {
-        squad = data[0].squad;
+  supabase.from('squads').select('squad').eq('user_id', currentUser.id).single()
+    .then(function(result) {
+      if (result.data && result.data.squad) {
+        squad = result.data.squad;
         while (squad.length < 34) squad.push(null);
         renderSquadGrid();
       }
     }).catch(function() {});
 
   // Load match history
-  supaFetch('/rest/v1/matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, authToken)
-    .then(function(data) {
-      if (data && data.length) {
-        var matches = data.map(function(r) { return r.data; });
+  supabase.from('matches').select('data').eq('user_id', currentUser.id).order('saved_at', { ascending: false })
+    .then(function(result) {
+      if (result.data && result.data.length) {
+        var matches = result.data.map(function(r) { return r.data; });
         try { localStorage.setItem(HISTORY_KEY, JSON.stringify(matches)); } catch(e) {}
         renderHistory();
         showSync('✓ Data loaded', 2000);
@@ -4975,15 +4958,14 @@ function loadUserData() {
 
 // ── SAVE SQUAD TO SUPABASE ─────────────────────────
 function syncSquad() {
-  if (!currentUser || !authToken) return;
-  supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id, 'GET', null, authToken)
-    .then(function(existing) {
-      if (existing && existing.length) {
-        return supaFetch('/rest/v1/squads?user_id=eq.' + currentUser.id, 'PATCH',
-          { squad: squad }, authToken);
+  if (!supabase || !currentUser) return;
+  supabase.from('squads').select('id').eq('user_id', currentUser.id).single()
+    .then(function(result) {
+      if (result.data) {
+        return supabase.from('squads').update({ squad: squad, updated_at: new Date().toISOString() })
+          .eq('user_id', currentUser.id);
       } else {
-        return supaFetch('/rest/v1/squads', 'POST',
-          { user_id: currentUser.id, squad: squad }, authToken);
+        return supabase.from('squads').insert({ user_id: currentUser.id, squad: squad });
       }
     })
     .then(function() { showSync('✓ Squad saved', 1800); })
@@ -4992,23 +4974,43 @@ function syncSquad() {
 
 // ── SAVE MATCH TO SUPABASE ─────────────────────────
 function syncMatchToSupabase(record) {
-  if (!currentUser || !authToken) return;
-  supaFetch('/rest/v1/matches', 'POST',
-    { user_id: currentUser.id, match_id: record.id, data: record },
-    authToken)
-    .then(function() { showSync('✓ Match saved to your account', 2500); })
+  if (!supabase || !currentUser) return;
+  supabase.from('matches').insert({
+    user_id: currentUser.id,
+    match_id: record.id,
+    data: record
+  }).then(function() { showSync('✓ Match saved to your account', 2500); })
     .catch(function() {});
 }
 
 // ── DELETE MATCH FROM SUPABASE ─────────────────────
 function deleteMatchFromSupabase(id) {
-  if (!currentUser || !authToken) return;
-  supaFetch('/rest/v1/matches?user_id=eq.' + currentUser.id + '&match_id=eq.' + id,
-    'DELETE', null, authToken).catch(function() {});
+  if (!supabase || !currentUser) return;
+  supabase.from('matches').delete()
+    .eq('user_id', currentUser.id)
+    .eq('match_id', id)
+    .catch(function() {});
 }
+
+// ── AUTH TAB SWITCHER ──────────────────────────────
+function switchAuthTab(tab) {
+  authTab = tab;
+  var isRegister = tab === 'register';
+  document.getElementById('tab-signin').style.background = isRegister ? 'rgba(255,255,255,0.04)' : '#e03030';
+  document.getElementById('tab-signin').style.color = isRegister ? 'rgba(245,232,232,0.5)' : '#fff';
+  document.getElementById('tab-register').style.background = isRegister ? '#e03030' : 'rgba(255,255,255,0.04)';
+  document.getElementById('tab-register').style.color = isRegister ? '#fff' : 'rgba(245,232,232,0.5)';
+  document.getElementById('register-name-field').style.display = isRegister ? '' : 'none';
+  document.getElementById('login-btn').textContent = isRegister ? 'Create Account' : 'Sign In';
+  document.getElementById('forgot-link').style.display = isRegister ? 'none' : '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-success').style.display = 'none';
+}
+
 
 // ── INIT ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  initSupabase();
   checkSession();
   try { updateNames(); } catch(e) {}
   try { updateScoreboard(); } catch(e) {}
