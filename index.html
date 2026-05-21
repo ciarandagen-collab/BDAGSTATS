@@ -583,6 +583,176 @@ select option { background:#1a0505; }
 .shot-summary-table td { padding:8px 10px; text-align:center; color:var(--cream); font-family:'Oswald',sans-serif; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.04); }
 .shot-summary-table td:first-child { text-align:left; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
 .shot-summary-table tr:last-child td { border-bottom:none; }
+/* ── HELP PAGE ── */
+.help-intro {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.help-intro-icon { font-size: 32px; flex-shrink: 0; }
+.help-intro-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.help-intro-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.help-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.help-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.18s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.help-section-header:active { background: rgba(224,48,48,0.08); }
+.help-section-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+.help-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cream);
+  flex: 1;
+}
+.help-chevron {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.help-section.open .help-chevron { transform: rotate(180deg); }
+.help-section.open .help-section-header { border-bottom: 1px solid var(--border); }
+.help-body {
+  display: none;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: rgba(245,232,232,0.8);
+  line-height: 1.65;
+}
+.help-section.open .help-body { display: block; }
+.help-body p { margin-bottom: 10px; }
+.help-body p:last-child { margin-bottom: 0; }
+.help-body strong { color: var(--cream); font-weight: 600; }
+.help-tip {
+  background: rgba(245,166,35,0.1);
+  border: 1px solid rgba(245,166,35,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #fde68a;
+  line-height: 1.5;
+}
+.help-tip::before { content: '💡 Tip: '; font-weight: 600; }
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 12px;
+}
+.help-table th {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  padding: 7px 10px;
+  text-align: left;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--border);
+}
+.help-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: top;
+  color: rgba(245,232,232,0.8);
+}
+.help-table td:first-child { color: var(--cream); font-weight: 500; white-space: nowrap; }
+.help-table tr:last-child td { border-bottom: none; }
+.help-badge {
+  display: inline-block;
+  background: rgba(224,48,48,0.15);
+  border: 1px solid rgba(224,48,48,0.3);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--red-light);
+  margin: 2px 2px 2px 0;
+  white-space: nowrap;
+}
+.help-step-list {
+  counter-reset: help-steps;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.help-step-list li {
+  counter-increment: help-steps;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: rgba(245,232,232,0.8);
+}
+.help-step-list li::before {
+  content: counter(help-steps);
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  background: var(--red);
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.help-url {
+  display: block;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--red-light);
+  word-break: break-all;
+  margin: 8px 0;
+}
+.help-qr-section {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.help-qr-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
 /* ── HISTORY PAGE ── */
 .history-empty { text-align:center; padding:48px 20px; color:var(--muted); }
 .history-empty-icon { font-size:48px; display:block; margin-bottom:12px; opacity:0.4; }
@@ -1859,6 +2029,339 @@ select option { background:#1a0505; }
 
   </div><!-- /page-history -->
 
+  <!-- PAGE: HELP -->
+  <div class="page" id="page-help">
+
+    <div class="help-intro">
+      <div class="help-intro-icon">🏐</div>
+      <div>
+        <div class="help-intro-title">Coach Stats Guide</div>
+        <div class="help-intro-sub">Tap any section below to expand it. Full guide — v2.0.</div>
+      </div>
+    </div>
+
+    <!-- 1. Introduction -->
+    <div class="help-section open" id="help-sec-intro">
+      <div class="help-section-header" onclick="toggleHelp('intro')">
+        <span class="help-section-icon">📖</span>
+        <span class="help-section-title">Introduction</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>Coach Stats is a Progressive Web App (PWA) for GAA football coaches, analysts and managers. Record live match statistics from your phone, tablet or computer. Works fully offline at the pitch.</p>
+        <span class="help-url">https://ciarandagen-collab.github.io/BDAGSTATS/</span>
+        <div class="help-tip">Once installed as a PWA, the app works fully offline — ideal for pitches with poor signal.</div>
+      </div>
+    </div>
+
+    <!-- 2. User Accounts -->
+    <div class="help-section" id="help-sec-accounts">
+      <div class="help-section-header" onclick="toggleHelp('accounts')">
+        <span class="help-section-icon">🔐</span>
+        <span class="help-section-title">User Accounts</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>Coach Stats uses Supabase to provide secure user accounts. Your squad and match history are stored in the cloud and accessible from any device when signed in.</p>
+        <p><strong>Creating an Account</strong></p>
+        <ol class="help-step-list">
+          <li>Open the app — the login screen appears</li>
+          <li>Tap the <strong>Register</strong> tab</li>
+          <li>Enter your name, email address and a password (min. 6 characters)</li>
+          <li>Tap <strong>Create Account</strong></li>
+          <li>Check your email and click the confirmation link</li>
+          <li>Return to the app and sign in</li>
+        </ol>
+        <p><strong>What Gets Synced</strong></p>
+        <table class="help-table">
+          <tr><td>Squad</td><td>Your full 34-player squad is saved every time you make a change</td></tr>
+          <tr><td>Match history</td><td>Every match you save is stored privately in your account</td></tr>
+          <tr><td>Cross-device</td><td>Accessible from any phone, tablet or computer</td></tr>
+        </table>
+        <div class="help-tip">If you forget your password, enter your email and tap <strong>Forgot password?</strong> to receive a reset link.</div>
+      </div>
+    </div>
+
+    <!-- 3. Club Feature -->
+    <div class="help-section" id="help-sec-club">
+      <div class="help-section-header" onclick="toggleHelp('club')">
+        <span class="help-section-icon">🏟</span>
+        <span class="help-section-title">Club Feature</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>The club feature lets a GAA club create a shared account, manage multiple squads across grades, and allow coaches to access only their assigned squads.</p>
+        <p><strong>Setting Up — tap the 🏟 button (top right) after signing in.</strong></p>
+        <p><strong>Create Club (Admin)</strong></p>
+        <ol class="help-step-list">
+          <li>Tap <strong>Create Club</strong></li>
+          <li>Enter your club name and county</li>
+          <li>Tap <strong>Create Club</strong> — you become the Club Admin</li>
+        </ol>
+        <p><strong>Join a Club (Coach)</strong></p>
+        <ol class="help-step-list">
+          <li>Tap <strong>Join Club</strong></li>
+          <li>Enter the 8-character invite code from your admin</li>
+          <li>Tap <strong>Join Club</strong></li>
+        </ol>
+        <p><strong>Club Dashboard Tabs</strong></p>
+        <table class="help-table">
+          <thead><tr><th>Tab</th><th>What it does</th></tr></thead>
+          <tr><td>Squads</td><td>View all club squads. Tap any to load it. Add new squads by grade or custom name.</td></tr>
+          <tr><td>Members</td><td>View your 8-character invite code. See and remove members.</td></tr>
+          <tr><td>Reports</td><td>All saved matches grouped by squad. Tap any to generate a PDF report.</td></tr>
+          <tr><td>Settings</td><td>Edit club name and county.</td></tr>
+        </table>
+        <div class="help-tip">When a coach records a match while a club squad is active, it saves to both their personal account and the club database automatically.</div>
+      </div>
+    </div>
+
+    <!-- 4. Match Tab -->
+    <div class="help-section" id="help-sec-match">
+      <div class="help-section-header" onclick="toggleHelp('match')">
+        <span class="help-section-icon">🏟</span>
+        <span class="help-section-title">Match Tab — Setting Up</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p><strong>Selecting Teams</strong> — Tap either team button to open the searchable team picker.</p>
+        <table class="help-table">
+          <tr><td>County search</td><td>Type a county name (e.g. Kerry) to see all clubs in that county</td></tr>
+          <tr><td>Filter</td><td>Type any part of a club name to filter the list</td></tr>
+          <tr><td>Custom entry</td><td>Type a name not in the list and tap <strong>Use [name]</strong></td></tr>
+          <tr><td>Add permanently</td><td>Tap <strong>+ Add New</strong> — appears under My Custom Teams</td></tr>
+        </table>
+        <p><strong>Game Control — Clock Phases</strong></p>
+        <table class="help-table">
+          <thead><tr><th>Phase</th><th>Button</th><th>What it does</th></tr></thead>
+          <tr><td>Before kickoff</td><td><span class="help-badge">▶ Start Game</span></td><td>Starts the clock, begins 1st half</td></tr>
+          <tr><td>1st half running</td><td><span class="help-badge">⏸ Half Time</span></td><td>Stops clock, enters half time</td></tr>
+          <tr><td>Half time</td><td><span class="help-badge">▶ 2nd Half</span></td><td>Resets clock to 00:00, starts 2nd half</td></tr>
+          <tr><td>2nd half running</td><td><span class="help-badge">⏹ Full Time</span></td><td>Stops clock, enters full time</td></tr>
+          <tr><td>Full time</td><td><span class="help-badge">🏁 End Game</span></td><td>Prompts to save the match</td></tr>
+          <tr><td>Finished</td><td><span class="help-badge">↺ New Game</span></td><td>Resets all match data</td></tr>
+        </table>
+        <div class="help-tip">Tapping End Game prompts you to save the match to history automatically.</div>
+      </div>
+    </div>
+
+    <!-- 5. Record Tab -->
+    <div class="help-section" id="help-sec-record">
+      <div class="help-section-header" onclick="toggleHelp('record')">
+        <span class="help-section-icon">✍️</span>
+        <span class="help-section-title">Record Tab — Recording Events</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p><strong>Event Categories</strong></p>
+        <table class="help-table">
+          <thead><tr><th>Category</th><th>Outcomes</th></tr></thead>
+          <tr><td>⚽ Shot from Play</td><td>Point, 2 Pointer, Goal, Blocked, Wide, Saved, Short</td></tr>
+          <tr><td>🎯 Shot from Free</td><td>Point, 2 Pointer, Goal, Blocked, Wide, Saved, Short</td></tr>
+          <tr><td>📤 Ball Lost</td><td>Hand Pass, Kick Pass, In Contact, Handling, Over Carrying</td></tr>
+          <tr><td>📥 Ball Won</td><td>In Contact, Tackle, Interception</td></tr>
+          <tr><td>🦶 Kickout</td><td>Won Clean, Break Won, Loss Clean, Break Loss, Short Won, Short Loss</td></tr>
+          <tr><td>🏐 45</td><td>Scored (+1 pt), Wide, Short, Pass, Ball Lost</td></tr>
+        </table>
+        <p><strong>How to Record an Event</strong></p>
+        <ol class="help-step-list">
+          <li>Tap the event button (e.g. Shot from Play — Home)</li>
+          <li>A panel slides up from the bottom of the screen</li>
+          <li>Optionally tap a player to tag the event</li>
+          <li>Tap the outcome (e.g. Point, Wide, Goal)</li>
+          <li>Event is recorded and the panel closes</li>
+        </ol>
+        <p><strong>2-Pointer</strong> — Available on Shot from Play and Shot from Free. Adds 2 points to the scoreboard. Shown with a gold star ⭐ button.</p>
+        <div class="help-tip">Tag events to players to build cumulative player statistics across matches. Tagging is optional.</div>
+      </div>
+    </div>
+
+    <!-- 6. Trends Tab -->
+    <div class="help-section" id="help-sec-trends">
+      <div class="help-section-header" onclick="toggleHelp('trends')">
+        <span class="help-section-icon">📈</span>
+        <span class="help-section-title">Trends Tab</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <table class="help-table">
+          <tr><td>Possession split bar</td><td>Home and away possession percentages</td></tr>
+          <tr><td>Possession timeline</td><td>How possession shifted throughout the match</td></tr>
+          <tr><td>Score trend charts</td><td>Scoring momentum spark charts</td></tr>
+          <tr><td>Momentum bar</td><td>Based on the last 5 scores</td></tr>
+          <tr><td>Attack bars</td><td>Shots, wides, scoring efficiency comparison</td></tr>
+          <tr><td>Ball Won / Lost bars</td><td>Turnover comparison</td></tr>
+          <tr><td>Kickout breakdown</td><td>Own and opposition kickout retention</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 7. Squad Tab -->
+    <div class="help-section" id="help-sec-squad">
+      <div class="help-section-header" onclick="toggleHelp('squad')">
+        <span class="help-section-icon">👥</span>
+        <span class="help-section-title">Squad Tab</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>Four sub-tabs: <strong>My Squad</strong>, <strong>Player Stats</strong>, <strong>Timeline</strong> and <strong>Team Sheet</strong>.</p>
+        <p><strong>My Squad</strong> — A grid of 34 numbered slots representing your full panel.</p>
+        <table class="help-table">
+          <tr><td>Adding</td><td>Tap any empty slot → enter name and select position</td></tr>
+          <tr><td>Editing</td><td>Tap a filled slot to edit or remove the player</td></tr>
+          <tr><td>Positions</td><td>GK, CB, LHB, RHB, MF, LHF, RHF, FF, CF, SUB</td></tr>
+        </table>
+        <p><strong>Player Stats</strong> — Cumulative stats across all matches where events were tagged: Goals, Points, Total Score, Shots, Wides, Ball Won, Ball Lost, Kickouts, matches played.</p>
+        <p><strong>Timeline</strong> — Chronological log of all events in the current match: minute, half, team, event type, outcome and tagged player.</p>
+        <p><strong>Team Sheet</strong> — Visual pitch layout with players 1–15 in positional rows and subs 16–34 below.</p>
+        <table class="help-table">
+          <tr><td>Print / Save PDF</td><td>Opens a print-ready version — on iPad save as PDF from the print dialog</td></tr>
+          <tr><td>Share</td><td>Sends the team sheet as plain text via the native share sheet</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 8. Stats Tab -->
+    <div class="help-section" id="help-sec-stats">
+      <div class="help-section-header" onclick="toggleHelp('stats')">
+        <span class="help-section-icon">📊</span>
+        <span class="help-section-title">Stats Tab</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>Full match statistics table updated in real time, covering: Scoring, Shots from Play, Shots from Free, Ball Lost, Ball Won, Kickout, and 45s (when recorded).</p>
+        <p><strong>Saving a Match</strong> — Tap the green <span class="help-badge">Save Match</span> button at the top of the Stats tab. Also triggered automatically when you tap End Game on the Match tab.</p>
+        <div class="help-tip">Saving stores the match in your personal account on Supabase and locally on your device. If a club squad is active it also saves to the club match database.</div>
+      </div>
+    </div>
+
+    <!-- 9. History Tab -->
+    <div class="help-section" id="help-sec-history">
+      <div class="help-section-header" onclick="toggleHelp('history')">
+        <span class="help-section-icon">🗂️</span>
+        <span class="help-section-title">History Tab</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p>All saved matches stored in your account.</p>
+        <table class="help-table">
+          <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+          <tr><td>📊 Full Stats</td><td>Opens a detailed stats breakdown for that match</td></tr>
+          <tr><td>📄 Report</td><td>Generates a full match analysis PDF report in a new window</td></tr>
+          <tr><td>↩ Reload</td><td>Loads the match back into the live tracker</td></tr>
+          <tr><td>🗑 Delete</td><td>Permanently removes the match from history</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 10. Match Reports -->
+    <div class="help-section" id="help-sec-reports">
+      <div class="help-section-header" onclick="toggleHelp('reports')">
+        <span class="help-section-icon">📄</span>
+        <span class="help-section-title">Match Reports</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p><strong>Generating a Report</strong></p>
+        <ol class="help-step-list">
+          <li>Go to the History tab</li>
+          <li>Find the match and tap <strong>Report 📄</strong></li>
+          <li>The report opens in a new window</li>
+          <li>Tap <strong>Print / Save PDF</strong> at the bottom right</li>
+          <li>On iPad: tap Share from the print dialog to save as PDF or send by email</li>
+        </ol>
+        <p><strong>Report Contents</strong></p>
+        <table class="help-table">
+          <tr><td>Cover header</td><td>Teams, competition, venue, date and result</td></tr>
+          <tr><td>KPI tiles</td><td>Shot conversion % and possession % for both teams</td></tr>
+          <tr><td>Stats table</td><td>Full match statistics comparison</td></tr>
+          <tr><td>Shooting breakdown</td><td>Outcome percentages</td></tr>
+          <tr><td>Ball Lost / Won</td><td>Breakdown by type</td></tr>
+          <tr><td>Kickout battle</td><td>Full won/lost breakdown with retention %</td></tr>
+          <tr><td>Player contributions</td><td>Shown if events were tagged to players</td></tr>
+        </table>
+        <div class="help-tip">Allow popups in your browser settings for the site if the report window doesn't open.</div>
+      </div>
+    </div>
+
+    <!-- 11. Installing the App -->
+    <div class="help-section" id="help-sec-install">
+      <div class="help-section-header" onclick="toggleHelp('install')">
+        <span class="help-section-icon">📱</span>
+        <span class="help-section-title">Installing on Your Device</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <p><strong>iPhone / iPad (Safari only)</strong></p>
+        <ol class="help-step-list">
+          <li>Open the app URL in <strong>Safari</strong></li>
+          <li>Tap the Share button (box with arrow pointing up)</li>
+          <li>Tap <strong>Add to Home Screen</strong></li>
+          <li>Tap <strong>Add</strong> to confirm</li>
+        </ol>
+        <p><strong>Android</strong></p>
+        <ol class="help-step-list">
+          <li>Open the URL in Chrome</li>
+          <li>Chrome shows a banner: <em>Add Coach Stats to Home Screen</em></li>
+          <li>Tap <strong>Install</strong></li>
+        </ol>
+        <div class="help-tip">You must use Safari on iPhone and iPad. Chrome does not support Add to Home Screen on iOS.</div>
+      </div>
+    </div>
+
+    <!-- 12. Troubleshooting -->
+    <div class="help-section" id="help-sec-trouble">
+      <div class="help-section-header" onclick="toggleHelp('trouble')">
+        <span class="help-section-icon">🔧</span>
+        <span class="help-section-title">Troubleshooting</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <table class="help-table">
+          <thead><tr><th>Issue</th><th>Solution</th></tr></thead>
+          <tr><td>Login shows network error</td><td>Check your internet connection</td></tr>
+          <tr><td>Team dropdown is empty</td><td>Ensure you have a connection the first time you open the app so it can cache itself</td></tr>
+          <tr><td>App shows old version</td><td>Close the app fully and reopen it. On iPad, swipe it off the app switcher.</td></tr>
+          <tr><td>Add to Home Screen not appearing</td><td>You must use Safari on iPhone/iPad, not Chrome</td></tr>
+          <tr><td>Player stats not showing</td><td>Make sure you tagged events to players during recording</td></tr>
+          <tr><td>Club squad not syncing</td><td>Ensure you are signed in and have an active internet connection</td></tr>
+          <tr><td>Match report not opening</td><td>Allow popups in your browser settings for the site</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 13. Quick Reference -->
+    <div class="help-section" id="help-sec-quickref">
+      <div class="help-section-header" onclick="toggleHelp('quickref')">
+        <span class="help-section-icon">⚡</span>
+        <span class="help-section-title">Quick Reference</span>
+        <span class="help-chevron">▼</span>
+      </div>
+      <div class="help-body">
+        <table class="help-table">
+          <thead><tr><th>Task</th><th>How to do it</th></tr></thead>
+          <tr><td>Register</td><td>Login screen → Register tab → enter name, email, password</td></tr>
+          <tr><td>Create a club</td><td>🏟 button → Create Club → enter name and county</td></tr>
+          <tr><td>Invite a coach</td><td>🏟 → Members tab → share the 8-character invite code</td></tr>
+          <tr><td>Set up a match</td><td>Match tab → tap team buttons, select venue and competition</td></tr>
+          <tr><td>Start the clock</td><td>Match tab → Game Control → tap Start Game ▶</td></tr>
+          <tr><td>Record a shot</td><td>Record tab → tap Shot from Play or Free → select outcome</td></tr>
+          <tr><td>Record a 2-pointer</td><td>Record tab → Shot → tap 2 Pointer ⭐</td></tr>
+          <tr><td>Record a 45</td><td>Record tab → 45 section → tap Home or Away → select outcome</td></tr>
+          <tr><td>Tag event to player</td><td>In outcome panel → tap player name before selecting outcome</td></tr>
+          <tr><td>End game and save</td><td>Match tab → End Game → confirm save 🏁</td></tr>
+          <tr><td>View match report</td><td>History tab → tap Report on a match card 📄</td></tr>
+          <tr><td>Print team sheet</td><td>Squad tab → Team Sheet → tap Print / Save PDF 🖨️</td></tr>
+          <tr><td>Add a custom team</td><td>Team picker → tap + Add New → type team name</td></tr>
+          <tr><td>View player stats</td><td>Squad tab → Player Stats sub-tab</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:20px 0 8px;font-size:11px;color:rgba(245,232,232,0.2);font-family:'Oswald',sans-serif;letter-spacing:2px;text-transform:uppercase;">Coach Stats v2.0 — 2025</div>
+
+  </div><!-- /page-help -->
+
 </div><!-- /scroll-area -->
 
 <!-- BOTTOM NAV -->
@@ -1886,6 +2389,10 @@ select option { background:#1a0505; }
   <button class="nav-btn" onclick="showPage('history',this)">
     <span class="nav-icon">🗂️</span>
     <span class="nav-label">History</span>
+  </button>
+  <button class="nav-btn" onclick="showPage('help',this)">
+    <span class="nav-icon">❓</span>
+    <span class="nav-label">Help</span>
   </button>
 </nav>
 
@@ -2030,6 +2537,13 @@ function showPage(name, btn) {
   if (name === 'trends') renderTrends();
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
+}
+
+// ── HELP TAB ────────────────────────────────────────
+function toggleHelp(key) {
+  var sec = document.getElementById('help-sec-' + key);
+  if (!sec) return;
+  sec.classList.toggle('open');
 }
 
 // ── NAMES ──────────────────────────────────────────
