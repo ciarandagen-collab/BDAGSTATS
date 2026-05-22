@@ -1280,7 +1280,7 @@ select option { background:#1a0505; }
     <div style="width:24px;height:24px;border-radius:50%;background:#e03030;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <button onclick="openClubDashboard()" style="background:rgba(224,48,48,0.15);border:1px solid rgba(224,48,48,0.3);border-radius:6px;padding:3px 8px;color:#ff8080;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club">🏟</button>
-    <button onclick="signOut()" style="background:none;border:none;color:rgba(245,232,232,0.3);font-size:13px;cursor:pointer;padding:0;line-height:1;" title="Sign out">⏻</button>
+    <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
   </div>
 </div>
 
@@ -2276,13 +2276,8 @@ function handleSubStatus(sub) {
 function updateTrialBanner(daysLeft) {
   var banner = document.getElementById('trial-banner');
   var daysEl = document.getElementById('trial-days-left');
-  if (daysLeft <= 7) {
-    banner.style.display = 'flex';
-    if (daysEl) daysEl.textContent = daysLeft + (daysLeft === 1 ? ' day' : ' days');
-  } else {
-    // More than 7 days left — don't nag
-    banner.style.display = 'none';
-  }
+  banner.style.display = 'flex';
+  if (daysEl) daysEl.textContent = daysLeft + (daysLeft === 1 ? ' day' : ' days');
 }
 
 // ── HANDLE CHECKOUT RETURN ─────────────────────────
