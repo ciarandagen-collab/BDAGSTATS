@@ -2288,9 +2288,15 @@ function handleCheckoutReturn() {
     window.history.replaceState({}, document.title, window.location.pathname);
     hidePaywall();
     showPage('match');
+    document.getElementById('trial-banner').style.display = 'none';
     showSync('✓ Payment successful — welcome to Coach Stats!', 5000);
-    // Poll for webhook to update subscription status in background
-    setTimeout(function() { checkSubscription(); }, 5000);
+    // Update subscription status to active immediately
+    if (currentUser && currentToken) {
+      supaDB('subscriptions?user_id=eq.' + currentUser.id, 'PATCH',
+        { status: 'active' }, currentToken).catch(function(){});
+      subStatus = 'active';
+      try { localStorage.setItem('cs_sub_status', 'active'); } catch(e) {}
+    }
   } else if (params.get('checkout') === 'cancelled') {
     window.history.replaceState({}, document.title, window.location.pathname);
     showSync('Checkout cancelled — your access is unchanged.', 3000);
