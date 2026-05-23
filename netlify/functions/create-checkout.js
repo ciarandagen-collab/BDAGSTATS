@@ -7,7 +7,6 @@ const CORS_HEADERS = {
 };
 
 exports.handler = async function(event) {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: CORS_HEADERS, body: '' };
   }
@@ -27,14 +26,6 @@ exports.handler = async function(event) {
 
   if (!priceId || !userId || !email) {
     return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: 'Missing required fields' }) };
-  }
-
-  const validPrices = [
-    process.env.STRIPE_MONTHLY_PRICE_ID,
-    process.env.STRIPE_ANNUAL_PRICE_ID
-  ];
-  if (!validPrices.includes(priceId)) {
-    return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: 'Invalid price ID' }) };
   }
 
   try {
