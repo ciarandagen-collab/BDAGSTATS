@@ -4,18 +4,22 @@ const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 async function supaUpdate(userId, patch) {
-  const url = SUPA_URL + '/rest/v1/subscriptions?user_id=eq.' + userId;
+  const url = `${SUPA_URL}/rest/v1/subscriptions?user_id=eq.${userId}`;
+  console.log('Supabase PATCH URL:', url);
+  console.log('Patch data:', JSON.stringify(patch));
   const res = await fetch(url, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       'apikey': SUPA_SERVICE_KEY,
-      'Authorization': 'Bearer ' + SUPA_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPA_SERVICE_KEY}`
     },
     body: JSON.stringify(patch)
   });
+  const text = await res.text();
+  console.log('Supabase response status:', res.status);
+  console.log('Supabase response:', text);
   if (!res.ok) {
-    const text = await res.text();
     throw new Error('Supabase PATCH failed: ' + text);
   }
 }
