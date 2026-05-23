@@ -2284,11 +2284,13 @@ function updateTrialBanner(daysLeft) {
 function handleCheckoutReturn() {
   var params = new URLSearchParams(window.location.search);
   if (params.get('checkout') === 'success') {
-    // Clean URL and refresh subscription
+    // Clean URL and immediately grant access
     window.history.replaceState({}, document.title, window.location.pathname);
+    hidePaywall();
+    showPage('match');
     showSync('✓ Payment successful — welcome to Coach Stats!', 5000);
-    // Poll for webhook to update status (give it a few seconds)
-    setTimeout(function() { checkSubscription(); }, 3000);
+    // Poll for webhook to update subscription status in background
+    setTimeout(function() { checkSubscription(); }, 5000);
   } else if (params.get('checkout') === 'cancelled') {
     window.history.replaceState({}, document.title, window.location.pathname);
     showSync('Checkout cancelled — your access is unchanged.', 3000);
