@@ -11,13 +11,21 @@ async function supaUpdate(userId, patch) {
       'Content-Type': 'application/json',
       'apikey': SUPA_SERVICE_KEY,
       'Authorization': 'Bearer ' + SUPA_SERVICE_KEY,
-      'Prefer': 'return=minimal'
     },
     body: JSON.stringify(patch)
   });
   if (!res.ok) {
     const text = await res.text();
     throw new Error('Supabase PATCH failed: ' + text);
+  }
+}
+
+function toISO(unixSeconds) {
+  if (!unixSeconds) return null;
+  try {
+    return new Date(unixSeconds * 1000).toISOString();
+  } catch(e) {
+    return null;
   }
 }
 
@@ -53,12 +61,11 @@ exports.handler = async function(event) {
         const uid = session.client_reference_id || (session.metadata && session.metadata.user_id);
         if (!uid) { console.error('No user_id in checkout session'); break; }
         const sub = await stripe.subscriptions.retrieve(subId);
-        const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
         await supaUpdate(uid, {
           status: 'active',
           stripe_customer_id: custId,
           stripe_subscription_id: subId,
-          current_period_end: periodEnd
+          current_period_end: toISO(sub.current_period_end)
         });
         console.log('Subscription activated for user:', uid);
         break;
@@ -71,8 +78,7 @@ exports.handler = async function(event) {
           const uid = invoice.metadata && invoice.metadata.user_id;
           if (!uid) break;
           const sub = await stripe.subscriptions.retrieve(subId);
-          const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
-          await supaUpdate(uid, { status: 'active', current_period_end: periodEnd });
+          await supaUpdate(uid, { status: 'active', current_period_end: toISO(sub.current_period_end) });
         }
         break;
       }
@@ -89,7 +95,7 @@ exports.handler = async function(event) {
         if (!uid) break;
         await supaUpdate(uid, {
           status: 'canceled',
-          current_period_end: new Date(data.current_period_end * 1000).toISOString()
+          current_period_end: toISO(data.current_period_end)
         });
         break;
       }
@@ -97,10 +103,9 @@ exports.handler = async function(event) {
       case 'customer.subscription.updated': {
         const uid = data.metadata && data.metadata.user_id;
         if (!uid) break;
-        const periodEnd = new Date(data.current_period_end * 1000).toISOString();
         await supaUpdate(uid, {
           status: data.status === 'active' ? 'active' : data.status,
-          current_period_end: periodEnd
+          current_period_end: toISO(data.current_period_end)
         });
         break;
       }
