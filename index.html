@@ -980,13 +980,13 @@ select option { background:#1a0505; }
 .squad-slot-del:hover { color:#ff6060; }
 
 /* Player edit modal */
-.player-edit-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:20px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.player-edit-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px calc(20px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
 .modal-overlay.open .player-edit-sheet { transform:translateY(0); }
 
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
 .pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.pos-btn { padding:10px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
+.pos-btn { padding:8px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
 .pos-btn.selected, .pos-btn:hover { background:var(--red); border-color:var(--red); color:#fff; }
 .btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
 .btn-save-player:hover { filter:brightness(1.1); }
