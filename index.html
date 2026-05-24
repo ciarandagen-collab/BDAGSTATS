@@ -2850,6 +2850,7 @@ function openPlayerEdit(slotIndex) {
   if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
 
   document.getElementById('player-edit-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
   setTimeout(function() { document.getElementById('edit-player-name').focus(); }, 300);
 }
 
@@ -2882,6 +2883,7 @@ function clearPlayerSlot() {
 
 function closePlayerEdit() {
   document.getElementById('player-edit-modal').classList.remove('open');
+  document.body.style.overflow = '';
   editingSlot = null;
 }
 
