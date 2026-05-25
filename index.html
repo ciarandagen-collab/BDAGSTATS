@@ -989,6 +989,9 @@ select option { background:#1a0505; }
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
 .pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.zone-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:4px; }
+.zone-btn { padding:10px 4px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
+.zone-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .pos-btn { padding:8px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
 .pos-btn.selected, .pos-btn:hover { background:var(--red); border-color:var(--red); color:#fff; }
 .btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
@@ -1718,6 +1721,70 @@ select option { background:#1a0505; }
           <span class="trig-count" id="ff-away-tally">0</span>
         </button>
       </div>
+      <div class="trigger-grid">
+        <button class="trigger-btn" onclick="openGenericModal('home','turnover')">
+          <span class="trig-icon">🔄</span>
+          <span class="trig-type">Turnover Forced</span>
+          <span class="trig-team" id="to-home-h">Home</span>
+          <span class="trig-count" id="to-home-tally">0</span>
+        </button>
+        <button class="trigger-btn" onclick="openGenericModal('away','turnover')">
+          <span class="trig-icon">🔄</span>
+          <span class="trig-type">Turnover Forced</span>
+          <span class="trig-team" id="to-away-h">Away</span>
+          <span class="trig-count" id="to-away-tally">0</span>
+        </button>
+      </div>
+      <div class="trigger-grid">
+        <button class="trigger-btn" onclick="openGenericModal('home','mark')">
+          <span class="trig-icon">📌</span>
+          <span class="trig-type">Mark</span>
+          <span class="trig-team" id="mk-home-h">Home</span>
+          <span class="trig-count" id="mk-home-tally">0</span>
+        </button>
+        <button class="trigger-btn" onclick="openGenericModal('away','mark')">
+          <span class="trig-icon">📌</span>
+          <span class="trig-type">Mark</span>
+          <span class="trig-team" id="mk-away-h">Away</span>
+          <span class="trig-count" id="mk-away-tally">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="sec-label discipline-toggle" onclick="toggleDiscipline()" style="cursor:pointer;">
+      Discipline <span id="discipline-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
+    </div>
+    <div id="discipline-section" style="display:none;">
+      <div class="record-group">
+        <div class="trigger-grid">
+          <button class="trigger-btn" onclick="openGenericModal('home','foul')">
+            <span class="trig-icon">⚠️</span>
+            <span class="trig-type">Foul Given</span>
+            <span class="trig-team" id="fo-home-h">Home</span>
+            <span class="trig-count" id="fo-home-tally">0</span>
+          </button>
+          <button class="trigger-btn" onclick="openGenericModal('away','foul')">
+            <span class="trig-icon">⚠️</span>
+            <span class="trig-type">Foul Given</span>
+            <span class="trig-team" id="fo-away-h">Away</span>
+            <span class="trig-count" id="fo-away-tally">0</span>
+          </button>
+        </div>
+        <div class="trigger-grid">
+          <button class="trigger-btn" onclick="openGenericModal('home','cards')">
+            <span class="trig-icon">🟨</span>
+            <span class="trig-type">Card</span>
+            <span class="trig-team" id="cd-home-h">Home</span>
+            <span class="trig-count" id="cd-home-tally">0</span>
+          </button>
+          <button class="trigger-btn" onclick="openGenericModal('away','cards')">
+            <span class="trig-icon">🟨</span>
+            <span class="trig-type">Card</span>
+            <span class="trig-team" id="cd-away-h">Away</span>
+            <span class="trig-count" id="cd-away-tally">0</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="sec-label">Shot Summary</div>
@@ -2033,7 +2100,22 @@ select option { background:#1a0505; }
       <button class="outcome-btn ob-saved"   onclick="selectShotOutcome('saved')"><span class="o-icon">🧤</span><span class="o-label">Saved</span></button>
       <button class="outcome-btn ob-short"   onclick="selectShotOutcome('short')"><span class="o-icon">⬇️</span><span class="o-label">Short</span></button>
     </div>
-    <div class="player-attr-section">
+    <div id="zone-picker-section" style="display:none;margin-top:12px;">
+      <div class="player-attr-label" style="margin-bottom:8px;">📍 Shot Zone (optional) <span style="font-size:10px;color:var(--muted);font-style:italic;">— tap to tag, skip to close</span></div>
+      <div class="zone-grid">
+        <button class="zone-btn" onclick="selectZone('left-d')">Left D</button>
+        <button class="zone-btn" onclick="selectZone('d-line')">D Centre</button>
+        <button class="zone-btn" onclick="selectZone('right-d')">Right D</button>
+        <button class="zone-btn" onclick="selectZone('left-45')">Left 45</button>
+        <button class="zone-btn" onclick="selectZone('45-centre')">45 Centre</button>
+        <button class="zone-btn" onclick="selectZone('right-45')">Right 45</button>
+        <button class="zone-btn" onclick="selectZone('left-wing')">Left Wing</button>
+        <button class="zone-btn" onclick="selectZone('midfield')">Midfield</button>
+        <button class="zone-btn" onclick="selectZone('right-wing')">Right Wing</button>
+      </div>
+      <button onclick="closeShotModal()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">Skip Zone</button>
+    </div>
+    <div id="zone-picker-hidden" class="player-attr-section">
       <div class="player-attr-label">Tag Player (optional)</div>
       <div class="player-attr-list" id="shot-player-attr-list"></div>
     </div>
@@ -2351,6 +2433,11 @@ const state = {
   ballLost:{home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}},
   ballWon:{home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}},
   kickout:{home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}},
+  turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
+  mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
+  foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
+  cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
+  shotZones:{home:{},away:{}},
   scoreline:[], // [{min, h, a}]
   possHistory:[] // [homePercent 0-100] after each possession event
 };
@@ -2444,7 +2531,16 @@ function openShotModal(team,mode) {
   buildPlayerAttrList(team, 'shot-player-attr-list');
   document.getElementById('shot-modal').classList.add('open');
 }
-function closeShotModal() { $('shot-modal').classList.remove('open'); shotModal.team=null; shotModal.mode=null; }
+function closeShotModal() {
+  $('shot-modal').classList.remove('open');
+  shotModal.team = null; shotModal.mode = null; shotModal.pendingOutcome = null;
+  var zoneSection = document.getElementById('zone-picker-section');
+  var playerSection = document.getElementById('zone-picker-hidden');
+  if (zoneSection) zoneSection.style.display = 'none';
+  if (playerSection) playerSection.style.display = '';
+  document.querySelectorAll('.outcome-btn').forEach(function(b) { b.style.opacity = ''; });
+}
+
 function selectShotOutcome(outcome) {
   if(!shotModal.team||!shotModal.mode)return;
   // Record against tagged player
@@ -2455,7 +2551,19 @@ function selectShotOutcome(outcome) {
       addStatToPlayer(selectedAttrPlayer, 'shots', outcome);
     }
   }
-  addShot(shotModal.team,shotModal.mode,outcome);
+  addShot(shotModal.team, shotModal.mode, outcome);
+  shotModal.pendingOutcome = outcome;
+  // Show zone picker as optional secondary step
+  var zoneSection = document.getElementById('zone-picker-section');
+  var playerSection = document.getElementById('zone-picker-hidden');
+  if (zoneSection) zoneSection.style.display = '';
+  if (playerSection) playerSection.style.display = 'none';
+}
+
+function selectZone(zone) {
+  if (!shotModal.team) { closeShotModal(); return; }
+  if (!state.shotZones[shotModal.team][zone]) state.shotZones[shotModal.team][zone] = 0;
+  state.shotZones[shotModal.team][zone]++;
   closeShotModal();
 }
 
@@ -2502,7 +2610,11 @@ const GENERIC_CONFIG = {
   ballLost:{title:'📤 Ball Lost',sub:'How was possession lost?',outcomes:[{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'inContact',icon:'💥',label:'In Contact'},{key:'handling',icon:'🖐️',label:'Handling'},{key:'overCarrying',icon:'🏃',label:'Over Carrying'}]},
   ballWon:{title:'📥 Ball Won',sub:'How was possession won?',outcomes:[{key:'inContact',icon:'💥',label:'In Contact'},{key:'tackle',icon:'🤼',label:'Tackle'},{key:'interception',icon:'🙌',label:'Interception'}]},
   kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]},
-  fortyFive:{title:'🏐 45',sub:'What was the result of the 45?',outcomes:[{key:'scored',icon:'✦',label:'Scored'},{key:'wide',icon:'↗️',label:'Wide'},{key:'short',icon:'⬇️',label:'Short'},{key:'pass',icon:'👟',label:'Pass'},{key:'ballLost',icon:'❌',label:'Ball Lost'}]}
+  fortyFive:{title:'🏐 45',sub:'What was the result of the 45?',outcomes:[{key:'scored',icon:'✦',label:'Scored'},{key:'wide',icon:'↗️',label:'Wide'},{key:'short',icon:'⬇️',label:'Short'},{key:'pass',icon:'👟',label:'Pass'},{key:'ballLost',icon:'❌',label:'Ball Lost'}]},
+  turnover:{title:'🔄 Turnover Forced',sub:'Where on the pitch?',outcomes:[{key:'inAttack',icon:'⚡',label:'In Attack'},{key:'midfield',icon:'🔀',label:'Midfield'},{key:'inDefence',icon:'🛡️',label:'In Defence'}]},
+  mark:{title:'📌 Mark',sub:'Was the mark won or lost?',outcomes:[{key:'won',icon:'✅',label:'Won'},{key:'lost',icon:'❌',label:'Lost'}]},
+  foul:{title:'⚠️ Foul Given',sub:'What type of foul?',outcomes:[{key:'shooting',icon:'🎯',label:'Shooting'},{key:'cynical',icon:'🟨',label:'Cynical'},{key:'dangerous',icon:'💥',label:'Dangerous'},{key:'dissent',icon:'🗣️',label:'Dissent'}]},
+  cards:{title:'🟨 Card',sub:'Select card type — tag a player first',outcomes:[{key:'yellow',icon:'🟨',label:'Yellow'},{key:'black',icon:'⬛',label:'Black'},{key:'red',icon:'🟥',label:'Red'}]}
 };
 const gmodal = {team:null,category:null};
 
@@ -2541,7 +2653,7 @@ function selectGenericOutcome(key) {
 }
 
 function renderGenericTallies() {
-  [['ballLost','bl'],['ballWon','bw'],['kickout','ko']].forEach(([cat,pfx])=>{
+  [['ballLost','bl'],['ballWon','bw'],['kickout','ko'],['turnover','to'],['mark','mk'],['foul','fo'],['cards','cd']].forEach(([cat,pfx])=>{
     const h=Object.values(state[cat].home).reduce((a,b)=>a+b,0);
     const a=Object.values(state[cat].away).reduce((a,b)=>a+b,0);
     const hEl=$(`${pfx}-home-tally`), aEl=$(`${pfx}-away-tally`);
@@ -3048,11 +3160,68 @@ function updateStats() {
     var ff45h = Object.values(state.fortyFive.home).reduce(function(a,b){return a+b;},0);
     var ff45a = Object.values(state.fortyFive.away).reduce(function(a,b){return a+b;},0);
     if (ff45h + ff45a > 0) {
-      statsRows.push(sec('🏐 45'));
+      statsRows.push(sec('🏐 45m Free'));
       [['Total',ff45h,ff45a],['Scored',state.fortyFive.home.scored,state.fortyFive.away.scored],
        ['Wide',state.fortyFive.home.wide,state.fortyFive.away.wide],['Short',state.fortyFive.home.short,state.fortyFive.away.short],
        ['Pass',state.fortyFive.home.pass,state.fortyFive.away.pass],['Ball Lost',state.fortyFive.home.ballLost,state.fortyFive.away.ballLost]
       ].forEach(function(r){statsRows.push(row(r));});
+    }
+  }
+  // Turnovers Forced
+  if (state.turnover) {
+    var toh = Object.values(state.turnover.home).reduce(function(a,b){return a+b;},0);
+    var toa = Object.values(state.turnover.away).reduce(function(a,b){return a+b;},0);
+    if (toh + toa > 0) {
+      statsRows.push(sec('🔄 Turnovers Forced'));
+      [['Total',toh,toa],['In Attack',state.turnover.home.inAttack,state.turnover.away.inAttack],
+       ['Midfield',state.turnover.home.midfield,state.turnover.away.midfield],
+       ['In Defence',state.turnover.home.inDefence,state.turnover.away.inDefence]
+      ].forEach(function(r){statsRows.push(row(r));});
+    }
+  }
+  // Mark
+  if (state.mark) {
+    var mkh = Object.values(state.mark.home).reduce(function(a,b){return a+b;},0);
+    var mka = Object.values(state.mark.away).reduce(function(a,b){return a+b;},0);
+    if (mkh + mka > 0) {
+      statsRows.push(sec('📌 Mark'));
+      [['Total',mkh,mka],['Won',state.mark.home.won,state.mark.away.won],
+       ['Lost',state.mark.home.lost,state.mark.away.lost]
+      ].forEach(function(r){statsRows.push(row(r));});
+    }
+  }
+  // Discipline
+  if (state.foul || state.cards) {
+    var foh = state.foul ? Object.values(state.foul.home).reduce(function(a,b){return a+b;},0) : 0;
+    var foa = state.foul ? Object.values(state.foul.away).reduce(function(a,b){return a+b;},0) : 0;
+    var cdh = state.cards ? Object.values(state.cards.home).reduce(function(a,b){return a+b;},0) : 0;
+    var cda = state.cards ? Object.values(state.cards.away).reduce(function(a,b){return a+b;},0) : 0;
+    if (foh + foa + cdh + cda > 0) {
+      statsRows.push(sec('⚠️ Discipline'));
+      if (foh + foa > 0) {
+        [['Fouls Total',foh,foa],['Shooting Fouls',state.foul.home.shooting,state.foul.away.shooting],
+         ['Cynical',state.foul.home.cynical,state.foul.away.cynical],
+         ['Dangerous',state.foul.home.dangerous,state.foul.away.dangerous],
+         ['Dissent',state.foul.home.dissent,state.foul.away.dissent]
+        ].forEach(function(r){statsRows.push(row(r));});
+      }
+      if (cdh + cda > 0) {
+        [['Cards Total',cdh,cda],['Yellow',state.cards.home.yellow,state.cards.away.yellow],
+         ['Black',state.cards.home.black,state.cards.away.black],
+         ['Red',state.cards.home.red,state.cards.away.red]
+        ].forEach(function(r){statsRows.push(row(r));});
+      }
+    }
+  }
+  // Shot Zones
+  if (state.shotZones) {
+    var allZones = new Set([...Object.keys(state.shotZones.home), ...Object.keys(state.shotZones.away)]);
+    if (allZones.size > 0) {
+      statsRows.push(sec('📍 Shot Zones'));
+      allZones.forEach(function(z) {
+        statsRows.push(row([z.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}),
+          state.shotZones.home[z]||0, state.shotZones.away[z]||0]));
+      });
     }
   }
   $('stats-body').innerHTML=statsRows.join('');
@@ -3354,6 +3523,19 @@ function startGame() {
   var chev = $('match-info-chevron');
   if (sec) { sec.style.display = 'none'; if (chev) chev.textContent = '▼'; }
   showSync('▶ Game started — 1st Half', 2000);
+}
+
+function toggleDiscipline() {
+  var sec = document.getElementById('discipline-section');
+  var chev = document.getElementById('discipline-chevron');
+  if (!sec) return;
+  if (sec.style.display === 'none') {
+    sec.style.display = '';
+    if (chev) chev.textContent = '▲';
+  } else {
+    sec.style.display = 'none';
+    if (chev) chev.textContent = '▼';
+  }
 }
 
 function toggleMatchInfo() {
