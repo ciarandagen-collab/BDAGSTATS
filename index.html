@@ -1088,6 +1088,90 @@ select option { background:#1a0505; }
 .ts-sub-circle.filled { background:rgba(255,255,255,0.2); border-color:rgba(255,255,255,0.6); color:#fff; }
 .ts-sub-name { font-family:'Oswald',sans-serif; font-size:7px; color:rgba(255,255,255,0.7); text-align:center; text-transform:uppercase; max-width:48px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.2; }
 @media print { body > *:not(#print-frame) { display:none !important; } #print-frame { display:block !important; position:fixed; inset:0; z-index:99999; } @page { margin:10mm; size:A4 portrait; } }
+
+/* ── VIDEO ANALYSIS ──────────────────────────────── */
+#video-analysis-overlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: #0a0505;
+  display: none; flex-direction: column;
+  font-family: 'Inter', sans-serif;
+}
+#video-analysis-overlay.open { display: flex; }
+
+/* Top bar */
+.va-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: rgba(0,0,0,0.6);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.va-topbar-title { font-family: 'Oswald',sans-serif; font-size: 13px; letter-spacing: 2px; color: var(--cream); text-transform: uppercase; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.va-topbar-time { font-family: 'Oswald',sans-serif; font-size: 18px; font-weight: 700; color: var(--red-light); letter-spacing: 1px; flex-shrink: 0; min-width: 52px; text-align: right; }
+.va-close-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(245,232,232,0.7); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-family: 'Oswald',sans-serif; letter-spacing: 1px; flex-shrink: 0; }
+
+/* Video area */
+.va-video-wrap {
+  flex-shrink: 0;
+  width: 100%;
+  background: #000;
+  position: relative;
+}
+.va-video-wrap iframe,
+.va-video-wrap video {
+  width: 100%; display: block;
+}
+
+/* URL input screen */
+.va-url-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 24px; flex: 1;
+}
+.va-url-title { font-family: 'Oswald',sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--cream); text-transform: uppercase; text-align: center; }
+.va-url-sub { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; max-width: 300px; }
+.va-url-input { width: 100%; max-width: 400px; padding: 12px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: var(--cream); font-size: 14px; font-family: 'Inter',sans-serif; outline: none; box-sizing: border-box; }
+.va-url-btn { width: 100%; max-width: 400px; padding: 13px; background: linear-gradient(135deg,var(--red-dark),var(--red)); border: none; border-radius: 10px; color: #fff; font-family: 'Oswald',sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+
+/* Controls panel */
+.va-controls {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 10px 12px 24px; display: none; flex-direction: column; gap: 10px;
+}
+.va-controls.active { display: flex; }
+.va-team-tabs { display: flex; gap: 8px; }
+.va-team-tab { flex: 1; padding: 9px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; text-align: center; }
+.va-team-tab.active-home { background: rgba(224,48,48,0.15); border-color: var(--red); color: var(--cream); }
+.va-team-tab.active-away { background: rgba(48,100,224,0.15); border-color: #4466ff; color: #aabbff; }
+.va-event-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+.va-event-btn { padding: 11px 6px; border-radius: 9px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; text-align: center; line-height: 1.3; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.va-event-btn:active { background: rgba(224,48,48,0.2); border-color: var(--red); color: var(--cream); transform: scale(0.96); }
+.va-event-icon { font-size: 16px; }
+.va-tag-flash { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(224,48,48,0.9); color: #fff; font-family: 'Oswald',sans-serif; font-size: 13px; letter-spacing: 2px; padding: 10px 20px; border-radius: 10px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 9999; }
+.va-tag-flash.show { opacity: 1; }
+
+/* Tag list */
+.va-tag-list-wrap { border-top: 1px solid var(--border); padding-top: 10px; }
+.va-tag-list-title { font-family: 'Oswald',sans-serif; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.va-tag-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+.va-tag-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.va-tag-item:active { background: rgba(224,48,48,0.1); }
+.va-tag-ts { font-family: 'Oswald',sans-serif; font-size: 13px; font-weight: 600; color: var(--red-light); min-width: 44px; flex-shrink: 0; }
+.va-tag-label { font-size: 12px; color: var(--cream); flex: 1; }
+.va-tag-team { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+.va-tag-del { background: none; border: none; color: rgba(255,80,80,0.4); font-size: 14px; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+.va-empty-tags { font-size: 12px; color: var(--muted); text-align: center; padding: 12px 0; font-style: italic; }
+
+/* Outcome picker overlay */
+.va-outcome-overlay {
+  position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.va-outcome-overlay.open { display: flex; }
+.va-outcome-sheet { background: var(--panel2); border: 1px solid var(--border); border-bottom: none; border-radius: 20px 20px 0 0; padding: 16px 16px calc(24px + var(--safe-bottom)); width: 100%; max-width: 500px; }
+.va-outcome-title { font-family: 'Oswald',sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--cream); text-transform: uppercase; margin-bottom: 12px; text-align: center; }
+.va-outcome-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.va-outcome-btn { padding: 12px 8px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; text-align: center; }
+.va-outcome-btn:active { background: var(--red); border-color: var(--red); color: #fff; }
+.va-outcome-cancel { width: 100%; margin-top: 10px; padding: 11px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
 </style>
 <body>
 
@@ -4180,6 +4264,7 @@ function renderHistory() {
       <div class="match-card-actions" onclick="event.stopPropagation()">
         <button class="mca-btn" onclick="openDetailModal(${m.id})">📊 Full Stats</button>
         <button class="mca-btn" onclick="generateMatchReport(${m.id})">📄 Report</button>
+        <button class="mca-btn" onclick="openVideoAnalysis(${m.id})">🎬 Video</button>
         <button class="mca-btn" onclick="loadMatchIntoTracker(${m.id})">↩ Reload</button>
         <button class="mca-btn danger" onclick="deleteMatch(${m.id})">🗑 Delete</button>
       </div>
@@ -6586,6 +6671,412 @@ window.addEventListener('appinstalled', () => {
   dismissInstall();
   deferredInstallPrompt = null;
 });
+
+// ── VIDEO ANALYSIS ────────────────────────────────────────────────────
+var vaMatchId = null;
+var vaMatch = null;
+var vaTeam = 'home';
+var vaTags = [];
+var vaYTPlayer = null;
+var vaVideoType = null; // 'youtube' | 'mp4'
+var vaTimeInterval = null;
+var vaPendingEvent = null;
+var vaPendingTs = null;
+
+var VA_OUTCOMES = {
+  'shot-play': ['Point','Goal','2 Pointer','Wide','Short','Saved','Blocked'],
+  'shot-free':  ['Point','Goal','Wide','Short','Saved','Blocked'],
+  'goal':       null,
+  'point':      null,
+  'wide':       null,
+  'turnover':   ['In Attack','Midfield','In Defence'],
+  'kickout':    ['Won Clean','Break Won','Loss Clean','Break Loss','Short Won','Short Loss'],
+  'mark':       ['Won','Lost'],
+  'foul':       ['Shooting','Cynical','Dangerous','Dissent'],
+  'card':       ['Yellow','Black','Red'],
+  'ball-won':   ['In Contact','Tackle','Interception'],
+  'ball-lost':  ['Hand Pass','Kick Pass','In Contact','Handling','Over Carrying'],
+};
+
+var VA_LABELS = {
+  'shot-play':'Shot Play','shot-free':'Shot Free','goal':'Goal','point':'Point',
+  'wide':'Wide','turnover':'Turnover','kickout':'Kickout','mark':'Mark',
+  'foul':'Foul','card':'Card','ball-won':'Ball Won','ball-lost':'Ball Lost'
+};
+
+function vaLoadTags(matchId) {
+  try { return JSON.parse(localStorage.getItem('cs_vtags_' + matchId) || '[]'); }
+  catch(e) { return []; }
+}
+function vaSaveTags(matchId, tags) {
+  try { localStorage.setItem('cs_vtags_' + matchId, JSON.stringify(tags)); } catch(e) {}
+}
+
+function openVideoAnalysis(matchId) {
+  var list = loadHistory();
+  vaMatch = list.find(function(m) { return m.id === matchId; });
+  if (!vaMatch) return;
+  vaMatchId = matchId;
+  vaTags = vaLoadTags(matchId);
+  vaTeam = 'home';
+
+  // Set team labels
+  document.getElementById('va-tab-home').textContent = vaMatch.home || 'Home';
+  document.getElementById('va-tab-away').textContent = vaMatch.away || 'Away';
+  document.getElementById('va-match-title').textContent = (vaMatch.home || 'Home') + ' v ' + (vaMatch.away || 'Away');
+
+  // Reset to URL input screen
+  document.getElementById('va-url-screen').style.display = 'flex';
+  document.getElementById('va-controls').classList.remove('active');
+  document.getElementById('va-video-wrap').style.display = 'none';
+  document.getElementById('va-url-input').value = '';
+  document.getElementById('va-url-error').style.display = 'none';
+
+  // Check if we have a saved URL for this match
+  var savedUrl = localStorage.getItem('cs_vurl_' + matchId);
+  if (savedUrl) {
+    document.getElementById('va-url-input').value = savedUrl;
+  }
+
+  document.getElementById('video-analysis-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  vaRenderTagList();
+}
+
+function closeVideoAnalysis() {
+  document.getElementById('video-analysis-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  // Stop video
+  if (vaYTPlayer && vaYTPlayer.stopVideo) { try { vaYTPlayer.stopVideo(); } catch(e) {} }
+  var mp4 = document.getElementById('va-mp4-player');
+  if (mp4) { mp4.pause(); mp4.src = ''; }
+  // Stop time polling
+  if (vaTimeInterval) { clearInterval(vaTimeInterval); vaTimeInterval = null; }
+  vaYTPlayer = null; vaVideoType = null;
+  // Clear YouTube player container
+  document.getElementById('va-youtube-player').innerHTML = '';
+}
+
+function vaExtractYouTubeId(url) {
+  var patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/
+  ];
+  for (var i = 0; i < patterns.length; i++) {
+    var m = url.match(patterns[i]);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function loadVideoUrl() {
+  var url = document.getElementById('va-url-input').value.trim();
+  var errEl = document.getElementById('va-url-error');
+  if (!url) { errEl.textContent = 'Please enter a URL'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  var ytId = vaExtractYouTubeId(url);
+  if (ytId) {
+    vaVideoType = 'youtube';
+    vaLoadYouTube(ytId);
+    localStorage.setItem('cs_vurl_' + vaMatchId, url);
+    return;
+  }
+
+  // Try as direct MP4/video URL
+  if (url.match(/\.(mp4|webm|ogg|mov)(\?|$)/i) || url.includes('dropbox') || url.includes('drive.google')) {
+    vaVideoType = 'mp4';
+    var mp4 = document.getElementById('va-mp4-player');
+    mp4.src = url;
+    mp4.style.display = 'block';
+    document.getElementById('va-youtube-player').style.display = 'none';
+    vaShowControls();
+    vaPollTime();
+    localStorage.setItem('cs_vurl_' + vaMatchId, url);
+    return;
+  }
+
+  errEl.textContent = 'Please enter a YouTube link or direct MP4 URL';
+  errEl.style.display = 'block';
+}
+
+function vaLoadYouTube(videoId) {
+  document.getElementById('va-mp4-player').style.display = 'none';
+  var container = document.getElementById('va-youtube-player');
+  container.innerHTML = '';
+  container.style.display = 'block';
+
+  // Set video wrap height for portrait phones
+  vaSetVideoHeight();
+
+  if (window.YT && window.YT.Player) {
+    vaCreateYTPlayer(videoId);
+  } else {
+    // Wait for API to load
+    window._vaPendingYTId = videoId;
+  }
+}
+
+function vaCreateYTPlayer(videoId) {
+  vaYTPlayer = new YT.Player('va-youtube-player', {
+    videoId: videoId,
+    playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
+    events: {
+      onReady: function() {
+        vaShowControls();
+        vaPollTime();
+      },
+      onError: function() {
+        document.getElementById('va-url-error').textContent = 'Could not load this YouTube video. Make sure embedding is enabled on the video.';
+        document.getElementById('va-url-error').style.display = 'block';
+      }
+    }
+  });
+}
+
+// Called by YouTube IFrame API when ready
+window.onYouTubeIframeAPIReady = function() {
+  if (window._vaPendingYTId) {
+    vaCreateYTPlayer(window._vaPendingYTId);
+    window._vaPendingYTId = null;
+  }
+};
+
+function vaSetVideoHeight() {
+  var wrap = document.getElementById('va-video-wrap');
+  var w = window.innerWidth;
+  var h = Math.round(w * 9 / 16);
+  var maxH = Math.round(window.innerHeight * 0.42);
+  wrap.style.height = Math.min(h, maxH) + 'px';
+}
+
+function vaShowControls() {
+  document.getElementById('va-url-screen').style.display = 'none';
+  document.getElementById('va-video-wrap').style.display = 'block';
+  document.getElementById('va-controls').classList.add('active');
+  vaSetVideoHeight();
+  vaUpdateTeamTabs();
+}
+
+function vaPollTime() {
+  if (vaTimeInterval) clearInterval(vaTimeInterval);
+  vaTimeInterval = setInterval(function() {
+    var t = vaGetCurrentTime();
+    document.getElementById('va-current-time').textContent = vaFormatTime(t);
+  }, 500);
+}
+
+function vaGetCurrentTime() {
+  if (vaVideoType === 'youtube' && vaYTPlayer && vaYTPlayer.getCurrentTime) {
+    try { return Math.floor(vaYTPlayer.getCurrentTime()); } catch(e) { return 0; }
+  }
+  if (vaVideoType === 'mp4') {
+    var mp4 = document.getElementById('va-mp4-player');
+    return mp4 ? Math.floor(mp4.currentTime) : 0;
+  }
+  return 0;
+}
+
+function vaFormatTime(secs) {
+  var m = Math.floor(secs / 60);
+  var s = secs % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function vaSelectTeam(team) {
+  vaTeam = team;
+  vaUpdateTeamTabs();
+}
+
+function vaUpdateTeamTabs() {
+  var homeTab = document.getElementById('va-tab-home');
+  var awayTab = document.getElementById('va-tab-away');
+  homeTab.className = 'va-team-tab' + (vaTeam === 'home' ? ' active-home' : '');
+  awayTab.className = 'va-team-tab' + (vaTeam === 'away' ? ' active-away' : '');
+}
+
+function vaTagEvent(eventType) {
+  var ts = vaGetCurrentTime();
+  var outcomes = VA_OUTCOMES[eventType];
+
+  if (outcomes && outcomes.length > 0) {
+    // Show outcome picker
+    vaPendingEvent = eventType;
+    vaPendingTs = ts;
+    vaOpenOutcome(eventType, outcomes);
+  } else {
+    // Tag directly with no outcome
+    vaAddTag(eventType, null, ts);
+  }
+}
+
+function vaOpenOutcome(eventType, outcomes) {
+  document.getElementById('va-outcome-title').textContent = VA_LABELS[eventType] || eventType;
+  var grid = document.getElementById('va-outcome-grid');
+  grid.innerHTML = outcomes.map(function(o) {
+    return '<button class="va-outcome-btn" onclick="vaSelectOutcome(\'' + o + '\')">' + o + '</button>';
+  }).join('');
+  document.getElementById('va-outcome-overlay').classList.add('open');
+}
+
+function vaSelectOutcome(outcome) {
+  vaCloseOutcome();
+  if (vaPendingEvent !== null) {
+    vaAddTag(vaPendingEvent, outcome, vaPendingTs);
+    vaPendingEvent = null; vaPendingTs = null;
+  }
+}
+
+function vaCloseOutcome() {
+  document.getElementById('va-outcome-overlay').classList.remove('open');
+  // Tag without outcome if cancel
+  if (vaPendingEvent !== null) {
+    vaAddTag(vaPendingEvent, null, vaPendingTs);
+    vaPendingEvent = null; vaPendingTs = null;
+  }
+}
+
+function vaAddTag(eventType, outcome, ts) {
+  var tag = {
+    id: Date.now(),
+    ts: ts,
+    type: eventType,
+    outcome: outcome,
+    team: vaTeam,
+    teamName: vaTeam === 'home' ? (vaMatch.home || 'Home') : (vaMatch.away || 'Away')
+  };
+  vaTags.push(tag);
+  vaTags.sort(function(a,b) { return a.ts - b.ts; });
+  vaSaveTags(vaMatchId, vaTags);
+  vaRenderTagList();
+  vaFlash((outcome || VA_LABELS[eventType]) + ' — ' + vaFormatTime(ts));
+}
+
+function vaFlash(text) {
+  var el = document.getElementById('va-tag-flash');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 1200);
+}
+
+function vaJumpToTag(ts) {
+  if (vaVideoType === 'youtube' && vaYTPlayer && vaYTPlayer.seekTo) {
+    try { vaYTPlayer.seekTo(ts, true); } catch(e) {}
+  }
+  if (vaVideoType === 'mp4') {
+    var mp4 = document.getElementById('va-mp4-player');
+    if (mp4) mp4.currentTime = ts;
+  }
+}
+
+function vaDeleteTag(id) {
+  vaTags = vaTags.filter(function(t) { return t.id !== id; });
+  vaSaveTags(vaMatchId, vaTags);
+  vaRenderTagList();
+}
+
+function vaRenderTagList() {
+  var el = document.getElementById('va-tag-list');
+  var countEl = document.getElementById('va-tag-count');
+  if (!el) return;
+  countEl.textContent = vaTags.length ? '(' + vaTags.length + ')' : '';
+  if (!vaTags.length) {
+    el.innerHTML = '<div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>';
+    return;
+  }
+  el.innerHTML = vaTags.map(function(t) {
+    var label = VA_LABELS[t.type] || t.type;
+    if (t.outcome) label += ' — ' + t.outcome;
+    return '<div class="va-tag-item" onclick="vaJumpToTag(' + t.ts + ')">' +
+      '<span class="va-tag-ts">' + vaFormatTime(t.ts) + '</span>' +
+      '<span class="va-tag-label">' + label + '</span>' +
+      '<span class="va-tag-team">' + (t.teamName || t.team) + '</span>' +
+      '<button class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+window.addEventListener('resize', function() {
+  if (document.getElementById('video-analysis-overlay').classList.contains('open')) {
+    vaSetVideoHeight();
+  }
+});
 </script>
+<!-- VIDEO ANALYSIS OVERLAY -->
+<div id="video-analysis-overlay">
+
+  <!-- Top bar -->
+  <div class="va-topbar">
+    <div class="va-topbar-title" id="va-match-title">Video Analysis</div>
+    <div class="va-topbar-time" id="va-current-time">0:00</div>
+    <button class="va-close-btn" onclick="closeVideoAnalysis()">✕ Close</button>
+  </div>
+
+  <!-- Video area (shown once URL loaded) -->
+  <div class="va-video-wrap" id="va-video-wrap" style="display:none;">
+    <div id="va-youtube-player"></div>
+    <video id="va-mp4-player" controls playsinline style="display:none;"></video>
+  </div>
+
+  <!-- URL input screen (shown first) -->
+  <div class="va-url-screen" id="va-url-screen">
+    <div style="font-size:40px;">🎬</div>
+    <div class="va-url-title">Link a Video</div>
+    <div class="va-url-sub">Paste a YouTube link or direct MP4 URL to start tagging events as you watch</div>
+    <input class="va-url-input" id="va-url-input" type="url" placeholder="https://youtube.com/watch?v=... or MP4 URL"
+      onkeydown="if(event.key==='Enter')loadVideoUrl()">
+    <button class="va-url-btn" onclick="loadVideoUrl()">▶ Load Video</button>
+    <div id="va-url-error" style="font-size:12px;color:#ff8080;display:none;text-align:center;"></div>
+  </div>
+
+  <!-- Controls (shown after video loads) -->
+  <div class="va-controls" id="va-controls">
+
+    <!-- Team selector -->
+    <div class="va-team-tabs">
+      <button class="va-team-tab active-home" id="va-tab-home" onclick="vaSelectTeam('home')" id="va-home-label">Home</button>
+      <button class="va-team-tab" id="va-tab-away" onclick="vaSelectTeam('away')" id="va-away-label">Away</button>
+    </div>
+
+    <!-- Event buttons -->
+    <div class="va-event-grid">
+      <button class="va-event-btn" onclick="vaTagEvent('shot-play')"><span class="va-event-icon">⚽</span>Shot Play</button>
+      <button class="va-event-btn" onclick="vaTagEvent('shot-free')"><span class="va-event-icon">🎯</span>Shot Free</button>
+      <button class="va-event-btn" onclick="vaTagEvent('goal')"><span class="va-event-icon">🥅</span>Goal</button>
+      <button class="va-event-btn" onclick="vaTagEvent('point')"><span class="va-event-icon">✦</span>Point</button>
+      <button class="va-event-btn" onclick="vaTagEvent('wide')"><span class="va-event-icon">↗️</span>Wide</button>
+      <button class="va-event-btn" onclick="vaTagEvent('turnover')"><span class="va-event-icon">🔄</span>Turnover</button>
+      <button class="va-event-btn" onclick="vaTagEvent('kickout')"><span class="va-event-icon">🦶</span>Kickout</button>
+      <button class="va-event-btn" onclick="vaTagEvent('mark')"><span class="va-event-icon">📌</span>Mark</button>
+      <button class="va-event-btn" onclick="vaTagEvent('foul')"><span class="va-event-icon">⚠️</span>Foul</button>
+      <button class="va-event-btn" onclick="vaTagEvent('card')"><span class="va-event-icon">🟨</span>Card</button>
+      <button class="va-event-btn" onclick="vaTagEvent('ball-won')"><span class="va-event-icon">📥</span>Ball Won</button>
+      <button class="va-event-btn" onclick="vaTagEvent('ball-lost')"><span class="va-event-icon">📤</span>Ball Lost</button>
+    </div>
+
+    <!-- Tag list -->
+    <div class="va-tag-list-wrap">
+      <div class="va-tag-list-title">Tagged Events <span id="va-tag-count" style="color:var(--red-light)"></span></div>
+      <div class="va-tag-list" id="va-tag-list">
+        <div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tag flash confirmation -->
+  <div class="va-tag-flash" id="va-tag-flash"></div>
+
+</div>
+
+<!-- OUTCOME PICKER for video tags -->
+<div class="va-outcome-overlay" id="va-outcome-overlay">
+  <div class="va-outcome-sheet">
+    <div class="va-outcome-title" id="va-outcome-title">Select Outcome</div>
+    <div class="va-outcome-grid" id="va-outcome-grid"></div>
+    <button class="va-outcome-cancel" onclick="vaCloseOutcome()">Cancel — tag without outcome</button>
+  </div>
+</div>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
