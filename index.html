@@ -623,6 +623,12 @@ select option { background:#1a0505; }
 .pw-title { font-size: 28px; font-weight: 700; color: var(--cream); letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
 .pw-sub { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 32px; font-family: 'Inter', sans-serif; line-height: 1.5; max-width: 320px; }
 .pw-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 400px; margin-bottom: 20px; }
+.pw-tier-tabs { display: flex; gap: 0; width: 100%; max-width: 400px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.pw-tier-tab { flex: 1; padding: 10px 8px; background: transparent; border: none; color: var(--muted); font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+.pw-tier-tab.active { background: rgba(224,48,48,0.12); color: var(--cream); border-bottom: 2px solid var(--red); }
+.pw-tier-panel { display: none; width: 100%; max-width: 400px; }
+.pw-tier-panel.active { display: block; }
+.pw-tier-label { font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; text-align: center; margin-bottom: 12px; }
 .pw-plan {
   background: var(--panel);
   border: 2px solid var(--border);
@@ -2238,28 +2244,62 @@ select option { background:#1a0505; }
   </div>
   <div class="pw-sub" id="pw-sub-text">Your 30-day free trial has ended. Subscribe to keep full access to all features.</div>
 
-  <div class="pw-plans">
-    <div class="pw-plan selected" id="plan-monthly" onclick="selectPlan('monthly')">
-      <div class="pw-plan-period">Monthly</div>
-      <div class="pw-plan-price"><sup>£</sup>5</div>
-      <div class="pw-plan-unit">per month</div>
+  <!-- Tier Tabs -->
+  <div class="pw-tier-tabs">
+    <button class="pw-tier-tab active" id="tier-tab-individual" onclick="selectTier('individual')">👤 Individual</button>
+    <button class="pw-tier-tab" id="tier-tab-club" onclick="selectTier('club')">🏟 Club</button>
+  </div>
+
+  <!-- Individual Plans -->
+  <div class="pw-tier-panel active" id="tier-panel-individual">
+    <div class="pw-tier-label">Individual Coach</div>
+    <div class="pw-plans">
+      <div class="pw-plan selected" id="plan-monthly" onclick="selectPlan('monthly')">
+        <div class="pw-plan-period">Monthly</div>
+        <div class="pw-plan-price"><sup>£</sup>5</div>
+        <div class="pw-plan-unit">per month</div>
+      </div>
+      <div class="pw-plan" id="plan-annual" onclick="selectPlan('annual')">
+        <div class="pw-plan-badge">BEST VALUE</div>
+        <div class="pw-plan-period">Annual</div>
+        <div class="pw-plan-price"><sup>£</sup>50</div>
+        <div class="pw-plan-unit">per year</div>
+        <div class="pw-plan-saving">Save £10 vs monthly</div>
+      </div>
     </div>
-    <div class="pw-plan" id="plan-annual" onclick="selectPlan('annual')">
-      <div class="pw-plan-badge">BEST VALUE</div>
-      <div class="pw-plan-period">Annual</div>
-      <div class="pw-plan-price"><sup>£</sup>50</div>
-      <div class="pw-plan-unit">per year</div>
-      <div class="pw-plan-saving">Save £10 vs monthly</div>
+    <div class="pw-features">
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Live match recording — shots, kickouts, turnovers, discipline</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Full Trends dashboard and possession tracking</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Match history, PDF reports and team sheets</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Squad management with player stats</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Works offline at the pitch</div>
     </div>
   </div>
 
-  <div class="pw-features">
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Live match recording — shots, kickouts, turnovers</div>
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Full Trends dashboard and possession tracking</div>
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Match history, PDF reports and team sheets</div>
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Squad management with player stats</div>
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Club feature — shared squads and multi-coach access</div>
-    <div class="pw-feature"><span class="pw-feature-icon">✅</span>Works offline at the pitch</div>
+  <!-- Club Plans -->
+  <div class="pw-tier-panel" id="tier-panel-club">
+    <div class="pw-tier-label">Club — Multiple Coaches & Squads</div>
+    <div class="pw-plans">
+      <div class="pw-plan selected" id="plan-club-monthly" onclick="selectPlan('club-monthly')">
+        <div class="pw-plan-period">Monthly</div>
+        <div class="pw-plan-price"><sup>£</sup>10</div>
+        <div class="pw-plan-unit">per month</div>
+      </div>
+      <div class="pw-plan" id="plan-club-annual" onclick="selectPlan('club-annual')">
+        <div class="pw-plan-badge">BEST VALUE</div>
+        <div class="pw-plan-period">Annual</div>
+        <div class="pw-plan-price"><sup>£</sup>90</div>
+        <div class="pw-plan-unit">per year</div>
+        <div class="pw-plan-saving">Save £30 vs monthly</div>
+      </div>
+    </div>
+    <div class="pw-features">
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Everything in Individual</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Unlimited coaches under one club account</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Multiple squads — Senior, U20, Minor, U16 and more</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Shared match history and club-wide reports</div>
+      <div class="pw-feature"><span class="pw-feature-icon">✅</span>Admin dashboard to manage coaches and squads</div>
+    </div>
   </div>
 
   <button class="pw-cta" id="pw-cta-btn" onclick="startCheckout()">Subscribe Now — £5/month</button>
@@ -2270,21 +2310,52 @@ select option { background:#1a0505; }
 <script>
 // ── BILLING CONFIG ─────────────────────────────────
 // Replace these with your real Stripe Price IDs after setup
-var STRIPE_MONTHLY_PRICE_ID = 'price_1TZbzKHimBSnUeOtOTyXwv40';
-var STRIPE_ANNUAL_PRICE_ID  = 'price_1TZc1RHimBSnUeOtStGENRlU';
+var STRIPE_MONTHLY_PRICE_ID      = 'price_1TZbzKHimBSnUeOtOTyXwv40';
+var STRIPE_ANNUAL_PRICE_ID       = 'price_1TZc1RHimBSnUeOtStGENRlU';
+var STRIPE_CLUB_MONTHLY_PRICE_ID = 'price_CLUB_MONTHLY_PLACEHOLDER';
+var STRIPE_CLUB_ANNUAL_PRICE_ID  = 'price_CLUB_ANNUAL_PLACEHOLDER';
 // Replace with your deployed webhook/checkout URL
 var CHECKOUT_URL = 'https://coachstats.netlify.app/.netlify/functions/create-checkout';
 
 var selectedPlan = 'monthly';
 var subStatus = null; // 'trialing' | 'active' | 'expired' | null
 
+// ── TIER SELECTOR ──────────────────────────────────
+function selectTier(tier) {
+  document.getElementById('tier-tab-individual').classList.toggle('active', tier === 'individual');
+  document.getElementById('tier-tab-club').classList.toggle('active', tier === 'club');
+  document.getElementById('tier-panel-individual').classList.toggle('active', tier === 'individual');
+  document.getElementById('tier-panel-club').classList.toggle('active', tier === 'club');
+  // Reset to monthly for the selected tier
+  if (tier === 'individual') {
+    selectPlan('monthly');
+  } else {
+    selectPlan('club-monthly');
+  }
+}
+
 // ── PLAN SELECTOR ──────────────────────────────────
 function selectPlan(plan) {
   selectedPlan = plan;
-  document.getElementById('plan-monthly').classList.toggle('selected', plan === 'monthly');
-  document.getElementById('plan-annual').classList.toggle('selected', plan === 'annual');
+  // Individual plans
+  var mEl = document.getElementById('plan-monthly');
+  var aEl = document.getElementById('plan-annual');
+  if (mEl) mEl.classList.toggle('selected', plan === 'monthly');
+  if (aEl) aEl.classList.toggle('selected', plan === 'annual');
+  // Club plans
+  var cmEl = document.getElementById('plan-club-monthly');
+  var caEl = document.getElementById('plan-club-annual');
+  if (cmEl) cmEl.classList.toggle('selected', plan === 'club-monthly');
+  if (caEl) caEl.classList.toggle('selected', plan === 'club-annual');
+  // Update CTA button
   var btn = document.getElementById('pw-cta-btn');
-  btn.textContent = plan === 'annual' ? 'Subscribe Now — £50/year' : 'Subscribe Now — £5/month';
+  var labels = {
+    'monthly': 'Subscribe Now — £5/month',
+    'annual': 'Subscribe Now — £50/year',
+    'club-monthly': 'Subscribe Now — £10/month',
+    'club-annual': 'Subscribe Now — £90/year'
+  };
+  btn.textContent = labels[plan] || 'Subscribe Now';
 }
 
 // ── SHOW PAYWALL ───────────────────────────────────
@@ -2315,7 +2386,13 @@ function startCheckout() {
   btn.textContent = 'Redirecting...';
   btn.disabled = true;
 
-  var priceId = selectedPlan === 'annual' ? STRIPE_ANNUAL_PRICE_ID : STRIPE_MONTHLY_PRICE_ID;
+  var priceMap = {
+    'monthly':      STRIPE_MONTHLY_PRICE_ID,
+    'annual':       STRIPE_ANNUAL_PRICE_ID,
+    'club-monthly': STRIPE_CLUB_MONTHLY_PRICE_ID,
+    'club-annual':  STRIPE_CLUB_ANNUAL_PRICE_ID
+  };
+  var priceId = priceMap[selectedPlan] || STRIPE_MONTHLY_PRICE_ID;
 
   fetch(CHECKOUT_URL, {
     method: 'POST',
@@ -2333,13 +2410,13 @@ function startCheckout() {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      btn.textContent = selectedPlan === 'annual' ? 'Subscribe Now — £50/year' : 'Subscribe Now — £5/month';
+      selectPlan(selectedPlan);
       btn.disabled = false;
       alert('Could not start checkout. Please try again.');
     }
   })
   .catch(function() {
-    btn.textContent = selectedPlan === 'annual' ? 'Subscribe Now — £50/year' : 'Subscribe Now — £5/month';
+    selectPlan(selectedPlan);
     btn.disabled = false;
     alert('Network error. Please check your connection and try again.');
   });
