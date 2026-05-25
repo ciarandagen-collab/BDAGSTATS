@@ -998,6 +998,22 @@ select option { background:#1a0505; }
 .btn-save-player:hover { filter:brightness(1.1); }
 .btn-clear-player { width:100%; padding:11px; background:rgba(255,60,60,0.07); border:1px solid rgba(255,60,60,0.2); border-radius:10px; color:rgba(255,120,120,0.65); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:8px; }
 
+/* ── HELP SHEET ─────────────────────────────────── */
+.help-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+.modal-overlay.open .help-sheet { transform:translateY(0); }
+.help-download-card { display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,rgba(153,27,27,0.25),rgba(224,48,48,0.1)); border:1px solid rgba(224,48,48,0.3); border-radius:14px; padding:14px; margin-bottom:16px; }
+.help-download-icon { font-size:28px; flex-shrink:0; }
+.help-download-text { flex:1; min-width:0; }
+.help-download-title { font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; color:var(--cream); letter-spacing:1px; text-transform:uppercase; }
+.help-download-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.help-download-btn { background:var(--red); border:none; border-radius:8px; padding:9px 14px; color:#fff; font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; text-decoration:none; white-space:nowrap; flex-shrink:0; display:inline-block; }
+.help-section { margin-bottom:16px; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.help-section-title { font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; padding:10px 14px; background:rgba(224,48,48,0.06); border-bottom:1px solid var(--border); }
+.help-row { display:flex; gap:10px; padding:9px 14px; border-bottom:1px solid rgba(255,255,255,0.03); align-items:flex-start; }
+.help-row:last-child { border-bottom:none; }
+.help-key { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; color:var(--cream); white-space:nowrap; flex-shrink:0; width:110px; padding-top:1px; }
+.help-val { font-size:12px; color:var(--muted); line-height:1.5; }
+
 /* Player stats view */
 .player-stat-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
 .psc-header { background:rgba(0,0,0,0.3); padding:12px 14px; display:flex; align-items:center; gap:12px; }
@@ -1286,6 +1302,7 @@ select option { background:#1a0505; }
     <div style="width:24px;height:24px;border-radius:50%;background:#e03030;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <button onclick="openClubDashboard()" style="background:rgba(224,48,48,0.15);border:1px solid rgba(224,48,48,0.3);border-radius:6px;padding:3px 8px;color:#ff8080;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club">🏟</button>
+    <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help">?</button>
     <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
   </div>
 </div>
@@ -2046,6 +2063,81 @@ select option { background:#1a0505; }
     <span class="nav-label">History</span>
   </button>
 </nav>
+
+<!-- HELP SHEET -->
+<div class="modal-overlay" id="help-modal" onclick="if(event.target===this)closeHelp()">
+  <div class="help-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Help & Guide</div>
+        <div class="sheet-sub">Coach Stats — Quick Reference</div>
+      </div>
+      <button class="sheet-close" onclick="closeHelp()">✕</button>
+    </div>
+
+    <!-- Download Guide -->
+    <div class="help-download-card">
+      <div class="help-download-icon">📄</div>
+      <div class="help-download-text">
+        <div class="help-download-title">Coach Stats User Guide</div>
+        <div class="help-download-sub">Full guide — setup, recording, reports & tips</div>
+      </div>
+      <a id="help-pdf-link" class="help-download-btn" href="https://raw.githubusercontent.com/ciarandagen-collab/BDAGSTATS/main/coach-stats-guide.pdf" download="coach-stats-guide.pdf" target="_blank">Download PDF</a>
+    </div>
+
+    <!-- Quick Reference Sections -->
+    <div class="help-section">
+      <div class="help-section-title">🏟 Match Tab</div>
+      <div class="help-row"><span class="help-key">Set up teams</span><span class="help-val">Tap the Home or Away button — search by county or club name</span></div>
+      <div class="help-row"><span class="help-key">Start game</span><span class="help-val">Game Control → ▶ Start Game — clock starts automatically</span></div>
+      <div class="help-row"><span class="help-key">Half time</span><span class="help-val">Tap ⏸ Half Time → then ▶ Start 2nd Half</span></div>
+      <div class="help-row"><span class="help-key">Undo a score</span><span class="help-val">Scoreboard → ↩ Undo Home or ↩ Undo Away</span></div>
+      <div class="help-row"><span class="help-key">Collapse match info</span><span class="help-val">Tap the Match Info heading — auto-collapses on Start Game</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">✍️ Record Tab</div>
+      <div class="help-row"><span class="help-key">Record a shot</span><span class="help-val">Shots section → tap Shot from Play or Free → select outcome</span></div>
+      <div class="help-row"><span class="help-key">Tag shot zone</span><span class="help-val">After selecting outcome → tap a zone or Skip Zone</span></div>
+      <div class="help-row"><span class="help-key">Record turnover</span><span class="help-val">Possession → Turnover Forced → In Attack / Midfield / In Defence</span></div>
+      <div class="help-row"><span class="help-key">Record a mark</span><span class="help-val">Possession → Mark → Won or Lost</span></div>
+      <div class="help-row"><span class="help-key">Record foul / card</span><span class="help-val">Tap Discipline heading to expand → Foul Given or Card</span></div>
+      <div class="help-row"><span class="help-key">Tag a player</span><span class="help-val">Tap player name in outcome panel before selecting outcome</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">👥 Squad Tab</div>
+      <div class="help-row"><span class="help-key">Add a player</span><span class="help-val">Tap any squad slot → enter name → tap Save Player</span></div>
+      <div class="help-row"><span class="help-key">Select position</span><span class="help-val">Tap a position button below Save Player (optional)</span></div>
+      <div class="help-row"><span class="help-key">Remove player</span><span class="help-val">Tap slot → tap Remove Player</span></div>
+      <div class="help-row"><span class="help-key">Team sheet</span><span class="help-val">Squad tab → Team Sheet → 🖨️ Print / Save PDF</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">📊 Stats & History</div>
+      <div class="help-row"><span class="help-key">Save a match</span><span class="help-val">Stats tab → tap Save Match</span></div>
+      <div class="help-row"><span class="help-key">View match report</span><span class="help-val">History tab → tap 📄 Report on any match card</span></div>
+      <div class="help-row"><span class="help-key">Reload a match</span><span class="help-val">History tab → tap ↩ Reload to bring it back into the tracker</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🏟 Club Feature</div>
+      <div class="help-row"><span class="help-key">Create a club</span><span class="help-val">🏟 button → Create Club → enter name and county</span></div>
+      <div class="help-row"><span class="help-key">Invite a coach</span><span class="help-val">🏟 → Members tab → share your 8-character invite code</span></div>
+      <div class="help-row"><span class="help-key">Join a club</span><span class="help-val">🏟 → Join Club → enter invite code</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">⚙️ Account</div>
+      <div class="help-row"><span class="help-key">Sign out</span><span class="help-val">⏻ Sign Out button — top right corner</span></div>
+      <div class="help-row"><span class="help-key">Subscribe</span><span class="help-val">Tap Upgrade in the trial banner → Stripe checkout</span></div>
+      <div class="help-row"><span class="help-key">App not updating</span><span class="help-val">Delete PWA from home screen and reinstall from Safari</span></div>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+</div>
 
 <!-- TEAM PICKER MODAL -->
 <div class="picker-overlay" id="team-picker-overlay" onclick="if(event.target===this)closePicker()">
@@ -3520,6 +3612,15 @@ function startGame() {
   var chev = $('match-info-chevron');
   if (sec) { sec.style.display = 'none'; if (chev) chev.textContent = '▼'; }
   showSync('▶ Game started — 1st Half', 2000);
+}
+
+function openHelp() {
+  document.getElementById('help-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeHelp() {
+  document.getElementById('help-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function toggleDiscipline() {
