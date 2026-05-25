@@ -982,8 +982,8 @@ select option { background:#1a0505; }
 
 /* Player edit modal */
 .player-edit-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px 0; width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:88vh; display:flex; flex-direction:column; }
-.player-edit-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:8px; }
-.player-edit-footer { padding:12px 0 calc(16px + var(--safe-bottom)); flex-shrink:0; border-top:1px solid var(--border); margin-top:4px; }
+.player-edit-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:8px; min-height:0; }
+.player-edit-footer { padding:12px 0 calc(16px + var(--safe-bottom)); flex-shrink:0; border-top:1px solid var(--border); margin-top:4px; background:var(--panel2); position:sticky; bottom:0; }
 .modal-overlay.open .player-edit-sheet { transform:translateY(0); }
 
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
@@ -2969,7 +2969,6 @@ function openPlayerEdit(slotIndex) {
 
   document.getElementById('player-edit-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
-  setTimeout(function() { document.getElementById('edit-player-name').focus(); }, 300);
 }
 
 function selectPos(btn, pos) {
@@ -2980,6 +2979,8 @@ function selectPos(btn, pos) {
 
 function savePlayerEdit() {
   if (editingSlot === null) return;
+  // Dismiss keyboard first (iOS fix)
+  document.activeElement && document.activeElement.blur();
   var name = document.getElementById('edit-player-name').value.trim();
   if (!name) { document.getElementById('edit-player-name').focus(); return; }
   var selectedPosBtn = document.querySelector('.pos-btn.selected');
