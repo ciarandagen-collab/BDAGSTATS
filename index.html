@@ -711,6 +711,7 @@ select option { background:#1a0505; }
 .mcs-score { font-family:'Oswald',sans-serif; font-size:clamp(24px,6vw,36px); font-weight:700; line-height:1; }
 .mcs-score span { color:var(--gold); }
 .mcs-total { font-size:11px; color:var(--red); margin-top:3px; font-style:italic; }
+.mcs-video-stub { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; color:var(--red-light); margin-top:4px; text-transform:uppercase; }
 .mcs-divider { font-family:'Oswald',sans-serif; font-size:16px; color:rgba(245,232,232,0.15); text-align:center; }
 
 .match-card-stats {
@@ -1154,6 +1155,14 @@ select option { background:#1a0505; }
 #stats-context-label { font-size:10px; color:var(--muted); font-weight:400; letter-spacing:1px; font-family:'Inter',sans-serif; text-transform:none; }
 .va-export-btn { width: 100%; padding: 11px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; text-align: center; margin-top: 4px; }
 .va-export-btn:active { background: rgba(255,255,255,0.1); color: var(--cream); }
+.new-video-btn { width:100%; padding:13px; background:linear-gradient(135deg,rgba(153,27,27,0.2),rgba(224,48,48,0.1)); border:1px solid rgba(224,48,48,0.3); border-radius:12px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-bottom:16px; }
+.new-video-btn:active { background:rgba(224,48,48,0.2); }
+.new-video-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.modal-overlay.open .new-video-sheet { transform:translateY(0); }
+.nva-field { margin-bottom:12px; }
+.nva-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+.nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
 /* Video area */
 .va-video-wrap {
@@ -1962,6 +1971,8 @@ select option { background:#1a0505; }
 
   <!-- PAGE: HISTORY -->
   <div class="page" id="page-history">
+
+    <button class="new-video-btn" onclick="openNewVideoAnalysis()">🎬 New Video Analysis</button>
 
     <div class="sec-label">Saved Matches</div>
     <div id="history-list"></div>
@@ -3644,6 +3655,80 @@ function startGame() {
   showSync('▶ Game started — 1st Half', 2000);
 }
 
+// ── NEW VIDEO ANALYSIS (video-first workflow) ─────
+function openNewVideoAnalysis() {
+  document.getElementById('nva-home').value = '';
+  document.getElementById('nva-away').value = '';
+  document.getElementById('nva-competition').value = '';
+  document.getElementById('nva-url').value = '';
+  document.getElementById('nva-error').style.display = 'none';
+  document.getElementById('new-video-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNewVideoAnalysis() {
+  document.getElementById('new-video-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function startNewVideoAnalysis() {
+  var home = document.getElementById('nva-home').value.trim();
+  var away = document.getElementById('nva-away').value.trim();
+  var url  = document.getElementById('nva-url').value.trim();
+  var errEl = document.getElementById('nva-error');
+
+  if (!home || !away) {
+    errEl.textContent = 'Please enter both team names';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!url) {
+    errEl.textContent = 'Please enter a video URL';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Create a lightweight match stub
+  var stub = {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    home: home,
+    away: away,
+    competition: document.getElementById('nva-competition').value.trim() || '',
+    venue: '',
+    homeGoals: 0, homePoints: 0,
+    awayGoals: 0, awayPoints: 0,
+    homePoss: 50, awayPoss: 50,
+    homeShotsPlay: 0, awayShotsPlay: 0,
+    homeShotsFree: 0, awayShotsFree: 0,
+    homeBallWon: 0, awayBallWon: 0,
+    homeWides: 0, awayWides: 0,
+    shots: {home:{play:{},free:{}},away:{play:{},free:{}}},
+    ballLost: {home:{},away:{}},
+    ballWon: {home:{},away:{}},
+    kickout: {home:{},away:{}},
+    fortyFive: {home:{},away:{}},
+    events: [],
+    players: [],
+    isVideoStub: true
+  };
+
+  // Save to history so it appears in match cards
+  var list = loadHistory();
+  list.unshift(stub);
+  saveHistory(list);
+  syncMatchToSupabase(stub);
+
+  // Save the video URL
+  localStorage.setItem('cs_vurl_' + stub.id, url);
+
+  closeNewVideoAnalysis();
+
+  // Open video analysis directly
+  openVideoAnalysis(stub.id);
+}
+
 function openHelp() {
   document.getElementById('help-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -4293,14 +4378,12 @@ function renderHistory() {
       <div class="match-card-score">
         <div class="mcs-team">
           <div class="mcs-name">${m.home}</div>
-          <div class="mcs-score"><span>${m.homeGoals}</span>-${String(m.homePoints).padStart(2,'0')}</div>
-          <div class="mcs-total">(${hT})</div>
+          ${m.isVideoStub ? '<div class="mcs-video-stub">Video Analysis</div>' : `<div class="mcs-score"><span>${m.homeGoals}</span>-${String(m.homePoints).padStart(2,'0')}</div><div class="mcs-total">(${hT})</div>`}
         </div>
         <div class="mcs-divider">|</div>
         <div class="mcs-team">
           <div class="mcs-name">${m.away}</div>
-          <div class="mcs-score"><span>${m.awayGoals}</span>-${String(m.awayPoints).padStart(2,'0')}</div>
-          <div class="mcs-total">(${aT})</div>
+          ${m.isVideoStub ? '<div class="mcs-video-stub">🎬</div>' : `<div class="mcs-score"><span>${m.awayGoals}</span>-${String(m.awayPoints).padStart(2,'0')}</div><div class="mcs-total">(${aT})</div>`}
         </div>
       </div>
       <div class="match-card-stats">
@@ -7252,6 +7335,46 @@ window.addEventListener('resize', function() {
   }
 });
 </script>
+<!-- NEW VIDEO ANALYSIS SETUP SHEET -->
+<div class="modal-overlay" id="new-video-modal" onclick="if(event.target===this)closeNewVideoAnalysis()">
+  <div class="new-video-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">New Video Analysis</div>
+        <div class="sheet-sub">Set up match details and paste a video link</div>
+      </div>
+      <button class="sheet-close" onclick="closeNewVideoAnalysis()">✕</button>
+    </div>
+
+    <div class="nva-field">
+      <div class="nva-label">Home Team</div>
+      <input type="text" id="nva-home" placeholder="Home team name" class="nva-input">
+    </div>
+    <div class="nva-field">
+      <div class="nva-label">Away Team</div>
+      <input type="text" id="nva-away" placeholder="Away team name" class="nva-input">
+    </div>
+    <div class="nva-field">
+      <div class="nva-label">Competition <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+      <input type="text" id="nva-competition" placeholder="e.g. GAA Ulster SFC" class="nva-input">
+    </div>
+    <div class="nva-field">
+      <div class="nva-label">Video URL</div>
+      <input type="url" id="nva-url" placeholder="YouTube link or direct MP4 URL" class="nva-input"
+        onkeydown="if(event.key==='Enter')startNewVideoAnalysis()">
+    </div>
+
+    <div id="nva-error" style="display:none;font-size:12px;color:#ff8080;margin-bottom:8px;"></div>
+
+    <button class="btn-save-player" onclick="startNewVideoAnalysis()" style="margin-top:4px;">
+      ▶ Start Video Analysis
+    </button>
+
+    <div class="nva-note">You can save this as a match record from the Stats tab after tagging.</div>
+  </div>
+</div>
+
 <!-- VIDEO ANALYSIS OVERLAY -->
 <div id="video-analysis-overlay">
 
