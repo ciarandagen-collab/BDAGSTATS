@@ -102,7 +102,10 @@ body {
   letter-spacing: 1px;
   margin-top: 2px;
 }
+.tb-match-label { font-family:'Inter',sans-serif; font-size:9px; color:rgba(245,232,232,0.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; text-align:center; margin-top:1px; }
 .tb-clock-status.live { color: var(--green); }
+.tb-clock-time.running { animation: clockPulse 2s ease-in-out infinite; }
+@keyframes clockPulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
 
 /* ── SCROLL AREA ── */
 .scroll-area {
@@ -164,7 +167,8 @@ body {
 }
 
 /* ── PAGE VIEWS ── */
-.page { display: none; padding: 14px 12px; }
+.page { display: none; padding: 14px 12px; opacity: 0; transition: opacity 0.12s ease; }
+.page.active { opacity: 1; }
 .page.active { display: block; }
 
 /* ── SECTION LABEL ── */
@@ -712,6 +716,29 @@ select option { background:#1a0505; }
 .mcs-score span { color:var(--gold); }
 .mcs-total { font-size:11px; color:var(--red); margin-top:3px; font-style:italic; }
 .mcs-video-stub { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; color:var(--red-light); margin-top:4px; text-transform:uppercase; }
+
+/* Fix 3: topbar match label */
+.tb-match-label { font-family:'Inter',sans-serif; font-size:9px; color:rgba(245,232,232,0.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; text-align:center; margin-top:1px; }
+
+/* Fix 4: history search */
+.history-search-wrap { margin-bottom:12px; }
+.history-search-input { width:100%; padding:10px 14px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px; color:var(--cream); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.history-search-input::placeholder { color:var(--muted); }
+
+/* Fix 5: video collapse */
+.va-collapse-btn { width:100%; padding:6px; background:rgba(0,0,0,0.4); border:none; border-top:1px solid rgba(255,255,255,0.06); color:rgba(245,232,232,0.4); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; cursor:pointer; text-align:center; }
+.va-video-collapsed .va-youtube-player, .va-video-collapsed video { display:none !important; }
+.va-video-collapsed .va-collapse-btn { display:block; }
+
+/* Fix 7: annual plan featured */
+.pw-plan-featured { border-color: rgba(245,166,35,0.5) !important; background: rgba(245,166,35,0.06) !important; transform: scale(1.02); }
+.pw-plan-featured.selected { border-color: var(--red) !important; background: rgba(224,48,48,0.1) !important; }
+
+/* Fix 9: trends empty state */
+.trends-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 20px; text-align:center; }
+.trends-empty-icon { font-size:40px; opacity:0.3; margin-bottom:12px; }
+.trends-empty-title { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+.trends-empty-sub { font-size:12px; color:rgba(245,232,232,0.3); line-height:1.6; max-width:280px; }
 .mcs-divider { font-family:'Oswald',sans-serif; font-size:16px; color:rgba(245,232,232,0.15); text-align:center; }
 
 .match-card-stats {
@@ -1472,6 +1499,7 @@ select option { background:#1a0505; }
   <div class="topbar-clock">
     <div class="tb-clock-time" id="tb-clock">00:00</div>
     <div class="tb-clock-status" id="tb-clock-status">Ready</div>
+    <div class="tb-match-label" id="tb-match-label"></div>
   </div>
 </div>
 
@@ -1765,6 +1793,12 @@ select option { background:#1a0505; }
   <!-- PAGE: TRENDS -->
   <div class="page" id="page-trends">
 
+    <div id="trends-empty-state" class="trends-empty">
+      <div class="trends-empty-icon">📈</div>
+      <div class="trends-empty-title">No data yet</div>
+      <div class="trends-empty-sub">Start recording events on the Record tab to see live possession, score trends and match momentum here</div>
+    </div>
+
     <div class="sec-label">Team Possession</div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div class="poss-header">
@@ -1974,7 +2008,14 @@ select option { background:#1a0505; }
 
     <button class="new-video-btn" onclick="openNewVideoAnalysis()">🎬 New Video Analysis</button>
 
-    <div class="sec-label">Saved Matches</div>
+    <div class="history-search-wrap">
+      <input class="history-search-input" id="history-search" type="search"
+        placeholder="Search by team, competition or venue..."
+        oninput="filterHistory(this.value)"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <div class="sec-label">Saved Matches <span id="history-count-label" style="font-size:9px;color:var(--muted);font-weight:400;letter-spacing:1px;font-family:'Inter',sans-serif;text-transform:none;"></span></div>
     <div id="history-list"></div>
 
   </div><!-- /page-history -->
@@ -2238,7 +2279,7 @@ select option { background:#1a0505; }
         <div class="pw-plan-price"><sup>£</sup>5</div>
         <div class="pw-plan-unit">per month</div>
       </div>
-      <div class="pw-plan" id="plan-annual" onclick="selectPlan('annual')">
+      <div class="pw-plan pw-plan-featured" id="plan-annual" onclick="selectPlan('annual')">
         <div class="pw-plan-badge">BEST VALUE</div>
         <div class="pw-plan-period">Annual</div>
         <div class="pw-plan-price"><sup>£</sup>50</div>
@@ -2264,7 +2305,7 @@ select option { background:#1a0505; }
         <div class="pw-plan-price"><sup>£</sup>10</div>
         <div class="pw-plan-unit">per month</div>
       </div>
-      <div class="pw-plan" id="plan-club-annual" onclick="selectPlan('club-annual')">
+      <div class="pw-plan pw-plan-featured" id="plan-club-annual" onclick="selectPlan('club-annual')">
         <div class="pw-plan-badge">BEST VALUE</div>
         <div class="pw-plan-period">Annual</div>
         <div class="pw-plan-price"><sup>£</sup>90</div>
@@ -2616,6 +2657,8 @@ function updateNames() {
   aIds.forEach(id=>{const el=$(id);if(el)el.textContent=a;});
   $('player-home-opt').textContent=h;
   $('player-away-opt').textContent=a;
+  var matchLabel = document.getElementById('tb-match-label');
+  if (matchLabel) matchLabel.textContent = (h && a && h !== 'Home' && a !== 'Away') ? h + ' v ' + a : '';
   updateStats(); renderShotSummary();
 }
 
@@ -3404,6 +3447,13 @@ function snapPossession() {
   state.possHistory.push(p.h);
 }
 function renderTrends() {
+  // Show empty state if no events yet
+  var trendsEmpty = document.getElementById('trends-empty-state');
+  var hasEvents = state.events.length > 0 || 
+    Object.values(state.ballWon.home).reduce((a,b)=>a+b,0) > 0 ||
+    Object.values(state.shots.home.play).reduce((a,b)=>a+b,0) > 0;
+  if (trendsEmpty) trendsEmpty.style.display = hasEvents ? 'none' : 'flex';
+
   const hT=total('home'), aT=total('away');
   $('tr-home-total').textContent=hT;
   $('tr-away-total').textContent=aT;
@@ -3610,7 +3660,7 @@ function renderClock() {
   var badgeClass = '';
 
   if (gamePhase === 'pregame') { badgeText = 'Ready'; badgeClass = ''; }
-  else if (gamePhase === 'first_half') { badgeText = running ? (ot ? '⏱ Injury Time' : '⏱ 1st Half') : 'Paused'; badgeClass = running ? (ot ? 'overtime' : 'live') : 'paused'; }
+  else if (gamePhase === 'first_half') { badgeText = running ? (ot ? '⏱ Injury Time' : '⏱ 1st Half') : '⏸ Paused'; badgeClass = running ? (ot ? 'overtime' : 'live') : 'paused'; }
   else if (gamePhase === 'half_time') { badgeText = '⏸ Half Time'; badgeClass = 'paused'; }
   else if (gamePhase === 'second_half') { badgeText = running ? (ot ? '⏱ Injury Time' : '⏱ 2nd Half') : 'Paused'; badgeClass = running ? (ot ? 'overtime' : 'live') : 'paused'; }
   else if (gamePhase === 'full_time') { badgeText = '⏹ Full Time'; badgeClass = 'paused'; }
@@ -3751,6 +3801,16 @@ function startNewVideoAnalysis() {
   openVideoAnalysis(stub.id);
 }
 
+function vaToggleVideoCollapse() {
+  var wrap = document.getElementById('va-video-wrap');
+  var btn = document.getElementById('va-collapse-btn');
+  var tl = document.getElementById('va-timeline');
+  if (!wrap) return;
+  var collapsed = wrap.classList.toggle('va-video-collapsed');
+  if (btn) btn.textContent = collapsed ? '▼ Show Video' : '▲ Hide Video';
+  if (tl) tl.style.display = collapsed ? 'none' : 'block';
+}
+
 function openHelp() {
   document.getElementById('help-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -3799,22 +3859,30 @@ function filterComps(query) {
   var current = document.getElementById('competition').value;
   var html = '';
 
+  if (!q) {
+    var recents = getRecentComps();
+    if (recents.length) {
+      html += '<div class="comp-group-label">⭐ Recent</div>';
+      recents.forEach(function(item) {
+        html += '<div class="comp-item' + (item === current ? ' selected' : '') + '" onclick="selectComp(\'' + item.replace(/'/g,"\\'") + '\')">' + item + '</div>';
+      });
+    }
+  }
+
   COMPETITIONS.forEach(function(group) {
     var items = q ? group.items.filter(function(i) { return i.toLowerCase().includes(q); }) : group.items;
     if (!items.length) return;
     if (!q) html += '<div class="comp-group-label">' + group.g + '</div>';
     items.forEach(function(item) {
-      html += '<div class="comp-item' + (item === current ? ' selected' : '') + '" onclick="selectComp(\'' + item.replace(/'/g,'\\\'') + '\')">' + item + '</div>';
+      html += '<div class="comp-item' + (item === current ? ' selected' : '') + '" onclick="selectComp(\'' + item.replace(/'/g,"\\'") + '\')">' + item + '</div>';
     });
   });
 
   if (!html) html = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No results for "' + query + '"</div>';
   list.innerHTML = html;
 }
-
 function selectComp(comp) {
   var sel = document.getElementById('competition');
-  // Add option if not present
   var found = false;
   for (var i = 0; i < sel.options.length; i++) {
     if (sel.options[i].value === comp) { found = true; break; }
@@ -3825,6 +3893,7 @@ function selectComp(comp) {
     sel.add(opt);
   }
   sel.value = comp;
+  addRecentComp(comp);
   syncCompDisplay();
   closeCompPicker();
 }
@@ -4369,18 +4438,54 @@ function saveMatchToHistory() {
   saveHistory(list);
   syncMatchToSupabase(record);
 
-  const btn = document.querySelector('.btn-save-match');
-  if (btn) { btn.textContent = '✓ Saved!'; setTimeout(()=>btn.textContent='Save Match', 2000); }
+  // Update banner to saved state
+  var banner = document.querySelector('.save-match-banner');
+  var btn = document.querySelector('.btn-save-match');
+  var bannerTitle = document.querySelector('.smb-title');
+  var bannerSub = document.querySelector('.smb-sub');
+  if (btn) {
+    btn.textContent = '✓ Saved';
+    btn.style.background = 'var(--green)';
+    btn.disabled = true;
+  }
+  if (bannerTitle) bannerTitle.textContent = '✓ Match Saved';
+  if (bannerSub) bannerSub.textContent = 'View in the History tab — synced to your account';
+  if (banner) banner.style.borderColor = 'rgba(34,197,94,0.3)';
+  setTimeout(function() {
+    if (btn) { btn.textContent = 'Save Again'; btn.style.background = ''; btn.disabled = false; }
+    if (bannerTitle) bannerTitle.textContent = 'Save to History';
+    if (bannerSub) bannerSub.textContent = 'Store this match — access it anytime in the History tab';
+    if (banner) banner.style.borderColor = '';
+  }, 4000);
 }
 
-function renderHistory() {
-  const list = loadHistory();
-  const container = $('history-list');
+function filterHistory(query) {
+  renderHistory(query);
+}
+
+function renderHistory(query) {
+  var list = loadHistory();
+  var container = $('history-list');
+  var countLabel = document.getElementById('history-count-label');
+
+  // Apply search filter
+  if (query && query.trim()) {
+    var q = query.toLowerCase().trim();
+    list = list.filter(function(m) {
+      return (m.home && m.home.toLowerCase().includes(q)) ||
+             (m.away && m.away.toLowerCase().includes(q)) ||
+             (m.competition && m.competition.toLowerCase().includes(q)) ||
+             (m.venue && m.venue.toLowerCase().includes(q));
+    });
+  }
+
+  if (countLabel) countLabel.textContent = list.length ? '(' + list.length + ')' : '';
+
   if (!list.length) {
     container.innerHTML = `<div class="history-empty">
       <span class="history-empty-icon">🗂️</span>
-      <div class="history-empty-text">No saved matches yet</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px;font-style:italic">Record a match and tap Save on the Stats tab</div>
+      <div class="history-empty-text">${query ? 'No matches found' : 'No saved matches yet'}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;font-style:italic">${query ? 'Try a different search' : 'Record a match and tap Save on the Stats tab'}</div>
     </div>`;
     return;
   }
@@ -7411,6 +7516,7 @@ window.addEventListener('resize', function() {
   <div class="va-video-wrap" id="va-video-wrap" style="display:none;">
     <div id="va-youtube-player"></div>
     <video id="va-mp4-player" controls playsinline style="display:none;"></video>
+    <button class="va-collapse-btn" id="va-collapse-btn" onclick="vaToggleVideoCollapse()">▲ Hide Video</button>
   </div>
 
   <!-- Timeline scrubber (shown after video loads) -->
