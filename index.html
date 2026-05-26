@@ -733,14 +733,15 @@ select option { background:#1a0505; }
 
 .match-card-actions {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   padding: 0 14px 14px;
 }
 .mca-btn {
-  flex:1; padding:9px 8px; border-radius:8px; border:1px solid var(--border);
+  flex: 1 1 calc(33% - 6px); min-width: 0; padding:9px 6px; border-radius:8px; border:1px solid var(--border);
   background:rgba(255,255,255,0.04); color:var(--muted);
   font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px;
-  text-transform:uppercase; cursor:pointer; transition:all 0.15s;
+  text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center;
 }
 .mca-btn:hover { background:rgba(224,48,48,0.1); color:var(--red-light); border-color:var(--red); }
 .mca-btn.danger:hover { background:rgba(255,60,60,0.12); color:#ff8080; border-color:rgba(255,60,60,0.35); }
@@ -1108,6 +1109,27 @@ select option { background:#1a0505; }
 .va-topbar-title { font-family: 'Oswald',sans-serif; font-size: 13px; letter-spacing: 2px; color: var(--cream); text-transform: uppercase; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .va-topbar-time { font-family: 'Oswald',sans-serif; font-size: 18px; font-weight: 700; color: var(--red-light); letter-spacing: 1px; flex-shrink: 0; min-width: 52px; text-align: right; }
 .va-close-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(245,232,232,0.7); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-family: 'Oswald',sans-serif; letter-spacing: 1px; flex-shrink: 0; }
+.va-back-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(245,232,232,0.8); font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 6px; font-family: 'Oswald',sans-serif; letter-spacing: 1px; flex-shrink: 0; }
+
+/* Timeline */
+.va-timeline-bar { position: relative; height: 28px; cursor: pointer; padding: 0 4px; display: flex; align-items: center; }
+.va-timeline-track { position: absolute; left: 4px; right: 4px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+.va-timeline-progress { position: absolute; left: 4px; height: 3px; background: var(--red); border-radius: 2px; width: 0%; transition: width 0.5s linear; }
+.va-timeline-dots { position: absolute; left: 4px; right: 4px; top: 0; bottom: 0; pointer-events: none; }
+.va-timeline-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); top: 50%; cursor: pointer; pointer-events: all; transition: transform 0.1s; }
+.va-timeline-dot:active { transform: translate(-50%,-50%) scale(1.4); }
+.va-timeline-cursor { position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; transform: translate(-50%,-50%); top: 50%; left: 0%; pointer-events: none; box-shadow: 0 0 4px rgba(0,0,0,0.5); transition: left 0.5s linear; }
+
+/* Stats summary */
+.va-stats-summary { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0; }
+.va-stat-chip { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-family: 'Oswald',sans-serif; font-size: 10px; letter-spacing: 1px; color: var(--muted); white-space: nowrap; }
+.va-stat-chip span { color: var(--cream); font-weight: 700; margin-right: 4px; }
+
+/* Filter bar */
+.va-tag-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.va-filter-row { display: flex; gap: 4px; }
+.va-filter-btn { padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 9px; letter-spacing: 1px; cursor: pointer; }
+.va-filter-btn.active { background: rgba(224,48,48,0.15); border-color: var(--red); color: var(--cream); }
 
 /* Video area */
 .va-video-wrap {
@@ -6674,6 +6696,82 @@ window.addEventListener('appinstalled', () => {
 
 // ── VIDEO ANALYSIS ────────────────────────────────────────────────────
 var vaMatchId = null;
+var vaFilter = 'all';
+var vaVideoDuration = 0;
+
+// ── TIMELINE ──────────────────────────────────────
+function vaUpdateTimeline() {
+  var timelineEl = document.getElementById('va-timeline');
+  if (!timelineEl || timelineEl.style.display === 'none') return;
+  var duration = vaGetDuration();
+  if (duration <= 0) return;
+  vaVideoDuration = duration;
+  var pct = (vaGetCurrentTime() / duration) * 100;
+  var progress = document.getElementById('va-timeline-progress');
+  var cursor = document.getElementById('va-timeline-cursor');
+  if (progress) progress.style.width = pct + '%';
+  if (cursor) cursor.style.left = pct + '%';
+}
+
+function vaRenderTimelineDots() {
+  var dotsEl = document.getElementById('va-timeline-dots');
+  if (!dotsEl) return;
+  var duration = vaVideoDuration || vaGetDuration();
+  if (duration <= 0) return;
+  var typeColors = {
+    'shot-play':'#e03030','shot-free':'#e08030','goal':'#ff4444','point':'#44cc44',
+    'wide':'#888888','turnover':'#4488ff','kickout':'#cc44cc','mark':'#ffaa00',
+    'foul':'#ff8800','card':'#ffdd00','ball-won':'#44bbff','ball-lost':'#ff6666'
+  };
+  dotsEl.innerHTML = vaTags.map(function(t) {
+    var pct = (t.ts / duration) * 100;
+    var color = typeColors[t.type] || '#aaa';
+    return '<div class="va-timeline-dot" style="left:' + pct + '%;background:' + color + ';" ' +
+      'onclick="vaJumpToTag(' + t.ts + ')" title="' + (VA_LABELS[t.type]||t.type) + ' — ' + vaFormatTime(t.ts) + '"></div>';
+  }).join('');
+}
+
+function vaGetDuration() {
+  if (vaVideoType === 'youtube' && vaYTPlayer && vaYTPlayer.getDuration) {
+    try { return Math.floor(vaYTPlayer.getDuration()) || 0; } catch(e) { return 0; }
+  }
+  if (vaVideoType === 'mp4') {
+    var mp4 = document.getElementById('va-mp4-player');
+    return mp4 ? Math.floor(mp4.duration) || 0 : 0;
+  }
+  return 0;
+}
+
+function vaTimelineClick(event) {
+  var bar = document.getElementById('va-timeline-bar');
+  if (!bar) return;
+  var rect = bar.getBoundingClientRect();
+  var pct = (event.clientX - rect.left) / rect.width;
+  var duration = vaGetDuration();
+  if (duration > 0) vaJumpToTag(Math.floor(pct * duration));
+}
+
+// ── STATS SUMMARY ─────────────────────────────────
+function vaRenderStatsSummary() {
+  var el = document.getElementById('va-stats-summary');
+  if (!el) return;
+  if (!vaTags.length) { el.style.display = 'none'; return; }
+  var counts = {};
+  vaTags.forEach(function(t) { counts[t.type] = (counts[t.type] || 0) + 1; });
+  el.innerHTML = Object.keys(counts).map(function(type) {
+    return '<div class="va-stat-chip"><span>' + counts[type] + '</span>' + (VA_LABELS[type] || type) + '</div>';
+  }).join('');
+  el.style.display = 'flex';
+}
+
+// ── FILTER ────────────────────────────────────────
+function vaSetFilter(filter) {
+  vaFilter = filter;
+  document.querySelectorAll('.va-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.getElementById('va-filter-' + filter);
+  if (btn) btn.classList.add('active');
+  vaRenderTagList();
+}
 var vaMatch = null;
 var vaTeam = 'home';
 var vaTags = [];
@@ -6746,15 +6844,14 @@ function openVideoAnalysis(matchId) {
 function closeVideoAnalysis() {
   document.getElementById('video-analysis-overlay').classList.remove('open');
   document.body.style.overflow = '';
-  // Stop video
   if (vaYTPlayer && vaYTPlayer.stopVideo) { try { vaYTPlayer.stopVideo(); } catch(e) {} }
   var mp4 = document.getElementById('va-mp4-player');
   if (mp4) { mp4.pause(); mp4.src = ''; }
-  // Stop time polling
   if (vaTimeInterval) { clearInterval(vaTimeInterval); vaTimeInterval = null; }
-  vaYTPlayer = null; vaVideoType = null;
-  // Clear YouTube player container
+  vaYTPlayer = null; vaVideoType = null; vaFilter = 'all'; vaVideoDuration = 0;
   document.getElementById('va-youtube-player').innerHTML = '';
+  var tl = document.getElementById('va-timeline');
+  if (tl) tl.style.display = 'none';
 }
 
 function vaExtractYouTubeId(url) {
@@ -6853,9 +6950,15 @@ function vaSetVideoHeight() {
 function vaShowControls() {
   document.getElementById('va-url-screen').style.display = 'none';
   document.getElementById('va-video-wrap').style.display = 'block';
+  document.getElementById('va-timeline').style.display = 'block';
   document.getElementById('va-controls').classList.add('active');
   vaSetVideoHeight();
   vaUpdateTeamTabs();
+  // Update filter button labels to team names
+  var homeFilterBtn = document.getElementById('va-filter-home');
+  var awayFilterBtn = document.getElementById('va-filter-away');
+  if (homeFilterBtn && vaMatch) homeFilterBtn.textContent = vaMatch.home || 'Home';
+  if (awayFilterBtn && vaMatch) awayFilterBtn.textContent = vaMatch.away || 'Away';
 }
 
 function vaPollTime() {
@@ -6863,6 +6966,7 @@ function vaPollTime() {
   vaTimeInterval = setInterval(function() {
     var t = vaGetCurrentTime();
     document.getElementById('va-current-time').textContent = vaFormatTime(t);
+    vaUpdateTimeline();
   }, 500);
 }
 
@@ -6978,22 +7082,33 @@ function vaDeleteTag(id) {
 function vaRenderTagList() {
   var el = document.getElementById('va-tag-list');
   var countEl = document.getElementById('va-tag-count');
+  var filterRow = document.getElementById('va-filter-row');
   if (!el) return;
+  if (filterRow) filterRow.style.display = vaTags.length > 2 ? 'flex' : 'none';
+  var filtered = vaTags.filter(function(t) {
+    if (vaFilter === 'home') return t.team === 'home';
+    if (vaFilter === 'away') return t.team === 'away';
+    return true;
+  });
   countEl.textContent = vaTags.length ? '(' + vaTags.length + ')' : '';
-  if (!vaTags.length) {
-    el.innerHTML = '<div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>';
-    return;
+  if (!filtered.length) {
+    el.innerHTML = vaTags.length
+      ? '<div class="va-empty-tags">No tags for this filter</div>'
+      : '<div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>';
+  } else {
+    el.innerHTML = filtered.map(function(t) {
+      var label = VA_LABELS[t.type] || t.type;
+      if (t.outcome) label += ' — ' + t.outcome;
+      return '<div class="va-tag-item" onclick="vaJumpToTag(' + t.ts + ')">' +
+        '<span class="va-tag-ts">' + vaFormatTime(t.ts) + '</span>' +
+        '<span class="va-tag-label">' + label + '</span>' +
+        '<span class="va-tag-team">' + (t.teamName || t.team) + '</span>' +
+        '<button class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
+        '</div>';
+    }).join('');
   }
-  el.innerHTML = vaTags.map(function(t) {
-    var label = VA_LABELS[t.type] || t.type;
-    if (t.outcome) label += ' — ' + t.outcome;
-    return '<div class="va-tag-item" onclick="vaJumpToTag(' + t.ts + ')">' +
-      '<span class="va-tag-ts">' + vaFormatTime(t.ts) + '</span>' +
-      '<span class="va-tag-label">' + label + '</span>' +
-      '<span class="va-tag-team">' + (t.teamName || t.team) + '</span>' +
-      '<button class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
-      '</div>';
-  }).join('');
+  vaRenderTimelineDots();
+  vaRenderStatsSummary();
 }
 
 window.addEventListener('resize', function() {
@@ -7007,15 +7122,25 @@ window.addEventListener('resize', function() {
 
   <!-- Top bar -->
   <div class="va-topbar">
+    <button class="va-back-btn" onclick="closeVideoAnalysis()">← Back</button>
     <div class="va-topbar-title" id="va-match-title">Video Analysis</div>
     <div class="va-topbar-time" id="va-current-time">0:00</div>
-    <button class="va-close-btn" onclick="closeVideoAnalysis()">✕ Close</button>
   </div>
 
   <!-- Video area (shown once URL loaded) -->
   <div class="va-video-wrap" id="va-video-wrap" style="display:none;">
     <div id="va-youtube-player"></div>
     <video id="va-mp4-player" controls playsinline style="display:none;"></video>
+  </div>
+
+  <!-- Timeline scrubber (shown after video loads) -->
+  <div id="va-timeline" style="display:none;">
+    <div class="va-timeline-bar" id="va-timeline-bar" onclick="vaTimelineClick(event)">
+      <div class="va-timeline-track"></div>
+      <div class="va-timeline-progress" id="va-timeline-progress"></div>
+      <div class="va-timeline-dots" id="va-timeline-dots"></div>
+      <div class="va-timeline-cursor" id="va-timeline-cursor"></div>
+    </div>
   </div>
 
   <!-- URL input screen (shown first) -->
@@ -7054,9 +7179,19 @@ window.addEventListener('resize', function() {
       <button class="va-event-btn" onclick="vaTagEvent('ball-lost')"><span class="va-event-icon">📤</span>Ball Lost</button>
     </div>
 
-    <!-- Tag list -->
+    <!-- Stats summary -->
+    <div class="va-stats-summary" id="va-stats-summary" style="display:none;"></div>
+
+    <!-- Tag list with filters -->
     <div class="va-tag-list-wrap">
-      <div class="va-tag-list-title">Tagged Events <span id="va-tag-count" style="color:var(--red-light)"></span></div>
+      <div class="va-tag-list-header">
+        <div class="va-tag-list-title">Tagged Events <span id="va-tag-count" style="color:var(--red-light)"></span></div>
+        <div class="va-filter-row" id="va-filter-row" style="display:none;">
+          <button class="va-filter-btn active" id="va-filter-all" onclick="vaSetFilter('all')">All</button>
+          <button class="va-filter-btn" id="va-filter-home" onclick="vaSetFilter('home')" id="va-filter-home-btn">Home</button>
+          <button class="va-filter-btn" id="va-filter-away" onclick="vaSetFilter('away')" id="va-filter-away-btn">Away</button>
+        </div>
+      </div>
       <div class="va-tag-list" id="va-tag-list">
         <div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>
       </div>
