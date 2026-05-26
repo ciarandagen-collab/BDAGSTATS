@@ -2139,6 +2139,11 @@ select option { background:#1a0505; }
       <button class="btn-export btn-reset" onclick="resetMatch()">↺ Reset</button>
     </div>
 
+    <div id="stats-video-tags-section" style="display:none;">
+      <div class="sec-label">🎬 Video Tags</div>
+      <div class="card" id="stats-video-tags-body" style="padding:12px 14px;"></div>
+    </div>
+
   </div><!-- /page-stats -->
 
   <!-- PAGE: HISTORY -->
@@ -2734,6 +2739,7 @@ function showPage(name, btn) {
   if (name === 'trends') renderTrends();
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
+  if (name === 'stats') renderStatsVideoTags();
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -3809,6 +3815,57 @@ function closeHelp() {
   document.body.style.overflow = '';
 }
 
+function renderStatsVideoTags() {
+  var section = document.getElementById('stats-video-tags-section');
+  var body = document.getElementById('stats-video-tags-body');
+  if (!section || !body) return;
+
+  // Only show if a saved match has been reloaded
+  var matchId = window.loadedMatchId;
+  if (!matchId) { section.style.display = 'none'; return; }
+
+  var vtags = vaLoadTags(matchId);
+  if (!vtags || !vtags.length) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+
+  var VA_LABELS_LOCAL = {
+    'shot-play':'Shot Play','shot-free':'Shot Free','goal':'Goal','point':'Point',
+    'wide':'Wide','turnover':'Turnover Forced','kickout':'Kickout','mark':'Mark',
+    'foul':'Foul Given','card':'Card','ball-won':'Ball Won','ball-lost':'Ball Lost'
+  };
+
+  // Summary chips
+  var tagCounts = {};
+  vtags.forEach(function(t) { tagCounts[t.type] = (tagCounts[t.type]||0)+1; });
+
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
+  Object.keys(tagCounts).forEach(function(type) {
+    html += '<div class="va-stat-chip"><span>' + tagCounts[type] + '</span>' + (VA_LABELS_LOCAL[type]||type) + '</div>';
+  });
+  html += '</div>';
+
+  // Full tag list
+  html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+  vtags.forEach(function(t) {
+    var mins = Math.floor(t.ts/60), secs = t.ts%60;
+    var time = mins + ':' + (secs<10?'0':'') + secs;
+    var label = VA_LABELS_LOCAL[t.type] || t.type;
+    if (t.outcome) label += ' — ' + t.outcome;
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+      '<span style="font-family:\'Oswald\',sans-serif;font-size:12px;color:var(--red-light);min-width:40px;">' + time + '</span>' +
+      '<span style="font-size:12px;color:var(--cream);flex:1;">' + label + '</span>' +
+      '<span style="font-size:11px;color:var(--muted);">' + (t.teamName||t.team) + '</span>' +
+      '</div>';
+  });
+  html += '</div>';
+
+  // Open video button
+  html += '<button onclick="openVideoAnalysis(' + matchId + ')" style="width:100%;margin-top:12px;padding:10px;background:rgba(224,48,48,0.1);border:1px solid rgba(224,48,48,0.25);border-radius:8px;color:var(--red-light);font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">🎬 Open Video Analysis</button>';
+
+  body.innerHTML = html;
+}
+
 function toggleDiscipline() {
   var sec = document.getElementById('discipline-section');
   var chev = document.getElementById('discipline-chevron');
@@ -4505,6 +4562,9 @@ function loadMatchIntoTracker(id) {
   state.kickout = m.kickout ? JSON.parse(JSON.stringify(m.kickout)) : state.kickout;
   state.scoreline = []; state.possHistory = []; state.half = 1;
   clockReset(); gamePhase = 'pregame'; $('current-min').value = 1;
+
+  // Store the loaded match ID so Stats tab can show video tags
+  window.loadedMatchId = id;
 
   updateNames(); updateScoreboard(); renderTimeline(); renderPlayers();
   renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
