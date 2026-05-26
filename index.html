@@ -1191,6 +1191,70 @@ select option { background:#1a0505; }
 .nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
 .nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
+/* ── EVENT SETTINGS ──────────────────────────────── */
+.settings-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px 0; width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; display:flex; flex-direction:column; }
+.modal-overlay.open .settings-sheet { transform:translateY(0); }
+.settings-tabs { display:flex; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; margin:12px 0 4px; flex-shrink:0; }
+.settings-tab { flex:1; padding:9px 8px; background:transparent; border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; }
+.settings-tab.active { background:rgba(224,48,48,0.12); color:var(--cream); }
+.settings-panel { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:24px; }
+.settings-panel-note { background:rgba(245,166,35,0.08); border:1px solid rgba(245,166,35,0.2); border-radius:8px; padding:10px 12px; font-size:11px; color:#fde68a; margin-bottom:12px; line-height:1.5; }
+.event-config-item { display:flex; align-items:center; gap:10px; padding:11px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.event-config-item:active { background:rgba(224,48,48,0.08); }
+.eci-icon { font-size:20px; flex-shrink:0; width:28px; text-align:center; }
+.eci-info { flex:1; min-width:0; }
+.eci-label { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; color:var(--cream); }
+.eci-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+.eci-ctx { font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 6px; border-radius:4px; }
+.eci-ctx.both { background:rgba(68,187,255,0.1); color:#44bbff; }
+.eci-ctx.live { background:rgba(34,197,94,0.1); color:var(--green); }
+.eci-ctx.video { background:rgba(153,27,27,0.15); color:var(--red-light); }
+.eci-arrow { color:var(--muted); font-size:12px; flex-shrink:0; }
+.settings-cat-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; margin:14px 0 6px 2px; }
+.settings-add-btn { width:100%; padding:12px; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:10px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer; margin-top:4px; }
+.settings-add-btn:active { background:rgba(224,48,48,0.08); color:var(--cream); }
+
+/* Performance tab */
+.perf-explainer { font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:14px; padding:12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid var(--border); }
+.perf-event-section { margin-bottom:16px; }
+.perf-event-label { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; color:var(--cream); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.perf-outcome-row { display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.03); }
+.perf-outcome-row:last-child { border-bottom:none; }
+.perf-outcome-label { flex:1; font-size:12px; color:var(--muted); }
+.perf-score-input { width:56px; padding:5px 8px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:6px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:13px; text-align:center; outline:none; }
+.perf-score-pos { color:var(--green); }
+.perf-score-neg { color:var(--red-light); }
+.perf-save-btn { width:100%; padding:12px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; cursor:pointer; margin-top:12px; }
+
+/* Event editor sheet */
+.event-editor-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px calc(24px + var(--safe-bottom)); width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.modal-overlay.open .event-editor-sheet { transform:translateY(0); }
+.ee-field { margin-bottom:12px; }
+.ee-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+.ee-hint { font-size:9px; color:rgba(245,232,232,0.25); letter-spacing:0; text-transform:none; font-family:'Inter',sans-serif; }
+.ee-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.ee-input-sm { width:80px; text-align:center; font-size:22px; }
+.ee-select-row { display:flex; gap:6px; flex-wrap:wrap; }
+.ee-cat-btn, .ee-ctx-btn { padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; }
+.ee-cat-btn.active, .ee-ctx-btn.active { background:rgba(224,48,48,0.15); border-color:var(--red); color:var(--cream); }
+.ee-outcome-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.ee-outcome-row:last-child { border-bottom:none; }
+.ee-outcome-label-input { flex:1; padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; color:var(--cream); font-size:13px; font-family:'Inter',sans-serif; outline:none; }
+.ee-perf-input { width:52px; padding:7px 6px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:13px; text-align:center; outline:none; }
+.ee-outcome-del { background:none; border:none; color:rgba(255,80,80,0.4); font-size:16px; cursor:pointer; padding:0 4px; flex-shrink:0; }
+.ee-add-outcome-btn { width:100%; margin-top:8px; padding:9px; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:8px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; cursor:pointer; }
+.ee-actions { display:flex; gap:10px; margin-top:16px; }
+.ee-save-btn { flex:2; padding:13px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; cursor:pointer; }
+.ee-delete-btn { flex:1; padding:13px; background:rgba(255,60,60,0.07); border:1px solid rgba(255,60,60,0.2); border-radius:10px; color:rgba(255,120,120,0.7); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; cursor:pointer; }
+
+/* Performance score in player stats */
+.psc-perf { display:flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(255,255,255,0.03); border-top:1px solid var(--border); border-radius:0 0 10px 10px; margin-top:4px; }
+.psc-perf-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; flex:1; }
+.psc-perf-score { font-family:'Oswald',sans-serif; font-size:18px; font-weight:700; }
+.psc-perf-score.positive { color:var(--green); }
+.psc-perf-score.negative { color:var(--red-light); }
+.psc-perf-score.neutral { color:var(--muted); }
+
 /* Video area */
 .va-video-wrap {
   flex-shrink: 0;
@@ -1475,6 +1539,7 @@ select option { background:#1a0505; }
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <button onclick="openClubDashboard()" style="background:rgba(224,48,48,0.15);border:1px solid rgba(224,48,48,0.3);border-radius:6px;padding:3px 8px;color:#ff8080;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club">🏟</button>
     <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help">?</button>
+    <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings">⚙️</button>
     <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
   </div>
 </div>
@@ -3264,12 +3329,19 @@ function renderPlayerStats() {
     var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
     var matches = p.matchCount || 0;
 
+    var perfScore = calcPlayerPerformance(p.stats);
+    var perfClass = perfScore > 0 ? 'positive' : perfScore < 0 ? 'negative' : 'neutral';
+    var perfDisplay = (perfScore > 0 ? '+' : '') + perfScore;
+
     html += '<div class="player-stat-card">' +
       '<div class="psc-header">' +
         '<div class="psc-num">' + num + '</div>' +
         '<div class="psc-info">' +
           '<div class="psc-name">' + p.name + '</div>' +
           '<div class="psc-pos">' + (p.pos || 'No position') + '</div>' +
+        '</div>' +
+        '<div class="psc-perf" style="background:none;border:none;padding:0;margin:0;">' +
+          '<div class="psc-perf-score ' + perfClass + '">' + perfDisplay + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="psc-body">' +
@@ -3810,6 +3882,381 @@ function vaToggleVideoCollapse() {
   if (btn) btn.textContent = collapsed ? '▼ Show Video' : '▲ Hide Video';
   if (tl) tl.style.display = collapsed ? 'none' : 'block';
 }
+
+// ── EVENT CONFIGURATION SYSTEM ───────────────────────────────────────
+
+const DEFAULT_EVENT_CONFIG = [
+  { id:'shot-play', label:'Shot from Play', icon:'⚽', category:'shots', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'point',label:'Point',perf:5},{key:'goal',label:'Goal',perf:8},{key:'twopointer',label:'2 Pointer',perf:6},{key:'wide',label:'Wide',perf:-1},{key:'short',label:'Short',perf:-1},{key:'saved',label:'Saved',perf:0},{key:'blocked',label:'Blocked',perf:0}]},
+  { id:'shot-free', label:'Shot from Free', icon:'🎯', category:'shots', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'point',label:'Point',perf:4},{key:'goal',label:'Goal',perf:7},{key:'wide',label:'Wide',perf:-1},{key:'short',label:'Short',perf:-1},{key:'saved',label:'Saved',perf:0},{key:'blocked',label:'Blocked',perf:0}]},
+  { id:'ballWon', label:'Ball Won', icon:'📥', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'inContact',label:'In Contact',perf:3},{key:'tackle',label:'Tackle',perf:4},{key:'interception',label:'Interception',perf:4}]},
+  { id:'ballLost', label:'Ball Lost', icon:'📤', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'handPass',label:'Hand Pass',perf:-2},{key:'kickPass',label:'Kick Pass',perf:-2},{key:'inContact',label:'In Contact',perf:-1},{key:'handling',label:'Handling',perf:-2},{key:'overCarrying',label:'Over Carrying',perf:-2}]},
+  { id:'kickout', label:'Kickout', icon:'🦶', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'wonClean',label:'Won Clean',perf:3},{key:'breakWon',label:'Break Won',perf:2},{key:'lossClean',label:'Loss Clean',perf:-2},{key:'breakLoss',label:'Break Loss',perf:-1},{key:'shortWon',label:'Short Won',perf:1},{key:'shortLoss',label:'Short Loss',perf:-1}]},
+  { id:'fortyFive', label:'45m Free', icon:'🏐', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'scored',label:'Scored',perf:4},{key:'wide',label:'Wide',perf:-1},{key:'short',label:'Short',perf:-1},{key:'pass',label:'Pass',perf:1},{key:'ballLost',label:'Ball Lost',perf:-2}]},
+  { id:'turnover', label:'Turnover Forced', icon:'🔄', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'inAttack',label:'In Attack',perf:5},{key:'midfield',label:'Midfield',perf:4},{key:'inDefence',label:'In Defence',perf:3}]},
+  { id:'mark', label:'Mark', icon:'📌', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'won',label:'Won',perf:3},{key:'lost',label:'Lost',perf:-1}]},
+  { id:'foul', label:'Foul Given', icon:'⚠️', category:'discipline', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'shooting',label:'Shooting',perf:-1},{key:'cynical',label:'Cynical',perf:-3},{key:'dangerous',label:'Dangerous',perf:-3},{key:'dissent',label:'Dissent',perf:-2}]},
+  { id:'cards', label:'Card', icon:'🟨', category:'discipline', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'yellow',label:'Yellow',perf:-3},{key:'black',label:'Black',perf:-5},{key:'red',label:'Red',perf:-8}]},
+];
+
+var eventConfig = JSON.parse(JSON.stringify(DEFAULT_EVENT_CONFIG));
+
+function loadEventConfig() {
+  try {
+    var saved = localStorage.getItem('cs_event_config');
+    if (saved) {
+      var custom = JSON.parse(saved);
+      // Merge: keep defaults, apply edits, append custom events
+      eventConfig = DEFAULT_EVENT_CONFIG.map(function(def) {
+        var override = custom.find(function(c) { return c.id === def.id; });
+        return override ? Object.assign({}, def, override) : def;
+      });
+      // Add custom events not in defaults
+      custom.forEach(function(c) {
+        if (!DEFAULT_EVENT_CONFIG.find(function(d) { return d.id === c.id; })) {
+          eventConfig.push(c);
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+function saveEventConfig() {
+  try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+  syncEventConfigToSupabase();
+}
+
+function syncEventConfigToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('event_config?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'event_config?user_id=eq.' + currentUser.id : 'event_config';
+      return supaDB(path, method, { user_id: currentUser.id, config: eventConfig }, currentToken);
+    }).catch(function() {});
+  // If club admin, also save to club config
+  if (currentClub && currentClubRole === 'admin') {
+    supaDB('club_event_config?club_id=eq.' + currentClub.id, 'GET', null, currentToken)
+      .then(function(data) {
+        var method = (data && data.length) ? 'PATCH' : 'POST';
+        var path = method === 'PATCH' ? 'club_event_config?club_id=eq.' + currentClub.id : 'club_event_config';
+        return supaDB(path, method, { club_id: currentClub.id, config: eventConfig }, currentToken);
+      }).catch(function() {});
+  }
+}
+
+function loadEventConfigFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  // Club config takes priority for club members
+  if (currentClub) {
+    supaDB('club_event_config?club_id=eq.' + currentClub.id + '&select=config', 'GET', null, currentToken)
+      .then(function(data) {
+        if (data && data.length && data[0].config) {
+          eventConfig = data[0].config;
+          try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+        } else {
+          loadPersonalEventConfig();
+        }
+      }).catch(function() { loadPersonalEventConfig(); });
+  } else {
+    loadPersonalEventConfig();
+  }
+}
+
+function loadPersonalEventConfig() {
+  supaDB('event_config?user_id=eq.' + currentUser.id + '&select=config', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].config) {
+        eventConfig = data[0].config;
+        try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+      }
+    }).catch(function() {});
+}
+
+function getEventById(id) {
+  return eventConfig.find(function(e) { return e.id === id; });
+}
+
+// ── PERFORMANCE SCORING ───────────────────────────
+function calcPlayerPerformance(playerStats) {
+  if (!playerStats) return 0;
+  var score = 0;
+  eventConfig.forEach(function(evt) {
+    var statGroup = playerStats[evt.id] || playerStats[evt.id.replace(/-/g, '_')];
+    if (!statGroup) return;
+    evt.outcomes.forEach(function(o) {
+      var count = statGroup[o.key] || 0;
+      score += count * (o.perf || 0);
+    });
+  });
+  // Also handle shot outcomes stored under 'shotsPlay' / 'shotsFree'
+  var playEvt = getEventById('shot-play');
+  var freeEvt = getEventById('shot-free');
+  if (playEvt && playerStats.shotsPlay) {
+    playEvt.outcomes.forEach(function(o) {
+      score += (playerStats.shotsPlay[o.key] || 0) * (o.perf || 0);
+    });
+  }
+  if (freeEvt && playerStats.shotsFree) {
+    freeEvt.outcomes.forEach(function(o) {
+      score += (playerStats.shotsFree[o.key] || 0) * (o.perf || 0);
+    });
+  }
+  return score;
+}
+
+// ── SETTINGS UI ───────────────────────────────────
+var settingsTab = 'events';
+
+function openEventSettings() {
+  loadEventConfig();
+  var note = document.getElementById('settings-club-note');
+  var sub = document.getElementById('event-settings-sub');
+  if (currentClub && currentClubRole === 'admin') {
+    note.textContent = '⚙️ Club Admin — changes apply to all coaches in ' + (currentClub.name || 'your club');
+    note.style.display = 'block';
+    sub.textContent = 'Changes apply to all club coaches';
+  } else if (currentClub) {
+    note.textContent = '🏟 Using club event configuration — contact your club admin to make changes';
+    note.style.display = 'block';
+    sub.textContent = 'Viewing club configuration';
+  } else {
+    note.style.display = 'none';
+    sub.textContent = 'Configure recording events and performance scoring';
+  }
+  switchSettingsTab('events');
+  document.getElementById('event-settings-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEventSettings() {
+  document.getElementById('event-settings-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchSettingsTab(tab) {
+  settingsTab = tab;
+  document.getElementById('stab-events').classList.toggle('active', tab === 'events');
+  document.getElementById('stab-performance').classList.toggle('active', tab === 'performance');
+  document.getElementById('settings-panel-events').style.display = tab === 'events' ? '' : 'none';
+  document.getElementById('settings-panel-performance').style.display = tab === 'performance' ? '' : 'none';
+  if (tab === 'events') renderEventConfigList();
+  if (tab === 'performance') renderPerfConfigList();
+}
+
+function renderEventConfigList() {
+  var container = document.getElementById('event-config-list');
+  if (!container) return;
+  var categories = ['shots', 'possession', 'discipline', 'custom'];
+  var catLabels = { shots:'Shots', possession:'Possession', discipline:'Discipline', custom:'Custom Events' };
+  var isClubCoach = currentClub && currentClubRole !== 'admin';
+
+  var html = '';
+  categories.forEach(function(cat) {
+    var items = eventConfig.filter(function(e) { return e.category === cat; });
+    if (!items.length && cat !== 'custom') return;
+    html += '<div class="settings-cat-label">' + catLabels[cat] + '</div>';
+    if (!items.length) {
+      html += '<div style="font-size:12px;color:var(--muted);padding:8px 4px;font-style:italic;">No custom events yet</div>';
+      return;
+    }
+    items.forEach(function(evt) {
+      var ctxLabel = evt.context === 'live' ? 'Live' : evt.context === 'video' ? 'Video' : 'Live + Video';
+      html += '<div class="event-config-item" onclick="' + (isClubCoach ? '' : 'openEventEditor(\'' + evt.id + '\')') + '">' +
+        '<span class="eci-icon">' + (evt.icon || '●') + '</span>' +
+        '<div class="eci-info">' +
+          '<div class="eci-label">' + evt.label + '</div>' +
+          '<div class="eci-meta">' + evt.outcomes.length + ' outcomes · <span class="eci-ctx ' + evt.context + '">' + ctxLabel + '</span></div>' +
+        '</div>' +
+        (isClubCoach ? '' : '<span class="eci-arrow">›</span>') +
+        '</div>';
+    });
+  });
+  container.innerHTML = html;
+  // Hide add button for club coaches
+  var addBtn = document.querySelector('.settings-add-btn');
+  if (addBtn) addBtn.style.display = isClubCoach ? 'none' : '';
+}
+
+function renderPerfConfigList() {
+  var container = document.getElementById('perf-config-list');
+  if (!container) return;
+  var isClubCoach = currentClub && currentClubRole !== 'admin';
+
+  var html = '';
+  eventConfig.forEach(function(evt) {
+    if (!evt.outcomes || !evt.outcomes.length) return;
+    html += '<div class="perf-event-section">';
+    html += '<div class="perf-event-label">' + (evt.icon || '') + ' ' + evt.label + '</div>';
+    evt.outcomes.forEach(function(o, oi) {
+      var val = o.perf || 0;
+      var colorClass = val > 0 ? 'perf-score-pos' : val < 0 ? 'perf-score-neg' : '';
+      html += '<div class="perf-outcome-row">' +
+        '<span class="perf-outcome-label">' + o.label + '</span>' +
+        (isClubCoach
+          ? '<span class="psc-perf-score ' + (val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral') + '">' + (val > 0 ? '+' : '') + val + '</span>'
+          : '<input class="perf-score-input ' + colorClass + '" type="number" value="' + val + '" ' +
+            'onchange="updateOutcomePerf(\'' + evt.id + '\',' + oi + ',this.value)" ' +
+            'oninput="this.className=\'perf-score-input \'+(this.value>0?\'perf-score-pos\':this.value<0?\'perf-score-neg\':\'\')">' ) +
+        '</div>';
+    });
+    html += '</div>';
+  });
+  if (!isClubCoach) {
+    html += '<button class="perf-save-btn" onclick="savePerfConfig()">Save Performance Scores</button>';
+  }
+  container.innerHTML = html;
+}
+
+function updateOutcomePerf(eventId, outcomeIdx, value) {
+  var evt = getEventById(eventId);
+  if (evt && evt.outcomes[outcomeIdx]) {
+    evt.outcomes[outcomeIdx].perf = parseInt(value) || 0;
+  }
+}
+
+function savePerfConfig() {
+  saveEventConfig();
+  showSync('✓ Performance scores saved', 2000);
+}
+
+// ── EVENT EDITOR ──────────────────────────────────
+var editingEventId = null;
+
+function openAddEventEditor() {
+  editingEventId = null;
+  document.getElementById('event-editor-title').textContent = 'Add Custom Event';
+  document.getElementById('ee-icon').value = '';
+  document.getElementById('ee-label').value = '';
+  eeSelectCat(document.querySelector('.ee-cat-btn[data-cat="custom"]'), 'custom');
+  eeSelectCtx(document.querySelector('.ee-ctx-btn[data-ctx="both"]'), 'both');
+  document.getElementById('ee-outcomes-list').innerHTML = '';
+  document.getElementById('ee-delete-btn').style.display = 'none';
+  document.getElementById('event-editor-modal').classList.add('open');
+}
+
+function openEventEditor(id) {
+  var evt = getEventById(id);
+  if (!evt) return;
+  editingEventId = id;
+  document.getElementById('event-editor-title').textContent = evt.deletable === false ? 'Edit Event' : 'Edit Event';
+  document.getElementById('ee-icon').value = evt.icon || '';
+  document.getElementById('ee-label').value = evt.label || '';
+  document.querySelectorAll('.ee-cat-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.cat === evt.category);
+  });
+  document.querySelectorAll('.ee-ctx-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.ctx === evt.context);
+  });
+  renderEeOutcomes(evt.outcomes);
+  document.getElementById('ee-delete-btn').style.display = evt.deletable === false ? 'none' : 'block';
+  document.getElementById('event-editor-modal').classList.add('open');
+}
+
+function closeEventEditor() {
+  document.getElementById('event-editor-modal').classList.remove('open');
+}
+
+function eeSelectCat(btn, cat) {
+  document.querySelectorAll('.ee-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+function eeSelectCtx(btn, ctx) {
+  document.querySelectorAll('.ee-ctx-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+
+function renderEeOutcomes(outcomes) {
+  var list = document.getElementById('ee-outcomes-list');
+  list.innerHTML = (outcomes || []).map(function(o, i) {
+    return '<div class="ee-outcome-row">' +
+      '<input class="ee-outcome-label-input" type="text" value="' + o.label + '" placeholder="Outcome label">' +
+      '<input class="ee-perf-input" type="number" value="' + (o.perf || 0) + '" title="Performance value">' +
+      '<button class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+function eeAddOutcome() {
+  var list = document.getElementById('ee-outcomes-list');
+  var row = document.createElement('div');
+  row.className = 'ee-outcome-row';
+  row.innerHTML = '<input class="ee-outcome-label-input" type="text" placeholder="Outcome label">' +
+    '<input class="ee-perf-input" type="number" value="0" title="Performance value">' +
+    '<button class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function eeRemoveOutcome(btn) {
+  btn.parentElement.remove();
+}
+
+function saveEventEditor() {
+  var icon = document.getElementById('ee-icon').value.trim() || '●';
+  var label = document.getElementById('ee-label').value.trim();
+  if (!label) { alert('Please enter an event label'); return; }
+
+  var cat = (document.querySelector('.ee-cat-btn.active') || {}).dataset || {};
+  var ctx = (document.querySelector('.ee-ctx-btn.active') || {}).dataset || {};
+
+  var outcomes = [];
+  document.querySelectorAll('.ee-outcome-row').forEach(function(row) {
+    var lbl = row.querySelector('.ee-outcome-label-input').value.trim();
+    var perf = parseInt(row.querySelector('.ee-perf-input').value) || 0;
+    if (lbl) {
+      outcomes.push({ key: lbl.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''), label: lbl, perf: perf });
+    }
+  });
+
+  if (editingEventId) {
+    var idx = eventConfig.findIndex(function(e) { return e.id === editingEventId; });
+    if (idx >= 0) {
+      eventConfig[idx] = Object.assign({}, eventConfig[idx], {
+        icon: icon, label: label,
+        category: cat.cat || 'custom',
+        context: ctx.ctx || 'both',
+        outcomes: outcomes
+      });
+    }
+  } else {
+    var newId = 'custom_' + Date.now();
+    eventConfig.push({
+      id: newId, icon: icon, label: label,
+      category: cat.cat || 'custom',
+      context: ctx.ctx || 'both',
+      editable: true, deletable: true,
+      outcomes: outcomes
+    });
+  }
+
+  saveEventConfig();
+  closeEventEditor();
+  renderEventConfigList();
+  showSync('✓ Event saved', 1500);
+}
+
+function deleteEditingEvent() {
+  if (!editingEventId) return;
+  if (!confirm('Delete this event? This cannot be undone.')) return;
+  eventConfig = eventConfig.filter(function(e) { return e.id !== editingEventId; });
+  saveEventConfig();
+  closeEventEditor();
+  renderEventConfigList();
+  showSync('Event deleted', 1500);
+}
+
+// Initialise event config on load
+loadEventConfig();
 
 function openHelp() {
   document.getElementById('help-modal').classList.add('open');
@@ -6441,6 +6888,9 @@ function loadUserData() {
       }
     }).catch(function() {});
 
+  // Load event config (club config takes priority)
+  loadEventConfigFromSupabase();
+
   // Load match history from Supabase
   supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
     .then(function(data) {
@@ -7462,6 +7912,93 @@ window.addEventListener('resize', function() {
   }
 });
 </script>
+<!-- EVENT SETTINGS SHEET -->
+<div class="modal-overlay" id="event-settings-modal" onclick="if(event.target===this)closeEventSettings()">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Event Settings</div>
+        <div class="sheet-sub" id="event-settings-sub">Configure recording events and performance scoring</div>
+      </div>
+      <button class="sheet-close" onclick="closeEventSettings()">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+      <button class="settings-tab active" id="stab-events" onclick="switchSettingsTab('events')">Events</button>
+      <button class="settings-tab" id="stab-performance" onclick="switchSettingsTab('performance')">Performance</button>
+    </div>
+
+    <!-- Events Tab -->
+    <div id="settings-panel-events" class="settings-panel active">
+      <div class="settings-panel-note" id="settings-club-note" style="display:none;"></div>
+      <div id="event-config-list"></div>
+      <button class="settings-add-btn" onclick="openAddEventEditor()">+ Add Custom Event</button>
+    </div>
+
+    <!-- Performance Tab -->
+    <div id="settings-panel-performance" class="settings-panel" style="display:none;">
+      <div class="perf-explainer">
+        <p>Each event outcome contributes a points value to a player's Performance Score for the match. Positive values reward good actions, negative values penalise mistakes.</p>
+      </div>
+      <div id="perf-config-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EVENT EDITOR SHEET -->
+<div class="modal-overlay" id="event-editor-modal" onclick="if(event.target===this)closeEventEditor()">
+  <div class="event-editor-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="event-editor-title">Edit Event</div>
+        <div class="sheet-sub">Configure label, icon, context and outcomes</div>
+      </div>
+      <button class="sheet-close" onclick="closeEventEditor()">✕</button>
+    </div>
+
+    <div class="ee-field">
+      <div class="ee-label">Icon <span class="ee-hint">(emoji)</span></div>
+      <input type="text" id="ee-icon" class="ee-input ee-input-sm" maxlength="2" placeholder="⚽">
+    </div>
+    <div class="ee-field">
+      <div class="ee-label">Label</div>
+      <input type="text" id="ee-label" class="ee-input" placeholder="Event name">
+    </div>
+    <div class="ee-field">
+      <div class="ee-label">Category</div>
+      <div class="ee-select-row">
+        <button class="ee-cat-btn active" data-cat="shots" onclick="eeSelectCat(this,'shots')">Shots</button>
+        <button class="ee-cat-btn" data-cat="possession" onclick="eeSelectCat(this,'possession')">Possession</button>
+        <button class="ee-cat-btn" data-cat="discipline" onclick="eeSelectCat(this,'discipline')">Discipline</button>
+        <button class="ee-cat-btn" data-cat="custom" onclick="eeSelectCat(this,'custom')">Custom</button>
+      </div>
+    </div>
+    <div class="ee-field">
+      <div class="ee-label">Available in</div>
+      <div class="ee-select-row">
+        <button class="ee-ctx-btn active" data-ctx="both" onclick="eeSelectCtx(this,'both')">Live + Video</button>
+        <button class="ee-ctx-btn" data-ctx="live" onclick="eeSelectCtx(this,'live')">Live Only</button>
+        <button class="ee-ctx-btn" data-ctx="video" onclick="eeSelectCtx(this,'video')">Video Only</button>
+      </div>
+    </div>
+
+    <div class="ee-field">
+      <div class="ee-label">Outcomes <span class="ee-hint">(tap to edit performance value)</span></div>
+      <div id="ee-outcomes-list"></div>
+      <button class="ee-add-outcome-btn" onclick="eeAddOutcome()">+ Add Outcome</button>
+    </div>
+
+    <div class="ee-actions">
+      <button class="ee-save-btn" onclick="saveEventEditor()">Save Event</button>
+      <button class="ee-delete-btn" id="ee-delete-btn" onclick="deleteEditingEvent()" style="display:none;">Delete Event</button>
+    </div>
+  </div>
+</div>
+
 <!-- NEW VIDEO ANALYSIS SETUP SHEET -->
 <div class="modal-overlay" id="new-video-modal" onclick="if(event.target===this)closeNewVideoAnalysis()">
   <div class="new-video-sheet">
