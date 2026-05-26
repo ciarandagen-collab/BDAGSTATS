@@ -5992,9 +5992,10 @@ function supaAuthGet(path, token) {
   }).then(function(r) { return r.json(); });
 }
 
-function supaDB(path, method, body, token) {
+function supaDB(path, method, body, token, extraHeaders) {
   var headers = supaHeaders(token);
   if (method === 'POST' || method === 'PATCH') headers['Prefer'] = 'return=representation';
+  if (extraHeaders) Object.assign(headers, extraHeaders);
   return fetch(SUPA_URL + '/rest/v1/' + path, {
     method: method || 'GET',
     headers: headers,
@@ -6230,18 +6231,35 @@ function loadUserData() {
       }
     }).catch(function() {});
 
-  // Load match history
+  // Load match history from Supabase
   supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
     .then(function(data) {
       if (data && data.length) {
-        var matches = data.map(function(r) { return r.data; });
-        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(matches)); } catch(e) {}
+        var remoteMatches = data.map(function(r) { return r.data; }).filter(Boolean);
+        // Merge with any local matches not yet synced (by match_id)
+        var localMatches = [];
+        try { localMatches = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) {}
+        var remoteIds = new Set(remoteMatches.map(function(m) { return m.id; }));
+        var localOnly = localMatches.filter(function(m) { return !remoteIds.has(m.id); });
+        // Sync any local-only matches up to Supabase
+        localOnly.forEach(function(m) { syncMatchToSupabase(m); });
+        var merged = remoteMatches.concat(localOnly);
+        merged.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(merged)); } catch(e) {}
         renderHistory();
-        showSync('✓ Data loaded', 2000);
+        showSync('✓ ' + merged.length + ' match' + (merged.length !== 1 ? 'es' : '') + ' loaded', 2000);
       } else {
-        showSync('✓ Ready', 1500);
+        // No remote matches — check if there are local ones to sync up
+        var localMatches = [];
+        try { localMatches = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) {}
+        if (localMatches.length) {
+          localMatches.forEach(function(m) { syncMatchToSupabase(m); });
+          showSync('✓ Syncing ' + localMatches.length + ' local match' + (localMatches.length !== 1 ? 'es' : '') + ' to your account', 3000);
+        } else {
+          showSync('✓ Ready', 1500);
+        }
       }
-    }).catch(function() { showSync('⚠ Could not load data', 2500); });
+    }).catch(function() { showSync('⚠ Could not load match history', 2500); });
 }
 
 // ── SAVE SQUAD TO SUPABASE ─────────────────────────
@@ -6264,23 +6282,23 @@ function syncSquad() {
 // ── SAVE MATCH TO SUPABASE ─────────────────────────
 function syncMatchToSupabase(record) {
   if (!currentUser || !currentToken) return;
-  // Save to personal matches
   supaDB('matches', 'POST', {
     user_id: currentUser.id,
     match_id: record.id,
+    saved_at: record.savedAt,
     data: record
-  }, currentToken)
+  }, currentToken, {'Prefer': 'resolution=merge-duplicates'})
     .then(function() { showSync('✓ Match saved to your account', 2500); })
     .catch(function() {});
-  // Also save to club matches if a club squad is active
   if (currentClub && currentClubSquadId) {
     supaDB('club_matches', 'POST', {
       club_id: currentClub.id,
       squad_id: currentClubSquadId,
       recorded_by: currentUser.id,
       match_id: record.id,
+      saved_at: record.savedAt,
       data: record
-    }, currentToken).catch(function() {});
+    }, currentToken, {'Prefer': 'resolution=merge-duplicates'}).catch(function() {});
   }
 }
 
