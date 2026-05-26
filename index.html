@@ -1131,6 +1131,27 @@ select option { background:#1a0505; }
 .va-filter-btn { padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 9px; letter-spacing: 1px; cursor: pointer; }
 .va-filter-btn.active { background: rgba(224,48,48,0.15); border-color: var(--red); color: var(--cream); }
 .mc-video-badge { font-size: 11px; margin-left: 4px; }
+
+/* Competition picker */
+.comp-picker-btn { display:flex; align-items:center; gap:8px; width:100%; padding:10px 14px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; cursor:pointer; text-align:left; }
+.comp-picker-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px 0; width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:88vh; display:flex; flex-direction:column; }
+.modal-overlay.open .comp-picker-sheet { transform:translateY(0); }
+.comp-search-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; margin:12px 0 8px; flex-shrink:0; }
+.comp-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:24px; }
+.comp-group-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; padding:10px 4px 4px; }
+.comp-item { padding:11px 8px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--cream); border-bottom:1px solid rgba(255,255,255,0.03); }
+.comp-item:active, .comp-item.selected { background:rgba(224,48,48,0.12); color:var(--cream); }
+
+/* Nav SVG icons */
+.nav-btn .nav-icon svg { width:22px; height:22px; display:block; }
+.nav-btn.active .nav-icon svg { stroke: var(--red-light); }
+
+/* Trigger button tap flash */
+.trig-count { transition: transform 0.15s, color 0.15s; }
+.trig-count.pulse { transform: scale(1.4); color: var(--red-light); }
+
+/* Stats context label */
+#stats-context-label { font-size:10px; color:var(--muted); font-weight:400; letter-spacing:1px; font-family:'Inter',sans-serif; text-transform:none; }
 .va-export-btn { width: 100%; padding: 11px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-family: 'Oswald',sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; text-align: center; margin-top: 4px; }
 .va-export-btn:active { background: rgba(255,255,255,0.1); color: var(--cream); }
 
@@ -1433,7 +1454,7 @@ select option { background:#1a0505; }
       <div class="tb-name" id="tb-home-name">Home</div>
       <div class="tb-score"><span id="tb-home-goals">0</span>-<span id="tb-home-pts">00</span></div>
     </div>
-    <div class="tb-vs">VS</div>
+
     <div class="tb-team">
       <div class="tb-name" id="tb-away-name">Away</div>
       <div class="tb-score"><span id="tb-away-goals">0</span>-<span id="tb-away-pts">00</span></div>
@@ -1483,219 +1504,12 @@ select option { background:#1a0505; }
         </div>
         <div class="meta-row">
           <input type="text" id="venue" placeholder="Venue">
-          <select id="competition" onchange="updateCompDisplay()">
-            <option value="" disabled selected>Select Competition</option>
-
-            <!-- ═══ GAA INTER-COUNTY ═══ -->
-            <optgroup label="── GAA Inter-County Senior ──">
-              <option>GAA All-Ireland SFC</option>
-              <option>GAA Tailteann Cup</option>
-              <option>GAA Allianz NFL Division 1</option>
-              <option>GAA Allianz NFL Division 2</option>
-              <option>GAA Allianz NFL Division 3</option>
-              <option>GAA Allianz NFL Division 4</option>
-              <option>GAA Connacht SFC</option>
-              <option>GAA Leinster SFC</option>
-              <option>GAA Munster SFC</option>
-              <option>GAA Ulster SFC</option>
-            </optgroup>
-
-            <optgroup label="── GAA Inter-County U20 ──">
-              <option>GAA All-Ireland U20 FC</option>
-              <option>GAA Eirgrid U20 FC</option>
-              <option>GAA Connacht U20 FC</option>
-              <option>GAA Leinster U20 FC</option>
-              <option>GAA Munster U20 FC</option>
-              <option>GAA Ulster U20 FC</option>
-            </optgroup>
-
-            <optgroup label="── GAA Inter-County Minor (U18) ──">
-              <option>GAA All-Ireland Minor FC</option>
-              <option>GAA Connacht Minor FC</option>
-              <option>GAA Leinster Minor FC</option>
-              <option>GAA Munster Minor FC</option>
-              <option>GAA Ulster Minor FC</option>
-            </optgroup>
-
-            <!-- ═══ LGFA INTER-COUNTY ═══ -->
-            <optgroup label="── LGFA Inter-County Senior ──">
-              <option>LGFA All-Ireland SFC</option>
-              <option>LGFA All-Ireland IFC</option>
-              <option>LGFA All-Ireland JFC</option>
-              <option>LGFA Lidl NFL Division 1</option>
-              <option>LGFA Lidl NFL Division 2</option>
-              <option>LGFA Lidl NFL Division 3</option>
-              <option>LGFA Lidl NFL Division 4</option>
-              <option>LGFA Connacht SFC</option>
-              <option>LGFA Leinster SFC</option>
-              <option>LGFA Munster SFC</option>
-              <option>LGFA Ulster SFC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA Inter-County U20 ──">
-              <option>LGFA All-Ireland U20 FC</option>
-              <option>LGFA Connacht U20 FC</option>
-              <option>LGFA Leinster U20 FC</option>
-              <option>LGFA Munster U20 FC</option>
-              <option>LGFA Ulster U20 FC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA Inter-County Minor (U18) ──">
-              <option>LGFA All-Ireland Minor FC</option>
-              <option>LGFA Connacht Minor FC</option>
-              <option>LGFA Leinster Minor FC</option>
-              <option>LGFA Munster Minor FC</option>
-              <option>LGFA Ulster Minor FC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA Inter-County U16 ──">
-              <option>LGFA All-Ireland U16 FC A</option>
-              <option>LGFA All-Ireland U16 FC B</option>
-              <option>LGFA Connacht U16 FC</option>
-              <option>LGFA Leinster U16 FC</option>
-              <option>LGFA Munster U16 FC</option>
-              <option>LGFA Ulster U16 FC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA Inter-County U14 ──">
-              <option>LGFA All-Ireland U14 FC A</option>
-              <option>LGFA All-Ireland U14 FC B</option>
-              <option>LGFA All-Ireland U14 Championship Series</option>
-              <option>LGFA Connacht U14 FC</option>
-              <option>LGFA Leinster U14 FC</option>
-              <option>LGFA Munster U14 FC</option>
-              <option>LGFA Ulster U14 FC</option>
-            </optgroup>
-
-            <!-- ═══ GAA COUNTY CLUB ═══ -->
-            <optgroup label="── GAA County Club Senior ──">
-              <option>GAA County SFC</option>
-              <option>GAA County SFC A</option>
-              <option>GAA County SFC B</option>
-              <option>GAA County Intermediate FC</option>
-              <option>GAA County Junior FC</option>
-              <option>GAA County Junior FC A</option>
-              <option>GAA County Junior FC B</option>
-            </optgroup>
-
-            <optgroup label="── GAA County Club U20 / Minor ──">
-              <option>GAA County U20 FC</option>
-              <option>GAA County Minor FC</option>
-              <option>GAA County Minor FC A</option>
-              <option>GAA County Minor FC B</option>
-            </optgroup>
-
-            <optgroup label="── GAA County Club Underage ──">
-              <option>GAA County U18 FC</option>
-              <option>GAA County U16 FC</option>
-              <option>GAA County U16 FC A</option>
-              <option>GAA County U16 FC B</option>
-              <option>GAA County U14 FC</option>
-              <option>GAA County U14 FC A</option>
-              <option>GAA County U14 FC B</option>
-              <option>GAA County U13 FC</option>
-              <option>GAA County U12 FC</option>
-            </optgroup>
-
-            <optgroup label="── GAA County Leagues ──">
-              <option>GAA County Senior League</option>
-              <option>GAA County Intermediate League</option>
-              <option>GAA County Junior League</option>
-              <option>GAA County U20 League</option>
-              <option>GAA County Minor League</option>
-              <option>GAA County U16 League</option>
-              <option>GAA County U14 League</option>
-              <option>GAA County U13 League</option>
-              <option>GAA County U12 League</option>
-            </optgroup>
-
-            <!-- ═══ LGFA COUNTY CLUB ═══ -->
-            <optgroup label="── LGFA County Club Senior ──">
-              <option>LGFA County SFC</option>
-              <option>LGFA County SFC A</option>
-              <option>LGFA County SFC B</option>
-              <option>LGFA County Intermediate FC</option>
-              <option>LGFA County Junior FC</option>
-              <option>LGFA County Junior FC A</option>
-              <option>LGFA County Junior FC B</option>
-            </optgroup>
-
-            <optgroup label="── LGFA County Club U20 / Minor ──">
-              <option>LGFA County U20 FC</option>
-              <option>LGFA County Minor FC</option>
-              <option>LGFA County Minor FC A</option>
-              <option>LGFA County Minor FC B</option>
-            </optgroup>
-
-            <optgroup label="── LGFA County Club Underage ──">
-              <option>LGFA County U18 FC</option>
-              <option>LGFA County U16 FC</option>
-              <option>LGFA County U16 FC A</option>
-              <option>LGFA County U16 FC B</option>
-              <option>LGFA County U16 FC C</option>
-              <option>LGFA County U14 FC</option>
-              <option>LGFA County U14 FC A</option>
-              <option>LGFA County U14 FC B</option>
-              <option>LGFA County U14 FC C</option>
-              <option>LGFA County U13 FC</option>
-              <option>LGFA County U12 FC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA County Leagues ──">
-              <option>LGFA County Senior League</option>
-              <option>LGFA County Intermediate League</option>
-              <option>LGFA County Junior League</option>
-              <option>LGFA County U20 League</option>
-              <option>LGFA County Minor League</option>
-              <option>LGFA County U16 League</option>
-              <option>LGFA County U14 League</option>
-              <option>LGFA County U13 League</option>
-              <option>LGFA County U12 League</option>
-            </optgroup>
-
-            <!-- ═══ PROVINCIAL CLUB ═══ -->
-            <optgroup label="── GAA Provincial Club ──">
-              <option>GAA Ulster Club SFC</option>
-              <option>GAA Ulster Club IFC</option>
-              <option>GAA Ulster Club JFC</option>
-              <option>GAA Connacht Club SFC</option>
-              <option>GAA Connacht Club IFC</option>
-              <option>GAA Leinster Club SFC</option>
-              <option>GAA Leinster Club IFC</option>
-              <option>GAA Munster Club SFC</option>
-              <option>GAA Munster Club IFC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA Provincial Club ──">
-              <option>LGFA Ulster Club SFC</option>
-              <option>LGFA Ulster Club IFC</option>
-              <option>LGFA Ulster Club JFC</option>
-              <option>LGFA Connacht Club SFC</option>
-              <option>LGFA Leinster Club SFC</option>
-              <option>LGFA Munster Club SFC</option>
-            </optgroup>
-
-            <!-- ═══ ALL-IRELAND CLUB ═══ -->
-            <optgroup label="── GAA All-Ireland Club ──">
-              <option>GAA All-Ireland Club SFC</option>
-              <option>GAA All-Ireland Club IFC</option>
-              <option>GAA All-Ireland Club JFC</option>
-            </optgroup>
-
-            <optgroup label="── LGFA All-Ireland Club ──">
-              <option>LGFA All-Ireland Club SFC</option>
-              <option>LGFA All-Ireland Club IFC</option>
-              <option>LGFA All-Ireland Club JFC</option>
-            </optgroup>
-
-            <!-- ═══ OTHER ═══ -->
-            <optgroup label="── Other ──">
-              <option>Tournament</option>
-              <option>Blitz</option>
-              <option>Challenge Match</option>
-              <option>Friendly</option>
-              <option>Training Game</option>
-            </optgroup>
+          <div class="comp-picker-btn" id="comp-picker-btn" onclick="openCompPicker()">
+            <span id="comp-display-text">Select Competition</span>
+            <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
+          </div>
+          <select id="competition" style="display:none;" onchange="syncCompDisplay()">
+            <option value="">Select Competition</option>
           </select>
         </div>
       </div>
@@ -2119,7 +1933,7 @@ select option { background:#1a0505; }
       <button class="btn-save-match" onclick="saveMatchToHistory()">Save Match</button>
     </div>
 
-    <div class="sec-label">Full Match Stats</div>
+    <div class="sec-label">Full Match Stats <span id="stats-context-label" style="font-size:9px;color:var(--muted);font-weight:400;letter-spacing:1px;text-transform:none;margin-left:6px;font-family:'Inter',sans-serif;"></span></div>
     <div class="card">
       <table class="stats-table">
         <thead>
@@ -2159,30 +1973,48 @@ select option { background:#1a0505; }
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('match',this)">
-    <span class="nav-icon">🏟</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
     <span class="nav-label">Match</span>
   </button>
   <button class="nav-btn" onclick="showPage('record',this)">
-    <span class="nav-icon">✍️</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></span>
     <span class="nav-label">Record</span>
   </button>
   <button class="nav-btn" onclick="showPage('trends',this)">
-    <span class="nav-icon">📈</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
     <span class="nav-label">Trends</span>
   </button>
   <button class="nav-btn" onclick="showPage('players',this)">
-    <span class="nav-icon">👥</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
     <span class="nav-label">Squad</span>
   </button>
   <button class="nav-btn" onclick="showPage('stats',this)">
-    <span class="nav-icon">📊</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
     <span class="nav-label">Stats</span>
   </button>
   <button class="nav-btn" onclick="showPage('history',this)">
-    <span class="nav-icon">🗂️</span>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
     <span class="nav-label">History</span>
   </button>
 </nav>
+
+<!-- COMPETITION PICKER MODAL -->
+<div class="modal-overlay" id="comp-picker-modal" onclick="if(event.target===this)closeCompPicker()">
+  <div class="comp-picker-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Competition</div>
+        <div class="sheet-sub">Search or browse</div>
+      </div>
+      <button class="sheet-close" onclick="closeCompPicker()">✕</button>
+    </div>
+    <input class="comp-search-input" id="comp-search-input" type="text"
+      placeholder="Search competitions..." oninput="filterComps(this.value)"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="comp-list" id="comp-list"></div>
+  </div>
+</div>
 
 <!-- HELP SHEET -->
 <div class="modal-overlay" id="help-modal" onclick="if(event.target===this)closeHelp()">
@@ -2739,7 +2571,7 @@ function showPage(name, btn) {
   if (name === 'trends') renderTrends();
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
-  if (name === 'stats') renderStatsVideoTags();
+  if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); }
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -2860,6 +2692,8 @@ function addShot(team,mode,outcome) {
     renderTimeline(); bumpMin();
   }
   renderShotCounts(); renderShotSummary();
+  var pfx = mode === 'play' ? 'sfp' : 'sff';
+  pulseTally(pfx + '-' + team + '-tally');
 }
 
 function renderShotCounts() {
@@ -2930,6 +2764,10 @@ function selectGenericOutcome(key) {
   }
   state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
+  // Pulse the tally count for feedback
+  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',foul:'fo',cards:'cd',fortyFive:'ff'};
+  var pfx = catPfxMap[gmodal.category];
+  if (pfx) pulseTally(pfx + '-' + gmodal.team + '-tally');
 }
 
 function renderGenericTallies() {
@@ -3813,6 +3651,110 @@ function openHelp() {
 function closeHelp() {
   document.getElementById('help-modal').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ── COMPETITION PICKER ────────────────────────────
+var COMPETITIONS = [
+  {g:'GAA Inter-County Senior', items:['GAA All-Ireland SFC','GAA Tailteann Cup','GAA Allianz NFL Division 1','GAA Allianz NFL Division 2','GAA Allianz NFL Division 3','GAA Allianz NFL Division 4','GAA Connacht SFC','GAA Leinster SFC','GAA Munster SFC','GAA Ulster SFC']},
+  {g:'GAA Inter-County U20', items:['GAA All-Ireland U20 FC','GAA Eirgrid U20 FC','GAA Connacht U20 FC','GAA Leinster U20 FC','GAA Munster U20 FC','GAA Ulster U20 FC']},
+  {g:'GAA Inter-County Minor', items:['GAA All-Ireland Minor FC','GAA Connacht Minor FC','GAA Leinster Minor FC','GAA Munster Minor FC','GAA Ulster Minor FC']},
+  {g:'LGFA Inter-County Senior', items:['LGFA All-Ireland SFC','LGFA All-Ireland IFC','LGFA All-Ireland JFC','LGFA Lidl NFL Division 1','LGFA Lidl NFL Division 2','LGFA Lidl NFL Division 3','LGFA Lidl NFL Division 4','LGFA Connacht SFC','LGFA Leinster SFC','LGFA Munster SFC','LGFA Ulster SFC']},
+  {g:'LGFA Inter-County U20', items:['LGFA All-Ireland U20 FC','LGFA Connacht U20 FC','LGFA Leinster U20 FC','LGFA Munster U20 FC','LGFA Ulster U20 FC']},
+  {g:'LGFA Inter-County Minor', items:['LGFA All-Ireland Minor FC','LGFA Connacht Minor FC','LGFA Leinster Minor FC','LGFA Munster Minor FC','LGFA Ulster Minor FC']},
+  {g:'LGFA Inter-County U16', items:['LGFA All-Ireland U16 FC A','LGFA All-Ireland U16 FC B','LGFA Connacht U16 FC','LGFA Leinster U16 FC','LGFA Munster U16 FC','LGFA Ulster U16 FC']},
+  {g:'LGFA Inter-County U14', items:['LGFA All-Ireland U14 FC A','LGFA All-Ireland U14 FC B','LGFA All-Ireland U14 Championship Series','LGFA Connacht U14 FC','LGFA Leinster U14 FC','LGFA Munster U14 FC','LGFA Ulster U14 FC']},
+  {g:'GAA County Club', items:['GAA County SFC','GAA County SFC A','GAA County SFC B','GAA County Intermediate FC','GAA County Junior FC','GAA County Junior FC A','GAA County Junior FC B','GAA County U20 FC','GAA County Minor FC','GAA County Minor FC A','GAA County Minor FC B','GAA County U18 FC','GAA County U16 FC','GAA County U16 FC A','GAA County U16 FC B','GAA County U14 FC','GAA County U14 FC A','GAA County U14 FC B','GAA County U13 FC','GAA County U12 FC']},
+  {g:'GAA County Leagues', items:['GAA County Senior League','GAA County Intermediate League','GAA County Junior League','GAA County U20 League','GAA County Minor League','GAA County U16 League','GAA County U14 League','GAA County U13 League','GAA County U12 League']},
+  {g:'LGFA County Club', items:['LGFA County SFC','LGFA County SFC A','LGFA County SFC B','LGFA County Intermediate FC','LGFA County Junior FC','LGFA County Junior FC A','LGFA County Junior FC B','LGFA County U20 FC','LGFA County Minor FC','LGFA County Minor FC A','LGFA County Minor FC B','LGFA County U18 FC','LGFA County U16 FC','LGFA County U16 FC A','LGFA County U16 FC B','LGFA County U16 FC C','LGFA County U14 FC','LGFA County U14 FC A','LGFA County U14 FC B','LGFA County U14 FC C','LGFA County U13 FC','LGFA County U12 FC']},
+  {g:'LGFA County Leagues', items:['LGFA County Senior League','LGFA County Intermediate League','LGFA County Junior League','LGFA County U20 League','LGFA County Minor League','LGFA County U16 League','LGFA County U14 League','LGFA County U13 League','LGFA County U12 League']},
+  {g:'GAA Provincial Club', items:['GAA Ulster Club SFC','GAA Ulster Club IFC','GAA Ulster Club JFC','GAA Connacht Club SFC','GAA Connacht Club IFC','GAA Leinster Club SFC','GAA Leinster Club IFC','GAA Munster Club SFC','GAA Munster Club IFC']},
+  {g:'LGFA Provincial Club', items:['LGFA Ulster Club SFC','LGFA Ulster Club IFC','LGFA Ulster Club JFC','LGFA Connacht Club SFC','LGFA Leinster Club SFC','LGFA Munster Club SFC']},
+  {g:'All-Ireland Club', items:['GAA All-Ireland Club SFC','GAA All-Ireland Club IFC','GAA All-Ireland Club JFC','LGFA All-Ireland Club SFC','LGFA All-Ireland Club IFC','LGFA All-Ireland Club JFC']},
+  {g:'Other', items:['Tournament','Blitz','Challenge Match','Friendly','Training Game']},
+];
+
+function openCompPicker() {
+  filterComps('');
+  document.getElementById('comp-search-input').value = '';
+  document.getElementById('comp-picker-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { document.getElementById('comp-search-input').focus(); }, 300);
+}
+
+function closeCompPicker() {
+  document.getElementById('comp-picker-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function filterComps(query) {
+  var list = document.getElementById('comp-list');
+  var q = query.toLowerCase().trim();
+  var current = document.getElementById('competition').value;
+  var html = '';
+
+  COMPETITIONS.forEach(function(group) {
+    var items = q ? group.items.filter(function(i) { return i.toLowerCase().includes(q); }) : group.items;
+    if (!items.length) return;
+    if (!q) html += '<div class="comp-group-label">' + group.g + '</div>';
+    items.forEach(function(item) {
+      html += '<div class="comp-item' + (item === current ? ' selected' : '') + '" onclick="selectComp(\'' + item.replace(/'/g,'\\\'') + '\')">' + item + '</div>';
+    });
+  });
+
+  if (!html) html = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No results for "' + query + '"</div>';
+  list.innerHTML = html;
+}
+
+function selectComp(comp) {
+  var sel = document.getElementById('competition');
+  // Add option if not present
+  var found = false;
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === comp) { found = true; break; }
+  }
+  if (!found) {
+    var opt = document.createElement('option');
+    opt.value = comp; opt.text = comp;
+    sel.add(opt);
+  }
+  sel.value = comp;
+  syncCompDisplay();
+  closeCompPicker();
+}
+
+function syncCompDisplay() {
+  var val = document.getElementById('competition').value;
+  var btn = document.getElementById('comp-picker-btn');
+  var display = document.getElementById('comp-display-text');
+  if (display) display.textContent = val || 'Select Competition';
+  if (btn) btn.style.color = val ? 'var(--cream)' : 'var(--muted)';
+  // Also update the scoreboard display
+  var compDisp = document.getElementById('comp-display');
+  if (compDisp) compDisp.textContent = val || '';
+}
+
+function updateCompDisplay() { syncCompDisplay(); }
+
+// ── TRIGGER BUTTON TALLY PULSE ─────────────────────
+function pulseTally(elId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.classList.remove('pulse');
+  void el.offsetWidth; // reflow
+  el.classList.add('pulse');
+  setTimeout(function() { el.classList.remove('pulse'); }, 300);
+}
+
+// ── STATS CONTEXT LABEL ───────────────────────────
+function updateStatsContext() {
+  var el = document.getElementById('stats-context-label');
+  if (!el) return;
+  if (window.loadedMatchId) {
+    var h = loadHistory().find(function(m) { return m.id === window.loadedMatchId; });
+    el.textContent = h ? '— ' + h.home + ' v ' + h.away : '— Loaded Match';
+  } else {
+    el.textContent = '— Live Match';
+  }
 }
 
 function renderStatsVideoTags() {
