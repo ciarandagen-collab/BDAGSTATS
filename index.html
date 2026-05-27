@@ -5754,6 +5754,15 @@ function closeCompPicker() {
   document.body.style.overflow = '';
 }
 
+function getRecentComps() {
+  try { return JSON.parse(localStorage.getItem('cs_recent_comps') || '[]'); } catch(e) { return []; }
+}
+function addRecentComp(comp) {
+  var recents = getRecentComps().filter(function(c) { return c !== comp; });
+  recents.unshift(comp);
+  try { localStorage.setItem('cs_recent_comps', JSON.stringify(recents.slice(0,3))); } catch(e) {}
+}
+
 function filterComps(query) {
   var list = document.getElementById('comp-list');
   var q = query.toLowerCase().trim();
