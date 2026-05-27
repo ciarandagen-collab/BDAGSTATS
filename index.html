@@ -1707,10 +1707,10 @@ select option { background:#1a0505; }
         </div>
         <div class="meta-row">
           <input type="text" id="venue" placeholder="Venue">
-          <div class="comp-picker-btn" id="comp-picker-btn" onclick="openCompPicker()">
+          <button class="comp-picker-btn" id="comp-picker-btn" onclick="openCompPicker()" type="button">
             <span id="comp-display-text">Select Competition</span>
             <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
-          </div>
+          </button>
           <select id="competition" style="display:none;" onchange="syncCompDisplay()">
             <option value="">Select Competition</option>
           </select>
