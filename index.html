@@ -1191,7 +1191,108 @@ select option { background:#1a0505; }
 .nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
 .nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
-/* ── EVENT SETTINGS ──────────────────────────────── */
+/* ── TRAINING ─────────────────────────────────────── */
+.training-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+.training-season-sel { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; padding:7px 10px; outline:none; }
+.training-view-toggle { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.tr-toggle-btn { padding:7px 14px; background:transparent; border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; }
+.tr-toggle-btn.active { background:rgba(224,48,48,0.15); color:var(--cream); }
+.training-new-btn { width:100%; padding:13px; background:linear-gradient(135deg,rgba(153,27,27,0.2),rgba(224,48,48,0.1)); border:1px solid rgba(224,48,48,0.3); border-radius:12px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-bottom:14px; }
+.training-new-btn:active { background:rgba(224,48,48,0.2); }
+
+/* Session list */
+.session-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; cursor:pointer; }
+.session-card:active { background:rgba(224,48,48,0.06); }
+.session-card-header { display:flex; align-items:center; gap:10px; padding:12px 14px; }
+.sc-date { font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; color:var(--cream); flex:1; }
+.sc-label { font-size:11px; color:var(--muted); }
+.sc-att-summary { display:flex; gap:6px; align-items:center; }
+.sc-att-pill { font-size:11px; padding:2px 7px; border-radius:10px; }
+.sc-att-pill.present { background:rgba(34,197,94,0.1); color:var(--green); }
+.sc-att-pill.absent { background:rgba(255,80,80,0.1); color:var(--red-light); }
+.sc-att-pill.injured { background:rgba(245,166,35,0.1); color:#f5a623; }
+.session-empty { text-align:center; padding:32px 16px; color:var(--muted); font-size:13px; font-style:italic; }
+
+/* Training sheet */
+.training-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px 0; width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; display:flex; flex-direction:column; }
+.modal-overlay.open .training-sheet { transform:translateY(0); }
+
+/* Session meta */
+.tr-session-meta { display:flex; gap:10px; margin-bottom:14px; flex-shrink:0; }
+.tr-meta-field { flex:1; }
+.tr-meta-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+.tr-meta-input { width:100%; padding:9px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:var(--cream); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+
+/* Attendance grid in session */
+.tr-att-header { display:flex; align-items:center; gap:6px; padding:0 4px 6px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.tr-att-label-col { flex:1; font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
+.tr-att-status-cols { display:flex; gap:0; width:160px; justify-content:space-around; font-size:14px; flex-shrink:0; }
+.tr-att-note-col { width:80px; font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; flex-shrink:0; }
+.tr-att-row { display:flex; align-items:center; gap:6px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.03); }
+.tr-att-name { flex:1; font-size:13px; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tr-att-name .tr-att-num { font-size:10px; color:var(--muted); margin-right:4px; }
+.tr-att-btns { display:flex; gap:0; width:160px; justify-content:space-around; flex-shrink:0; }
+.tr-att-btn { width:28px; height:28px; border-radius:6px; border:1px solid transparent; background:transparent; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all 0.12s; }
+.tr-att-btn.selected { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); transform:scale(1.15); }
+.tr-att-note-input { width:80px; padding:5px 6px; background:rgba(255,255,255,0.04); border:1px solid transparent; border-radius:6px; color:var(--muted); font-size:11px; font-family:'Inter',sans-serif; outline:none; flex-shrink:0; }
+.tr-att-note-input:focus { border-color:var(--border); color:var(--cream); background:rgba(255,255,255,0.06); }
+.tr-att-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+/* Players view */
+.training-player-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.training-player-row:active { background:rgba(224,48,48,0.06); }
+.tpr-num { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); width:24px; flex-shrink:0; }
+.tpr-info { flex:1; }
+.tpr-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
+.tpr-pos { font-size:10px; color:var(--muted); }
+.tpr-att-badge { font-size:11px; padding:3px 8px; border-radius:10px; font-family:'Oswald',sans-serif; letter-spacing:1px; flex-shrink:0; }
+.tpr-att-badge.green { background:rgba(34,197,94,0.12); color:var(--green); }
+.tpr-att-badge.yellow { background:rgba(245,166,35,0.12); color:#f5a623; }
+.tpr-att-badge.red { background:rgba(255,80,80,0.12); color:var(--red-light); }
+.tpr-avail { font-size:16px; flex-shrink:0; }
+.squad-att-badge { position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%; border:1px solid var(--panel); }
+.squad-att-badge.green { background:var(--green); }
+.squad-att-badge.yellow { background:#f5a623; }
+.squad-att-badge.red { background:var(--red-light); }
+
+/* Player training profile */
+.ptr-section { margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.ptr-section:last-child { border-bottom:none; }
+.ptr-section-title { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; margin-bottom:10px; }
+.ptr-att-summary { display:flex; gap:10px; margin-bottom:10px; }
+.ptr-att-stat { flex:1; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
+.ptr-att-stat-val { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; }
+.ptr-att-stat-val.green { color:var(--green); }
+.ptr-att-stat-val.yellow { color:#f5a623; }
+.ptr-att-stat-val.red { color:var(--red-light); }
+.ptr-att-stat-label { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-family:'Oswald',sans-serif; margin-top:2px; }
+.ptr-att-history { display:flex; gap:4px; flex-wrap:wrap; }
+.ptr-att-dot { width:20px; height:20px; border-radius:4px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:default; }
+.ptr-att-dot.present { background:rgba(34,197,94,0.2); }
+.ptr-att-dot.absent { background:rgba(255,80,80,0.15); }
+.ptr-att-dot.injured { background:rgba(245,166,35,0.2); }
+.ptr-att-dot.sick { background:rgba(148,163,184,0.2); }
+.ptr-att-dot.county { background:rgba(99,102,241,0.2); }
+.ptr-att-dot.none { background:rgba(255,255,255,0.04); }
+.ptr-avail-row { display:flex; gap:8px; margin-bottom:8px; }
+.ptr-avail-btn { flex:1; padding:9px 6px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1px; cursor:pointer; text-align:center; }
+.ptr-avail-btn.available.active { background:rgba(34,197,94,0.15); border-color:var(--green); color:var(--green); }
+.ptr-avail-btn.maybe.active { background:rgba(245,166,35,0.12); border-color:#f5a623; color:#f5a623; }
+.ptr-avail-btn.unavailable.active { background:rgba(255,80,80,0.1); border-color:var(--red-light); color:var(--red-light); }
+.ptr-note-input { width:100%; padding:9px 12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:var(--cream); font-size:13px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; margin-top:4px; }
+.ptr-skills-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.ptr-skill-item { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.ptr-skill-name { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+.ptr-skill-score-row { display:flex; gap:3px; }
+.ptr-skill-dot { width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; transition:all 0.1s; font-family:'Oswald',sans-serif; font-size:10px; color:transparent; display:flex; align-items:center; justify-content:center; }
+.ptr-skill-dot.filled { background:var(--red); border-color:var(--red); color:#fff; }
+.ptr-save-ratings-btn { width:100%; padding:10px; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer; }
+.ptr-note-add { display:flex; gap:8px; margin-bottom:10px; }
+.ptr-add-note-btn { padding:9px 14px; background:rgba(224,48,48,0.15); border:1px solid rgba(224,48,48,0.3); border-radius:8px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; cursor:pointer; flex-shrink:0; }
+.ptr-note-item { padding:8px 10px; background:rgba(255,255,255,0.03); border-radius:8px; margin-bottom:6px; }
+.ptr-note-date { font-size:9px; color:var(--muted); margin-bottom:3px; }
+.ptr-note-text { font-size:12px; color:var(--cream); line-height:1.5; }
+.ptr-no-notes { font-size:12px; color:var(--muted); font-style:italic; }
 .settings-sheet { background:var(--panel2); border:1px solid var(--border); border-bottom:none; border-radius:20px 20px 0 0; padding:16px 16px 0; width:100%; max-width:640px; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); max-height:92vh; display:flex; flex-direction:column; }
 .modal-overlay.open .settings-sheet { transform:translateY(0); }
 .settings-tabs { display:flex; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; margin:12px 0 4px; flex-shrink:0; }
@@ -1961,10 +2062,11 @@ select option { background:#1a0505; }
   <div class="page" id="page-players">
 
     <div class="squad-sub-tabs">
-      <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 My Squad</button>
-      <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Player Stats</button>
+      <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 Squad</button>
+      <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Stats</button>
+      <button class="squad-sub-btn" id="squad-tab-training" onclick="switchSquadTab('training',this)">🏃 Training</button>
       <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
-      <button class="squad-sub-btn" id="squad-tab-print" onclick="switchSquadTab('print',this)">🖨️ Team Sheet</button>
+      <button class="squad-sub-btn" id="squad-tab-print" onclick="switchSquadTab('print',this)">🖨️ Sheet</button>
     </div>
 
     <!-- SQUAD LIST -->
@@ -1980,6 +2082,34 @@ select option { background:#1a0505; }
     </div>
 
     <!-- TIMELINE -->
+    <!-- TRAINING VIEW -->
+    <div id="squad-view-training" style="display:none">
+
+      <!-- Season selector + toggle -->
+      <div class="training-header">
+        <div class="training-season-wrap">
+          <select id="training-season-select" class="training-season-sel" onchange="switchTrainingSeason(this.value)">
+          </select>
+        </div>
+        <div class="training-view-toggle">
+          <button class="tr-toggle-btn active" id="tr-toggle-sessions" onclick="switchTrainingView('sessions')">Sessions</button>
+          <button class="tr-toggle-btn" id="tr-toggle-players" onclick="switchTrainingView('players')">Players</button>
+        </div>
+      </div>
+
+      <!-- Sessions View -->
+      <div id="training-sessions-view">
+        <button class="training-new-btn" onclick="openNewSession()">+ New Training Session</button>
+        <div id="training-session-list"></div>
+      </div>
+
+      <!-- Players View -->
+      <div id="training-players-view" style="display:none">
+        <div id="training-players-list"></div>
+      </div>
+
+    </div>
+
     <div id="squad-view-timeline" style="display:none">
       <div class="sec-label">Match Timeline</div>
       <div class="card">
@@ -2991,7 +3121,7 @@ function setHalf(h) {
 
 // ── TEAM SHEET ─────────────────────────────────────
 function switchSquadTab(tab, btn) {
-  var tabs = ['squad','stats','timeline','print'];
+  var tabs = ['squad','stats','training','timeline','print'];
   tabs.forEach(function(t) {
     var view = document.getElementById('squad-view-' + t);
     var tabBtn = document.getElementById('squad-tab-' + t);
@@ -2999,6 +3129,7 @@ function switchSquadTab(tab, btn) {
     if (tabBtn) tabBtn.classList.toggle('active', t === tab);
   });
   if (tab === 'stats') renderPlayerStats();
+  if (tab === 'training') initTrainingTab();
   if (tab === 'print') renderTeamSheet();
 }
 
@@ -3199,9 +3330,13 @@ function renderSquadGrid() {
     var num = i + 1;
     var p = squad[i];
     if (p && p.name) {
-      html += '<div class="squad-slot filled" onclick="openPlayerEdit(' + i + ')">' +
+      var attStats = getPlayerAttStats(i);
+      var badgeClass = trainingSessions.length ? (attStats.pct >= 85 ? 'green' : attStats.pct >= 70 ? 'yellow' : 'red') : '';
+      var availIcon = p.availability ? (p.availability.status === 'available' ? ' ✅' : p.availability.status === 'unavailable' ? ' ❌' : p.availability.status === 'maybe' ? ' 🤔' : '') : '';
+      html += '<div class="squad-slot filled" data-slot="' + i + '" onclick="openPlayerEdit(' + i + ')" style="position:relative;">' +
+        (badgeClass ? '<div class="squad-att-badge ' + badgeClass + '"></div>' : '') +
         '<div class="squad-num">' + num + '</div>' +
-        '<div class="squad-name">' + p.name + '</div>' +
+        '<div class="squad-name">' + p.name + availIcon + '</div>' +
         '<div class="squad-pos">' + (p.pos || '') + '</div>' +
         '</div>';
     } else {
@@ -3213,7 +3348,6 @@ function renderSquadGrid() {
   }
   grid.innerHTML = html;
 }
-
 function openPlayerEdit(slotIndex) {
   editingSlot = slotIndex;
   var num = slotIndex + 1;
@@ -4024,6 +4158,469 @@ function calcPlayerPerformance(playerStats) {
 
 // ── SETTINGS UI ───────────────────────────────────
 var settingsTab = 'events';
+
+// ── TRAINING SYSTEM ───────────────────────────────────────────────────
+
+const TRAINING_KEY = 'cs_training';
+const SKILL_AREAS = ['Kicking','Handpass','Catching','Decision Making','Fitness','Work Rate','Tackling','Positioning'];
+const ATT_STATUSES = ['present','absent','injured','sick','county'];
+const ATT_ICONS = {present:'✅',absent:'❌',injured:'🤕',sick:'🤧',county:'🏆'};
+
+var trainingSessions = [];
+var trainingView = 'sessions';
+var trainingSeason = getCurrentSeason();
+var editingSessionId = null;
+var trainingPlayerSlot = null;
+
+function getCurrentSeason() {
+  var now = new Date();
+  var year = now.getFullYear();
+  var month = now.getMonth(); // 0-based
+  // Season runs Aug(7)–Jul(6): if Aug or later, season is year/year+1
+  if (month >= 7) return year + '-' + (year+1).toString().slice(2);
+  return (year-1) + '-' + year.toString().slice(2);
+}
+
+function getSeasons() {
+  var seasons = new Set(trainingSessions.map(function(s) { return s.season; }));
+  seasons.add(getCurrentSeason());
+  return Array.from(seasons).sort().reverse();
+}
+
+function loadTraining() {
+  try {
+    trainingSessions = JSON.parse(localStorage.getItem(TRAINING_KEY) || '[]');
+  } catch(e) { trainingSessions = []; }
+}
+
+function saveTraining() {
+  try { localStorage.setItem(TRAINING_KEY, JSON.stringify(trainingSessions)); } catch(e) {}
+  syncTrainingToSupabase();
+}
+
+function syncTrainingToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('training_sessions?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'training_sessions?user_id=eq.' + currentUser.id : 'training_sessions';
+      return supaDB(path, method, { user_id: currentUser.id, sessions: trainingSessions }, currentToken);
+    }).catch(function() {});
+}
+
+function loadTrainingFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('training_sessions?user_id=eq.' + currentUser.id + '&select=sessions', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].sessions) {
+        trainingSessions = data[0].sessions;
+        try { localStorage.setItem(TRAINING_KEY, JSON.stringify(trainingSessions)); } catch(e) {}
+      }
+    }).catch(function() {});
+}
+
+// ── TRAINING TAB SWITCHING ────────────────────────
+function switchTrainingView(view) {
+  trainingView = view;
+  document.getElementById('tr-toggle-sessions').classList.toggle('active', view === 'sessions');
+  document.getElementById('tr-toggle-players').classList.toggle('active', view === 'players');
+  document.getElementById('training-sessions-view').style.display = view === 'sessions' ? '' : 'none';
+  document.getElementById('training-players-view').style.display = view === 'players' ? '' : 'none';
+  if (view === 'sessions') renderSessionList();
+  if (view === 'players') renderTrainingPlayersList();
+}
+
+function initTrainingTab() {
+  loadTraining();
+  trainingSeason = getCurrentSeason();
+  // Populate season selector
+  var sel = document.getElementById('training-season-select');
+  if (sel) {
+    var seasons = getSeasons();
+    sel.innerHTML = seasons.map(function(s) {
+      return '<option value="' + s + '"' + (s === trainingSeason ? ' selected' : '') + '>' + s + '</option>';
+    }).join('');
+  }
+  switchTrainingView('sessions');
+}
+
+function switchTrainingSeason(season) {
+  trainingSeason = season;
+  if (trainingView === 'sessions') renderSessionList();
+  else renderTrainingPlayersList();
+}
+
+// ── SESSION LIST ──────────────────────────────────
+function renderSessionList() {
+  var container = document.getElementById('training-session-list');
+  if (!container) return;
+  var sessions = trainingSessions.filter(function(s) { return s.season === trainingSeason; });
+  sessions.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+  if (!sessions.length) {
+    container.innerHTML = '<div class="session-empty">No sessions recorded for ' + trainingSeason + '<br><span style="font-size:11px">Tap + New Training Session to start</span></div>';
+    return;
+  }
+
+  container.innerHTML = sessions.map(function(s) {
+    var att = s.attendance || {};
+    var present = Object.values(att).filter(function(v) { return v === 'present'; }).length;
+    var absent = Object.values(att).filter(function(v) { return v === 'absent'; }).length;
+    var injured = Object.values(att).filter(function(v) { return v === 'injured' || v === 'sick'; }).length;
+    var dateStr = new Date(s.date).toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
+    return '<div class="session-card" onclick="openEditSession(' + s.id + ')">' +
+      '<div class="session-card-header">' +
+        '<div>' +
+          '<div class="sc-date">' + dateStr + '</div>' +
+          (s.label ? '<div class="sc-label">' + s.label + '</div>' : '') +
+        '</div>' +
+        '<div class="sc-att-summary">' +
+          (present ? '<span class="sc-att-pill present">✅ ' + present + '</span>' : '') +
+          (absent ? '<span class="sc-att-pill absent">❌ ' + absent + '</span>' : '') +
+          (injured ? '<span class="sc-att-pill injured">🤕 ' + injured + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── NEW / EDIT SESSION ────────────────────────────
+function openNewSession() {
+  editingSessionId = null;
+  document.getElementById('session-sheet-title').textContent = 'New Training Session';
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('session-date').value = today;
+  document.getElementById('session-label').value = '';
+  renderAttendanceGrid({});
+  document.getElementById('new-session-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openEditSession(id) {
+  var s = trainingSessions.find(function(x) { return x.id === id; });
+  if (!s) return;
+  editingSessionId = id;
+  document.getElementById('session-sheet-title').textContent = 'Edit Session';
+  document.getElementById('session-date').value = s.date;
+  document.getElementById('session-label').value = s.label || '';
+  renderAttendanceGrid(s.attendance || {}, s.notes || {});
+  document.getElementById('new-session-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNewSession() {
+  document.getElementById('new-session-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderAttendanceGrid(attendance, notes) {
+  notes = notes || {};
+  var activePlayers = squad.map(function(p,i) { return {p:p,i:i}; }).filter(function(x) { return x.p && x.p.name; });
+  var container = document.getElementById('session-attendance-list');
+  if (!container) return;
+
+  if (!activePlayers.length) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Add players to your squad first</div>';
+    return;
+  }
+
+  container.innerHTML = activePlayers.map(function(x) {
+    var current = attendance[x.i] || 'present';
+    var btns = ATT_STATUSES.map(function(s) {
+      return '<button class="tr-att-btn' + (current === s ? ' selected' : '') + '" ' +
+        'onclick="setAttStatus(this,' + x.i + ',\'' + s + '\')" title="' + s + '">' +
+        ATT_ICONS[s] + '</button>';
+    }).join('');
+    return '<div class="tr-att-row">' +
+      '<div class="tr-att-name"><span class="tr-att-num">' + (x.i+1) + '</span>' + x.p.name + '</div>' +
+      '<div class="tr-att-btns">' + btns + '</div>' +
+      '<input class="tr-att-note-input" type="text" placeholder="Note" value="' + (notes[x.i] || '') + '" ' +
+        'onchange="setAttNote(this,' + x.i + ')">' +
+    '</div>';
+  }).join('');
+}
+
+function setAttStatus(btn, slotIdx, status) {
+  var row = btn.closest('.tr-att-row');
+  row.querySelectorAll('.tr-att-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  btn.dataset.slot = slotIdx;
+  btn.dataset.status = status;
+}
+
+function setAttNote(input, slotIdx) {
+  input.dataset.slot = slotIdx;
+}
+
+function saveSession() {
+  var date = document.getElementById('session-date').value;
+  if (!date) { showSync('Please select a date', 2000); return; }
+
+  var label = document.getElementById('session-label').value.trim();
+  var attendance = {};
+  var notes = {};
+
+  document.querySelectorAll('.tr-att-btn.selected').forEach(function(btn) {
+    var slot = parseInt(btn.closest('.tr-att-row').querySelector('.tr-att-btn.selected').closest('.tr-att-row').querySelector('.tr-att-num').parentElement.dataset ? 0 : 0);
+    // Get slot from row index
+  });
+
+  // Collect attendance from rows
+  document.querySelectorAll('.tr-att-row').forEach(function(row) {
+    var numEl = row.querySelector('.tr-att-num');
+    if (!numEl) return;
+    var slotIdx = parseInt(numEl.textContent) - 1;
+    var selectedBtn = row.querySelector('.tr-att-btn.selected');
+    if (selectedBtn) {
+      ATT_STATUSES.forEach(function(s, si) {
+        if (row.querySelectorAll('.tr-att-btn')[si] === selectedBtn) {
+          attendance[slotIdx] = s;
+        }
+      });
+    }
+    var noteInput = row.querySelector('.tr-att-note-input');
+    if (noteInput && noteInput.value.trim()) notes[slotIdx] = noteInput.value.trim();
+  });
+
+  if (editingSessionId) {
+    var idx = trainingSessions.findIndex(function(s) { return s.id === editingSessionId; });
+    if (idx >= 0) {
+      trainingSessions[idx] = Object.assign(trainingSessions[idx], { date, label, attendance, notes });
+    }
+  } else {
+    trainingSessions.push({ id: Date.now(), date, label, attendance, notes, season: trainingSeason });
+  }
+
+  saveTraining();
+  closeNewSession();
+  renderSessionList();
+  updateAttendanceBadges();
+  showSync('✓ Session saved', 2000);
+}
+
+// ── PLAYERS VIEW ──────────────────────────────────
+function renderTrainingPlayersList() {
+  var container = document.getElementById('training-players-list');
+  if (!container) return;
+  var activePlayers = squad.map(function(p,i) { return {p:p,i:i}; }).filter(function(x) { return x.p && x.p.name; });
+
+  if (!activePlayers.length) {
+    container.innerHTML = '<div class="session-empty">Add players to your squad first</div>';
+    return;
+  }
+
+  container.innerHTML = activePlayers.map(function(x) {
+    var stats = getPlayerAttStats(x.i);
+    var badgeClass = stats.pct >= 85 ? 'green' : stats.pct >= 70 ? 'yellow' : 'red';
+    var avail = getPlayerAvailability(x.i);
+    var availIcon = avail === 'available' ? '✅' : avail === 'unavailable' ? '❌' : avail === 'maybe' ? '🤔' : '—';
+    return '<div class="training-player-row" onclick="openPlayerTraining(' + x.i + ')">' +
+      '<div class="tpr-num">' + (x.i+1) + '</div>' +
+      '<div class="tpr-info">' +
+        '<div class="tpr-name">' + x.p.name + '</div>' +
+        '<div class="tpr-pos">' + (x.p.pos || 'No position') + '</div>' +
+      '</div>' +
+      '<div class="tpr-att-badge ' + badgeClass + '">' + stats.pct + '%</div>' +
+      '<div class="tpr-avail">' + availIcon + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function getPlayerAttStats(slotIdx) {
+  var sessions = trainingSessions.filter(function(s) { return s.season === trainingSeason; });
+  var total = sessions.length;
+  if (!total) return { pct: 100, present: 0, total: 0, streak: 0 };
+  var present = sessions.filter(function(s) { return (s.attendance || {})[slotIdx] === 'present'; }).length;
+  var pct = Math.round((present / total) * 100);
+  // Calculate current streak
+  var sorted = sessions.slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+  var streak = 0;
+  for (var i = 0; i < sorted.length; i++) {
+    if ((sorted[i].attendance || {})[slotIdx] === 'present') streak++;
+    else break;
+  }
+  return { pct, present, total, streak };
+}
+
+function getPlayerAvailability(slotIdx) {
+  var p = squad[slotIdx];
+  return p && p.availability ? p.availability.status : null;
+}
+
+// ── PLAYER TRAINING PROFILE ───────────────────────
+function openPlayerTraining(slotIdx) {
+  var p = squad[slotIdx];
+  if (!p) return;
+  trainingPlayerSlot = slotIdx;
+
+  document.getElementById('ptr-player-name').textContent = p.name;
+  document.getElementById('ptr-player-pos').textContent = p.pos || 'No position';
+
+  renderPtrAttSummary(slotIdx);
+  renderPtrAvailability(slotIdx);
+  renderPtrSkills(slotIdx);
+  renderPtrNotes(slotIdx);
+
+  document.getElementById('player-training-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlayerTraining() {
+  document.getElementById('player-training-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderPtrAttSummary(slotIdx) {
+  var stats = getPlayerAttStats(slotIdx);
+  var colorClass = stats.pct >= 85 ? 'green' : stats.pct >= 70 ? 'yellow' : 'red';
+
+  document.getElementById('ptr-att-summary').innerHTML =
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val ' + colorClass + '">' + stats.pct + '%</div><div class="ptr-att-stat-label">Attendance</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val">' + stats.present + '/' + stats.total + '</div><div class="ptr-att-stat-label">Sessions</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val">' + stats.streak + '</div><div class="ptr-att-stat-label">Streak</div></div>';
+
+  // Last 10 sessions as dots
+  var sessions = trainingSessions.filter(function(s) { return s.season === trainingSeason; })
+    .sort(function(a,b) { return new Date(b.date) - new Date(a.date); }).slice(0,10);
+  document.getElementById('ptr-att-history').innerHTML = sessions.map(function(s) {
+    var status = (s.attendance || {})[slotIdx] || 'none';
+    return '<div class="ptr-att-dot ' + status + '" title="' + new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + '">' + (ATT_ICONS[status] || '–') + '</div>';
+  }).join('');
+}
+
+function renderPtrAvailability(slotIdx) {
+  var p = squad[slotIdx];
+  var avail = p && p.availability ? p.availability : {};
+  ['available','maybe','unavailable'].forEach(function(s) {
+    var btn = document.getElementById('ptr-avail-' + (s === 'available' ? 'yes' : s === 'unavailable' ? 'no' : 'maybe'));
+    if (btn) btn.classList.toggle('active', avail.status === s);
+  });
+  var noteInput = document.getElementById('ptr-avail-note');
+  if (noteInput) noteInput.value = avail.note || '';
+}
+
+function setAvailability(status) {
+  if (trainingPlayerSlot === null) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p) return;
+  if (!p.availability) p.availability = {};
+  p.availability.status = status;
+  saveSquad();
+  renderPtrAvailability(trainingPlayerSlot);
+  renderTrainingPlayersList();
+  showSync('✓ Availability updated', 1500);
+}
+
+function setAvailabilityNote(note) {
+  if (trainingPlayerSlot === null) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p) return;
+  if (!p.availability) p.availability = {};
+  p.availability.note = note;
+  saveSquad();
+}
+
+function renderPtrSkills(slotIdx) {
+  var p = squad[slotIdx];
+  var latestRating = p && p.ratings && p.ratings.length ? p.ratings[p.ratings.length-1].scores : {};
+  var grid = document.getElementById('ptr-skills-grid');
+  if (!grid) return;
+
+  grid.innerHTML = SKILL_AREAS.map(function(skill) {
+    var current = latestRating[skill] || 0;
+    var dots = Array.from({length:10}, function(_,i) {
+      return '<div class="ptr-skill-dot' + (i < current ? ' filled' : '') + '" ' +
+        'onclick="setSkillScore(\'' + skill + '\',' + (i+1) + ')">' + (i+1) + '</div>';
+    }).join('');
+    return '<div class="ptr-skill-item">' +
+      '<div class="ptr-skill-name">' + skill + '</div>' +
+      '<div class="ptr-skill-score-row" id="skill-row-' + skill.replace(/\s/g,'_') + '">' + dots + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function setSkillScore(skill, score) {
+  if (trainingPlayerSlot === null) return;
+  var rowId = 'skill-row-' + skill.replace(/\s/g,'_');
+  var row = document.getElementById(rowId);
+  if (!row) return;
+  row.querySelectorAll('.ptr-skill-dot').forEach(function(dot, i) {
+    dot.classList.toggle('filled', i < score);
+  });
+  // Store temporarily in dataset
+  row.dataset.score = score;
+}
+
+function saveSkillRatings() {
+  if (trainingPlayerSlot === null) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p) return;
+  if (!p.ratings) p.ratings = [];
+
+  var scores = {};
+  SKILL_AREAS.forEach(function(skill) {
+    var rowId = 'skill-row-' + skill.replace(/\s/g,'_');
+    var row = document.getElementById(rowId);
+    if (row) scores[skill] = parseInt(row.dataset.score) || row.querySelectorAll('.filled').length;
+  });
+
+  var today = new Date().toISOString().split('T')[0];
+  // Update today's rating if exists, else add new
+  var todayIdx = p.ratings.findIndex(function(r) { return r.date === today; });
+  if (todayIdx >= 0) {
+    p.ratings[todayIdx].scores = scores;
+  } else {
+    p.ratings.push({ date: today, season: trainingSeason, scores });
+  }
+  saveSquad();
+  showSync('✓ Skill ratings saved', 1500);
+}
+
+function renderPtrNotes(slotIdx) {
+  var p = squad[slotIdx];
+  var notes = (p && p.trainingNotes) || [];
+  var list = document.getElementById('ptr-notes-list');
+  if (!list) return;
+  if (!notes.length) {
+    list.innerHTML = '<div class="ptr-no-notes">No notes yet</div>';
+    return;
+  }
+  list.innerHTML = notes.slice().reverse().map(function(n) {
+    return '<div class="ptr-note-item">' +
+      '<div class="ptr-note-date">' + new Date(n.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + '</div>' +
+      '<div class="ptr-note-text">' + n.text + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function addPlayerNote() {
+  if (trainingPlayerSlot === null) return;
+  var input = document.getElementById('ptr-new-note');
+  var text = input ? input.value.trim() : '';
+  if (!text) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p) return;
+  if (!p.trainingNotes) p.trainingNotes = [];
+  p.trainingNotes.push({ date: new Date().toISOString(), text });
+  saveSquad();
+  if (input) input.value = '';
+  renderPtrNotes(trainingPlayerSlot);
+  showSync('✓ Note added', 1500);
+}
+
+// ── ATTENDANCE BADGES ON SQUAD GRID ──────────────
+function updateAttendanceBadges() {
+  var activePlayers = squad.map(function(p,i) { return {p:p,i:i}; }).filter(function(x) { return x.p && x.p.name; });
+  activePlayers.forEach(function(x) {
+    var stats = getPlayerAttStats(x.i);
+    var badge = document.querySelector('.squad-slot[data-slot="' + x.i + '"] .squad-att-badge');
+    if (!badge) return;
+    badge.className = 'squad-att-badge ' + (stats.pct >= 85 ? 'green' : stats.pct >= 70 ? 'yellow' : 'red');
+  });
+}
+
+// Init training on load
+loadTraining();
 
 function openEventSettings() {
   loadEventConfig();
@@ -6899,6 +7496,9 @@ function loadUserData() {
   // Load event config (club config takes priority)
   loadEventConfigFromSupabase();
 
+  // Load training sessions
+  loadTrainingFromSupabase();
+
   // Load match history from Supabase
   supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
     .then(function(data) {
@@ -8004,6 +8604,98 @@ window.addEventListener('resize', function() {
       <button class="ee-save-btn" onclick="saveEventEditor()">Save Event</button>
       <button class="ee-delete-btn" id="ee-delete-btn" onclick="deleteEditingEvent()" style="display:none;">Delete Event</button>
     </div>
+  </div>
+</div>
+
+<!-- NEW TRAINING SESSION SHEET -->
+<div class="modal-overlay" id="new-session-modal" onclick="if(event.target===this)closeNewSession()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="session-sheet-title">New Training Session</div>
+        <div class="sheet-sub">Mark attendance and add notes</div>
+      </div>
+      <button class="sheet-close" onclick="closeNewSession()">✕</button>
+    </div>
+
+    <div class="tr-session-meta">
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Date</div>
+        <input type="date" id="session-date" class="tr-meta-input">
+      </div>
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Label <span style="color:var(--muted);font-size:9px;">(optional)</span></div>
+        <input type="text" id="session-label" class="tr-meta-input" placeholder="e.g. Tuesday session">
+      </div>
+    </div>
+
+    <!-- Attendance grid -->
+    <div class="tr-att-header">
+      <div class="tr-att-label-col">Player</div>
+      <div class="tr-att-status-cols">
+        <span title="Present">✅</span>
+        <span title="Absent">❌</span>
+        <span title="Injured">🤕</span>
+        <span title="Sick">🤧</span>
+        <span title="County/College">🏆</span>
+      </div>
+      <div class="tr-att-note-col">Note</div>
+    </div>
+    <div id="session-attendance-list"></div>
+
+    <button class="btn-save-player" onclick="saveSession()" style="margin-top:12px;">Save Session</button>
+  </div>
+</div>
+
+<!-- PLAYER TRAINING PROFILE SHEET -->
+<div class="modal-overlay" id="player-training-modal" onclick="if(event.target===this)closePlayerTraining()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="ptr-player-name">Player</div>
+        <div class="sheet-sub" id="ptr-player-pos"></div>
+      </div>
+      <button class="sheet-close" onclick="closePlayerTraining()">✕</button>
+    </div>
+
+    <!-- Attendance summary -->
+    <div class="ptr-section">
+      <div class="ptr-section-title">Attendance</div>
+      <div class="ptr-att-summary" id="ptr-att-summary"></div>
+      <div class="ptr-att-history" id="ptr-att-history"></div>
+    </div>
+
+    <!-- Availability -->
+    <div class="ptr-section">
+      <div class="ptr-section-title">Availability for Next Match</div>
+      <div class="ptr-avail-row">
+        <button class="ptr-avail-btn available" id="ptr-avail-yes" onclick="setAvailability('available')">✅ Available</button>
+        <button class="ptr-avail-btn maybe" id="ptr-avail-maybe" onclick="setAvailability('maybe')">🤔 Maybe</button>
+        <button class="ptr-avail-btn unavailable" id="ptr-avail-no" onclick="setAvailability('unavailable')">❌ Unavailable</button>
+      </div>
+      <input type="text" id="ptr-avail-note" class="ptr-note-input" placeholder="Reason / note (optional)"
+        onchange="setAvailabilityNote(this.value)">
+    </div>
+
+    <!-- Skill ratings -->
+    <div class="ptr-section">
+      <div class="ptr-section-title">Skill Ratings <span style="font-size:9px;color:var(--muted);letter-spacing:0;text-transform:none;font-family:Inter,sans-serif;">(tap to rate, 1–10)</span></div>
+      <div id="ptr-skills-grid"></div>
+      <button class="ptr-save-ratings-btn" onclick="saveSkillRatings()">Save Ratings</button>
+    </div>
+
+    <!-- Notes history -->
+    <div class="ptr-section">
+      <div class="ptr-section-title">Notes</div>
+      <div class="ptr-note-add">
+        <input type="text" id="ptr-new-note" class="ptr-note-input" placeholder="Add a note...">
+        <button class="ptr-add-note-btn" onclick="addPlayerNote()">Add</button>
+      </div>
+      <div id="ptr-notes-list"></div>
+    </div>
+
   </div>
 </div>
 
