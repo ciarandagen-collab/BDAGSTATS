@@ -1246,6 +1246,33 @@ select option { background:#1a0505; }
 .wellness-training-btn { width:100%; padding:10px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; cursor:pointer; margin-bottom:10px; }
 .wellness-training-btn:active { background:rgba(224,48,48,0.1); color:var(--cream); }
 
+/* ── PLAYER WELLNESS SCREEN ──────────────────────── */
+.pw-screen-inner { max-width:480px; margin:0 auto; padding:24px 20px 48px; }
+.pws-header { text-align:center; padding:32px 0 24px; }
+.pws-title { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--cream); letter-spacing:1px; }
+.pws-date { font-size:13px; color:var(--muted); margin-top:6px; }
+.pws-section { margin-bottom:20px; }
+.pws-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+.pws-select { width:100%; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:12px; color:var(--cream); font-size:16px; font-family:'Inter',sans-serif; outline:none; -webkit-appearance:none; }
+.pws-metric-section { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; }
+.pws-metric-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.pws-metric-icon { font-size:22px; }
+.pws-metric-name { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1.5px; color:var(--cream); text-transform:uppercase; }
+.pws-metric-score { margin-left:auto; font-family:'Oswald',sans-serif; font-size:18px; font-weight:700; color:var(--muted); min-width:24px; text-align:right; }
+.pws-score-row { display:flex; gap:6px; }
+.pws-score-btn { flex:1; height:44px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:14px; cursor:pointer; transition:all 0.12s; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
+.pws-score-btn.sel-1, .pws-score-btn.sel-2 { background:#ef4444; border-color:#ef4444; color:#fff; transform:scale(1.05); }
+.pws-score-btn.sel-3 { background:#f59e0b; border-color:#f59e0b; color:#fff; transform:scale(1.05); }
+.pws-score-btn.sel-4, .pws-score-btn.sel-5 { background:#22c55e; border-color:#22c55e; color:#fff; transform:scale(1.05); }
+.pws-score-labels { display:flex; justify-content:space-between; margin-top:4px; padding:0 2px; }
+.pws-score-label { font-size:9px; color:rgba(245,232,232,0.25); font-family:'Inter',sans-serif; }
+.pws-note-input { width:100%; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:var(--cream); font-size:16px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.pws-submit-btn { width:100%; padding:16px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:14px; color:#fff; font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:8px; -webkit-tap-highlight-color:transparent; }
+.pws-submit-btn:active { filter:brightness(1.1); }
+.pws-submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.pws-scores-summary { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px; }
+.pws-score-chip { padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; }
+
 /* ── TRIAL SYSTEM ─────────────────────────────────── */
 .trial-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; padding:14px; cursor:pointer; }
 .trial-card:active { background:rgba(224,48,48,0.06); }
@@ -6078,6 +6105,221 @@ function submitWellnessSelfCheck() {
 // Init wellness on load
 loadWellness();
 
+// ── PHASE 2: PLAYER WELLNESS SELF-REPORT ─────────────────────────────
+
+var pwsUserId = null;
+var pwsDate = null;
+var pwsScores = {};
+
+function checkWellnessParam() {
+  var params = new URLSearchParams(window.location.search);
+  var wellnessUserId = params.get('wellness');
+  var wellnessDate = params.get('date');
+  if (!wellnessUserId) return false;
+
+  // Hide main app, show player wellness screen
+  var appRoot = document.getElementById('app-root') || document.querySelector('.app-wrap') || document.getElementById('scroll-area');
+  var topbar = document.querySelector('.topbar');
+  var nav = document.querySelector('.bottom-nav');
+  var userBadge = document.getElementById('user-badge');
+  var trialBanner = document.getElementById('trial-banner');
+
+  // Hide all main app elements
+  [appRoot, topbar, nav, userBadge, trialBanner].forEach(function(el) {
+    if (el) el.style.display = 'none';
+  });
+
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(function(p) { p.style.display = 'none'; });
+
+  document.getElementById('player-wellness-screen').style.display = 'block';
+  document.body.style.background = '#0a0505';
+
+  pwsUserId = wellnessUserId;
+  pwsDate = wellnessDate || new Date().toISOString().split('T')[0];
+
+  // Load squad from Supabase public_squads table
+  loadPublicSquad(wellnessUserId, wellnessDate);
+  return true;
+}
+
+function loadPublicSquad(userId, date) {
+  fetch(SUPA_URL + '/rest/v1/public_squads?user_id=eq.' + userId + '&select=players', {
+    headers: {
+      'apikey': SUPA_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPA_ANON_KEY
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data || !data.length || !data[0].players || !data[0].players.length) {
+      showPwsError('No squad found for this link. Ask your coach to regenerate it.');
+      return;
+    }
+    renderPlayerWellnessForm(data[0].players, date);
+  })
+  .catch(function() {
+    showPwsError('Could not load squad. Please check your connection and try again.');
+  });
+}
+
+function showPwsError(msg) {
+  document.getElementById('pws-loading').style.display = 'none';
+  document.getElementById('pws-error').style.display = 'block';
+  document.getElementById('pws-error-msg').textContent = msg;
+}
+
+function renderPlayerWellnessForm(players, date) {
+  document.getElementById('pws-loading').style.display = 'none';
+  document.getElementById('pws-form').style.display = 'block';
+
+  // Date label
+  var d = date ? new Date(date + 'T12:00:00') : new Date();
+  document.getElementById('pws-date-label').textContent =
+    d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Player select
+  var sel = document.getElementById('pws-player-select');
+  sel.innerHTML = '<option value="">Select your name...</option>' +
+    players.map(function(p, i) {
+      if (!p || !p.name) return '';
+      return '<option value="' + i + '">' + (p.name) + (p.pos ? ' (' + p.pos + ')' : '') + '</option>';
+    }).join('');
+
+  // Metrics
+  var metricsHtml = WELLNESS_METRICS.map(function(m) {
+    var labels = ['Very Poor','Poor','OK','Good','Excellent'];
+    if (m.key === 'soreness') labels = ['Very Sore','Sore','Moderate','Slight','None'];
+    if (m.key === 'stress') labels = ['Very High','High','Moderate','Low','Very Low'];
+    return '<div class="pws-metric-section">' +
+      '<div class="pws-metric-header">' +
+        '<span class="pws-metric-icon">' + m.icon + '</span>' +
+        '<span class="pws-metric-name">' + m.label + '</span>' +
+        '<span class="pws-metric-score" id="pws-score-' + m.key + '">—</span>' +
+      '</div>' +
+      '<div class="pws-score-row">' +
+        [1,2,3,4,5].map(function(v) {
+          return '<button class="pws-score-btn" type="button" onclick="pwsSetScore(\'' + m.key + '\',' + v + ',this)">' + v + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="pws-score-labels">' +
+        '<span class="pws-score-label">' + labels[0] + '</span>' +
+        '<span class="pws-score-label">' + labels[4] + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('pws-metrics').innerHTML = metricsHtml;
+  pwsScores = {};
+}
+
+function pwsSetScore(metric, value, btn) {
+  pwsScores[metric] = value;
+  // Update display
+  var scoreEl = document.getElementById('pws-score-' + metric);
+  if (scoreEl) scoreEl.textContent = value + '/5';
+  // Update button styles
+  var row = btn.closest('.pws-score-row');
+  row.querySelectorAll('.pws-score-btn').forEach(function(b, i) {
+    b.className = 'pws-score-btn' + (i < value ? ' sel-' + (i+1) : '');
+  });
+}
+
+function submitPlayerWellness() {
+  var slotIdx = document.getElementById('pws-player-select').value;
+  if (slotIdx === '' || slotIdx === undefined) {
+    alert('Please select your name'); return;
+  }
+
+  // Check all metrics rated
+  var missing = WELLNESS_METRICS.filter(function(m) { return !pwsScores[m.key]; });
+  if (missing.length) {
+    alert('Please rate all 5 metrics before submitting'); return;
+  }
+
+  var btn = document.getElementById('pws-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  var note = document.getElementById('pws-note').value.trim();
+
+  fetch('/.netlify/functions/wellness-checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: pwsUserId,
+      date: pwsDate,
+      slotIdx: parseInt(slotIdx),
+      scores: pwsScores,
+      note: note
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      showPwsSuccess(slotIdx);
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Submit Check-in';
+      alert('Submission failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'Submit Check-in';
+    alert('Network error — please check your connection and try again.');
+  });
+}
+
+function showPwsSuccess(slotIdx) {
+  document.getElementById('pws-form').style.display = 'none';
+  document.getElementById('pws-success').style.display = 'block';
+
+  // Get player name
+  var sel = document.getElementById('pws-player-select');
+  var playerName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text.split(' (')[0] : 'Player';
+  document.getElementById('pws-success-name').textContent = 'Thanks, ' + playerName + '!';
+
+  // Show score summary
+  var chips = WELLNESS_METRICS.map(function(m) {
+    return '<div class="pws-score-chip">' + m.icon + ' ' + (pwsScores[m.key] || '—') + '/5</div>';
+  }).join('');
+  document.getElementById('pws-scores-summary').innerHTML = chips;
+}
+
+// ── UPDATED COPY WELLNESS LINK ────────────────────
+function copyWellnessLink() {
+  // Save squad snapshot to public_squads so players can see it
+  savePublicSquad().then(function() {
+    var text = document.getElementById('wellness-link-text').textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        vaFlash('Link copied! Share with your squad');
+      }).catch(function() { window.prompt('Copy this link:', text); });
+    } else {
+      window.prompt('Copy this link:', text);
+    }
+  });
+}
+
+function savePublicSquad() {
+  if (!currentUser || !currentToken) return Promise.resolve();
+  var squadSnapshot = squad.map(function(p) {
+    return p && p.name ? { name: p.name, pos: p.pos || '' } : null;
+  });
+
+  return supaDB('public_squads?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'public_squads?user_id=eq.' + currentUser.id : 'public_squads';
+      return supaDB(path, method, { user_id: currentUser.id, players: squadSnapshot }, currentToken);
+    }).catch(function() { return null; });
+}
+
+// Check for wellness param on load (called from DOMContentLoaded)
+function initWellnessCheck() {
+  return checkWellnessParam();
+}
+
 function openEventSettings() {
   loadEventConfig();
   var note = document.getElementById('settings-club-note');
@@ -8683,6 +8925,7 @@ function onTeamSelect(team, value) {
 // ── SUPABASE CONFIG ────────────────────────────────
 var SUPA_URL = 'https://sbruzfczhdooboxgsabs.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicnV6ZmN6aGRvb2JveGdzYWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNzc3NTQsImV4cCI6MjA5NDg1Mzc1NH0.OrBC9OPtbDREjRB_daCvNHEtRvOJh7chxTDWEYSdIt8';
+var SUPA_ANON_KEY = SUPA_KEY;
 
 var currentUser = null;
 var currentToken = null;
@@ -9457,6 +9700,9 @@ function syncClubSquad() {
 // Override saveSquad to also sync to club if active
 var _origSaveSquad = null;
 document.addEventListener('DOMContentLoaded', function() {
+  // Check for player wellness self-report URL first
+  if (initWellnessCheck()) return; // Stop normal app init if wellness mode
+
   initSupabase();
   checkSession();
   try { updateNames(); } catch(e) {}
@@ -10597,5 +10843,62 @@ window.addEventListener('resize', function() {
   </div>
 </div>
 <script src="https://www.youtube.com/iframe_api"></script>
+
+<!-- PLAYER WELLNESS SELF-REPORT SCREEN (standalone, no login) -->
+<div id="player-wellness-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:#0a0505;overflow-y:auto;font-family:'Inter',sans-serif;">
+  <div class="pw-screen-inner">
+
+    <!-- Loading state -->
+    <div id="pws-loading" style="text-align:center;padding:60px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;">🏐</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--cream);text-transform:uppercase;">Coach Stats</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Loading your check-in...</div>
+    </div>
+
+    <!-- Error state -->
+    <div id="pws-error" style="display:none;text-align:center;padding:60px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;">⚠️</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--red-light);text-transform:uppercase;">Link Invalid</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;" id="pws-error-msg">This wellness link has expired or is invalid.</div>
+    </div>
+
+    <!-- Form state -->
+    <div id="pws-form" style="display:none;">
+      <div class="pws-header">
+        <div style="font-size:32px;margin-bottom:8px;">🏐</div>
+        <div class="pws-title">How are you feeling?</div>
+        <div class="pws-date" id="pws-date-label"></div>
+      </div>
+
+      <!-- Name picker -->
+      <div class="pws-section">
+        <div class="pws-label">Your Name</div>
+        <select id="pws-player-select" class="pws-select">
+          <option value="">Select your name...</option>
+        </select>
+      </div>
+
+      <!-- Metrics -->
+      <div id="pws-metrics"></div>
+
+      <!-- Note -->
+      <div class="pws-section">
+        <div class="pws-label">Note <span style="font-size:11px;color:rgba(245,232,232,0.3);font-weight:400;">(optional)</span></div>
+        <input type="text" id="pws-note" class="pws-note-input" placeholder="e.g. Tight hamstring, slept badly...">
+      </div>
+
+      <button class="pws-submit-btn" onclick="submitPlayerWellness()" id="pws-submit-btn">Submit Check-in</button>
+    </div>
+
+    <!-- Success state -->
+    <div id="pws-success" style="display:none;text-align:center;padding:60px 20px;">
+      <div style="font-size:60px;margin-bottom:16px;">✅</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:2px;color:var(--cream);text-transform:uppercase;" id="pws-success-name">Thanks!</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">Your coach has your readiness scores.<br>See you at training!</div>
+      <div class="pws-scores-summary" id="pws-scores-summary"></div>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
