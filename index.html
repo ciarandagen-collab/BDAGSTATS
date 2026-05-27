@@ -1246,6 +1246,11 @@ select option { background:#1a0505; }
 .wellness-training-btn { width:100%; padding:10px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; cursor:pointer; margin-bottom:10px; }
 .wellness-training-btn:active { background:rgba(224,48,48,0.1); color:var(--cream); }
 
+.tsc-share-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; color:var(--muted); font-size:13px; cursor:pointer; flex-shrink:0; }
+.tsc-share-btn:active { background:rgba(224,48,48,0.1); color:var(--red-light); }
+.trial-sync-btn { width:100%; padding:10px; background:rgba(68,136,255,0.08); border:1px solid rgba(68,136,255,0.2); border-radius:8px; color:#6699ff; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; cursor:pointer; margin-bottom:12px; }
+.trial-sync-btn:active { background:rgba(68,136,255,0.15); }
+
 /* ── PLAYER WELLNESS SCREEN ──────────────────────── */
 .pw-screen-inner { max-width:480px; margin:0 auto; padding:24px 20px 48px; }
 .pws-header { text-align:center; padding:32px 0 24px; }
@@ -3069,10 +3074,7 @@ function updateNames() {
   updateStats(); renderShotSummary();
 }
 
-function updateCompDisplay() {
-  const val = $('competition').value;
-  $('comp-display').textContent = val || 'Select Competition';
-}
+
 
 // ── SCOREBOARD ─────────────────────────────────────
 function updateScoreboard() {
@@ -4580,17 +4582,7 @@ function renderTrialistsList() {
   }).join('');
 }
 
-function getTrialistAvg(trialistId) {
-  var trial = getActiveTrial();
-  if (!trial) return null;
-  var scores = [];
-  (trial.sessions || []).forEach(function(s) {
-    var g = s.grades && s.grades[trialistId];
-    if (g && g.attended && g.overall) scores.push(g.overall);
-  });
-  if (!scores.length) return null;
-  return scores.reduce(function(a,b) { return a+b; }, 0) / scores.length;
-}
+
 
 function getLastInviteBack(trialistId) {
   var trial = getActiveTrial();
@@ -4604,32 +4596,6 @@ function getLastInviteBack(trialistId) {
 }
 
 // ── TRIAL SESSIONS ────────────────────────────────
-function renderTrialSessions() {
-  var container = document.getElementById('trial-sessions-list');
-  if (!container) return;
-  var trial = getActiveTrial();
-  if (!trial || !trial.sessions.length) {
-    container.innerHTML = '<div class="trial-empty">No sessions yet — tap + New Session to start grading</div>';
-    return;
-  }
-  var sessions = trial.sessions.slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
-  container.innerHTML = sessions.map(function(s) {
-    var gradedCount = Object.values(s.grades || {}).filter(function(g) { return g.attended && g.overall; }).length;
-    var totalActive = trial.trialists.filter(function(t) {
-      var g = s.grades && s.grades[t.id];
-      return !g || g.attended !== false;
-    }).length;
-    var dateStr = new Date(s.date).toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
-    return '<div class="trial-session-card" onclick="openTrialSessionGrading(' + s.id + ')">' +
-      '<div>' +
-        '<div class="tsc-date">' + dateStr + '</div>' +
-        (s.label ? '<div class="tsc-label">' + s.label + '</div>' : '') +
-      '</div>' +
-      '<span class="tsc-graded">' + gradedCount + ' graded</span>' +
-    '</div>';
-  }).join('');
-}
-
 function openNewTrialSession() {
   editingTrialSessionId = null;
   document.getElementById('trial-session-sheet-title').textContent = 'New Trial Session';
@@ -4857,12 +4823,22 @@ function openTrialistProfile(trialistId) {
     if (trialist.finalDecision === 'promote' && !trialist.promotedToSlot) renderSquadSlotSelect();
   }
 
+  // Coach breakdown for multi-coach grading
+  var breakdownHtml = renderTrialistCoachBreakdown(trialistId);
+  var bdWrap = document.getElementById('tpro-coach-breakdown');
+  if (!bdWrap) {
+    bdWrap = document.createElement('div');
+    bdWrap.id = 'tpro-coach-breakdown';
+    var finalDecEl = document.querySelector('#trialist-profile-modal .ptr-section:last-of-type');
+    if (finalDecEl) finalDecEl.insertAdjacentElement('beforebegin', bdWrap);
+  }
+  bdWrap.innerHTML = breakdownHtml;
+
   document.getElementById('trialist-profile-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeTrialistProfile() {
-  document.getElementById('trialist-profile-modal').classList.remove('open');
   document.body.style.overflow = '';
   activeTrialistId = null;
   if (trialDetailTab === 'trialists') renderTrialistsList();
@@ -5281,51 +5257,7 @@ function setAttNote(input, slotIdx) {
   input.dataset.slot = slotIdx;
 }
 
-function saveSession() {
-  var date = document.getElementById('session-date').value;
-  if (!date) { showSync('Please select a date', 2000); return; }
 
-  var label = document.getElementById('session-label').value.trim();
-  var attendance = {};
-  var notes = {};
-
-  document.querySelectorAll('.tr-att-btn.selected').forEach(function(btn) {
-    var slot = parseInt(btn.closest('.tr-att-row').querySelector('.tr-att-btn.selected').closest('.tr-att-row').querySelector('.tr-att-num').parentElement.dataset ? 0 : 0);
-    // Get slot from row index
-  });
-
-  // Collect attendance from rows
-  document.querySelectorAll('.tr-att-row').forEach(function(row) {
-    var numEl = row.querySelector('.tr-att-num');
-    if (!numEl) return;
-    var slotIdx = parseInt(numEl.textContent) - 1;
-    var selectedBtn = row.querySelector('.tr-att-btn.selected');
-    if (selectedBtn) {
-      ATT_STATUSES.forEach(function(s, si) {
-        if (row.querySelectorAll('.tr-att-btn')[si] === selectedBtn) {
-          attendance[slotIdx] = s;
-        }
-      });
-    }
-    var noteInput = row.querySelector('.tr-att-note-input');
-    if (noteInput && noteInput.value.trim()) notes[slotIdx] = noteInput.value.trim();
-  });
-
-  if (editingSessionId) {
-    var idx = trainingSessions.findIndex(function(s) { return s.id === editingSessionId; });
-    if (idx >= 0) {
-      trainingSessions[idx] = Object.assign(trainingSessions[idx], { date, label, attendance, notes });
-    }
-  } else {
-    trainingSessions.push({ id: Date.now(), date, label, attendance, notes, season: trainingSeason });
-  }
-
-  saveTraining();
-  closeNewSession();
-  renderSessionList();
-  updateAttendanceBadges();
-  showSync('✓ Session saved', 2000);
-}
 
 // ── PLAYERS VIEW ──────────────────────────────────
 function renderTrainingPlayersList() {
@@ -5987,14 +5919,7 @@ function closeWellnessModal() {
   document.body.style.overflow = '';
 }
 
-function copyWellnessLink() {
-  var text = document.getElementById('wellness-link-text').textContent;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function() { vaFlash('Link copied!'); }).catch(function() {});
-  } else {
-    window.prompt('Copy this link:', text);
-  }
-}
+
 
 function renderWellnessDashboard(date) {
   var container = document.getElementById('wellness-dashboard');
@@ -6318,6 +6243,369 @@ function savePublicSquad() {
 // Check for wellness param on load (called from DOMContentLoaded)
 function initWellnessCheck() {
   return checkWellnessParam();
+}
+
+// ── MULTI-COACH TRIAL GRADING ─────────────────────────────────────────
+
+var tgsUserId = null;
+var tgsTrialId = null;
+var tgsSessionId = null;
+var tgsTrialists = [];
+var tgsGrades = {};
+
+// ── SHARE GRADING LINK ────────────────────────────
+function copyTrialGradingLink(sessionId) {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  var baseUrl = window.location.origin + window.location.pathname;
+  var link = baseUrl + '?trialgrade=' + (currentUser ? currentUser.id : '') +
+    '&trialId=' + trial.id + '&sessionId=' + sessionId;
+
+  // Also sync trial to shared_trials so coaches can read trialist list
+  syncTrialToShared();
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function() {
+      vaFlash('Grading link copied!');
+    }).catch(function() { window.prompt('Copy grading link:', link); });
+  } else {
+    window.prompt('Copy grading link:', link);
+  }
+}
+
+function syncTrialToShared() {
+  if (!currentUser || !currentToken) return;
+  var trial = getActiveTrial();
+  if (!trial) return;
+
+  supaDB('shared_trials?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var existing = (data && data.length && data[0].trials) ? data[0].trials : [];
+      var idx = existing.findIndex(function(t) { return t.id === trial.id; });
+      // Store trialist names + session shells (no grades — those come from submissions)
+      var sharedTrial = {
+        id: trial.id,
+        name: trial.name,
+        season: trial.season,
+        trialists: trial.trialists.map(function(t) {
+          return { id: t.id, name: t.name, pos: t.pos || '', ageGroup: t.ageGroup || '' };
+        }),
+        sessions: trial.sessions.map(function(s) {
+          return { id: s.id, date: s.date, label: s.label || '' };
+        })
+      };
+      if (idx >= 0) existing[idx] = sharedTrial;
+      else existing.push(sharedTrial);
+
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'shared_trials?user_id=eq.' + currentUser.id : 'shared_trials';
+      return supaDB(path, method, { user_id: currentUser.id, trials: existing }, currentToken);
+    }).catch(function() {});
+}
+
+// ── MERGE SHARED GRADES INTO LOCAL TRIAL ──────────
+function mergeSharedGrades() {
+  var trial = getActiveTrial();
+  if (!trial || !currentUser || !currentToken) return;
+
+  supaDB('shared_trials?user_id=eq.' + currentUser.id + '&select=trials', 'GET', null, currentToken)
+    .then(function(data) {
+      if (!data || !data.length || !data[0].trials) return;
+      var sharedTrial = data[0].trials.find(function(t) { return t.id === trial.id; });
+      if (!sharedTrial || !sharedTrial.sessions) return;
+
+      // Merge shared grades into local trial sessions
+      sharedTrial.sessions.forEach(function(sharedSession) {
+        var localSession = trial.sessions.find(function(s) { return s.id === sharedSession.id; });
+        if (!localSession || !sharedSession.grades) return;
+        if (!localSession.sharedGrades) localSession.sharedGrades = {};
+        Object.keys(sharedSession.grades).forEach(function(tid) {
+          localSession.sharedGrades[tid] = sharedSession.grades[tid];
+        });
+      });
+
+      saveTrials();
+      if (trialDetailTab === 'sessions') renderTrialSessions();
+      if (trialDetailTab === 'leaderboard') renderTrialLeaderboard();
+      showSync('✓ Grades synced', 1500);
+    }).catch(function() {});
+}
+
+// ── UPDATED renderTrialSessions with share + sync buttons ──
+function renderTrialSessions() {
+  var container = document.getElementById('trial-sessions-list');
+  if (!container) return;
+  var trial = getActiveTrial();
+  if (!trial || !trial.sessions.length) {
+    container.innerHTML = '<div class="trial-empty">No sessions yet — tap + New Session to start grading</div>';
+    return;
+  }
+
+  // Add sync button at top
+  var html = '<button class="trial-sync-btn" onclick="mergeSharedGrades()">🔄 Sync Co-Coach Grades</button>';
+
+  var sessions = trial.sessions.slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+  html += sessions.map(function(s) {
+    var gradedCount = Object.values(s.grades || {}).filter(function(g) { return g.attended && g.overall; }).length;
+    var sharedCount = s.sharedGrades ? Object.keys(s.sharedGrades).filter(function(tid) {
+      return s.sharedGrades[tid].submissions && s.sharedGrades[tid].submissions.length > 0;
+    }).length : 0;
+    var coachCount = s.sharedGrades ? new Set(
+      Object.values(s.sharedGrades).flatMap(function(g) {
+        return (g.submissions || []).map(function(sub) { return sub.coachName; });
+      })
+    ).size : 0;
+    var dateStr = new Date(s.date).toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
+    return '<div class="trial-session-card" onclick="openTrialSessionGrading(' + s.id + ')">' +
+      '<div style="flex:1;">' +
+        '<div class="tsc-date">' + dateStr + '</div>' +
+        (s.label ? '<div class="tsc-label">' + s.label + '</div>' : '') +
+      '</div>' +
+      '<span class="tsc-graded">' + gradedCount + ' graded</span>' +
+      (coachCount > 0 ? '<span class="tsc-graded" style="background:rgba(68,136,255,0.1);color:#6699ff;">👥 ' + coachCount + ' coach' + (coachCount!==1?'es':'') + '</span>' : '') +
+      '<button class="tsc-share-btn" onclick="event.stopPropagation();copyTrialGradingLink(' + s.id + ')" title="Share grading link">📤</button>' +
+    '</div>';
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+// ── UPDATED getTrialistAvg to include shared grades ──
+function getTrialistAvg(trialistId) {
+  var trial = getActiveTrial();
+  if (!trial) return null;
+  var scores = [];
+
+  (trial.sessions || []).forEach(function(s) {
+    // Head coach's own grade
+    var g = s.grades && s.grades[trialistId];
+    if (g && g.attended && g.overall) scores.push(g.overall);
+
+    // Co-coach shared grades
+    var sg = s.sharedGrades && s.sharedGrades[trialistId];
+    if (sg && sg.submissions) {
+      sg.submissions.forEach(function(sub) {
+        if (sub.attended && sub.overall) scores.push(sub.overall);
+      });
+    }
+  });
+
+  if (!scores.length) return null;
+  return scores.reduce(function(a,b) { return a+b; }, 0) / scores.length;
+}
+
+// ── UPDATED openTrialistProfile to show per-coach grades ──
+function renderTrialistCoachBreakdown(trialistId) {
+  var trial = getActiveTrial();
+  if (!trial) return '';
+
+  var coachGrades = {}; // coachName -> [scores]
+  (trial.sessions || []).forEach(function(s) {
+    var dateStr = new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    // Head coach's grade
+    var g = s.grades && s.grades[trialistId];
+    if (g && g.attended && g.overall) {
+      if (!coachGrades['Head Coach']) coachGrades['Head Coach'] = [];
+      coachGrades['Head Coach'].push({ score: g.overall, date: dateStr });
+    }
+    // Co-coach grades
+    var sg = s.sharedGrades && s.sharedGrades[trialistId];
+    if (sg && sg.submissions) {
+      sg.submissions.forEach(function(sub) {
+        if (sub.attended && sub.overall) {
+          if (!coachGrades[sub.coachName]) coachGrades[sub.coachName] = [];
+          coachGrades[sub.coachName].push({ score: sub.overall, date: dateStr });
+        }
+      });
+    }
+  });
+
+  var coaches = Object.keys(coachGrades);
+  if (coaches.length <= 1) return ''; // Only one coach, no breakdown needed
+
+  var html = '<div class="ptr-section"><div class="ptr-section-title">Coach Breakdown</div>';
+  coaches.forEach(function(coach) {
+    var scores = coachGrades[coach];
+    var avg = scores.reduce(function(a,b) { return a+b.score; }, 0) / scores.length;
+    var scoreClass = avg >= 7 ? 'positive' : avg >= 5 ? '' : 'negative';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+      '<div style="flex:1;font-size:12px;color:var(--cream);">' + coach + '</div>' +
+      '<div style="display:flex;gap:4px;">' +
+        scores.map(function(s) {
+          var sc = s.score >= 7 ? 'high' : s.score >= 5 ? 'mid' : 'low';
+          return '<span style="font-family:\'Oswald\',sans-serif;font-size:11px;color:var(--muted);">' + s.date + ' <span class="trial-lb-score ' + sc + '" style="font-size:14px;">' + s.score + '</span></span>';
+        }).join('') +
+      '</div>' +
+      '<div class="psc-perf-score ' + scoreClass + '" style="font-size:16px;">' + avg.toFixed(1) + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ── PLAYER-FACING TRIAL GRADING SCREEN ────────────
+function checkTrialGradeParam() {
+  var params = new URLSearchParams(window.location.search);
+  var userId = params.get('trialgrade');
+  if (!userId) return false;
+
+  tgsUserId = userId;
+  tgsTrialId = params.get('trialId') ? parseInt(params.get('trialId')) : null;
+  tgsSessionId = params.get('sessionId') ? parseInt(params.get('sessionId')) : null;
+
+  // Hide main app
+  document.querySelectorAll('.page,.topbar,.bottom-nav,#user-badge,#trial-banner').forEach(function(el) {
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('trial-grading-screen').style.display = 'block';
+  document.body.style.background = '#0a0505';
+
+  loadSharedTrialForGrading();
+  return true;
+}
+
+function loadSharedTrialForGrading() {
+  fetch(SUPA_URL + '/rest/v1/shared_trials?user_id=eq.' + tgsUserId + '&select=trials', {
+    headers: { 'apikey': SUPA_ANON_KEY, 'Authorization': 'Bearer ' + SUPA_ANON_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data || !data.length) { showTgsError('Trial not found.'); return; }
+    var trial = (data[0].trials || []).find(function(t) { return t.id === tgsTrialId; });
+    if (!trial) { showTgsError('Trial not found. Ask your head coach to reshare the link.'); return; }
+    var session = (trial.sessions || []).find(function(s) { return s.id === tgsSessionId; });
+    if (!session) { showTgsError('Session not found.'); return; }
+
+    tgsTrialists = trial.trialists || [];
+    renderTrialGradingForm(trial, session);
+  })
+  .catch(function() { showTgsError('Could not load trial. Check your connection.'); });
+}
+
+function showTgsError(msg) {
+  document.getElementById('tgs-loading').style.display = 'none';
+  document.getElementById('tgs-error').style.display = 'block';
+  document.getElementById('tgs-error-msg').textContent = msg;
+}
+
+function renderTrialGradingForm(trial, session) {
+  document.getElementById('tgs-loading').style.display = 'none';
+  document.getElementById('tgs-form').style.display = 'block';
+  document.getElementById('tgs-trial-name').textContent = trial.name;
+  var dateStr = new Date(session.date + 'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('tgs-session-label').textContent = (session.label ? session.label + ' · ' : '') + dateStr;
+
+  tgsGrades = {};
+
+  var html = tgsTrialists.map(function(t) {
+    var scoreDots = Array.from({length:10}, function(_,i) {
+      var fc = ' '; // filled class placeholder
+      return '<div class="grading-score-dot" onclick="tgsSetScore(this,' + t.id + ',' + (i+1) + ')" style="width:32px;height:32px;">' + (i+1) + '</div>';
+    }).join('');
+
+    return '<div class="grading-row tgs-trialist-row" data-trialist="' + t.id + '" style="padding:14px 0;">' +
+      '<div class="grading-name-row">' +
+        '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
+        '<div class="grading-att-toggle">' +
+          '<button class="grading-att-btn active" onclick="tgsSetAtt(this,' + t.id + ',true)">✅ Present</button>' +
+          '<button class="grading-att-btn" onclick="tgsSetAtt(this,' + t.id + ',false)">❌ Absent</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-family:\'Oswald\',sans-serif;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Grade (1–10)</div>' +
+      '<div class="grading-score-row" id="tgscore-' + t.id + '">' + scoreDots + '</div>' +
+      '<div class="grading-invited-row">' +
+        '<button class="grading-invited-btn yes-active" onclick="tgsSetInvite(this,' + t.id + ',true)">✅ Invite Back</button>' +
+        '<button class="grading-invited-btn" onclick="tgsSetInvite(this,' + t.id + ',\'maybe\')">🤔 Maybe</button>' +
+        '<button class="grading-invited-btn" onclick="tgsSetInvite(this,' + t.id + ',false)">❌ Not Invited</button>' +
+      '</div>' +
+      '<input class="grading-note-input" placeholder="Notes on ' + t.name + '..." style="margin-top:4px;">' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('tgs-trialists').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted);">No trialists found</div>';
+
+  // Init grades with defaults
+  tgsTrialists.forEach(function(t) {
+    tgsGrades[t.id] = { attended: true, overall: 0, invitedBack: true, notes: '' };
+  });
+}
+
+function tgsSetScore(dot, trialistId, score) {
+  var row = document.getElementById('tgscore-' + trialistId);
+  if (!row) return;
+  row.querySelectorAll('.grading-score-dot').forEach(function(d, i) {
+    d.className = 'grading-score-dot' + (i < score ? ' f' + (i+1) : '');
+  });
+  if (!tgsGrades[trialistId]) tgsGrades[trialistId] = {};
+  tgsGrades[trialistId].overall = score;
+}
+
+function tgsSetAtt(btn, trialistId, present) {
+  var row = btn.closest('.tgs-trialist-row');
+  row.querySelectorAll('.grading-att-btn').forEach(function(b) { b.className = 'grading-att-btn'; });
+  btn.className = 'grading-att-btn ' + (present ? 'active' : 'absent-active');
+  if (!tgsGrades[trialistId]) tgsGrades[trialistId] = {};
+  tgsGrades[trialistId].attended = present;
+}
+
+function tgsSetInvite(btn, trialistId, value) {
+  var row = btn.closest('.grading-invited-row');
+  row.querySelectorAll('.grading-invited-btn').forEach(function(b) { b.className = 'grading-invited-btn'; });
+  var cls = value === true ? 'yes-active' : value === false ? 'no-active' : 'maybe-active';
+  btn.className = 'grading-invited-btn ' + cls;
+  if (!tgsGrades[trialistId]) tgsGrades[trialistId] = {};
+  tgsGrades[trialistId].invitedBack = value;
+}
+
+function submitTrialGrades() {
+  var coachName = document.getElementById('tgs-coach-name').value.trim();
+  if (!coachName) { alert('Please enter your name'); return; }
+
+  // Collect notes from inputs
+  document.querySelectorAll('.tgs-trialist-row').forEach(function(row) {
+    var tid = parseInt(row.dataset.trialist);
+    var noteInput = row.querySelector('.grading-note-input');
+    if (noteInput && tgsGrades[tid]) tgsGrades[tid].notes = noteInput.value.trim();
+  });
+
+  var btn = document.getElementById('tgs-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  fetch('/.netlify/functions/trial-grade', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: tgsUserId,
+      trialId: tgsTrialId,
+      sessionId: tgsSessionId,
+      coachName: coachName,
+      grades: tgsGrades
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      document.getElementById('tgs-form').style.display = 'none';
+      document.getElementById('tgs-success').style.display = 'block';
+      document.getElementById('tgs-success-msg').textContent =
+        'Grades from ' + coachName + ' sent to the head coach. ' + tgsTrialists.length + ' trialist' + (tgsTrialists.length!==1?'s':'') + ' graded.';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Submit Grades';
+      alert('Submission failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'Submit Grades';
+    alert('Network error. Please try again.');
+  });
+}
+
+// Init check
+function initTrialGradeCheck() {
+  return checkTrialGradeParam();
 }
 
 function openEventSettings() {
@@ -9033,19 +9321,7 @@ function testConnection() {
 }
 
 // ── AUTH TAB SWITCHER ──────────────────────────────
-function switchAuthTab(tab) {
-  authTab = tab;
-  var isRegister = tab === 'register';
-  document.getElementById('tab-signin').style.background = isRegister ? 'rgba(255,255,255,0.04)' : '#e03030';
-  document.getElementById('tab-signin').style.color = isRegister ? 'rgba(245,232,232,0.5)' : '#fff';
-  document.getElementById('tab-register').style.background = isRegister ? '#e03030' : 'rgba(255,255,255,0.04)';
-  document.getElementById('tab-register').style.color = isRegister ? '#fff' : 'rgba(245,232,232,0.5)';
-  document.getElementById('register-name-field').style.display = isRegister ? '' : 'none';
-  document.getElementById('login-btn').textContent = isRegister ? 'Create Account' : 'Sign In';
-  document.getElementById('forgot-link').style.display = isRegister ? 'none' : '';
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('login-success').style.display = 'none';
-}
+
 
 // ── ATTEMPT LOGIN / REGISTER ───────────────────────
 function attemptLogin() {
@@ -9701,7 +9977,9 @@ function syncClubSquad() {
 var _origSaveSquad = null;
 document.addEventListener('DOMContentLoaded', function() {
   // Check for player wellness self-report URL first
-  if (initWellnessCheck()) return; // Stop normal app init if wellness mode
+  if (initWellnessCheck()) return;
+  // Check for trial grading URL
+  if (initTrialGradeCheck()) return;
 
   initSupabase();
   checkSession();
@@ -10896,6 +11174,50 @@ window.addEventListener('resize', function() {
       <div style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:2px;color:var(--cream);text-transform:uppercase;" id="pws-success-name">Thanks!</div>
       <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">Your coach has your readiness scores.<br>See you at training!</div>
       <div class="pws-scores-summary" id="pws-scores-summary"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TRIAL GRADING SCREEN (shareable link, no login needed) -->
+<div id="trial-grading-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:#0a0505;overflow-y:auto;font-family:'Inter',sans-serif;">
+  <div class="pw-screen-inner">
+
+    <div id="tgs-loading" style="text-align:center;padding:60px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;">🧪</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--cream);text-transform:uppercase;">Coach Stats</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Loading trial session...</div>
+    </div>
+
+    <div id="tgs-error" style="display:none;text-align:center;padding:60px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;">⚠️</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--red-light);text-transform:uppercase;">Link Invalid</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;" id="tgs-error-msg">This grading link has expired or is invalid.</div>
+    </div>
+
+    <div id="tgs-form" style="display:none;">
+      <div class="pws-header">
+        <div style="font-size:32px;margin-bottom:8px;">🧪</div>
+        <div class="pws-title" id="tgs-trial-name">Trial Grading</div>
+        <div class="pws-date" id="tgs-session-label"></div>
+      </div>
+
+      <!-- Coach name -->
+      <div class="pws-section">
+        <div class="pws-label">Your Name (Coach)</div>
+        <input type="text" id="tgs-coach-name" class="pws-note-input" placeholder="Enter your name..." style="font-size:16px;">
+      </div>
+
+      <!-- Trialist grades -->
+      <div id="tgs-trialists"></div>
+
+      <button class="pws-submit-btn" onclick="submitTrialGrades()" id="tgs-submit-btn">Submit Grades</button>
+    </div>
+
+    <div id="tgs-success" style="display:none;text-align:center;padding:60px 20px;">
+      <div style="font-size:60px;margin-bottom:16px;">✅</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:2px;color:var(--cream);text-transform:uppercase;">Grades Submitted!</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;" id="tgs-success-msg">Your grades have been sent to the head coach.</div>
     </div>
 
   </div>
