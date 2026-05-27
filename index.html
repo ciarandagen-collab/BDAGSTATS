@@ -1191,6 +1191,85 @@ select option { background:#1a0505; }
 .nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
 .nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
+/* ── TRIAL SYSTEM ─────────────────────────────────── */
+.trial-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; padding:14px; cursor:pointer; }
+.trial-card:active { background:rgba(224,48,48,0.06); }
+.trial-card-name { font-family:'Oswald',sans-serif; font-size:14px; font-weight:600; color:var(--cream); }
+.trial-card-meta { font-size:11px; color:var(--muted); margin-top:4px; }
+.trial-card-status { display:inline-block; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; font-family:'Oswald',sans-serif; padding:2px 8px; border-radius:10px; margin-top:6px; }
+.trial-card-status.active { background:rgba(34,197,94,0.12); color:var(--green); }
+.trial-card-status.complete { background:rgba(255,255,255,0.06); color:var(--muted); }
+.trial-empty { text-align:center; padding:32px 16px; color:var(--muted); font-size:13px; font-style:italic; }
+.trial-detail-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.trial-back-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:rgba(245,232,232,0.7); font-size:12px; cursor:pointer; padding:6px 12px; border-radius:6px; font-family:'Oswald',sans-serif; letter-spacing:1px; flex-shrink:0; }
+.trial-detail-title-wrap { flex:1; min-width:0; }
+.trial-detail-name { font-family:'Oswald',sans-serif; font-size:14px; font-weight:600; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.trial-detail-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+.trial-menu-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:var(--cream); font-size:18px; cursor:pointer; padding:4px 10px; border-radius:6px; flex-shrink:0; }
+.trial-detail-tabs { display:flex; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:12px; }
+.trial-dtab { flex:1; padding:9px 6px; background:transparent; border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; }
+.trial-dtab.active { background:rgba(224,48,48,0.15); color:var(--cream); }
+.trial-session-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; padding:12px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; }
+.trial-session-card:active { background:rgba(224,48,48,0.06); }
+.tsc-date { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); flex:1; }
+.tsc-label { font-size:11px; color:var(--muted); }
+.tsc-graded { font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(34,197,94,0.1); color:var(--green); }
+.trial-trialist-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.trial-trialist-row:active { background:rgba(224,48,48,0.06); }
+.ttr-name { flex:1; }
+.ttr-name-main { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
+.ttr-pos { font-size:10px; color:var(--muted); }
+.ttr-grade { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; color:var(--red-light); flex-shrink:0; min-width:36px; text-align:right; }
+.ttr-invited { font-size:16px; flex-shrink:0; }
+.ttr-decision { font-size:10px; padding:2px 8px; border-radius:10px; flex-shrink:0; font-family:'Oswald',sans-serif; letter-spacing:1px; }
+.ttr-decision.promote { background:rgba(34,197,94,0.12); color:var(--green); }
+.ttr-decision.holdover { background:rgba(245,166,35,0.12); color:#f5a623; }
+.ttr-decision.release { background:rgba(255,80,80,0.1); color:var(--red-light); }
+.grading-row { padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.grading-row:last-child { border-bottom:none; }
+.grading-name-row { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+.grading-att-toggle { display:flex; gap:6px; margin-bottom:8px; }
+.grading-att-btn { padding:5px 12px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; }
+.grading-att-btn.active { background:rgba(34,197,94,0.15); border-color:var(--green); color:var(--green); }
+.grading-att-btn.absent-active { background:rgba(255,80,80,0.1); border-color:var(--red-light); color:var(--red-light); }
+.grading-score-row { display:flex; gap:3px; margin-bottom:8px; flex-wrap:wrap; }
+.grading-score-dot { width:28px; height:28px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; font-family:'Oswald',sans-serif; font-size:11px; color:var(--muted); display:flex; align-items:center; justify-content:center; transition:all 0.1s; flex-shrink:0; }
+.grading-score-dot.f1,.grading-score-dot.f2,.grading-score-dot.f3 { background:#ef4444; border-color:#ef4444; color:#fff; }
+.grading-score-dot.f4,.grading-score-dot.f5,.grading-score-dot.f6 { background:#f59e0b; border-color:#f59e0b; color:#fff; }
+.grading-score-dot.f7,.grading-score-dot.f8 { background:#22c55e; border-color:#22c55e; color:#fff; }
+.grading-score-dot.f9,.grading-score-dot.f10 { background:#10b981; border-color:#10b981; color:#fff; }
+.grading-invited-row { display:flex; gap:6px; margin-bottom:8px; }
+.grading-invited-btn { padding:5px 10px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; flex:1; text-align:center; }
+.grading-invited-btn.yes-active { background:rgba(34,197,94,0.15); border-color:var(--green); color:var(--green); }
+.grading-invited-btn.no-active { background:rgba(255,80,80,0.1); border-color:var(--red-light); color:var(--red-light); }
+.grading-invited-btn.maybe-active { background:rgba(245,166,35,0.1); border-color:#f5a623; color:#f5a623; }
+.grading-note-input { width:100%; padding:7px 10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:7px; color:var(--cream); font-size:12px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.trial-lb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.trial-lb-note { font-size:11px; color:var(--muted); font-style:italic; }
+.trial-report-btn { padding:7px 12px; background:rgba(224,48,48,0.12); border:1px solid rgba(224,48,48,0.25); border-radius:7px; color:var(--red-light); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; }
+.trial-lb-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.trial-lb-row:active { background:rgba(224,48,48,0.06); }
+.trial-lb-rank { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; color:var(--muted); width:28px; flex-shrink:0; text-align:center; }
+.trial-lb-rank.top3 { color:var(--gold); }
+.trial-lb-info { flex:1; }
+.trial-lb-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
+.trial-lb-detail { font-size:10px; color:var(--muted); margin-top:2px; }
+.trial-lb-score { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; flex-shrink:0; }
+.trial-lb-score.high { color:var(--green); }
+.trial-lb-score.mid { color:#f5a623; }
+.trial-lb-score.low { color:var(--red-light); }
+.trial-build-squad-btn { width:100%; padding:13px; background:linear-gradient(135deg,rgba(153,27,27,0.2),rgba(224,48,48,0.1)); border:1px solid rgba(224,48,48,0.3); border-radius:12px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:12px; }
+.trial-menu-action { width:100%; padding:14px 16px; background:transparent; border:none; border-bottom:1px solid var(--border); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; cursor:pointer; text-align:left; }
+.trial-menu-action:last-child { border-bottom:none; }
+.trial-menu-action.danger { color:var(--red-light); }
+.build-squad-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; }
+.bsr-check { width:22px; height:22px; border-radius:4px; border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.bsr-check.checked { background:var(--red); border-color:var(--red); color:#fff; }
+.bsr-info { flex:1; }
+.bsr-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
+.bsr-grade { font-size:10px; color:var(--muted); }
+.bsr-slot-select { padding:6px 8px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:6px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:10px; outline:none; }
+
 /* ── TRAINING ─────────────────────────────────────── */
 .training-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
 .training-season-sel { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; padding:7px 10px; outline:none; }
@@ -2065,6 +2144,7 @@ select option { background:#1a0505; }
       <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 Squad</button>
       <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Stats</button>
       <button class="squad-sub-btn" id="squad-tab-training" onclick="switchSquadTab('training',this)">🏃 Training</button>
+      <button class="squad-sub-btn" id="squad-tab-trial" onclick="switchSquadTab('trial',this)">🧪 Trial</button>
       <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
       <button class="squad-sub-btn" id="squad-tab-print" onclick="switchSquadTab('print',this)">🖨️ Sheet</button>
     </div>
@@ -2082,6 +2162,50 @@ select option { background:#1a0505; }
     </div>
 
     <!-- TIMELINE -->
+    <!-- TRIAL VIEW -->
+    <div id="squad-view-trial" style="display:none">
+      <!-- Trial list screen -->
+      <div id="trial-list-screen">
+        <button class="training-new-btn" onclick="openNewTrial()">+ New Trial</button>
+        <div id="trial-list-container"></div>
+      </div>
+      <!-- Trial detail screen (shown when a trial is open) -->
+      <div id="trial-detail-screen" style="display:none">
+        <div class="trial-detail-header">
+          <button class="trial-back-btn" onclick="closeTrialDetail()">← Trials</button>
+          <div class="trial-detail-title-wrap">
+            <div class="trial-detail-name" id="trial-detail-name"></div>
+            <div class="trial-detail-meta" id="trial-detail-meta"></div>
+          </div>
+          <button class="trial-menu-btn" onclick="openTrialMenu()">⋯</button>
+        </div>
+        <div class="trial-detail-tabs">
+          <button class="trial-dtab active" id="tdtab-sessions" onclick="switchTrialDetailTab('sessions')">Sessions</button>
+          <button class="trial-dtab" id="tdtab-trialists" onclick="switchTrialDetailTab('trialists')">Trialists</button>
+          <button class="trial-dtab" id="tdtab-leaderboard" onclick="switchTrialDetailTab('leaderboard')">Rankings</button>
+        </div>
+        <!-- Sessions sub-view -->
+        <div id="trial-sessions-panel">
+          <button class="training-new-btn" onclick="openNewTrialSession()">+ New Session</button>
+          <div id="trial-sessions-list"></div>
+        </div>
+        <!-- Trialists sub-view -->
+        <div id="trial-trialists-panel" style="display:none">
+          <button class="training-new-btn" onclick="openAddTrialist()">+ Add Trialist</button>
+          <div id="trial-trialists-list"></div>
+        </div>
+        <!-- Rankings sub-view -->
+        <div id="trial-leaderboard-panel" style="display:none">
+          <div class="trial-lb-header">
+            <div class="trial-lb-note">Ranked by average grade across all attended sessions</div>
+            <button class="trial-report-btn" onclick="generateTrialReport()">📄 PDF Report</button>
+          </div>
+          <div id="trial-leaderboard-list"></div>
+          <button class="trial-build-squad-btn" id="trial-build-squad-btn" onclick="openBuildSquad()" style="display:none;">🏆 Build Squad from Trial</button>
+        </div>
+      </div>
+    </div>
+
     <!-- TRAINING VIEW -->
     <div id="squad-view-training" style="display:none">
 
@@ -3121,7 +3245,7 @@ function setHalf(h) {
 
 // ── TEAM SHEET ─────────────────────────────────────
 function switchSquadTab(tab, btn) {
-  var tabs = ['squad','stats','training','timeline','print'];
+  var tabs = ['squad','stats','training','trial','timeline','print'];
   tabs.forEach(function(t) {
     var view = document.getElementById('squad-view-' + t);
     var tabBtn = document.getElementById('squad-tab-' + t);
@@ -3130,6 +3254,7 @@ function switchSquadTab(tab, btn) {
   });
   if (tab === 'stats') renderPlayerStats();
   if (tab === 'training') initTrainingTab();
+  if (tab === 'trial') initTrialTab();
   if (tab === 'print') renderTeamSheet();
 }
 
@@ -4158,6 +4283,730 @@ function calcPlayerPerformance(playerStats) {
 
 // ── SETTINGS UI ───────────────────────────────────
 var settingsTab = 'events';
+
+// ── TRIAL SYSTEM ──────────────────────────────────────────────────────
+
+const TRIAL_KEY = 'cs_trials';
+var trials = [];
+var activeTrialId = null;
+var trialDetailTab = 'sessions';
+var editingTrialSessionId = null;
+var activeTrialistId = null;
+
+function loadTrials() {
+  try { trials = JSON.parse(localStorage.getItem(TRIAL_KEY) || '[]'); }
+  catch(e) { trials = []; }
+}
+
+function saveTrials() {
+  try { localStorage.setItem(TRIAL_KEY, JSON.stringify(trials)); } catch(e) {}
+  syncTrialsToSupabase();
+}
+
+function syncTrialsToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('trial_data?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'trial_data?user_id=eq.' + currentUser.id : 'trial_data';
+      return supaDB(path, method, { user_id: currentUser.id, trials: trials }, currentToken);
+    }).catch(function() {});
+}
+
+function loadTrialsFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('trial_data?user_id=eq.' + currentUser.id + '&select=trials', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].trials) {
+        trials = data[0].trials;
+        try { localStorage.setItem(TRIAL_KEY, JSON.stringify(trials)); } catch(e) {}
+      }
+    }).catch(function() {});
+}
+
+function getActiveTrial() {
+  return trials.find(function(t) { return t.id === activeTrialId; });
+}
+
+// ── TRIAL LIST ────────────────────────────────────
+function initTrialTab() {
+  loadTrials();
+  renderTrialList();
+}
+
+function renderTrialList() {
+  var container = document.getElementById('trial-list-container');
+  if (!container) return;
+  if (!trials.length) {
+    container.innerHTML = '<div class="trial-empty">No trials yet<br><span style="font-size:11px">Tap + New Trial to start a player evaluation process</span></div>';
+    return;
+  }
+  container.innerHTML = trials.slice().sort(function(a,b) {
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (b.status === 'active' && a.status !== 'active') return 1;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  }).map(function(t) {
+    var sessionCount = (t.sessions || []).length;
+    var trialistCount = (t.trialists || []).length;
+    return '<div class="trial-card" onclick="openTrialDetail(' + t.id + ')">' +
+      '<div class="trial-card-name">' + t.name + '</div>' +
+      '<div class="trial-card-meta">' + t.season + ' · ' + trialistCount + ' trialist' + (trialistCount !== 1 ? 's' : '') + ' · ' + sessionCount + ' session' + (sessionCount !== 1 ? 's' : '') + '</div>' +
+      '<div class="trial-card-status ' + t.status + '">' + t.status + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── NEW TRIAL ─────────────────────────────────────
+function openNewTrial() {
+  document.getElementById('new-trial-name').value = '';
+  document.getElementById('new-trial-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('new-trial-season').value = getCurrentSeason();
+  document.getElementById('new-trial-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNewTrial() {
+  document.getElementById('new-trial-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function saveTrial() {
+  var name = document.getElementById('new-trial-name').value.trim();
+  if (!name) { showSync('Please enter a trial name', 2000); return; }
+  var trial = {
+    id: Date.now(),
+    name: name,
+    createdAt: document.getElementById('new-trial-date').value,
+    season: document.getElementById('new-trial-season').value.trim() || getCurrentSeason(),
+    status: 'active',
+    sessions: [],
+    trialists: []
+  };
+  trials.unshift(trial);
+  saveTrials();
+  closeNewTrial();
+  openTrialDetail(trial.id);
+}
+
+// ── TRIAL DETAIL ──────────────────────────────────
+function openTrialDetail(id) {
+  activeTrialId = id;
+  var trial = getActiveTrial();
+  if (!trial) return;
+  document.getElementById('trial-detail-name').textContent = trial.name;
+  document.getElementById('trial-detail-meta').textContent = trial.season + ' · ' + (trial.trialists||[]).length + ' trialists · ' + (trial.sessions||[]).length + ' sessions';
+  document.getElementById('trial-list-screen').style.display = 'none';
+  document.getElementById('trial-detail-screen').style.display = '';
+  switchTrialDetailTab('sessions');
+}
+
+function closeTrialDetail() {
+  activeTrialId = null;
+  document.getElementById('trial-list-screen').style.display = '';
+  document.getElementById('trial-detail-screen').style.display = 'none';
+  renderTrialList();
+}
+
+function switchTrialDetailTab(tab) {
+  trialDetailTab = tab;
+  ['sessions','trialists','leaderboard'].forEach(function(t) {
+    var panel = document.getElementById('trial-' + t + '-panel');
+    var btn = document.getElementById('tdtab-' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'sessions') renderTrialSessions();
+  if (tab === 'trialists') renderTrialistsList();
+  if (tab === 'leaderboard') renderTrialLeaderboard();
+}
+
+// ── TRIAL MENU ────────────────────────────────────
+function openTrialMenu() {
+  document.getElementById('trial-menu-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTrialMenu() {
+  document.getElementById('trial-menu-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function toggleTrialStatus() {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  trial.status = trial.status === 'active' ? 'complete' : 'active';
+  saveTrials();
+  closeTrialMenu();
+  document.getElementById('trial-detail-meta').textContent = trial.season + ' · ' + (trial.trialists||[]).length + ' trialists · ' + (trial.sessions||[]).length + ' sessions';
+  showSync('Trial marked as ' + trial.status, 2000);
+}
+function deleteTrial() {
+  if (!confirm('Delete this trial? This cannot be undone.')) return;
+  trials = trials.filter(function(t) { return t.id !== activeTrialId; });
+  saveTrials();
+  closeTrialMenu();
+  closeTrialDetail();
+}
+
+// ── TRIALISTS ─────────────────────────────────────
+function openAddTrialist() {
+  document.getElementById('trialist-name').value = '';
+  document.getElementById('trialist-pos').value = '';
+  document.getElementById('trialist-age').value = '';
+  document.getElementById('add-trialist-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAddTrialist() {
+  document.getElementById('add-trialist-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function saveTrialist() {
+  var name = document.getElementById('trialist-name').value.trim();
+  if (!name) { showSync('Please enter a player name', 2000); return; }
+  var trial = getActiveTrial();
+  if (!trial) return;
+  trial.trialists.push({
+    id: Date.now(),
+    name: name,
+    pos: document.getElementById('trialist-pos').value,
+    ageGroup: document.getElementById('trialist-age').value.trim(),
+    finalDecision: null,
+    promotedToSlot: null
+  });
+  saveTrials();
+  closeAddTrialist();
+  renderTrialistsList();
+  showSync('✓ Trialist added', 1500);
+}
+
+function renderTrialistsList() {
+  var container = document.getElementById('trial-trialists-list');
+  if (!container) return;
+  var trial = getActiveTrial();
+  if (!trial || !trial.trialists.length) {
+    container.innerHTML = '<div class="trial-empty">No trialists yet — tap + Add Trialist</div>';
+    return;
+  }
+  container.innerHTML = trial.trialists.map(function(t) {
+    var avg = getTrialistAvg(t.id);
+    var lastInvite = getLastInviteBack(t.id);
+    var inviteIcon = lastInvite === true ? '✅' : lastInvite === false ? '❌' : lastInvite === 'maybe' ? '🤔' : '—';
+    var decisionHtml = t.finalDecision ? '<span class="ttr-decision ' + t.finalDecision + '">' + t.finalDecision + '</span>' : '';
+    return '<div class="trial-trialist-row" onclick="openTrialistProfile(' + t.id + ')">' +
+      '<div class="ttr-name">' +
+        '<div class="ttr-name-main">' + t.name + '</div>' +
+        '<div class="ttr-pos">' + (t.pos || '') + (t.ageGroup ? ' · ' + t.ageGroup : '') + '</div>' +
+      '</div>' +
+      decisionHtml +
+      '<div class="ttr-invited" title="Last invited back">' + inviteIcon + '</div>' +
+      '<div class="ttr-grade">' + (avg !== null ? avg.toFixed(1) : '—') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function getTrialistAvg(trialistId) {
+  var trial = getActiveTrial();
+  if (!trial) return null;
+  var scores = [];
+  (trial.sessions || []).forEach(function(s) {
+    var g = s.grades && s.grades[trialistId];
+    if (g && g.attended && g.overall) scores.push(g.overall);
+  });
+  if (!scores.length) return null;
+  return scores.reduce(function(a,b) { return a+b; }, 0) / scores.length;
+}
+
+function getLastInviteBack(trialistId) {
+  var trial = getActiveTrial();
+  if (!trial) return null;
+  var sessions = (trial.sessions || []).slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+  for (var i = 0; i < sessions.length; i++) {
+    var g = sessions[i].grades && sessions[i].grades[trialistId];
+    if (g && g.attended && g.invitedBack !== undefined) return g.invitedBack;
+  }
+  return null;
+}
+
+// ── TRIAL SESSIONS ────────────────────────────────
+function renderTrialSessions() {
+  var container = document.getElementById('trial-sessions-list');
+  if (!container) return;
+  var trial = getActiveTrial();
+  if (!trial || !trial.sessions.length) {
+    container.innerHTML = '<div class="trial-empty">No sessions yet — tap + New Session to start grading</div>';
+    return;
+  }
+  var sessions = trial.sessions.slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+  container.innerHTML = sessions.map(function(s) {
+    var gradedCount = Object.values(s.grades || {}).filter(function(g) { return g.attended && g.overall; }).length;
+    var totalActive = trial.trialists.filter(function(t) {
+      var g = s.grades && s.grades[t.id];
+      return !g || g.attended !== false;
+    }).length;
+    var dateStr = new Date(s.date).toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
+    return '<div class="trial-session-card" onclick="openTrialSessionGrading(' + s.id + ')">' +
+      '<div>' +
+        '<div class="tsc-date">' + dateStr + '</div>' +
+        (s.label ? '<div class="tsc-label">' + s.label + '</div>' : '') +
+      '</div>' +
+      '<span class="tsc-graded">' + gradedCount + ' graded</span>' +
+    '</div>';
+  }).join('');
+}
+
+function openNewTrialSession() {
+  editingTrialSessionId = null;
+  document.getElementById('trial-session-sheet-title').textContent = 'New Trial Session';
+  document.getElementById('trial-session-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('trial-session-label').value = '';
+  renderTrialGradingList({});
+  document.getElementById('new-trial-session-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openTrialSessionGrading(sessionId) {
+  var trial = getActiveTrial();
+  var session = trial && trial.sessions.find(function(s) { return s.id === sessionId; });
+  if (!session) return;
+  editingTrialSessionId = sessionId;
+  document.getElementById('trial-session-sheet-title').textContent = 'Edit Session';
+  document.getElementById('trial-session-date').value = session.date;
+  document.getElementById('trial-session-label').value = session.label || '';
+  renderTrialGradingList(session.grades || {});
+  document.getElementById('new-trial-session-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNewTrialSession() {
+  document.getElementById('new-trial-session-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderTrialGradingList(existingGrades) {
+  var trial = getActiveTrial();
+  var container = document.getElementById('trial-grading-list');
+  if (!container || !trial) return;
+  if (!trial.trialists.length) {
+    container.innerHTML = '<div class="trial-empty">Add trialists first</div>';
+    return;
+  }
+  container.innerHTML = trial.trialists.map(function(t) {
+    var g = existingGrades[t.id] || { attended: true, overall: 0, invitedBack: 'yes', notes: '' };
+    var scoreDots = Array.from({length:10}, function(_,i) {
+      var filled = i < (g.overall || 0);
+      var fc = filled ? ' f' + (i+1) : '';
+      return '<div class="grading-score-dot' + fc + '" onclick="setGradeScore(this,' + t.id + ',' + (i+1) + ')">' + (i+1) + '</div>';
+    }).join('');
+    var attPresent = g.attended !== false ? ' active' : '';
+    var attAbsent = g.attended === false ? ' absent-active' : '';
+    var invYes = g.invitedBack === true || g.invitedBack === 'yes' ? ' yes-active' : '';
+    var invNo = g.invitedBack === false || g.invitedBack === 'no' ? ' no-active' : '';
+    var invMaybe = g.invitedBack === 'maybe' ? ' maybe-active' : '';
+    return '<div class="grading-row" data-trialist="' + t.id + '">' +
+      '<div class="grading-name-row">' +
+        '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
+        '<div class="grading-att-toggle">' +
+          '<button class="grading-att-btn' + attPresent + '" onclick="setGradeAtt(this,' + t.id + ',true)">✅ Present</button>' +
+          '<button class="grading-att-btn' + attAbsent + '" onclick="setGradeAtt(this,' + t.id + ',false)">❌ Absent</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="grading-score-row" id="gscore-' + t.id + '">' + scoreDots + '</div>' +
+      '<div class="grading-invited-row">' +
+        '<button class="grading-invited-btn' + invYes + '" onclick="setGradeInvite(this,' + t.id + ',true)">✅ Invite Back</button>' +
+        '<button class="grading-invited-btn' + invMaybe + '" onclick="setGradeInvite(this,' + t.id + ',\'maybe\')">🤔 Maybe</button>' +
+        '<button class="grading-invited-btn' + invNo + '" onclick="setGradeInvite(this,' + t.id + ',false)">❌ Not Invited</button>' +
+      '</div>' +
+      '<input class="grading-note-input" placeholder="Notes (optional)" value="' + (g.notes||'') + '">' +
+    '</div>';
+  }).join('');
+}
+
+function setGradeScore(dot, trialistId, score) {
+  var row = document.getElementById('gscore-' + trialistId);
+  if (!row) return;
+  row.querySelectorAll('.grading-score-dot').forEach(function(d,i) {
+    d.className = 'grading-score-dot' + (i < score ? ' f'+(i+1) : '');
+  });
+  row.dataset.score = score;
+}
+
+function setGradeAtt(btn, trialistId, present) {
+  var row = btn.closest('.grading-row');
+  row.querySelectorAll('.grading-att-btn').forEach(function(b) { b.className = 'grading-att-btn'; });
+  btn.className = 'grading-att-btn ' + (present ? 'active' : 'absent-active');
+}
+
+function setGradeInvite(btn, trialistId, value) {
+  var row = btn.closest('.grading-row');
+  row.querySelectorAll('.grading-invited-btn').forEach(function(b) { b.className = 'grading-invited-btn'; });
+  var cls = value === true ? 'yes-active' : value === false ? 'no-active' : 'maybe-active';
+  btn.className = 'grading-invited-btn ' + cls;
+}
+
+function saveTrialSession() {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  var date = document.getElementById('trial-session-date').value;
+  if (!date) { showSync('Please select a date', 2000); return; }
+  var label = document.getElementById('trial-session-label').value.trim();
+  var grades = {};
+
+  document.querySelectorAll('.grading-row').forEach(function(row) {
+    var tid = parseInt(row.dataset.trialist);
+    var scoreRow = document.getElementById('gscore-' + tid);
+    var score = scoreRow ? parseInt(scoreRow.dataset.score) || scoreRow.querySelectorAll('.grading-score-dot[class*="f"]').length : 0;
+    var attBtn = row.querySelector('.grading-att-btn.active,.grading-att-btn.absent-active');
+    var attended = !attBtn || attBtn.classList.contains('active');
+    var invBtn = row.querySelector('.grading-invited-btn.yes-active,.grading-invited-btn.no-active,.grading-invited-btn.maybe-active');
+    var invited = invBtn ? (invBtn.classList.contains('yes-active') ? true : invBtn.classList.contains('no-active') ? false : 'maybe') : true;
+    var note = row.querySelector('.grading-note-input') ? row.querySelector('.grading-note-input').value.trim() : '';
+    grades[tid] = { attended, overall: score, invitedBack: invited, notes: note };
+  });
+
+  if (editingTrialSessionId) {
+    var idx = trial.sessions.findIndex(function(s) { return s.id === editingTrialSessionId; });
+    if (idx >= 0) trial.sessions[idx] = Object.assign(trial.sessions[idx], { date, label, grades });
+  } else {
+    trial.sessions.push({ id: Date.now(), date, label, grades });
+  }
+
+  saveTrials();
+  closeNewTrialSession();
+  renderTrialSessions();
+  document.getElementById('trial-detail-meta').textContent = trial.season + ' · ' + trial.trialists.length + ' trialists · ' + trial.sessions.length + ' sessions';
+  showSync('✓ Session saved', 2000);
+}
+
+// ── LEADERBOARD ───────────────────────────────────
+function renderTrialLeaderboard() {
+  var container = document.getElementById('trial-leaderboard-list');
+  var buildBtn = document.getElementById('trial-build-squad-btn');
+  if (!container) return;
+  var trial = getActiveTrial();
+  if (!trial || !trial.trialists.length) {
+    container.innerHTML = '<div class="trial-empty">Add trialists and record sessions to see rankings</div>';
+    if (buildBtn) buildBtn.style.display = 'none';
+    return;
+  }
+
+  var ranked = trial.trialists.map(function(t) {
+    return { t, avg: getTrialistAvg(t.id) };
+  }).sort(function(a,b) {
+    if (a.avg === null && b.avg === null) return 0;
+    if (a.avg === null) return 1;
+    if (b.avg === null) return -1;
+    return b.avg - a.avg;
+  });
+
+  container.innerHTML = ranked.map(function(item, idx) {
+    var avg = item.avg;
+    var scoreClass = avg === null ? '' : avg >= 7 ? 'high' : avg >= 5 ? 'mid' : 'low';
+    var rankClass = idx < 3 ? 'top3' : '';
+    var rankSymbol = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx+1);
+    var sessionCount = (trial.sessions || []).filter(function(s) {
+      return s.grades && s.grades[item.t.id] && s.grades[item.t.id].attended;
+    }).length;
+    var decisionBadge = item.t.finalDecision ? '<span class="ttr-decision ' + item.t.finalDecision + '">' + item.t.finalDecision + '</span>' : '';
+    return '<div class="trial-lb-row" onclick="openTrialistProfile(' + item.t.id + ')">' +
+      '<div class="trial-lb-rank ' + rankClass + '">' + rankSymbol + '</div>' +
+      '<div class="trial-lb-info">' +
+        '<div class="trial-lb-name">' + item.t.name + ' ' + decisionBadge + '</div>' +
+        '<div class="trial-lb-detail">' + (item.t.pos || '') + (item.t.ageGroup ? ' · ' + item.t.ageGroup : '') + ' · ' + sessionCount + ' session' + (sessionCount!==1?'s':'') + ' attended</div>' +
+      '</div>' +
+      '<div class="trial-lb-score ' + scoreClass + '">' + (avg !== null ? avg.toFixed(1) : '—') + '</div>' +
+    '</div>';
+  }).join('');
+
+  var hasPromoted = ranked.some(function(item) { return item.t.finalDecision === 'promote'; });
+  if (buildBtn) buildBtn.style.display = hasPromoted ? 'block' : 'none';
+}
+
+// ── TRIALIST PROFILE ──────────────────────────────
+function openTrialistProfile(trialistId) {
+  var trial = getActiveTrial();
+  var trialist = trial && trial.trialists.find(function(t) { return t.id === trialistId; });
+  if (!trialist) return;
+  activeTrialistId = trialistId;
+
+  document.getElementById('tpro-name').textContent = trialist.name;
+  document.getElementById('tpro-meta').textContent = (trialist.pos || '') + (trialist.ageGroup ? ' · ' + trialist.ageGroup : '');
+
+  // Grade history
+  var sessions = (trial.sessions || []).slice().sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
+  var gradeHistory = document.getElementById('tpro-grade-history');
+  if (gradeHistory) {
+    if (!sessions.length) {
+      gradeHistory.innerHTML = '<div class="ptr-no-notes">No sessions recorded yet</div>';
+    } else {
+      gradeHistory.innerHTML = sessions.map(function(s) {
+        var g = s.grades && s.grades[trialistId];
+        var dateStr = new Date(s.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+        if (!g || !g.attended) {
+          return '<div class="ptr-note-item"><div class="ptr-note-date">' + dateStr + (s.label ? ' · ' + s.label : '') + '</div><div class="ptr-note-text" style="color:var(--muted);">Absent</div></div>';
+        }
+        var scoreClass = g.overall >= 7 ? 'high' : g.overall >= 5 ? 'mid' : 'low';
+        var inviteIcon = g.invitedBack === true ? ' · ✅ Invited back' : g.invitedBack === false ? ' · ❌ Not invited' : g.invitedBack === 'maybe' ? ' · 🤔 Maybe' : '';
+        return '<div class="ptr-note-item">' +
+          '<div class="ptr-note-date">' + dateStr + (s.label ? ' · ' + s.label : '') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<div class="trial-lb-score ' + scoreClass + '" style="font-size:20px;">' + (g.overall || '—') + '</div>' +
+            '<div style="font-size:11px;color:var(--muted);">' + inviteIcon + '</div>' +
+          '</div>' +
+          (g.notes ? '<div class="ptr-note-text">' + g.notes + '</div>' : '') +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Overall
+  var avg = getTrialistAvg(trialistId);
+  var overall = document.getElementById('tpro-overall');
+  if (overall) {
+    var scoreClass = avg === null ? 'neutral' : avg >= 7 ? 'positive' : avg >= 5 ? '' : 'negative';
+    var attendedCount = sessions.filter(function(s) { return s.grades && s.grades[trialistId] && s.grades[trialistId].attended; }).length;
+    overall.innerHTML = '<div class="ptr-att-summary">' +
+      '<div class="ptr-att-stat"><div class="ptr-att-stat-val ' + scoreClass + '">' + (avg !== null ? avg.toFixed(1) : '—') + '</div><div class="ptr-att-stat-label">Avg Grade</div></div>' +
+      '<div class="ptr-att-stat"><div class="ptr-att-stat-val">' + attendedCount + '/' + sessions.length + '</div><div class="ptr-att-stat-label">Sessions</div></div>' +
+    '</div>';
+  }
+
+  // Final decision
+  ['promote','holdover','release'].forEach(function(d) {
+    var btn = document.getElementById('tpro-' + (d==='promote'?'promote':d==='holdover'?'holdover':'release') + '-btn');
+    if (btn) btn.classList.toggle('active', trialist.finalDecision === d);
+  });
+  var promoteWrap = document.getElementById('tpro-promote-squad-wrap');
+  if (promoteWrap) {
+    promoteWrap.style.display = trialist.finalDecision === 'promote' && !trialist.promotedToSlot ? 'block' : 'none';
+    if (trialist.finalDecision === 'promote' && !trialist.promotedToSlot) renderSquadSlotSelect();
+  }
+
+  document.getElementById('trialist-profile-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTrialistProfile() {
+  document.getElementById('trialist-profile-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  activeTrialistId = null;
+  if (trialDetailTab === 'trialists') renderTrialistsList();
+  if (trialDetailTab === 'leaderboard') renderTrialLeaderboard();
+}
+
+function setTrialistDecision(decision) {
+  var trial = getActiveTrial();
+  var trialist = trial && trial.trialists.find(function(t) { return t.id === activeTrialistId; });
+  if (!trialist) return;
+  trialist.finalDecision = decision;
+  saveTrials();
+  ['promote','holdover','release'].forEach(function(d) {
+    var id = 'tpro-' + (d==='holdover'?'holdover':d) + '-btn';
+    var btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('active', d === decision);
+  });
+  var promoteWrap = document.getElementById('tpro-promote-squad-wrap');
+  if (promoteWrap) {
+    promoteWrap.style.display = decision === 'promote' && !trialist.promotedToSlot ? 'block' : 'none';
+    if (decision === 'promote') renderSquadSlotSelect();
+  }
+  showSync('Decision saved', 1500);
+}
+
+function renderSquadSlotSelect() {
+  var sel = document.getElementById('tpro-squad-slot-select');
+  if (!sel) return;
+  var options = '<option value="">Select squad slot</option>';
+  for (var i = 0; i < 34; i++) {
+    var p = squad[i];
+    var label = (i+1) + ' — ' + (p && p.name ? p.name + ' (' + (p.pos||'No pos') + ')' : 'Empty slot');
+    options += '<option value="' + i + '">' + label + '</option>';
+  }
+  sel.innerHTML = options;
+}
+
+function promoteTrialistToSquad() {
+  var trial = getActiveTrial();
+  var trialist = trial && trial.trialists.find(function(t) { return t.id === activeTrialistId; });
+  if (!trialist) return;
+  var sel = document.getElementById('tpro-squad-slot-select');
+  var slotIdx = sel ? parseInt(sel.value) : NaN;
+  if (isNaN(slotIdx) || slotIdx < 0 || slotIdx > 33) { showSync('Please select a squad slot', 2000); return; }
+
+  // Build player record with trial data carried over
+  var avg = getTrialistAvg(trialist.id);
+  squad[slotIdx] = {
+    name: trialist.name,
+    pos: trialist.pos || '',
+    stats: {},
+    trialData: { trialId: trial.id, trialName: trial.name, avgGrade: avg, season: trial.season },
+    ratings: []
+  };
+  trialist.promotedToSlot = slotIdx;
+  saveSquad();
+  saveTrials();
+
+  document.getElementById('tpro-promote-squad-wrap').style.display = 'none';
+  showSync('✓ ' + trialist.name + ' promoted to slot ' + (slotIdx+1), 2500);
+  closeTrialistProfile();
+  renderSquadGrid();
+}
+
+// ── BUILD SQUAD FROM TRIAL ────────────────────────
+function openBuildSquad() {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  var promoted = trial.trialists.filter(function(t) { return t.finalDecision === 'promote'; });
+  if (!promoted.length) { showSync('No trialists marked as Promote yet', 2000); return; }
+
+  var container = document.getElementById('build-squad-list');
+  container.innerHTML = promoted.map(function(t) {
+    var avg = getTrialistAvg(t.id);
+    var emptySlots = squad.map(function(p,i) { return {p:p,i:i}; }).filter(function(x) { return !x.p || !x.p.name; });
+    var slotOptions = '<option value="">Assign slot</option>' + emptySlots.map(function(x) {
+      return '<option value="' + x.i + '">Slot ' + (x.i+1) + '</option>';
+    }).join('');
+    if (t.promotedToSlot !== null && t.promotedToSlot !== undefined) {
+      return '<div class="build-squad-row">' +
+        '<div class="bsr-info">' +
+          '<div class="bsr-name">' + t.name + '</div>' +
+          '<div class="bsr-grade">Already in squad — slot ' + (t.promotedToSlot+1) + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+    return '<div class="build-squad-row" data-trialist-id="' + t.id + '">' +
+      '<div class="bsr-check checked" onclick="toggleBsrCheck(this)">✓</div>' +
+      '<div class="bsr-info">' +
+        '<div class="bsr-name">' + t.name + '</div>' +
+        '<div class="bsr-grade">' + (t.pos || 'No pos') + ' · Avg ' + (avg !== null ? avg.toFixed(1) : '—') + '</div>' +
+      '</div>' +
+      '<select class="bsr-slot-select">' + slotOptions + '</select>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('build-squad-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBuildSquad() {
+  document.getElementById('build-squad-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function toggleBsrCheck(el) {
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+}
+
+function confirmBuildSquad() {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  var rows = document.querySelectorAll('.build-squad-row[data-trialist-id]');
+  var added = 0;
+  rows.forEach(function(row) {
+    var check = row.querySelector('.bsr-check');
+    if (!check || !check.classList.contains('checked')) return;
+    var slotSel = row.querySelector('.bsr-slot-select');
+    var slotIdx = slotSel ? parseInt(slotSel.value) : NaN;
+    if (isNaN(slotIdx)) return;
+    var tid = parseInt(row.dataset.trialistId);
+    var trialist = trial.trialists.find(function(t) { return t.id === tid; });
+    if (!trialist) return;
+    var avg = getTrialistAvg(tid);
+    squad[slotIdx] = { name: trialist.name, pos: trialist.pos || '', stats: {},
+      trialData: { trialId: trial.id, trialName: trial.name, avgGrade: avg, season: trial.season }, ratings: [] };
+    trialist.promotedToSlot = slotIdx;
+    added++;
+  });
+  if (!added) { showSync('Select players and assign slots first', 2000); return; }
+  saveSquad();
+  saveTrials();
+  closeBuildSquad();
+  renderSquadGrid();
+  showSync('✓ ' + added + ' player' + (added!==1?'s':'') + ' added to squad', 2500);
+}
+
+// ── TRIAL PDF REPORT ──────────────────────────────
+function generateTrialReport() {
+  var trial = getActiveTrial();
+  if (!trial) return;
+
+  var ranked = trial.trialists.map(function(t) {
+    return { t, avg: getTrialistAvg(t.id) };
+  }).sort(function(a,b) {
+    if (a.avg === null) return 1; if (b.avg === null) return -1;
+    return b.avg - a.avg;
+  });
+
+  var sessions = (trial.sessions || []).slice().sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
+
+  var printWin = window.open('', '_blank');
+  if (!printWin) { alert('Please allow popups to generate the report.'); return; }
+
+  var css = '<style>body{font-family:Arial,sans-serif;color:#111;margin:0;padding:20px;background:#fff;font-size:13px;}' +
+    'h1{font-size:22px;font-weight:700;color:#991b1b;margin-bottom:4px;}' +
+    'h2{font-size:14px;font-weight:700;color:#991b1b;margin:20px 0 8px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #991b1b;padding-bottom:4px;}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:16px;}' +
+    'th{background:#991b1b;color:#fff;padding:7px 10px;text-align:left;font-size:11px;letter-spacing:1px;}' +
+    'td{padding:7px 10px;border-bottom:1px solid #e5e7eb;font-size:12px;}' +
+    'tr:nth-child(even) td{background:#f9fafb;}' +
+    '.high{color:#059669;font-weight:700;} .mid{color:#d97706;font-weight:700;} .low{color:#dc2626;font-weight:700;}' +
+    '.promote{color:#059669;} .release{color:#dc2626;} .holdover{color:#d97706;}' +
+    '.cover-title{font-size:28px;font-weight:700;color:#991b1b;} .cover-sub{color:#6b7280;margin-top:4px;}' +
+    '@media print{button{display:none!important;}}' +
+    '</style>';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trial Report</title>' + css + '</head><body>';
+  html += '<div class="cover-title">' + trial.name + '</div>';
+  html += '<div class="cover-sub">' + trial.season + ' · ' + trial.trialists.length + ' trialists · ' + sessions.length + ' sessions · Status: ' + trial.status + '</div>';
+
+  html += '<h2>Rankings</h2>';
+  html += '<table><thead><tr><th>#</th><th>Player</th><th>Position</th><th>Sessions</th><th>Avg Grade</th><th>Decision</th></tr></thead><tbody>';
+  ranked.forEach(function(item, idx) {
+    var avgStr = item.avg !== null ? item.avg.toFixed(1) : '—';
+    var scoreClass = item.avg === null ? '' : item.avg >= 7 ? 'high' : item.avg >= 5 ? 'mid' : 'low';
+    var attended = sessions.filter(function(s) { return s.grades && s.grades[item.t.id] && s.grades[item.t.id].attended; }).length;
+    html += '<tr><td>' + (idx+1) + '</td><td><strong>' + item.t.name + '</strong></td>' +
+      '<td>' + (item.t.pos || '—') + '</td><td>' + attended + '/' + sessions.length + '</td>' +
+      '<td class="' + scoreClass + '">' + avgStr + '</td>' +
+      '<td class="' + (item.t.finalDecision || '') + '">' + (item.t.finalDecision || '—') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<h2>Session by Session Grades</h2>';
+  html += '<table><thead><tr><th>Player</th>' + sessions.map(function(s) {
+    return '<th>' + new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + (s.label ? '<br><span style="font-weight:400;font-size:9px;">' + s.label + '</span>' : '') + '</th>';
+  }).join('') + '</tr></thead><tbody>';
+  ranked.forEach(function(item) {
+    html += '<tr><td><strong>' + item.t.name + '</strong></td>';
+    sessions.forEach(function(s) {
+      var g = s.grades && s.grades[item.t.id];
+      if (!g || !g.attended) { html += '<td style="color:#9ca3af;">—</td>'; return; }
+      var sc = g.overall >= 7 ? 'high' : g.overall >= 5 ? 'mid' : 'low';
+      html += '<td class="' + sc + '">' + (g.overall || '—') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<h2>Coach Notes</h2>';
+  ranked.forEach(function(item) {
+    var notes = [];
+    sessions.forEach(function(s) {
+      var g = s.grades && s.grades[item.t.id];
+      if (g && g.notes) {
+        notes.push('<em>' + new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ':</em> ' + g.notes);
+      }
+    });
+    if (notes.length) {
+      html += '<p><strong>' + item.t.name + '</strong><br>' + notes.join('<br>') + '</p>';
+    }
+  });
+
+  html += '<button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#991b1b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">🖨️ Print / Save PDF</button>';
+  html += '</body></html>';
+
+  printWin.document.write(html);
+  printWin.document.close();
+}
+
+// Init trials on load
+loadTrials();
 
 // ── TRAINING SYSTEM ───────────────────────────────────────────────────
 
@@ -7499,6 +8348,9 @@ function loadUserData() {
   // Load training sessions
   loadTrainingFromSupabase();
 
+  // Load trial data
+  loadTrialsFromSupabase();
+
   // Load match history from Supabase
   supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
     .then(function(data) {
@@ -8603,6 +9455,164 @@ window.addEventListener('resize', function() {
     <div class="ee-actions">
       <button class="ee-save-btn" onclick="saveEventEditor()">Save Event</button>
       <button class="ee-delete-btn" id="ee-delete-btn" onclick="deleteEditingEvent()" style="display:none;">Delete Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW TRIAL MODAL -->
+<div class="modal-overlay" id="new-trial-modal" onclick="if(event.target===this)closeNewTrial()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">New Trial</div><div class="sheet-sub">Set up a player trial process</div></div>
+      <button class="sheet-close" onclick="closeNewTrial()">✕</button>
+    </div>
+    <div class="tr-meta-field" style="margin-bottom:12px;">
+      <div class="tr-meta-label">Trial Name</div>
+      <input type="text" id="new-trial-name" class="tr-meta-input" placeholder="e.g. Senior Trial 2026">
+    </div>
+    <div class="tr-session-meta">
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Start Date</div>
+        <input type="date" id="new-trial-date" class="tr-meta-input">
+      </div>
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Season</div>
+        <input type="text" id="new-trial-season" class="tr-meta-input" placeholder="e.g. 2025-26">
+      </div>
+    </div>
+    <button class="btn-save-player" onclick="saveTrial()" style="margin-top:12px;">Create Trial</button>
+  </div>
+</div>
+
+<!-- ADD TRIALIST MODAL -->
+<div class="modal-overlay" id="add-trialist-modal" onclick="if(event.target===this)closeAddTrialist()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Add Trialist</div><div class="sheet-sub">Enter player details</div></div>
+      <button class="sheet-close" onclick="closeAddTrialist()">✕</button>
+    </div>
+    <div class="tr-meta-field" style="margin-bottom:12px;">
+      <div class="tr-meta-label">Name</div>
+      <input type="text" id="trialist-name" class="tr-meta-input" placeholder="Player name">
+    </div>
+    <div class="tr-session-meta">
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Position</div>
+        <select id="trialist-pos" class="tr-meta-input training-season-sel" style="width:100%;">
+          <option value="">Select</option>
+          <option>GK</option><option>CB</option><option>LHB</option><option>RHB</option>
+          <option>MF</option><option>LHF</option><option>RHF</option><option>FF</option>
+          <option>CF</option><option>SUB</option>
+        </select>
+      </div>
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Age Group</div>
+        <input type="text" id="trialist-age" class="tr-meta-input" placeholder="e.g. U20, Senior">
+      </div>
+    </div>
+    <button class="btn-save-player" onclick="saveTrialist()" style="margin-top:12px;">Add Trialist</button>
+  </div>
+</div>
+
+<!-- NEW TRIAL SESSION MODAL -->
+<div class="modal-overlay" id="new-trial-session-modal" onclick="if(event.target===this)closeNewTrialSession()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title" id="trial-session-sheet-title">New Trial Session</div><div class="sheet-sub">Grade each trialist</div></div>
+      <button class="sheet-close" onclick="closeNewTrialSession()">✕</button>
+    </div>
+    <div class="tr-session-meta" style="flex-shrink:0;">
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Date</div>
+        <input type="date" id="trial-session-date" class="tr-meta-input">
+      </div>
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Label</div>
+        <input type="text" id="trial-session-label" class="tr-meta-input" placeholder="e.g. Week 1">
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div id="trial-grading-list"></div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
+      <button class="btn-save-player" onclick="saveTrialSession()">Save Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRIALIST PROFILE MODAL -->
+<div class="modal-overlay" id="trialist-profile-modal" onclick="if(event.target===this)closeTrialistProfile()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="tpro-name"></div>
+        <div class="sheet-sub" id="tpro-meta"></div>
+      </div>
+      <button class="sheet-close" onclick="closeTrialistProfile()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
+      <!-- Grade history -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Grade History</div>
+        <div id="tpro-grade-history"></div>
+      </div>
+      <!-- Average score -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Overall Performance</div>
+        <div id="tpro-overall"></div>
+      </div>
+      <!-- Invited back status -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Invited Back</div>
+        <div id="tpro-invited-history"></div>
+      </div>
+      <!-- Final Decision -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Final Decision</div>
+        <div class="ptr-avail-row">
+          <button class="ptr-avail-btn available" id="tpro-promote-btn" onclick="setTrialistDecision('promote')">✅ Promote</button>
+          <button class="ptr-avail-btn maybe" id="tpro-holdover-btn" onclick="setTrialistDecision('holdover')">🔄 Hold Over</button>
+          <button class="ptr-avail-btn unavailable" id="tpro-release-btn" onclick="setTrialistDecision('release')">❌ Release</button>
+        </div>
+        <div id="tpro-promote-squad-wrap" style="display:none;margin-top:10px;">
+          <div class="tr-meta-label" style="margin-bottom:6px;">Assign to Squad Slot</div>
+          <select id="tpro-squad-slot-select" class="tr-meta-input training-season-sel" style="width:100%;"></select>
+          <button class="btn-save-player" onclick="promoteTrialistToSquad()" style="margin-top:8px;">Promote to Main Squad</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD SQUAD MODAL -->
+<div class="modal-overlay" id="build-squad-modal" onclick="if(event.target===this)closeBuildSquad()">
+  <div class="training-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Build Squad from Trial</div><div class="sheet-sub">Select promoted trialists to add</div></div>
+      <button class="sheet-close" onclick="closeBuildSquad()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding-bottom:24px;">
+      <div id="build-squad-list"></div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
+      <button class="btn-save-player" onclick="confirmBuildSquad()">Add Selected to Squad</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRIAL MENU MODAL -->
+<div class="modal-overlay" id="trial-menu-modal" onclick="if(event.target===this)closeTrialMenu()">
+  <div class="training-sheet" style="max-height:40vh;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 0 calc(16px + var(--safe-bottom));">
+      <button class="trial-menu-action" onclick="toggleTrialStatus()">⏸ Complete / Re-open Trial</button>
+      <button class="trial-menu-action danger" onclick="deleteTrial()">🗑 Delete Trial</button>
+      <button class="trial-menu-action" onclick="closeTrialMenu()">Cancel</button>
     </div>
   </div>
 </div>
