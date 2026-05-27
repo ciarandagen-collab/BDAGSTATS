@@ -1191,6 +1191,61 @@ select option { background:#1a0505; }
 .nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
 .nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
+/* ── SEASON SUMMARY ──────────────────────────────── */
+.ss-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.ss-stat-card { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center; }
+.ss-stat-val { font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:var(--cream); }
+.ss-stat-label { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-family:'Oswald',sans-serif; margin-top:2px; }
+.ss-results-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:11px; }
+.ss-results-table th { background:rgba(224,48,48,0.15); color:var(--red-light); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1.5px; padding:6px 8px; text-align:left; }
+.ss-results-table td { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03); color:var(--cream); }
+.ss-results-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.ss-result-w { color:var(--green); font-weight:700; }
+.ss-result-l { color:var(--red-light); font-weight:700; }
+.ss-result-d { color:#f5a623; font-weight:700; }
+.ss-section-title { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; margin:14px 0 8px; }
+.ss-top-performer { display:flex; align-items:center; gap:10px; padding:8px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; }
+.ss-tp-rank { font-family:'Oswald',sans-serif; font-size:14px; color:var(--muted); width:20px; flex-shrink:0; }
+.ss-tp-name { font-family:'Oswald',sans-serif; font-size:12px; color:var(--cream); flex:1; }
+.ss-tp-val { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:var(--red-light); }
+.ss-empty { text-align:center; padding:24px; color:var(--muted); font-size:13px; font-style:italic; }
+
+/* ── SCOUT REPORT ────────────────────────────────── */
+.scout-textarea { width:100%; padding:10px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:var(--cream); font-size:13px; font-family:'Inter',sans-serif; outline:none; resize:none; min-height:80px; box-sizing:border-box; line-height:1.5; }
+.scout-player-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+.scout-player-name { flex:1; padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; color:var(--cream); font-size:13px; font-family:'Inter',sans-serif; outline:none; }
+.scout-player-pos { width:70px; padding:7px 8px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; color:var(--cream); font-size:12px; font-family:'Inter',sans-serif; outline:none; }
+.scout-player-notes { flex:2; padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:7px; color:var(--muted); font-size:12px; font-family:'Inter',sans-serif; outline:none; }
+.scout-player-del { background:none; border:none; color:rgba(255,80,80,0.4); font-size:15px; cursor:pointer; flex-shrink:0; }
+.scout-badge { font-size:10px; padding:2px 7px; border-radius:10px; background:rgba(68,136,255,0.12); color:#6699ff; font-family:'Oswald',sans-serif; letter-spacing:1px; margin-left:6px; }
+
+/* ── WELLNESS ─────────────────────────────────────── */
+.wellness-link-box { display:flex; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; }
+.wellness-link-text { flex:1; font-size:11px; color:var(--muted); font-family:'Inter',sans-serif; word-break:break-all; }
+.wellness-copy-btn { padding:6px 12px; background:rgba(224,48,48,0.12); border:1px solid rgba(224,48,48,0.25); border-radius:7px; color:var(--red-light); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; flex-shrink:0; }
+.wellness-player-row { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.wellness-player-row:last-child { border-bottom:none; }
+.wellness-player-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.wellness-player-name { font-family:'Oswald',sans-serif; font-size:12px; color:var(--cream); }
+.wellness-overall { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; }
+.wellness-overall.green { color:var(--green); }
+.wellness-overall.yellow { color:#f5a623; }
+.wellness-overall.red { color:var(--red-light); }
+.wellness-metrics { display:flex; gap:6px; flex-wrap:wrap; }
+.wellness-metric-chip { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,0.05); color:var(--muted); font-family:'Oswald',sans-serif; letter-spacing:0.5px; }
+.wellness-no-data { font-size:11px; color:rgba(245,232,232,0.2); font-style:italic; }
+.wellness-metric-row { padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.wellness-metric-row:last-child { border-bottom:none; }
+.wellness-metric-name { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+.wellness-score-row { display:flex; gap:4px; }
+.wellness-score-dot { width:36px; height:36px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; font-family:'Oswald',sans-serif; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:center; flex:1; transition:all 0.1s; }
+.wellness-score-dot.selected-1, .wellness-score-dot.selected-2 { background:#ef4444; border-color:#ef4444; color:#fff; }
+.wellness-score-dot.selected-3 { background:#f59e0b; border-color:#f59e0b; color:#fff; }
+.wellness-score-dot.selected-4, .wellness-score-dot.selected-5 { background:#22c55e; border-color:#22c55e; color:#fff; }
+.wellness-empty { text-align:center; padding:32px 16px; color:var(--muted); font-size:13px; font-style:italic; }
+.wellness-training-btn { width:100%; padding:10px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; cursor:pointer; margin-bottom:10px; }
+.wellness-training-btn:active { background:rgba(224,48,48,0.1); color:var(--cream); }
+
 /* ── TRIAL SYSTEM ─────────────────────────────────── */
 .trial-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; padding:14px; cursor:pointer; }
 .trial-card:active { background:rgba(224,48,48,0.06); }
@@ -2223,6 +2278,7 @@ select option { background:#1a0505; }
 
       <!-- Sessions View -->
       <div id="training-sessions-view">
+        <button class="wellness-training-btn" onclick="openWellnessModal()">💚 View Readiness Dashboard</button>
         <button class="training-new-btn" onclick="openNewSession()">+ New Training Session</button>
         <div id="training-session-list"></div>
       </div>
@@ -2326,6 +2382,7 @@ select option { background:#1a0505; }
   <div class="page" id="page-history">
 
     <button class="new-video-btn" onclick="openNewVideoAnalysis()">🎬 New Video Analysis</button>
+    <button class="new-video-btn" onclick="openSeasonSummary()" style="background:linear-gradient(135deg,rgba(27,60,153,0.2),rgba(48,100,224,0.1));border-color:rgba(48,100,224,0.3);margin-top:-8px;">📊 Season Summary</button>
 
     <div class="history-search-wrap">
       <input class="history-search-input" id="history-search" type="search"
@@ -2412,80 +2469,76 @@ select option { background:#1a0505; }
     <!-- Quick Reference Sections -->
     <div class="help-section">
       <div class="help-section-title">🏟 Match Tab</div>
-      <div class="help-row"><span class="help-key">Set up teams</span><span class="help-val">Tap the Home or Away button — search by county or club name</span></div>
-      <div class="help-row"><span class="help-key">Select competition</span><span class="help-val">Tap the competition button — recent picks shown at top, search to filter</span></div>
-      <div class="help-row"><span class="help-key">Start game</span><span class="help-val">Game Control → ▶ Start Game — clock starts and Match Info auto-collapses</span></div>
-      <div class="help-row"><span class="help-key">Half time</span><span class="help-val">Tap ⏸ Half Time → then ▶ Start 2nd Half</span></div>
-      <div class="help-row"><span class="help-key">Clock status</span><span class="help-val">Clock pulses when running · shows ⏸ Paused when stopped</span></div>
-      <div class="help-row"><span class="help-key">Undo a score</span><span class="help-val">Scoreboard → ↩ Undo Home or ↩ Undo Away (highlighted in red)</span></div>
-      <div class="help-row"><span class="help-key">Collapse match info</span><span class="help-val">Tap the Match Info heading to toggle — auto-collapses on Start Game</span></div>
+      <div class="help-row"><span class="help-key">Set up teams</span><span class="help-val">Tap Home or Away — search by county or club name</span></div>
+      <div class="help-row"><span class="help-key">Competition</span><span class="help-val">Tap competition button — recent picks at top, type to search</span></div>
+      <div class="help-row"><span class="help-key">Start game</span><span class="help-val">Game Control → ▶ Start Game — clock starts, Match Info collapses</span></div>
+      <div class="help-row"><span class="help-key">Clock status</span><span class="help-val">Pulses when running · ⏸ Paused when stopped</span></div>
+      <div class="help-row"><span class="help-key">Undo a score</span><span class="help-val">Scoreboard → ↩ Undo Home or ↩ Undo Away</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">✍️ Record Tab</div>
-      <div class="help-row"><span class="help-key">Record a shot</span><span class="help-val">Shots section → tap Shot from Play or Free → select outcome</span></div>
-      <div class="help-row"><span class="help-key">Tag shot zone</span><span class="help-val">After selecting outcome → tap a zone or Skip Zone</span></div>
-      <div class="help-row"><span class="help-key">Record turnover</span><span class="help-val">Possession → Turnover Forced → In Attack / Midfield / In Defence</span></div>
-      <div class="help-row"><span class="help-key">Record a mark</span><span class="help-val">Possession → Mark → Won or Lost</span></div>
-      <div class="help-row"><span class="help-key">Record foul / card</span><span class="help-val">Tap Discipline heading to expand → Foul Given or Card</span></div>
-      <div class="help-row"><span class="help-key">Custom events</span><span class="help-val">Custom events added in ⚙️ Settings appear automatically here</span></div>
+      <div class="help-row"><span class="help-key">Record a shot</span><span class="help-val">Shots → Shot from Play or Free → select outcome</span></div>
+      <div class="help-row"><span class="help-key">Tag shot zone</span><span class="help-val">After outcome → tap a zone or Skip Zone</span></div>
+      <div class="help-row"><span class="help-key">Possession events</span><span class="help-val">Ball Won / Lost / Kickout / 45m Free / Turnover / Mark</span></div>
+      <div class="help-row"><span class="help-key">Foul / card</span><span class="help-val">Tap Discipline heading to expand</span></div>
       <div class="help-row"><span class="help-key">Tag a player</span><span class="help-val">Tap player name in outcome panel before selecting outcome</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">👥 Squad Tab</div>
-      <div class="help-row"><span class="help-key">Add a player</span><span class="help-val">Tap any squad slot → enter name → tap Save Player</span></div>
-      <div class="help-row"><span class="help-key">Performance score</span><span class="help-val">Player Stats tab shows a score (e.g. +14) based on their tagged events</span></div>
-      <div class="help-row"><span class="help-key">Team sheet</span><span class="help-val">Squad tab → Team Sheet → 🖨️ Print / Save PDF</span></div>
+      <div class="help-row"><span class="help-key">Add a player</span><span class="help-val">Squad sub-tab → tap slot → enter name → Save Player</span></div>
+      <div class="help-row"><span class="help-key">Performance score</span><span class="help-val">Stats sub-tab — score per player based on tagged events</span></div>
+      <div class="help-row"><span class="help-key">Team sheet</span><span class="help-val">Sheet sub-tab → 🖨️ Print / Save PDF</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🏃 Training Tab</div>
+      <div class="help-row"><span class="help-key">New session</span><span class="help-val">Training → Sessions → + New Training Session → mark attendance</span></div>
+      <div class="help-row"><span class="help-key">Statuses</span><span class="help-val">✅ Present · ❌ Absent · 🤕 Injured · 🤧 Sick · 🏆 County</span></div>
+      <div class="help-row"><span class="help-key">Attendance flags</span><span class="help-val">🟢 85%+ · 🟡 70–85% · 🔴 below 70% — shown on squad grid</span></div>
+      <div class="help-row"><span class="help-key">Player profile</span><span class="help-val">Training → Players → tap player → attendance, skills, availability, notes</span></div>
+      <div class="help-row"><span class="help-key">Skill ratings</span><span class="help-val">Player profile → tap 1–10 per skill → Save Ratings</span></div>
+      <div class="help-row"><span class="help-key">Availability</span><span class="help-val">Player profile → tap Available / Maybe / Unavailable for next match</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🧪 Trial Tab</div>
+      <div class="help-row"><span class="help-key">New trial</span><span class="help-val">Squad → Trial → + New Trial → name, date, season</span></div>
+      <div class="help-row"><span class="help-key">Add trialists</span><span class="help-val">Trialists tab → + Add Trialist</span></div>
+      <div class="help-row"><span class="help-key">Grade a session</span><span class="help-val">Sessions tab → + New Session → score 1–10, Invite Back, notes per trialist</span></div>
+      <div class="help-row"><span class="help-key">View rankings</span><span class="help-val">Rankings tab — sorted by average grade, 🥇🥈🥉 for top 3</span></div>
+      <div class="help-row"><span class="help-key">Final decision</span><span class="help-val">Tap trialist → Promote / Hold Over / Release</span></div>
+      <div class="help-row"><span class="help-key">Build squad</span><span class="help-val">Rankings → 🏆 Build Squad from Trial → select players + assign slots</span></div>
+      <div class="help-row"><span class="help-key">PDF report</span><span class="help-val">Rankings → 📄 PDF Report — full grades and notes report</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">📊 Stats & History</div>
-      <div class="help-row"><span class="help-key">Save a match</span><span class="help-val">Stats tab → tap Save Match — banner turns green to confirm</span></div>
-      <div class="help-row"><span class="help-key">Search history</span><span class="help-val">Type in the search bar at the top of History — filters by team, competition or venue</span></div>
-      <div class="help-row"><span class="help-key">View match report</span><span class="help-val">History tab → tap 📄 Report on any match card</span></div>
-      <div class="help-row"><span class="help-key">Reload a match</span><span class="help-val">History tab → tap ↩ Reload to bring it back into the tracker</span></div>
-      <div class="help-row"><span class="help-key">Match history sync</span><span class="help-val">All saved matches sync to your account — sign in on any device to restore</span></div>
+      <div class="help-row"><span class="help-key">Save a match</span><span class="help-val">Stats tab → Save Match — banner turns green to confirm</span></div>
+      <div class="help-row"><span class="help-key">Search history</span><span class="help-val">Type in search bar — filters by team, competition or venue</span></div>
+      <div class="help-row"><span class="help-key">Match report</span><span class="help-val">History → 📄 Report on any match card</span></div>
+      <div class="help-row"><span class="help-key">History sync</span><span class="help-val">All matches sync to your account — sign in anywhere to restore</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">🎬 Video Analysis</div>
-      <div class="help-row"><span class="help-key">Tag from live match</span><span class="help-val">History tab → tap 🎬 Video on any saved match card</span></div>
-      <div class="help-row"><span class="help-key">New video analysis</span><span class="help-val">History tab → tap 🎬 New Video Analysis → enter teams and video URL</span></div>
-      <div class="help-row"><span class="help-key">Hide / show video</span><span class="help-val">Tap ▲ Hide Video to collapse video and give buttons more space</span></div>
-      <div class="help-row"><span class="help-key">Tag an event</span><span class="help-val">Select Home or Away → tap any event button while video plays</span></div>
-      <div class="help-row"><span class="help-key">Jump to a tag</span><span class="help-val">Tap any entry in the tag list or any dot on the timeline</span></div>
-      <div class="help-row"><span class="help-key">Export clip list</span><span class="help-val">Tap 📋 Copy Clip List — copies all tags with timestamps to clipboard</span></div>
+      <div class="help-row"><span class="help-key">Tag saved match</span><span class="help-val">History → 🎬 Video on any match card</span></div>
+      <div class="help-row"><span class="help-key">New video session</span><span class="help-val">History → 🎬 New Video Analysis → teams + URL</span></div>
+      <div class="help-row"><span class="help-key">Hide video</span><span class="help-val">▲ Hide Video — more space for event buttons</span></div>
+      <div class="help-row"><span class="help-key">Tag event</span><span class="help-val">Select Home or Away → tap event button while video plays</span></div>
+      <div class="help-row"><span class="help-key">Jump to tag</span><span class="help-val">Tap tag in list or coloured dot on timeline</span></div>
+      <div class="help-row"><span class="help-key">Export clips</span><span class="help-val">📋 Copy Clip List — timestamps to clipboard</span></div>
     </div>
 
     <div class="help-section">
-      <div class="help-section-title">⚙️ Event Settings</div>
-      <div class="help-row"><span class="help-key">Open settings</span><span class="help-val">⚙️ button in the top right corner (beside ? and ⏻)</span></div>
-      <div class="help-row"><span class="help-key">Edit an event</span><span class="help-val">Events tab → tap any event → edit label, icon, context and outcomes</span></div>
-      <div class="help-row"><span class="help-key">Add custom event</span><span class="help-val">Events tab → tap + Add Custom Event → set label, icon, category and outcomes</span></div>
-      <div class="help-row"><span class="help-key">Context (Live/Video)</span><span class="help-val">Each event can be set to Live Only, Video Only, or Live + Video</span></div>
-      <div class="help-row"><span class="help-key">Performance scores</span><span class="help-val">Performance tab → adjust point values per outcome → tap Save</span></div>
-      <div class="help-row"><span class="help-key">Club config</span><span class="help-val">Club admins — changes apply to all coaches in the club automatically</span></div>
-    </div>
-
-    <div class="help-section">
-      <div class="help-section-title">🏟 Club Feature</div>
-      <div class="help-row"><span class="help-key">Create a club</span><span class="help-val">🏟 button → Create Club → enter name and county</span></div>
-      <div class="help-row"><span class="help-key">Invite a coach</span><span class="help-val">🏟 → Members tab → share your 8-character invite code</span></div>
-      <div class="help-row"><span class="help-key">Join a club</span><span class="help-val">🏟 → Join Club → enter invite code</span></div>
-    </div>
-
-    <div class="help-section">
-      <div class="help-section-title">💳 Subscription</div>
-      <div class="help-row"><span class="help-key">Individual plans</span><span class="help-val">Upgrade → Individual → £5/month or £50/year</span></div>
-      <div class="help-row"><span class="help-key">Club plans</span><span class="help-val">Upgrade → Club → £10/month or £90/year — unlimited coaches</span></div>
-    </div>
-
-    <div class="help-section">
-      <div class="help-section-title">⚙️ Account</div>
-      <div class="help-row"><span class="help-key">Sign out</span><span class="help-val">⏻ Sign Out button — top right corner</span></div>
-      <div class="help-row"><span class="help-key">Match history</span><span class="help-val">Clear browser data? Sign back in — all matches restore from your account</span></div>
-      <div class="help-row"><span class="help-key">App not updating</span><span class="help-val">Delete PWA from home screen and reinstall from Safari</span></div>
+      <div class="help-section-title">⚙️ Settings &amp; Account</div>
+      <div class="help-row"><span class="help-key">Event settings</span><span class="help-val">⚙️ button → Events tab (edit/add) or Performance tab (scores)</span></div>
+      <div class="help-row"><span class="help-key">Create a club</span><span class="help-val">🏟 button → Create Club</span></div>
+      <div class="help-row"><span class="help-key">Invite a coach</span><span class="help-val">🏟 → Members → share 8-character invite code</span></div>
+      <div class="help-row"><span class="help-key">Subscribe</span><span class="help-val">Upgrade → Individual (£5/mo) or Club (£10/mo)</span></div>
+      <div class="help-row"><span class="help-key">Sign out</span><span class="help-val">⏻ Sign Out — top right corner</span></div>
+      <div class="help-row"><span class="help-key">History gone?</span><span class="help-val">Sign back in — restores from your account automatically</span></div>
     </div>
 
     <div style="height:20px;"></div>
@@ -5471,6 +5524,560 @@ function updateAttendanceBadges() {
 // Init training on load
 loadTraining();
 
+// ── SEASON SUMMARY ────────────────────────────────────────────────────
+
+function openSeasonSummary() {
+  var list = loadHistory();
+  // Build season options from match savedAt dates
+  var seasons = new Set();
+  list.forEach(function(m) {
+    if (m.savedAt) {
+      var d = new Date(m.savedAt);
+      var yr = d.getFullYear(), mo = d.getMonth();
+      seasons.add(mo >= 7 ? yr + '-' + (yr+1).toString().slice(2) : (yr-1) + '-' + yr.toString().slice(2));
+    }
+  });
+  seasons.add(getCurrentSeason());
+  var sel = document.getElementById('ss-season-select');
+  var cur = getCurrentSeason();
+  sel.innerHTML = Array.from(seasons).sort().reverse().map(function(s) {
+    return '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' + s + '</option>';
+  }).join('');
+  document.getElementById('ss-team-filter').value = '';
+  renderSeasonSummaryPreview();
+  document.getElementById('season-summary-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSeasonSummary() {
+  document.getElementById('season-summary-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function getSeasonMatches() {
+  var season = document.getElementById('ss-season-select').value;
+  var teamFilter = (document.getElementById('ss-team-filter').value || '').trim().toLowerCase();
+  var list = loadHistory();
+  return list.filter(function(m) {
+    if (m.isVideoStub) return false;
+    if (!m.savedAt) return false;
+    var d = new Date(m.savedAt);
+    var yr = d.getFullYear(), mo = d.getMonth();
+    var mSeason = mo >= 7 ? yr + '-' + (yr+1).toString().slice(2) : (yr-1) + '-' + yr.toString().slice(2);
+    if (mSeason !== season) return false;
+    if (teamFilter) {
+      return (m.home && m.home.toLowerCase().includes(teamFilter)) ||
+             (m.away && m.away.toLowerCase().includes(teamFilter));
+    }
+    return true;
+  }).sort(function(a,b) { return new Date(a.savedAt) - new Date(b.savedAt); });
+}
+
+function renderSeasonSummaryPreview() {
+  var preview = document.getElementById('ss-preview');
+  var matches = getSeasonMatches();
+  if (!matches.length) {
+    preview.innerHTML = '<div class="ss-empty">No matches found for this season.<br>Save matches from the Stats tab to build your season summary.</div>';
+    return;
+  }
+
+  // Aggregate stats
+  var wins=0, draws=0, losses=0;
+  var totalGoals=0, totalPoints=0, oppGoals=0, oppPoints=0;
+  var totalShots=0, totalScored=0, totalWides=0;
+  var totalBallWon=0, totalBallLost=0, totalTurnovers=0;
+  var totalKoWon=0, totalKoTotal=0;
+  var playerPerf = {}; // name -> perf score accumulator
+
+  matches.forEach(function(m) {
+    var hT = m.homeGoals*3 + m.homePoints;
+    var aT = m.awayGoals*3 + m.awayPoints;
+    if (hT > aT) wins++; else if (hT < aT) losses++; else draws++;
+    totalGoals += m.homeGoals || 0;
+    totalPoints += m.homePoints || 0;
+    oppGoals += m.awayGoals || 0;
+    oppPoints += m.awayPoints || 0;
+    // Shots
+    if (m.shots && m.shots.home) {
+      var play = m.shots.home.play || {}, free = m.shots.home.free || {};
+      var allOutcomes = Object.assign({}, play, free);
+      Object.keys(allOutcomes).forEach(function(k) {
+        if (k !== 'goal' && k !== 'point' && k !== 'twopointer') totalWides += (play[k]||0) + (free[k]||0);
+      });
+      totalScored += (play.goal||0)*3 + (play.point||0) + (free.goal||0)*3 + (free.point||0);
+      totalShots += Object.values(play).reduce(function(a,b){return a+b;},0) + Object.values(free).reduce(function(a,b){return a+b;},0);
+    }
+    // Ball
+    if (m.ballWon && m.ballWon.home) totalBallWon += Object.values(m.ballWon.home).reduce(function(a,b){return a+b;},0);
+    if (m.ballLost && m.ballLost.home) totalBallLost += Object.values(m.ballLost.home).reduce(function(a,b){return a+b;},0);
+    if (m.turnover && m.turnover.home) totalTurnovers += Object.values(m.turnover.home).reduce(function(a,b){return a+b;},0);
+    // Kickouts
+    if (m.kickout && m.kickout.home) {
+      var ko = m.kickout.home;
+      totalKoWon += (ko.wonClean||0) + (ko.breakWon||0) + (ko.shortWon||0);
+      totalKoTotal += Object.values(ko).reduce(function(a,b){return a+b;},0);
+    }
+    // Player performance
+    if (m.players) {
+      m.players.forEach(function(p) {
+        if (p && p.name && p.stats) {
+          var score = calcPlayerPerformance(p.stats);
+          if (!playerPerf[p.name]) playerPerf[p.name] = { score:0, matches:0 };
+          playerPerf[p.name].score += score;
+          playerPerf[p.name].matches++;
+        }
+      });
+    }
+  });
+
+  var totalGames = matches.length;
+  var convPct = totalShots > 0 ? Math.round((totalScored/totalShots)*100) : 0;
+  var koPct = totalKoTotal > 0 ? Math.round((totalKoWon/totalKoTotal)*100) : 0;
+  var poss = (totalBallWon + totalBallLost) > 0 ? Math.round((totalBallWon/(totalBallWon+totalBallLost))*100) : 0;
+
+  var html = '';
+
+  // Record summary
+  html += '<div class="ptr-att-summary" style="margin-bottom:14px;">' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val">' + totalGames + '</div><div class="ptr-att-stat-label">Matches</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val green">' + wins + '</div><div class="ptr-att-stat-label">Wins</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val" style="color:#f5a623">' + draws + '</div><div class="ptr-att-stat-label">Draws</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val" style="color:var(--red-light)">' + losses + '</div><div class="ptr-att-stat-label">Losses</div></div>' +
+  '</div>';
+
+  // Key stats grid
+  html += '<div class="ss-stat-grid">' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + totalGoals + '-' + String(totalPoints).padStart(2,'0') + '</div><div class="ss-stat-label">Total Score</div></div>' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + convPct + '%</div><div class="ss-stat-label">Shot Conv.</div></div>' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + poss + '%</div><div class="ss-stat-label">Possession</div></div>' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + koPct + '%</div><div class="ss-stat-label">Kickout Won</div></div>' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + totalTurnovers + '</div><div class="ss-stat-label">Turnovers</div></div>' +
+    '<div class="ss-stat-card"><div class="ss-stat-val">' + totalWides + '</div><div class="ss-stat-label">Wides</div></div>' +
+  '</div>';
+
+  // Results table
+  html += '<div class="ss-section-title">Results</div>';
+  html += '<table class="ss-results-table"><thead><tr><th>Date</th><th>Opponent</th><th>Competition</th><th>Score</th><th>Result</th></tr></thead><tbody>';
+  matches.forEach(function(m) {
+    var d = new Date(m.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var hT = m.homeGoals*3+m.homePoints, aT = m.awayGoals*3+m.awayPoints;
+    var res = hT > aT ? 'W' : hT < aT ? 'L' : 'D';
+    var resClass = res === 'W' ? 'ss-result-w' : res === 'L' ? 'ss-result-l' : 'ss-result-d';
+    var score = m.homeGoals + '-' + String(m.homePoints).padStart(2,'0') + ' v ' + m.awayGoals + '-' + String(m.awayPoints).padStart(2,'0');
+    html += '<tr><td>' + d + '</td><td>' + (m.away||'') + '</td><td>' + (m.competition||'—') + '</td><td>' + score + '</td><td class="' + resClass + '">' + res + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  // Top performers
+  var perfRanked = Object.keys(playerPerf).map(function(name) {
+    return { name, score: playerPerf[name].score, matches: playerPerf[name].matches };
+  }).sort(function(a,b) { return b.score - a.score; }).slice(0, 5);
+
+  if (perfRanked.length) {
+    html += '<div class="ss-section-title">Top Performers</div>';
+    perfRanked.forEach(function(p, i) {
+      html += '<div class="ss-top-performer">' +
+        '<div class="ss-tp-rank">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>' +
+        '<div class="ss-tp-name">' + p.name + '<span style="font-size:9px;color:var(--muted);margin-left:6px;">' + p.matches + ' match' + (p.matches!==1?'es':'') + '</span></div>' +
+        '<div class="ss-tp-val">' + (p.score > 0 ? '+' : '') + p.score + '</div>' +
+      '</div>';
+    });
+  }
+
+  preview.innerHTML = html;
+}
+
+function generateSeasonSummaryPDF() {
+  var season = document.getElementById('ss-season-select').value;
+  var matches = getSeasonMatches();
+  if (!matches.length) { showSync('No matches to report', 2000); return; }
+
+  var wins=0, draws=0, losses=0;
+  var totalGoals=0, totalPoints=0, oppGoals=0, oppPoints=0;
+  var totalShots=0, totalScored=0;
+  var playerPerf = {};
+
+  matches.forEach(function(m) {
+    var hT = m.homeGoals*3+m.homePoints, aT = m.awayGoals*3+m.awayPoints;
+    if (hT > aT) wins++; else if (hT < aT) losses++; else draws++;
+    totalGoals += m.homeGoals||0; totalPoints += m.homePoints||0;
+    oppGoals += m.awayGoals||0; oppPoints += m.awayPoints||0;
+    if (m.shots && m.shots.home) {
+      var play = m.shots.home.play||{}, free = m.shots.home.free||{};
+      totalScored += (play.goal||0)*3+(play.point||0)+(free.goal||0)*3+(free.point||0);
+      totalShots += Object.values(play).reduce(function(a,b){return a+b;},0)+Object.values(free).reduce(function(a,b){return a+b;},0);
+    }
+    if (m.players) m.players.forEach(function(p) {
+      if (p && p.name && p.stats) {
+        var s = calcPlayerPerformance(p.stats);
+        if (!playerPerf[p.name]) playerPerf[p.name] = {score:0,matches:0};
+        playerPerf[p.name].score += s; playerPerf[p.name].matches++;
+      }
+    });
+  });
+
+  var convPct = totalShots > 0 ? Math.round((totalScored/totalShots)*100) : 0;
+  var perfRanked = Object.keys(playerPerf).map(function(n){ return {name:n,...playerPerf[n]}; }).sort(function(a,b){return b.score-a.score;});
+
+  var printWin = window.open('', '_blank');
+  if (!printWin) { alert('Please allow popups'); return; }
+
+  var css = '<style>body{font-family:Arial,sans-serif;color:#111;margin:0;padding:20px;font-size:13px;}h1{font-size:22px;font-weight:700;color:#991b1b;}h2{font-size:14px;font-weight:700;color:#991b1b;margin:20px 0 8px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #991b1b;padding-bottom:4px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;}th{background:#991b1b;color:#fff;padding:7px 10px;text-align:left;font-size:11px;letter-spacing:1px;}td{padding:7px 10px;border-bottom:1px solid #e5e7eb;font-size:12px;}tr:nth-child(even) td{background:#f9fafb;}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}.kpi{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center;}.kpi-val{font-size:22px;font-weight:700;color:#991b1b;}.kpi-label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;}.w{color:#059669;font-weight:700;}.l{color:#dc2626;font-weight:700;}.d{color:#d97706;font-weight:700;}@media print{button{display:none!important;}}</style>';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Season Summary ' + season + '</title>' + css + '</head><body>';
+  html += '<h1>Season Summary — ' + season + '</h1>';
+  html += '<p style="color:#6b7280;margin-top:0;">' + matches.length + ' matches · ' + wins + 'W ' + draws + 'D ' + losses + 'L</p>';
+  html += '<div class="kpi-grid"><div class="kpi"><div class="kpi-val">' + totalGoals + '-' + String(totalPoints).padStart(2,'0') + '</div><div class="kpi-label">Total Score</div></div>' +
+    '<div class="kpi"><div class="kpi-val">' + (oppGoals + '-' + String(oppPoints).padStart(2,'0')) + '</div><div class="kpi-label">Conceded</div></div>' +
+    '<div class="kpi"><div class="kpi-val">' + convPct + '%</div><div class="kpi-label">Shot Conv.</div></div>' +
+    '<div class="kpi"><div class="kpi-val">' + (wins + 'W/' + draws + 'D/' + losses + 'L') + '</div><div class="kpi-label">Record</div></div></div>';
+
+  html += '<h2>Results</h2><table><thead><tr><th>Date</th><th>Opponent</th><th>Competition</th><th>Score</th><th>Result</th></tr></thead><tbody>';
+  matches.forEach(function(m) {
+    var d = new Date(m.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    var hT = m.homeGoals*3+m.homePoints, aT = m.awayGoals*3+m.awayPoints;
+    var res = hT > aT ? 'W' : hT < aT ? 'L' : 'D';
+    html += '<tr><td>' + d + '</td><td>' + (m.away||'') + '</td><td>' + (m.competition||'—') + '</td>' +
+      '<td>' + m.homeGoals + '-' + String(m.homePoints).padStart(2,'0') + ' v ' + m.awayGoals + '-' + String(m.awayPoints).padStart(2,'0') + '</td>' +
+      '<td class="' + res.toLowerCase() + '">' + res + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  if (perfRanked.length) {
+    html += '<h2>Player Performance Rankings</h2><table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>Performance Score</th></tr></thead><tbody>';
+    perfRanked.forEach(function(p, i) {
+      html += '<tr><td>' + (i+1) + '</td><td><strong>' + p.name + '</strong></td><td>' + p.matches + '</td><td>' + (p.score > 0 ? '+' : '') + p.score + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  html += '<button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#991b1b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">🖨️ Print / Save PDF</button>';
+  html += '</body></html>';
+  printWin.document.write(html);
+  printWin.document.close();
+  closeSeasonSummary();
+}
+
+// ── SCOUT REPORTS ─────────────────────────────────────────────────────
+
+const SCOUT_KEY = 'cs_scout_reports';
+var scoutReports = [];
+var activeScoutMatchId = null;
+
+function loadScoutReports() {
+  try { scoutReports = JSON.parse(localStorage.getItem(SCOUT_KEY) || '[]'); }
+  catch(e) { scoutReports = []; }
+}
+
+function saveScoutReports() {
+  try { localStorage.setItem(SCOUT_KEY, JSON.stringify(scoutReports)); } catch(e) {}
+  syncScoutToSupabase();
+}
+
+function syncScoutToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('scout_reports?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'scout_reports?user_id=eq.' + currentUser.id : 'scout_reports';
+      return supaDB(path, method, { user_id: currentUser.id, reports: scoutReports }, currentToken);
+    }).catch(function() {});
+}
+
+function loadScoutFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('scout_reports?user_id=eq.' + currentUser.id + '&select=reports', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].reports) {
+        scoutReports = data[0].reports;
+        try { localStorage.setItem(SCOUT_KEY, JSON.stringify(scoutReports)); } catch(e) {}
+      }
+    }).catch(function() {});
+}
+
+function openScoutReport(matchId) {
+  loadScoutReports();
+  var match = loadHistory().find(function(m) { return m.id === matchId; });
+  if (!match) return;
+  activeScoutMatchId = matchId;
+
+  var opponent = match.away || 'Opponent';
+  document.getElementById('scout-sheet-title').textContent = 'Scout: ' + opponent;
+  document.getElementById('scout-sheet-sub').textContent = (match.competition || '') + (match.savedAt ? ' · ' + new Date(match.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '');
+
+  var existing = scoutReports.find(function(r) { return r.matchId === matchId; });
+  document.getElementById('scout-attacking').value = existing ? (existing.attacking || '') : '';
+  document.getElementById('scout-defensive').value = existing ? (existing.defensive || '') : '';
+  document.getElementById('scout-setpieces').value = existing ? (existing.setpieces || '') : '';
+  document.getElementById('scout-strengths').value = existing ? (existing.strengths || '') : '';
+  document.getElementById('scout-weaknesses').value = existing ? (existing.weaknesses || '') : '';
+  document.getElementById('scout-notes').value = existing ? (existing.notes || '') : '';
+
+  // Render key players
+  renderScoutPlayers(existing ? (existing.keyPlayers || []) : []);
+
+  var deleteBtn = document.getElementById('scout-delete-btn');
+  if (deleteBtn) deleteBtn.style.display = existing ? 'block' : 'none';
+
+  document.getElementById('scout-report-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeScoutReport() {
+  document.getElementById('scout-report-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  activeScoutMatchId = null;
+}
+
+function renderScoutPlayers(players) {
+  var list = document.getElementById('scout-players-list');
+  list.innerHTML = (players || []).map(function(p, i) {
+    return '<div class="scout-player-row">' +
+      '<input class="scout-player-name" type="text" value="' + (p.name||'') + '" placeholder="Player name">' +
+      '<input class="scout-player-pos" type="text" value="' + (p.pos||'') + '" placeholder="Pos">' +
+      '<input class="scout-player-notes" type="text" value="' + (p.notes||'') + '" placeholder="Notes on this player">' +
+      '<button class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addScoutPlayer() {
+  var list = document.getElementById('scout-players-list');
+  var row = document.createElement('div');
+  row.className = 'scout-player-row';
+  row.innerHTML = '<input class="scout-player-name" type="text" placeholder="Player name">' +
+    '<input class="scout-player-pos" type="text" placeholder="Pos">' +
+    '<input class="scout-player-notes" type="text" placeholder="Notes on this player">' +
+    '<button class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function saveScoutReport() {
+  var keyPlayers = [];
+  document.querySelectorAll('.scout-player-row').forEach(function(row) {
+    var name = row.querySelectorAll('input')[0].value.trim();
+    var pos = row.querySelectorAll('input')[1].value.trim();
+    var notes = row.querySelectorAll('input')[2].value.trim();
+    if (name) keyPlayers.push({ name, pos, notes });
+  });
+
+  var report = {
+    matchId: activeScoutMatchId,
+    createdAt: new Date().toISOString(),
+    keyPlayers,
+    attacking: document.getElementById('scout-attacking').value,
+    defensive: document.getElementById('scout-defensive').value,
+    setpieces: document.getElementById('scout-setpieces').value,
+    strengths: document.getElementById('scout-strengths').value,
+    weaknesses: document.getElementById('scout-weaknesses').value,
+    notes: document.getElementById('scout-notes').value,
+  };
+
+  var idx = scoutReports.findIndex(function(r) { return r.matchId === activeScoutMatchId; });
+  if (idx >= 0) scoutReports[idx] = report;
+  else scoutReports.push(report);
+
+  saveScoutReports();
+  closeScoutReport();
+  renderHistory();
+  showSync('✓ Scout report saved', 2000);
+}
+
+function deleteScoutReport() {
+  if (!confirm('Delete this scout report?')) return;
+  scoutReports = scoutReports.filter(function(r) { return r.matchId !== activeScoutMatchId; });
+  saveScoutReports();
+  closeScoutReport();
+  renderHistory();
+  showSync('Scout report deleted', 1500);
+}
+
+// Init scout reports
+loadScoutReports();
+
+// ── WELLNESS / READINESS ──────────────────────────────────────────────
+
+const WELLNESS_KEY = 'cs_wellness';
+var wellnessData = {};
+
+const WELLNESS_METRICS = [
+  { key: 'sleep', label: 'Sleep Quality', icon: '😴' },
+  { key: 'energy', label: 'Energy Level', icon: '⚡' },
+  { key: 'soreness', label: 'Muscle Soreness', icon: '💪' },
+  { key: 'stress', label: 'Stress Level', icon: '🧠' },
+  { key: 'mood', label: 'Mood', icon: '😊' },
+];
+
+function loadWellness() {
+  try { wellnessData = JSON.parse(localStorage.getItem(WELLNESS_KEY) || '{}'); }
+  catch(e) { wellnessData = {}; }
+}
+
+function saveWellness() {
+  try { localStorage.setItem(WELLNESS_KEY, JSON.stringify(wellnessData)); } catch(e) {}
+  syncWellnessToSupabase();
+}
+
+function syncWellnessToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('wellness_data?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'wellness_data?user_id=eq.' + currentUser.id : 'wellness_data';
+      return supaDB(path, method, { user_id: currentUser.id, data: wellnessData }, currentToken);
+    }).catch(function() {});
+}
+
+function loadWellnessFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('wellness_data?user_id=eq.' + currentUser.id + '&select=data', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].data) {
+        wellnessData = data[0].data;
+        try { localStorage.setItem(WELLNESS_KEY, JSON.stringify(wellnessData)); } catch(e) {}
+      }
+    }).catch(function() {});
+}
+
+function openWellnessModal() {
+  loadWellness();
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('wellness-date-label').textContent = 'Today — ' + new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  // Generate self-report link
+  var baseUrl = window.location.origin + window.location.pathname;
+  var link = baseUrl + '?wellness=' + (currentUser ? currentUser.id : 'demo') + '&date=' + today;
+  document.getElementById('wellness-link-text').textContent = link;
+
+  renderWellnessDashboard(today);
+  document.getElementById('wellness-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWellnessModal() {
+  document.getElementById('wellness-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function copyWellnessLink() {
+  var text = document.getElementById('wellness-link-text').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { vaFlash('Link copied!'); }).catch(function() {});
+  } else {
+    window.prompt('Copy this link:', text);
+  }
+}
+
+function renderWellnessDashboard(date) {
+  var container = document.getElementById('wellness-dashboard');
+  if (!container) return;
+  var dayData = wellnessData[date] || {};
+  var activePlayers = squad.map(function(p,i){ return {p,i}; }).filter(function(x){ return x.p && x.p.name; });
+
+  if (!activePlayers.length) {
+    container.innerHTML = '<div class="wellness-empty">Add players to your squad to track wellness</div>';
+    return;
+  }
+
+  var html = '';
+  // Self-check button
+  html += '<button class="wellness-training-btn" onclick="openWellnessSelfCheck()">📱 Add Self Check-in</button>';
+
+  activePlayers.forEach(function(x) {
+    var sub = dayData[x.i];
+    if (!sub) {
+      html += '<div class="wellness-player-row">' +
+        '<div class="wellness-player-header">' +
+          '<span class="wellness-player-name">' + x.p.name + '</span>' +
+          '<span class="wellness-no-data">Not submitted</span>' +
+        '</div>' +
+      '</div>';
+      return;
+    }
+    var scores = [sub.sleep, sub.energy, sub.soreness, sub.stress, sub.mood].filter(Boolean);
+    var avg = scores.length ? scores.reduce(function(a,b){return a+b;},0)/scores.length : 0;
+    var colorClass = avg >= 4 ? 'green' : avg >= 3 ? 'yellow' : 'red';
+    var chips = WELLNESS_METRICS.map(function(m) {
+      return '<span class="wellness-metric-chip">' + m.icon + ' ' + (sub[m.key] || '—') + '</span>';
+    }).join('');
+    html += '<div class="wellness-player-row">' +
+      '<div class="wellness-player-header">' +
+        '<span class="wellness-player-name">' + x.p.name + '</span>' +
+        '<span class="wellness-overall ' + colorClass + '">' + avg.toFixed(1) + '</span>' +
+      '</div>' +
+      '<div class="wellness-metrics">' + chips + '</div>' +
+      (sub.note ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;">' + sub.note + '</div>' : '') +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// Player self-check-in
+function openWellnessSelfCheck() {
+  var activePlayers = squad.map(function(p,i){ return {p,i}; }).filter(function(x){ return x.p && x.p.name; });
+  var sel = document.getElementById('wellness-player-select');
+  sel.innerHTML = '<option value="">Select your name</option>' + activePlayers.map(function(x) {
+    return '<option value="' + x.i + '">' + x.p.name + '</option>';
+  }).join('');
+
+  // Render metric sliders
+  var list = document.getElementById('wellness-metrics-list');
+  list.innerHTML = WELLNESS_METRICS.map(function(m) {
+    return '<div class="wellness-metric-row ptr-section">' +
+      '<div class="wellness-metric-name">' + m.icon + ' ' + m.label + '</div>' +
+      '<div class="wellness-score-row" id="wm-' + m.key + '">' +
+        [1,2,3,4,5].map(function(v) {
+          return '<div class="wellness-score-dot" onclick="setWellnessScore(this,\'' + m.key + '\',' + v + ')">' + v + '</div>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('wellness-note').value = '';
+  document.getElementById('wellness-selfcheck-modal').classList.add('open');
+}
+
+function closeWellnessSelfCheck() {
+  document.getElementById('wellness-selfcheck-modal').classList.remove('open');
+}
+
+function setWellnessScore(dot, metric, value) {
+  var row = document.getElementById('wm-' + metric);
+  if (!row) return;
+  row.querySelectorAll('.wellness-score-dot').forEach(function(d, i) {
+    d.className = 'wellness-score-dot' + (i < value ? ' selected-' + (i+1) : '');
+  });
+  row.dataset.score = value;
+}
+
+function submitWellnessSelfCheck() {
+  var slotIdx = parseInt(document.getElementById('wellness-player-select').value);
+  if (isNaN(slotIdx)) { showSync('Please select your name', 2000); return; }
+
+  var scores = {};
+  WELLNESS_METRICS.forEach(function(m) {
+    var row = document.getElementById('wm-' + m.key);
+    scores[m.key] = row ? (parseInt(row.dataset.score) || 0) : 0;
+  });
+
+  var today = new Date().toISOString().split('T')[0];
+  if (!wellnessData[today]) wellnessData[today] = {};
+  wellnessData[today][slotIdx] = Object.assign(scores, {
+    note: document.getElementById('wellness-note').value.trim(),
+    submittedAt: new Date().toISOString()
+  });
+
+  saveWellness();
+  closeWellnessSelfCheck();
+  renderWellnessDashboard(today);
+  showSync('✓ Check-in submitted', 2000);
+}
+
+// Init wellness on load
+loadWellness();
+
 function openEventSettings() {
   loadEventConfig();
   var note = document.getElementById('settings-club-note');
@@ -6407,10 +7014,11 @@ function renderHistory(query) {
     const winner = hT > aT ? m.home : hT < aT ? m.away : 'Draw';
     const winnerClass = hT > aT ? 'home-color' : hT < aT ? 'away-color' : '';
     var hasTags = vaLoadTags(m.id).length > 0;
+    var hasScout = scoutReports.some(function(r) { return r.matchId === m.id; });
     return `<div class="match-card" onclick="openDetailModal(${m.id})">
       <div class="match-card-header">
         <span class="match-card-comp">${m.competition}${m.venue ? ' · ' + m.venue : ''}</span>
-        <span class="match-card-date">${dateStr}${hasTags ? ' <span class="mc-video-badge">🎬</span>' : ''}</span>
+        <span class="match-card-date">${dateStr}${hasTags ? ' <span class="mc-video-badge">🎬</span>' : ''}${hasScout ? ' <span class="scout-badge">🔍</span>' : ''}</span>
       </div>
       <div class="match-card-score">
         <div class="mcs-team">
@@ -6445,6 +7053,7 @@ function renderHistory(query) {
         <button class="mca-btn" onclick="openDetailModal(${m.id})">📊 Full Stats</button>
         <button class="mca-btn" onclick="generateMatchReport(${m.id})">📄 Report</button>
         <button class="mca-btn" onclick="openVideoAnalysis(${m.id})">🎬 Video</button>
+        <button class="mca-btn" onclick="openScoutReport(${m.id})">🔍 Scout</button>
         <button class="mca-btn" onclick="loadMatchIntoTracker(${m.id})">↩ Reload</button>
         <button class="mca-btn danger" onclick="deleteMatch(${m.id})">🗑 Delete</button>
       </div>
@@ -8360,6 +8969,12 @@ function loadUserData() {
   // Load trial data
   loadTrialsFromSupabase();
 
+  // Load scout reports
+  loadScoutFromSupabase();
+
+  // Load wellness data
+  loadWellnessFromSupabase();
+
   // Load match history from Supabase
   supaDB('matches?user_id=eq.' + currentUser.id + '&select=data&order=saved_at.desc', 'GET', null, currentToken)
     .then(function(data) {
@@ -9464,6 +10079,128 @@ window.addEventListener('resize', function() {
     <div class="ee-actions">
       <button class="ee-save-btn" onclick="saveEventEditor()">Save Event</button>
       <button class="ee-delete-btn" id="ee-delete-btn" onclick="deleteEditingEvent()" style="display:none;">Delete Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEASON SUMMARY MODAL -->
+<div class="modal-overlay" id="season-summary-modal" onclick="if(event.target===this)closeSeasonSummary()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Season Summary</div><div class="sheet-sub">Aggregated stats across all matches</div></div>
+      <button class="sheet-close" onclick="closeSeasonSummary()">✕</button>
+    </div>
+    <div class="tr-session-meta" style="flex-shrink:0;">
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Season</div>
+        <select id="ss-season-select" class="tr-meta-input training-season-sel" style="width:100%;" onchange="renderSeasonSummaryPreview()"></select>
+      </div>
+      <div class="tr-meta-field">
+        <div class="tr-meta-label">Team (Home)</div>
+        <input type="text" id="ss-team-filter" class="tr-meta-input" placeholder="Filter by team (optional)">
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div id="ss-preview"></div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
+      <button class="btn-save-player" onclick="generateSeasonSummaryPDF()">📄 Generate PDF Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCOUT REPORT MODAL -->
+<div class="modal-overlay" id="scout-report-modal" onclick="if(event.target===this)closeScoutReport()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title" id="scout-sheet-title">Scout Report</div><div class="sheet-sub" id="scout-sheet-sub">Opposition analysis</div></div>
+      <button class="sheet-close" onclick="closeScoutReport()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
+      <!-- Key Players -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Key Players to Watch</div>
+        <div id="scout-players-list"></div>
+        <button class="settings-add-btn" onclick="addScoutPlayer()" style="margin-top:6px;">+ Add Player</button>
+      </div>
+      <!-- Tactical sections -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Attacking Play</div>
+        <textarea class="scout-textarea" id="scout-attacking" placeholder="How do they attack? Key patterns, runs, playmakers..."></textarea>
+      </div>
+      <div class="ptr-section">
+        <div class="ptr-section-title">Defensive Shape</div>
+        <textarea class="scout-textarea" id="scout-defensive" placeholder="Formation, press triggers, sweeper, marking..."></textarea>
+      </div>
+      <div class="ptr-section">
+        <div class="ptr-section-title">Kickouts</div>
+        <textarea class="scout-textarea" id="scout-setpieces" placeholder="Short or long? Target players? Patterns..."></textarea>
+      </div>
+      <div class="ptr-section">
+        <div class="ptr-section-title">Strengths</div>
+        <textarea class="scout-textarea" id="scout-strengths" placeholder="What are they good at?"></textarea>
+      </div>
+      <div class="ptr-section">
+        <div class="ptr-section-title">Weaknesses / Opportunities</div>
+        <textarea class="scout-textarea" id="scout-weaknesses" placeholder="Where can we exploit them?"></textarea>
+      </div>
+      <div class="ptr-section" style="border-bottom:none;">
+        <div class="ptr-section-title">General Notes</div>
+        <textarea class="scout-textarea" id="scout-notes" placeholder="Anything else worth noting..."></textarea>
+      </div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));display:flex;gap:10px;">
+      <button class="btn-save-player" onclick="saveScoutReport()" style="flex:2;">Save Report</button>
+      <button class="ee-delete-btn" id="scout-delete-btn" onclick="deleteScoutReport()" style="display:none;flex:1;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- WELLNESS CHECKIN MODAL (Coach view) -->
+<div class="modal-overlay" id="wellness-modal" onclick="if(event.target===this)closeWellnessModal()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Readiness Dashboard</div><div class="sheet-sub" id="wellness-date-label">Today's check-in</div></div>
+      <button class="sheet-close" onclick="closeWellnessModal()">✕</button>
+    </div>
+    <div style="flex-shrink:0;margin-bottom:12px;">
+      <div class="ptr-section-title" style="margin-bottom:8px;">Player Self-Report Link</div>
+      <div class="wellness-link-box">
+        <div class="wellness-link-text" id="wellness-link-text">Generate link for players</div>
+        <button class="wellness-copy-btn" onclick="copyWellnessLink()">📋 Copy</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Share this link with your squad — players tap their name and submit their readiness scores</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div id="wellness-dashboard"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WELLNESS SELF-REPORT (Player facing - embedded in app for now) -->
+<div class="modal-overlay" id="wellness-selfcheck-modal" onclick="if(event.target===this)closeWellnessSelfCheck()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">How are you feeling?</div><div class="sheet-sub">Your coach will see your scores</div></div>
+      <button class="sheet-close" onclick="closeWellnessSelfCheck()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
+      <div class="ptr-section">
+        <div class="ptr-section-title">Select Your Name</div>
+        <select id="wellness-player-select" class="tr-meta-input training-season-sel" style="width:100%;margin-bottom:0;"></select>
+      </div>
+      <div id="wellness-metrics-list"></div>
+      <div class="ptr-section" style="border-bottom:none;">
+        <div class="ptr-section-title">Note <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;">(optional)</span></div>
+        <input type="text" id="wellness-note" class="tr-meta-input" placeholder="e.g. Tight hamstring, feeling good...">
+      </div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
+      <button class="btn-save-player" onclick="submitWellnessSelfCheck()">Submit Check-in</button>
     </div>
   </div>
 </div>
