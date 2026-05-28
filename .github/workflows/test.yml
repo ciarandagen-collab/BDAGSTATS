@@ -41,13 +41,16 @@ jobs:
         run: npm install
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps chromium
+
+      - name: List test files
+        run: ls -la tests/
 
       - name: Wait for Netlify deployment
         run: sleep 30
 
       - name: Run browser tests
-        run: npx playwright test
+        run: npx playwright test --config=playwright.config.js
         env:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
