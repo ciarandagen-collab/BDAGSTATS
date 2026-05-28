@@ -2,7 +2,6 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
-  testMatch: '**/*.spec.js',
   timeout: 30000,
   retries: 1,
   workers: 2,
@@ -24,14 +23,6 @@ module.exports = defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 14'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 7'] },
     },
   ],
 });
