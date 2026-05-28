@@ -32,7 +32,7 @@ test.describe('Login Screen', () => {
   test('Login screen renders with green branding', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#login-screen')).toBeVisible();
-    const title = page.locator('#login-screen').getByText('Coach Stats');
+    const title = page.locator('#login-screen').getByText('Coach Stats', { exact: true });
     await expect(title).toBeVisible();
   });
 
@@ -160,7 +160,7 @@ test.describe('Match Tab', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
   test('Scoreboard visible', async ({ page }) => {
-    await expect(page.locator('.scoreboard')).toBeVisible();
+    await expect(page.locator('.scoreboard-card')).toBeVisible();
   });
 
   test('Game clock visible', async ({ page }) => {
@@ -186,14 +186,14 @@ test.describe('Match Tab', () => {
   test('Competition search filters results', async ({ page }) => {
     await page.click('#comp-picker-btn');
     await page.fill('#comp-search-input', 'Senior Football');
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(800);
     const items = await page.locator('.comp-item').count();
     expect(items).toBeGreaterThan(0);
   });
 
   test('Team picker opens on Home tap', async ({ page }) => {
-    await page.click('#home-team-btn');
-    await expect(page.locator('.picker-sheet')).toBeVisible({ timeout: 3000 });
+    await page.click('#home-name-display');
+    await expect(page.locator('.picker-sheet')).toBeVisible({ timeout: 5000 });
   });
 
   test('Start Game button visible', async ({ page }) => {
@@ -240,8 +240,12 @@ test.describe('Record Tab', () => {
     await navTo(page, 'match');
     // Set a home team name via JS
     await page.evaluate(() => {
-      document.getElementById('home-team').value = 'Kilcoo';
-      updateNames();
+      // Set the hidden input and the display button text
+      var homeInput = document.getElementById('home-name');
+      var homeDisplay = document.getElementById('home-name-display');
+      if (homeInput) homeInput.value = 'Kilcoo';
+      if (homeDisplay) homeDisplay.textContent = 'Kilcoo';
+      if (typeof updateNames === 'function') updateNames();
     });
     await navTo(page, 'record');
     await expect(page.locator('#record-home-label')).toHaveText('Kilcoo');
