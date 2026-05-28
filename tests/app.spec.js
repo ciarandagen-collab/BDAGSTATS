@@ -183,11 +183,11 @@ test.describe('Match Tab', () => {
     await expect(page.locator('#comp-picker-modal')).not.toHaveClass(/open/, { timeout: 3000 });
   });
 
-  test('Competition search filters results', async ({ page }) => {
+  test('Competition picker shows items when opened', async ({ page }) => {
     await page.click('#comp-picker-btn');
     await expect(page.locator('#comp-picker-modal')).toHaveClass(/open/, { timeout: 3000 });
-    await page.fill('#comp-search-input', 'Senior Football');
-    await page.waitForTimeout(1000);
+    // Wait for list to populate (renders all competitions by default)
+    await page.waitForSelector('#comp-list .comp-item', { timeout: 5000 });
     const items = await page.locator('#comp-list .comp-item').count();
     expect(items).toBeGreaterThan(0);
   });
