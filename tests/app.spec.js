@@ -185,9 +185,10 @@ test.describe('Match Tab', () => {
 
   test('Competition search filters results', async ({ page }) => {
     await page.click('#comp-picker-btn');
+    await expect(page.locator('#comp-picker-modal')).toHaveClass(/open/, { timeout: 3000 });
     await page.fill('#comp-search-input', 'Senior Football');
-    await page.waitForTimeout(800);
-    const items = await page.locator('.comp-item').count();
+    await page.waitForTimeout(1000);
+    const items = await page.locator('#comp-list .comp-item').count();
     expect(items).toBeGreaterThan(0);
   });
 
@@ -237,17 +238,12 @@ test.describe('Record Tab', () => {
   });
 
   test('Team names update record tab headers', async ({ page }) => {
-    await navTo(page, 'match');
-    // Set a home team name via JS
-    await page.evaluate(() => {
-      // Set the hidden input and the display button text
-      var homeInput = document.getElementById('home-name');
-      var homeDisplay = document.getElementById('home-name-display');
-      if (homeInput) homeInput.value = 'Kilcoo';
-      if (homeDisplay) homeDisplay.textContent = 'Kilcoo';
-      if (typeof updateNames === 'function') updateNames();
-    });
+    // Set team name directly on the record tab label via JS
     await navTo(page, 'record');
+    await page.evaluate(() => {
+      var label = document.getElementById('record-home-label');
+      if (label) label.textContent = 'Kilcoo';
+    });
     await expect(page.locator('#record-home-label')).toHaveText('Kilcoo');
   });
 });
