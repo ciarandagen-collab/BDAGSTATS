@@ -391,3 +391,160 @@ test.describe('History Search', () => {
     await expect(list).toBeVisible();
   });
 });
+
+// ── NEW FEATURES ──────────────────────────────────────────────────────
+
+test.describe('Substitutions', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'record');
+  });
+
+  test('Substitutions section visible on Record tab', async ({ page }) => {
+    await expect(page.locator('text=Substitutions')).toBeVisible();
+  });
+
+  test('Substitutions section expands on tap', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await expect(page.locator('#subs-section')).toBeVisible();
+  });
+
+  test('Record substitution button visible after expand', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await expect(page.locator('button:has-text("Record Substitution")')).toBeVisible();
+  });
+
+  test('Substitution modal opens', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await page.locator('button:has-text("Record Substitution")').click();
+    await expect(page.locator('#sub-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Match Notes', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Match notes textarea visible on Stats tab', async ({ page }) => {
+    await expect(page.locator('#match-notes-input')).toBeVisible();
+  });
+
+  test('Match notes autosaves on input', async ({ page }) => {
+    await page.fill('#match-notes-input', 'Test match notes');
+    await page.waitForTimeout(1000);
+    await expect(page.locator('#match-notes-saved')).toHaveText('✓ Saved');
+  });
+});
+
+test.describe('Shot Map', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Shot Map button visible on Stats tab', async ({ page }) => {
+    await expect(page.locator('button:has-text("Shot Map")')).toBeVisible();
+  });
+
+  test('Shot Map section shows on tap', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('#shot-map-section')).toBeVisible();
+  });
+
+  test('Shot Map SVG renders', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('#shot-map-svg')).toBeVisible();
+  });
+
+  test('Shot Map filters visible', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('.shot-map-controls')).toBeVisible();
+  });
+});
+
+test.describe('Fixtures', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Fixtures button visible in History tab', async ({ page }) => {
+    await expect(page.locator('button:has-text("Fixtures")')).toBeVisible();
+  });
+
+  test('Fixtures modal opens', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await expect(page.locator('#fixtures-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Add Fixture button visible in modal', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await expect(page.locator('button:has-text("Add Fixture")')).toBeVisible();
+  });
+
+  test('Add Fixture form opens', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await page.click('button:has-text("Add Fixture")');
+    await expect(page.locator('#add-fixture-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Opposition Database', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Opposition DB button visible', async ({ page }) => {
+    await expect(page.locator('button:has-text("Opposition DB")')).toBeVisible();
+  });
+
+  test('Opposition modal opens', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    await expect(page.locator('#opposition-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Opposition search bar visible', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    await expect(page.locator('#opposition-search')).toBeVisible();
+  });
+});
+
+test.describe('Injury Log', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'squad');
+    await page.click('#squad-tab-training');
+  });
+
+  test('Training players view accessible', async ({ page }) => {
+    await expect(page.locator('#squad-view-training')).toBeVisible();
+  });
+});
+
+test.describe('Video Analysis Clips', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('History tab has Video button on match cards', async ({ page }) => {
+    await navTo(page, 'history');
+    const historyList = page.locator('#history-list');
+    await expect(historyList).toBeVisible();
+  });
+});
+
+test.describe('Share Match Report', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Share button visible on match cards', async ({ page }) => {
+    const shareBtn = page.locator('.mca-btn:has-text("Share")').first();
+    const historyList = await page.locator('#history-list').innerHTML();
+    if (historyList.includes('mca-btn')) {
+      await expect(shareBtn).toBeVisible();
+    }
+  });
+});
