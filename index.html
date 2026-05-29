@@ -1323,6 +1323,30 @@ select option { background:#1a0505; }
 .match-notes-saved { font-size:11px; color:var(--green); margin-top:4px; height:16px; transition:opacity 0.3s; }
 .match-notes-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(74,222,128,0.1); color:#4ade80; font-family:'Oswald',sans-serif; letter-spacing:1px; margin-left:6px; }
 
+/* ── HIGHLIGHT CLIPS ─────────────────────────────── */
+.va-section-tabs { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:10px 0 8px; }
+.va-section-tab { flex:1; padding:8px 6px; background:transparent; border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; }
+.va-section-tab.active { background:rgba(22,163,74,0.15); color:var(--cream); }
+.va-clip-recorder { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:10px; }
+.va-clip-recorder-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.va-clip-mark-btn { padding:8px 12px; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.25); border-radius:8px; color:#4ade80; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; flex-shrink:0; }
+.va-clip-mark-btn:active { background:rgba(22,163,74,0.25); }
+.va-clip-times { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; }
+.va-clip-time-display { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:var(--cream); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px; min-width:44px; text-align:center; }
+.va-clip-save-btn { width:100%; padding:9px; background:linear-gradient(135deg,rgba(20,83,45,0.4),rgba(22,163,74,0.2)); border:1px solid rgba(22,163,74,0.3); border-radius:8px; color:#4ade80; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer; }
+.va-clip-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+.va-clip-item:active { background:rgba(22,163,74,0.08); }
+.va-clip-times-small { font-family:'Oswald',sans-serif; font-size:11px; color:var(--red-light); flex-shrink:0; width:80px; }
+.va-clip-label { flex:1; font-size:12px; color:var(--cream); }
+.va-clip-cat { font-size:9px; padding:2px 6px; border-radius:6px; font-family:'Oswald',sans-serif; letter-spacing:1px; flex-shrink:0; }
+.va-clip-cat.attack { background:rgba(22,163,74,0.12); color:#4ade80; }
+.va-clip-cat.defence { background:rgba(59,130,246,0.12); color:#60a5fa; }
+.va-clip-cat.individual { background:rgba(168,85,247,0.12); color:#c084fc; }
+.va-clip-cat.setpiece { background:rgba(245,158,11,0.12); color:#fbbf24; }
+.va-clip-del { background:none; border:none; color:rgba(255,80,80,0.35); font-size:13px; cursor:pointer; flex-shrink:0; }
+.va-tag-item-create-clip { display:block; width:100%; text-align:right; font-size:10px; color:rgba(74,222,128,0.5); font-family:'Oswald',sans-serif; letter-spacing:1px; background:none; border:none; cursor:pointer; padding:2px 0 0; }
+.va-tag-item-create-clip:active { color:#4ade80; }
+
 /* ── INJURY LOG ──────────────────────────────────── */
 .injury-row { padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:6px; }
 .injury-type { font-family:'Oswald',sans-serif; font-size:12px; color:var(--cream); display:flex; align-items:center; justify-content:space-between; }
@@ -5874,6 +5898,225 @@ function saveMatchNotesModal() {
   renderHistory();
   showSync('✓ Notes saved', 1500);
 }
+
+// ── HIGHLIGHT CLIPS ───────────────────────────────────────────────────
+
+var vaClipIn = null;
+var vaClipOut = null;
+var vaClipCategory = 'attack';
+var vaClipTeam = 'home';
+var vaCurrentTab = 'tags';
+
+const CLIPS_PREFIX = 'cs_clips_';
+
+function vaLoadClips(matchId) {
+  try { return JSON.parse(localStorage.getItem(CLIPS_PREFIX + matchId) || '[]'); }
+  catch(e) { return []; }
+}
+
+function vaSaveClips(matchId, clips) {
+  try { localStorage.setItem(CLIPS_PREFIX + matchId, JSON.stringify(clips)); } catch(e) {}
+}
+
+function vaSwitchTab(tab) {
+  vaCurrentTab = tab;
+  document.getElementById('va-tab-tags').classList.toggle('active', tab === 'tags');
+  document.getElementById('va-tab-clips').classList.toggle('active', tab === 'clips');
+  document.getElementById('va-panel-tags').style.display = tab === 'tags' ? 'block' : 'none';
+  document.getElementById('va-panel-clips').style.display = tab === 'clips' ? 'block' : 'none';
+  if (tab === 'clips') vaRenderClips();
+}
+
+function vaMarkClipStart() {
+  var ts = vaGetCurrentTime();
+  vaClipIn = ts;
+  var inEl = document.getElementById('va-clip-in-display');
+  if (inEl) inEl.textContent = vaFormatTime(Math.round(ts));
+  // Auto-set out to in + 15 seconds
+  vaClipOut = ts + 15;
+  var outEl = document.getElementById('va-clip-out-display');
+  if (outEl) outEl.textContent = vaFormatTime(Math.round(vaClipOut));
+  var saveBtn = document.getElementById('va-clip-save-btn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  vaFlash('In: ' + vaFormatTime(Math.round(ts)));
+}
+
+function vaMarkClipEnd() {
+  var ts = vaGetCurrentTime();
+  vaClipOut = ts;
+  var outEl = document.getElementById('va-clip-out-display');
+  if (outEl) outEl.textContent = vaFormatTime(Math.round(ts));
+  var saveBtn = document.getElementById('va-clip-save-btn');
+  if (saveBtn && vaClipIn !== null) saveBtn.style.display = 'block';
+  vaFlash('Out: ' + vaFormatTime(Math.round(ts)));
+}
+
+
+function openSaveClipModal() {
+  if (vaClipIn === null) return;
+  var inSec = Math.round(vaClipIn);
+  var outSec = Math.round(vaClipOut || vaClipIn + 15);
+  document.getElementById('clip-label-input').value = '';
+  document.getElementById('clip-in-input').value = inSec;
+  document.getElementById('clip-out-input').value = outSec;
+  document.getElementById('save-clip-times').textContent =
+    vaFormatTime(inSec) + ' → ' + vaFormatTime(outSec) + ' (' + (outSec - inSec) + 's)';
+  setClipCategory(document.querySelector('.ee-cat-btn[data-cat="attack"]'), 'attack');
+  document.getElementById('clip-team-home').classList.add('active');
+  document.getElementById('clip-team-away').classList.remove('active');
+  document.getElementById('clip-team-both').classList.remove('active');
+  vaClipTeam = 'home';
+  document.getElementById('save-clip-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { document.getElementById('clip-label-input').focus(); }, 300);
+}
+
+function closeSaveClipModal() {
+  document.getElementById('save-clip-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setClipCategory(btn, cat) {
+  vaClipCategory = cat;
+  document.querySelectorAll('#save-clip-modal .ee-cat-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+}
+
+function setClipTeam(btn, team) {
+  vaClipTeam = team;
+  ['home','away','both'].forEach(function(t) {
+    var el = document.getElementById('clip-team-' + t);
+    if (el) el.classList.toggle('active', t === team);
+  });
+}
+
+function saveClip() {
+  var label = document.getElementById('clip-label-input').value.trim();
+  if (!label) { showSync('Please enter a clip label', 2000); return; }
+  var inSec = parseInt(document.getElementById('clip-in-input').value) || 0;
+  var outSec = parseInt(document.getElementById('clip-out-input').value) || inSec + 15;
+  if (outSec <= inSec) { showSync('Out point must be after in point', 2000); return; }
+
+  var clips = vaLoadClips(vaCurrentMatchId);
+  clips.push({
+    id: Date.now(),
+    label,
+    category: vaClipCategory,
+    team: vaClipTeam,
+    inSec,
+    outSec,
+    duration: outSec - inSec,
+    createdAt: new Date().toISOString()
+  });
+  vaSaveClips(vaCurrentMatchId, clips);
+
+  // Reset markers
+  vaClipIn = null;
+  vaClipOut = null;
+  var inEl = document.getElementById('va-clip-in-display');
+  var outEl = document.getElementById('va-clip-out-display');
+  if (inEl) inEl.textContent = '—';
+  if (outEl) outEl.textContent = '—';
+  var saveBtn = document.getElementById('va-clip-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
+
+  closeSaveClipModal();
+  vaRenderClips();
+  vaSwitchTab('clips');
+  showSync('✓ Clip saved', 1500);
+}
+
+// Create clip from an existing tag
+function vaCreateClipFromTag(tagId) {
+  var tag = vaTags.find(function(t) { return t.id === tagId; });
+  if (!tag) return;
+  vaClipIn = Math.max(0, tag.ts - 5);
+  vaClipOut = tag.ts + 10;
+  vaSwitchTab('clips');
+  var inEl = document.getElementById('va-clip-in-display');
+  var outEl = document.getElementById('va-clip-out-display');
+  if (inEl) inEl.textContent = vaFormatTime(Math.round(vaClipIn));
+  if (outEl) outEl.textContent = vaFormatTime(Math.round(vaClipOut));
+  var saveBtn = document.getElementById('va-clip-save-btn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  // Pre-fill label from tag
+  openSaveClipModal();
+  var labelInput = document.getElementById('clip-label-input');
+  var label = VA_LABELS[tag.type] || tag.type;
+  if (tag.outcome) label += ' — ' + tag.outcome;
+  if (labelInput) labelInput.value = label;
+  // Set team
+  setClipTeam(null, tag.team || 'home');
+  vaFlash('Creating clip from tag');
+}
+
+function vaRenderClips() {
+  var container = document.getElementById('va-clip-list');
+  var exportBtn = document.getElementById('va-export-clips-btn');
+  var countEl = document.getElementById('va-clips-count');
+  if (!container) return;
+  var clips = vaLoadClips(vaCurrentMatchId);
+  if (countEl) countEl.textContent = clips.length ? clips.length : '';
+  if (!clips.length) {
+    container.innerHTML = '<div class="va-empty-tags">No clips yet — mark in/out points or tap a tag to create a clip</div>';
+    if (exportBtn) exportBtn.style.display = 'none';
+    return;
+  }
+  clips.sort(function(a,b) { return a.inSec - b.inSec; });
+  container.innerHTML = clips.map(function(c) {
+    var homeName = document.getElementById('va-home-team-name') ? document.getElementById('va-home-team-name').textContent : 'Home';
+    var awayName = document.getElementById('va-away-team-name') ? document.getElementById('va-away-team-name').textContent : 'Away';
+    var teamLabel = c.team === 'home' ? homeName : c.team === 'away' ? awayName : 'Both';
+    return '<div class="va-clip-item" onclick="vaJumpToTag(' + c.inSec + ')">' +
+      '<div class="va-clip-times-small">' + vaFormatTime(c.inSec) + ' → ' + vaFormatTime(c.outSec) + '</div>' +
+      '<div class="va-clip-label">' + c.label + '<div style="font-size:10px;color:var(--muted);">' + teamLabel + ' · ' + c.duration + 's</div></div>' +
+      '<span class="va-clip-cat ' + c.category + '">' + c.category + '</span>' +
+      '<button class="va-clip-del" onclick="event.stopPropagation();vaDeleteClip(' + c.id + ')">✕</button>' +
+    '</div>';
+  }).join('');
+  if (exportBtn) exportBtn.style.display = 'block';
+}
+
+function vaDeleteClip(id) {
+  var clips = vaLoadClips(vaCurrentMatchId).filter(function(c) { return c.id !== id; });
+  vaSaveClips(vaCurrentMatchId, clips);
+  vaRenderClips();
+}
+
+function vaExportClips() {
+  var clips = vaLoadClips(vaCurrentMatchId);
+  if (!clips.length) return;
+  var history = loadHistory();
+  var match = history.find(function(m) { return m.id === vaCurrentMatchId; });
+  var header = '🎬 Clip Sheet — ' + (match ? match.home + ' v ' + match.away : 'Match') + '\n';
+  header += match && match.competition ? match.competition + '\n' : '';
+  header += '━━━━━━━━━━━━━━━━━━━━\n';
+
+  var categories = ['attack','defence','individual','setpiece'];
+  var text = header;
+  categories.forEach(function(cat) {
+    var catClips = clips.filter(function(c) { return c.category === cat; });
+    if (!catClips.length) return;
+    text += '\n' + cat.toUpperCase() + '\n';
+    catClips.sort(function(a,b) { return a.inSec-b.inSec; }).forEach(function(c) {
+      text += vaFormatTime(c.inSec) + ' → ' + vaFormatTime(c.outSec) + ' (' + c.duration + 's) ' + c.label + '\n';
+    });
+  });
+  text += '\n━━━━━━━━━━━━━━━━━━━━\n';
+  text += clips.length + ' clips · Generated by Coach Stats';
+
+  if (navigator.share) {
+    navigator.share({ title: 'Clip Sheet', text: text }).catch(function() {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { vaFlash('Clip sheet copied!'); });
+  } else {
+    window.prompt('Copy clip sheet:', text);
+  }
+}
+
+// Update vaRenderTags to add "Create Clip" button on each tag
+var _origVaRenderTags = null;
 
 // ── INJURY LOG ────────────────────────────────────────────────────────
 
@@ -11450,8 +11693,24 @@ function openVideoAnalysis(matchId) {
   vaMatch = list.find(function(m) { return m.id === matchId; });
   if (!vaMatch) return;
   vaMatchId = matchId;
+  vaCurrentMatchId = matchId;
   vaTags = vaLoadTags(matchId);
   vaTeam = 'home';
+
+  // Reset clip state
+  vaClipIn = null; vaClipOut = null;
+  vaSwitchTab('tags');
+  var inEl = document.getElementById('va-clip-in-display');
+  var outEl = document.getElementById('va-clip-out-display');
+  if (inEl) inEl.textContent = '—';
+  if (outEl) outEl.textContent = '—';
+  var saveBtn = document.getElementById('va-clip-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
+
+  // Update clips count badge
+  var clips = vaLoadClips(matchId);
+  var countEl = document.getElementById('va-clips-count');
+  if (countEl) countEl.textContent = clips.length ? clips.length : '';
 
   // Set team labels
   document.getElementById('va-tab-home').textContent = vaMatch.home || 'Home';
@@ -11739,6 +11998,7 @@ function vaRenderTagList() {
         '<span class="va-tag-label">' + label + '</span>' +
         '<span class="va-tag-team">' + (t.teamName || t.team) + '</span>' +
         '<button class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
+        '<button class="va-tag-item-create-clip" onclick="event.stopPropagation();vaCreateClipFromTag(' + t.id + ')">✂️ clip</button>' +
         '</div>';
     }).join('');
   }
@@ -12172,6 +12432,51 @@ window.addEventListener('resize', function() {
   </div>
 </div>
 
+<!-- SAVE CLIP MODAL -->
+<div class="modal-overlay" id="save-clip-modal" onclick="if(event.target===this)closeSaveClipModal()">
+  <div class="training-sheet" style="max-height:75vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Save Clip</div><div class="sheet-sub" id="save-clip-times"></div></div>
+      <button class="sheet-close" onclick="closeSaveClipModal()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Clip Label</div>
+        <input type="text" id="clip-label-input" class="tr-meta-input" placeholder="e.g. Great goal, Missed chance, Defensive breakdown...">
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Category</div>
+        <div class="ee-select-row">
+          <button class="ee-cat-btn active" data-cat="attack" onclick="setClipCategory(this,'attack')">⚡ Attack</button>
+          <button class="ee-cat-btn" data-cat="defence" onclick="setClipCategory(this,'defence')">🛡 Defence</button>
+          <button class="ee-cat-btn" data-cat="individual" onclick="setClipCategory(this,'individual')">👤 Individual</button>
+          <button class="ee-cat-btn" data-cat="setpiece" onclick="setClipCategory(this,'setpiece')">🎯 Set Piece</button>
+        </div>
+      </div>
+      <div class="tr-session-meta">
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">In Point (seconds)</div>
+          <input type="number" id="clip-in-input" class="tr-meta-input" min="0">
+        </div>
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Out Point (seconds)</div>
+          <input type="number" id="clip-out-input" class="tr-meta-input" min="0">
+        </div>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:16px;">
+        <div class="tr-meta-label">Team</div>
+        <div class="ee-select-row" style="margin-top:6px;">
+          <button class="ee-cat-btn active" id="clip-team-home" onclick="setClipTeam(this,'home')">Home</button>
+          <button class="ee-cat-btn" id="clip-team-away" onclick="setClipTeam(this,'away')">Away</button>
+          <button class="ee-cat-btn" id="clip-team-both" onclick="setClipTeam(this,'both')">Both</button>
+        </div>
+      </div>
+      <button class="btn-save-player" onclick="saveClip()">Save Clip</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD INJURY MODAL -->
 <div class="modal-overlay" id="add-injury-modal" onclick="if(event.target===this)closeAddInjury()">
   <div class="training-sheet" style="max-height:75vh;">
@@ -12541,25 +12846,55 @@ window.addEventListener('resize', function() {
     <!-- Stats summary -->
     <div class="va-stats-summary" id="va-stats-summary" style="display:none;"></div>
 
-    <!-- Tag list with filters -->
-    <div class="va-tag-list-wrap">
-      <div class="va-tag-list-header">
-        <div class="va-tag-list-title">Tagged Events <span id="va-tag-count" style="color:var(--red-light)"></span></div>
-        <div class="va-filter-row" id="va-filter-row" style="display:none;">
-          <button class="va-filter-btn active" id="va-filter-all" onclick="vaSetFilter('all')">All</button>
-          <button class="va-filter-btn" id="va-filter-home" onclick="vaSetFilter('home')" id="va-filter-home-btn">Home</button>
-          <button class="va-filter-btn" id="va-filter-away" onclick="vaSetFilter('away')" id="va-filter-away-btn">Away</button>
-        </div>
-      </div>
-      <div class="va-tag-list" id="va-tag-list">
-        <div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>
-      </div>
+    <!-- Tags / Clips tab toggle -->
+    <div class="va-section-tabs">
+      <button class="va-section-tab active" id="va-tab-tags" onclick="vaSwitchTab('tags')">🏷 Tags</button>
+      <button class="va-section-tab" id="va-tab-clips" onclick="vaSwitchTab('clips')">✂️ Clips <span id="va-clips-count" style="font-size:9px;color:var(--red-light);"></span></button>
     </div>
 
-    <!-- Export -->
-    <button class="va-export-btn" id="va-export-btn" onclick="vaExportTags()" style="display:none;">
-      📋 Copy Clip List
-    </button>
+    <!-- Tag list panel -->
+    <div id="va-panel-tags">
+      <div class="va-tag-list-wrap">
+        <div class="va-tag-list-header">
+          <div class="va-tag-list-title">Tagged Events <span id="va-tag-count" style="color:var(--red-light)"></span></div>
+          <div class="va-filter-row" id="va-filter-row" style="display:none;">
+            <button class="va-filter-btn active" id="va-filter-all" onclick="vaSetFilter('all')">All</button>
+            <button class="va-filter-btn" id="va-filter-home" onclick="vaSetFilter('home')">Home</button>
+            <button class="va-filter-btn" id="va-filter-away" onclick="vaSetFilter('away')">Away</button>
+          </div>
+        </div>
+        <div class="va-tag-list" id="va-tag-list">
+          <div class="va-empty-tags">No tags yet — tap an event button while the video plays</div>
+        </div>
+      </div>
+      <button class="va-export-btn" id="va-export-btn" onclick="vaExportTags()" style="display:none;">
+        📋 Copy Clip List
+      </button>
+    </div>
+
+    <!-- Clips panel -->
+    <div id="va-panel-clips" style="display:none;">
+      <div class="va-clip-recorder">
+        <div class="va-clip-recorder-row">
+          <button class="va-clip-mark-btn" onclick="vaMarkClipStart()">▶ Mark In</button>
+          <div class="va-clip-times">
+            <span id="va-clip-in-display" class="va-clip-time-display">—</span>
+            <span style="color:var(--muted);font-size:10px;padding:0 4px;">→</span>
+            <span id="va-clip-out-display" class="va-clip-time-display">—</span>
+          </div>
+          <button class="va-clip-mark-btn" onclick="vaMarkClipEnd()">⏹ Mark Out</button>
+        </div>
+        <button class="va-clip-save-btn" id="va-clip-save-btn" onclick="openSaveClipModal()" style="display:none;">
+          💾 Save Clip
+        </button>
+      </div>
+      <div class="va-tag-list" id="va-clip-list" style="max-height:220px;">
+        <div class="va-empty-tags">No clips yet — mark in/out points or tap a tag to create a clip</div>
+      </div>
+      <button class="va-export-btn" id="va-export-clips-btn" onclick="vaExportClips()" style="display:none;margin-top:4px;">
+        📤 Share Clip Sheet
+      </button>
+    </div>
 
   </div>
 
