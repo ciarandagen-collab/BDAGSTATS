@@ -1307,6 +1307,22 @@ select option { background:#1a0505; }
 .pws-scores-summary { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px; }
 .pws-score-chip { padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; }
 
+/* ── SUBSTITUTIONS ───────────────────────────────── */
+.sub-event-row { display:flex; align-items:center; gap:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border-radius:8px; margin-top:6px; }
+.sub-minute { font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:var(--red-light); width:32px; flex-shrink:0; }
+.sub-detail { flex:1; font-size:12px; color:var(--cream); line-height:1.5; }
+.sub-team-badge { font-size:9px; padding:2px 6px; border-radius:6px; font-family:'Oswald',sans-serif; letter-spacing:1px; flex-shrink:0; }
+.sub-team-badge.home { background:rgba(22,163,74,0.12); color:#4ade80; }
+.sub-team-badge.away { background:rgba(148,163,184,0.1); color:#cbd5e1; }
+.sub-del-btn { background:none; border:none; color:rgba(255,80,80,0.35); font-size:14px; cursor:pointer; flex-shrink:0; }
+
+/* ── MATCH NOTES ─────────────────────────────────── */
+.match-notes-wrap { margin-bottom:14px; }
+.match-notes-textarea { width:100%; min-height:120px; padding:12px 14px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; color:var(--cream); font-size:14px; font-family:'Inter',sans-serif; outline:none; resize:none; box-sizing:border-box; line-height:1.6; }
+.match-notes-textarea::placeholder { color:var(--muted); }
+.match-notes-saved { font-size:11px; color:var(--green); margin-top:4px; height:16px; transition:opacity 0.3s; }
+.match-notes-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(74,222,128,0.1); color:#4ade80; font-family:'Oswald',sans-serif; letter-spacing:1px; margin-left:6px; }
+
 /* ── SHOT MAP ─────────────────────────────────────── */
 .shot-map-controls { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
 .shot-map-toggle-group { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
@@ -2144,6 +2160,18 @@ select option { background:#1a0505; }
       </div>
     </div>
 
+    <!-- Substitutions section (collapsed) -->
+    <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
+      Substitutions <span id="subs-count-badge" style="display:none;font-size:10px;color:var(--red-light);margin-left:6px;"></span>
+      <span id="subs-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
+    </div>
+    <div id="subs-section" style="display:none;">
+      <div style="padding:4px 0 10px;">
+        <button class="training-new-btn" style="margin-bottom:0;" onclick="openSubModal()">+ Record Substitution</button>
+        <div id="subs-list-record"></div>
+      </div>
+    </div>
+
     <div class="sec-label discipline-toggle" onclick="toggleDiscipline()" style="cursor:pointer;">
       Discipline <span id="discipline-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
     </div>
@@ -2514,6 +2542,15 @@ select option { background:#1a0505; }
     <div id="stats-video-tags-section" style="display:none;">
       <div class="sec-label">🎬 Video Tags</div>
       <div class="card" id="stats-video-tags-body" style="padding:12px 14px;"></div>
+    </div>
+
+    <!-- Match Notes -->
+    <div class="sec-label">📝 Match Notes</div>
+    <div class="match-notes-wrap">
+      <textarea id="match-notes-input" class="match-notes-textarea"
+        placeholder="Add notes about this match — tactics, key moments, things to work on..."
+        oninput="autoSaveMatchNotes()"></textarea>
+      <div class="match-notes-saved" id="match-notes-saved"></div>
     </div>
 
   </div><!-- /page-stats -->
@@ -3171,7 +3208,7 @@ function showPage(name, btn) {
   if (name === 'trends') renderTrends();
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
-  if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); }
+  if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -3954,6 +3991,15 @@ function updateStats() {
       }
     }
   }
+  // Substitutions
+  var subs = state.subs || [];
+  if (subs.length > 0) {
+    var hSubs = subs.filter(function(s) { return s.team === 'home'; }).length;
+    var aSubs = subs.filter(function(s) { return s.team === 'away'; }).length;
+    statsRows.push(sec('🔄 Substitutions'));
+    statsRows.push(row(['Total Subs', hSubs, aSubs]));
+  }
+
   // Shot Zones
   if (state.shotZones) {
     var allZones = new Set([...Object.keys(state.shotZones.home), ...Object.keys(state.shotZones.away)]);
@@ -5607,6 +5653,179 @@ function updateAttendanceBadges() {
 
 // Init training on load
 loadTraining();
+
+// ── SUBSTITUTIONS ─────────────────────────────────────────────────────
+
+var subTeam = 'home';
+
+function toggleSubs() {
+  var sec = document.getElementById('subs-section');
+  var chev = document.getElementById('subs-chevron');
+  if (!sec) return;
+  var open = sec.style.display !== 'none';
+  sec.style.display = open ? 'none' : 'block';
+  if (chev) chev.textContent = open ? '▼' : '▲';
+}
+
+function openSubModal() {
+  subTeam = 'home';
+  document.getElementById('sub-team-home').classList.add('active');
+  document.getElementById('sub-team-away').classList.remove('active');
+  document.getElementById('sub-minute').value = getMin() || '';
+  document.getElementById('sub-on-name').value = '';
+  renderSubPlayerSelects();
+  document.getElementById('sub-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSubModal() {
+  document.getElementById('sub-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setSubTeam(team) {
+  subTeam = team;
+  document.getElementById('sub-team-home').classList.toggle('active', team === 'home');
+  document.getElementById('sub-team-away').classList.toggle('active', team === 'away');
+  renderSubPlayerSelects();
+}
+
+function renderSubPlayerSelects() {
+  var activePlayers = squad.map(function(p,i) { return {p,i}; }).filter(function(x) { return x.p && x.p.name; });
+  var options = '<option value="">Select player...</option>' +
+    activePlayers.map(function(x) {
+      return '<option value="' + x.p.name + '">' + (x.i+1) + ' ' + x.p.name + (x.p.pos ? ' (' + x.p.pos + ')' : '') + '</option>';
+    }).join('');
+  var offSel = document.getElementById('sub-off-select');
+  var onSel = document.getElementById('sub-on-select');
+  if (offSel) offSel.innerHTML = options;
+  if (onSel) onSel.innerHTML = options;
+}
+
+function saveSubstitution() {
+  var off = document.getElementById('sub-off-select').value;
+  var onName = document.getElementById('sub-on-name').value.trim() ||
+    document.getElementById('sub-on-select').value;
+  var min = parseInt(document.getElementById('sub-minute').value) || getMin();
+
+  if (!off && !onName) { showSync('Enter at least one player name', 2000); return; }
+
+  var sub = {
+    id: Date.now(),
+    type: 'sub',
+    team: subTeam,
+    off: off || null,
+    on: onName || null,
+    min: min,
+    half: state.half
+  };
+
+  if (!state.subs) state.subs = [];
+  state.subs.push(sub);
+  state.events.unshift(Object.assign({}, sub));
+  renderTimeline();
+  renderSubsList();
+  updateSubsBadge();
+  closeSubModal();
+  showSync('✓ Substitution recorded', 1500);
+}
+
+function renderSubsList() {
+  var container = document.getElementById('subs-list-record');
+  if (!container) return;
+  var subs = state.subs || [];
+  if (!subs.length) { container.innerHTML = ''; return; }
+  container.innerHTML = subs.slice().sort(function(a,b) { return (a.min||0)-(b.min||0); }).map(function(s) {
+    var homeLabel = document.getElementById('sfp-home-h') ? document.getElementById('sfp-home-h').textContent : 'Home';
+    var awayLabel = document.getElementById('sfp-away-h') ? document.getElementById('sfp-away-h').textContent : 'Away';
+    var teamLabel = s.team === 'home' ? homeLabel : awayLabel;
+    var detail = (s.off ? '⬆ OFF: ' + s.off : '') + (s.off && s.on ? '  ' : '') + (s.on ? '⬇ ON: ' + s.on : '');
+    return '<div class="sub-event-row">' +
+      '<div class="sub-minute">' + (s.min||'?') + '\'</div>' +
+      '<div class="sub-detail">' + detail + '</div>' +
+      '<span class="sub-team-badge ' + s.team + '">' + teamLabel + '</span>' +
+      '<button class="sub-del-btn" onclick="deleteSub(' + s.id + ')">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function deleteSub(id) {
+  if (!state.subs) return;
+  state.subs = state.subs.filter(function(s) { return s.id !== id; });
+  state.events = state.events.filter(function(e) { return !(e.type === 'sub' && e.id === id); });
+  renderSubsList();
+  renderTimeline();
+  updateSubsBadge();
+}
+
+function updateSubsBadge() {
+  var badge = document.getElementById('subs-count-badge');
+  var count = (state.subs || []).length;
+  if (badge) {
+    badge.textContent = count ? count + ' recorded' : '';
+    badge.style.display = count ? 'inline' : 'none';
+  }
+}
+
+// ── MATCH NOTES ───────────────────────────────────────────────────────
+
+var matchNotesTimer = null;
+var matchNotesModalId = null;
+
+function autoSaveMatchNotes() {
+  clearTimeout(matchNotesTimer);
+  matchNotesTimer = setTimeout(function() {
+    var notes = document.getElementById('match-notes-input');
+    if (notes) {
+      state.matchNotes = notes.value;
+      var saved = document.getElementById('match-notes-saved');
+      if (saved) {
+        saved.textContent = '✓ Saved';
+        setTimeout(function() { saved.textContent = ''; }, 2000);
+      }
+    }
+  }, 800);
+}
+
+function loadMatchNotes() {
+  var input = document.getElementById('match-notes-input');
+  if (input) input.value = state.matchNotes || '';
+}
+
+// Open notes from History tab
+function openMatchNotes(matchId) {
+  var m = loadHistory().find(function(x) { return x.id === matchId; });
+  if (!m) return;
+  matchNotesModalId = matchId;
+  var sub = document.getElementById('match-notes-modal-sub');
+  if (sub) sub.textContent = (m.home||'Home') + ' v ' + (m.away||'Away') + ' · ' + (m.competition||'');
+  var input = document.getElementById('match-notes-modal-input');
+  if (input) input.value = m.matchNotes || '';
+  document.getElementById('match-notes-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMatchNotes() {
+  document.getElementById('match-notes-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  matchNotesModalId = null;
+}
+
+function saveMatchNotesModal() {
+  if (!matchNotesModalId) return;
+  var input = document.getElementById('match-notes-modal-input');
+  var notes = input ? input.value : '';
+  var list = loadHistory();
+  var idx = list.findIndex(function(x) { return x.id === matchNotesModalId; });
+  if (idx >= 0) {
+    list[idx].matchNotes = notes;
+    saveHistory(list);
+    syncMatchToSupabase(list[idx]);
+  }
+  closeMatchNotes();
+  renderHistory();
+  showSync('✓ Notes saved', 1500);
+}
 
 // ── SEASON SUMMARY ────────────────────────────────────────────────────
 
@@ -7575,6 +7794,8 @@ function resetMatch(){
   if(!confirm('Reset all match data?'))return;
   state.home={goals:0,points:0}; state.away={goals:0,points:0};
   state.events=[]; state.players=[]; state.half=1; state.scoreline=[]; state.possHistory=[];
+  state.subs=[]; state.matchNotes='';
+  loadMatchNotes(); renderSubsList(); updateSubsBadge();
   state.shots={home:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}},away:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}}};
   state.ballLost={home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}};
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
@@ -7798,6 +8019,29 @@ function generateMatchReport(id) {
     html += '</tbody></table>';
   }
 
+  // Substitutions section
+  var matchSubs = m.subs || [];
+  if (matchSubs.length > 0) {
+    html += section('5. Substitutions');
+    html += '<table><thead><tr>' + th('Min') + th('Team') + th('Off') + th('On') + '</tr></thead><tbody>';
+    matchSubs.slice().sort(function(a,b){ return (a.min||0)-(b.min||0); }).forEach(function(s) {
+      html += '<tr>' +
+        td(s.min ? s.min + '\'' : '—') +
+        td(s.team === 'home' ? m.home : m.away, true) +
+        td(s.off || '—') +
+        td(s.on || '—') +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  // Match notes section
+  if (m.matchNotes && m.matchNotes.trim()) {
+    html += section((matchSubs.length > 0 ? '6' : '5') + '. Match Notes');
+    html += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap;">' +
+      m.matchNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  }
+
   // Shot Map (half-page inset — if zone data exists)
   var shotsWithZones = (m.events || []).filter(function(ev) { return ev.type === 'shot' && ev.zone; });
   if (shotsWithZones.length > 0) {
@@ -7946,7 +8190,9 @@ function saveMatchToHistory() {
     kickout: JSON.parse(JSON.stringify(state.kickout)),
     fortyFive: JSON.parse(JSON.stringify(state.fortyFive || {home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}})),
     events: state.events.slice(),
-    players: state.players.slice()
+    players: state.players.slice(),
+    subs: (state.subs || []).slice(),
+    matchNotes: state.matchNotes || ''
   };
 
   const list = loadHistory();
@@ -8014,10 +8260,11 @@ function renderHistory(query) {
     const winnerClass = hT > aT ? 'home-color' : hT < aT ? 'away-color' : '';
     var hasTags = vaLoadTags(m.id).length > 0;
     var hasScout = scoutReports.some(function(r) { return r.matchId === m.id; });
+    var hasNotes = m.matchNotes && m.matchNotes.trim().length > 0;
     return `<div class="match-card" onclick="openDetailModal(${m.id})">
       <div class="match-card-header">
         <span class="match-card-comp">${m.competition}${m.venue ? ' · ' + m.venue : ''}</span>
-        <span class="match-card-date">${dateStr}${hasTags ? ' <span class="mc-video-badge">🎬</span>' : ''}${hasScout ? ' <span class="scout-badge">🔍</span>' : ''}</span>
+        <span class="match-card-date">${dateStr}${hasTags ? ' <span class="mc-video-badge">🎬</span>' : ''}${hasScout ? ' <span class="scout-badge">🔍</span>' : ''}${hasNotes ? ' <span class="match-notes-badge">📝</span>' : ''}</span>
       </div>
       <div class="match-card-score">
         <div class="mcs-team">
@@ -8053,6 +8300,7 @@ function renderHistory(query) {
         <button class="mca-btn" onclick="generateMatchReport(${m.id})">📄 Report</button>
         <button class="mca-btn" onclick="openVideoAnalysis(${m.id})">🎬 Video</button>
         <button class="mca-btn" onclick="openScoutReport(${m.id})">🔍 Scout</button>
+        <button class="mca-btn" onclick="openMatchNotes(${m.id})">📝 Notes</button>
         <button class="mca-btn" onclick="loadMatchIntoTracker(${m.id})">↩ Reload</button>
         <button class="mca-btn danger" onclick="deleteMatch(${m.id})">🗑 Delete</button>
       </div>
@@ -8226,6 +8474,11 @@ function loadMatchIntoTracker(id) {
   state.away = { goals: m.awayGoals, points: m.awayPoints };
   state.events = m.events || [];
   state.players = m.players || [];
+  state.subs = m.subs || [];
+  state.matchNotes = m.matchNotes || '';
+  loadMatchNotes();
+  renderSubsList();
+  updateSubsBadge();
   state.shots = m.shots ? JSON.parse(JSON.stringify(m.shots)) : state.shots;
   state.ballLost = m.ballLost ? JSON.parse(JSON.stringify(m.ballLost)) : state.ballLost;
   state.ballWon = m.ballWon ? JSON.parse(JSON.stringify(m.ballWon)) : state.ballWon;
@@ -11197,6 +11450,60 @@ window.addEventListener('resize', function() {
     </div>
     <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
       <button class="btn-save-player" onclick="submitWellnessSelfCheck()">Submit Check-in</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBSTITUTION MODAL -->
+<div class="modal-overlay" id="sub-modal" onclick="if(event.target===this)closeSubModal()">
+  <div class="training-sheet" style="max-height:70vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Record Substitution</div><div class="sheet-sub">Who came on and off?</div></div>
+      <button class="sheet-close" onclick="closeSubModal()">✕</button>
+    </div>
+    <div style="padding-bottom:calc(16px + var(--safe-bottom));overflow-y:auto;">
+      <div class="tr-session-meta">
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Team</div>
+          <div class="ee-select-row">
+            <button class="ee-cat-btn active" id="sub-team-home" onclick="setSubTeam('home')">Home</button>
+            <button class="ee-cat-btn" id="sub-team-away" onclick="setSubTeam('away')">Away</button>
+          </div>
+        </div>
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Minute</div>
+          <input type="number" id="sub-minute" class="tr-meta-input" placeholder="e.g. 47" min="1" max="80">
+        </div>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Player Coming Off</div>
+        <select id="sub-off-select" class="tr-meta-input training-season-sel" style="width:100%;font-size:14px;"></select>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:16px;">
+        <div class="tr-meta-label">Player Coming On</div>
+        <select id="sub-on-select" class="tr-meta-input training-season-sel" style="width:100%;font-size:14px;"></select>
+        <input type="text" id="sub-on-name" class="tr-meta-input" placeholder="Or type a name..." style="margin-top:6px;">
+      </div>
+      <button class="btn-save-player" onclick="saveSubstitution()">Save Substitution</button>
+    </div>
+  </div>
+</div>
+
+<!-- MATCH NOTES MODAL (from History) -->
+<div class="modal-overlay" id="match-notes-modal" onclick="if(event.target===this)closeMatchNotes()">
+  <div class="training-sheet" style="max-height:80vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Match Notes</div><div class="sheet-sub" id="match-notes-modal-sub">Add notes for this match</div></div>
+      <button class="sheet-close" onclick="closeMatchNotes()">✕</button>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;padding-bottom:calc(16px + var(--safe-bottom));">
+      <textarea id="match-notes-modal-input" class="match-notes-textarea" style="flex:1;min-height:200px;"
+        placeholder="Tactics, key moments, areas to improve, player notes..."></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-save-player" onclick="saveMatchNotesModal()" style="flex:1;">Save Notes</button>
+      </div>
     </div>
   </div>
 </div>
