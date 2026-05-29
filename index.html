@@ -1307,6 +1307,18 @@ select option { background:#1a0505; }
 .pws-scores-summary { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px; }
 .pws-score-chip { padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; }
 
+/* ── SHOT MAP ─────────────────────────────────────── */
+.shot-map-controls { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.shot-map-toggle-group { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.sm-toggle { padding:7px 14px; background:transparent; border:none; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; }
+.sm-toggle.active { background:rgba(22,163,74,0.15); color:var(--cream); }
+.shot-map-wrap { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:10px; }
+.shot-map-wrap svg { width:100%; height:auto; display:block; }
+.shot-map-legend { display:flex; gap:12px; flex-wrap:wrap; padding:4px 0 8px; }
+.sm-legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); font-family:'Inter',sans-serif; }
+.sm-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.shot-map-tooltip { position:fixed; background:#0d2015; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:12px; color:var(--cream); font-family:'Inter',sans-serif; z-index:9000; pointer-events:none; max-width:200px; line-height:1.5; }
+
 /* ── TRIAL SYSTEM ─────────────────────────────────── */
 .trial-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; padding:14px; cursor:pointer; }
 .trial-card:active { background:rgba(224,48,48,0.06); }
@@ -2466,7 +2478,37 @@ select option { background:#1a0505; }
     <div class="sec-label">Export</div>
     <div class="export-row">
       <button class="btn-export" id="copy-btn" onclick="exportSummary()">📋 Copy Summary</button>
+      <button class="btn-export" onclick="toggleShotMap()">🎯 Shot Map</button>
       <button class="btn-export btn-reset" onclick="resetMatch()">↺ Reset</button>
+    </div>
+
+    <!-- Shot Map -->
+    <div id="shot-map-section" style="display:none;">
+      <div class="sec-label">Shot Map</div>
+      <div class="shot-map-controls">
+        <div class="shot-map-toggle-group">
+          <button class="sm-toggle active" id="sm-team-both" onclick="setShotMapFilter('team','both')">Both</button>
+          <button class="sm-toggle" id="sm-team-home" onclick="setShotMapFilter('team','home')">Home</button>
+          <button class="sm-toggle" id="sm-team-away" onclick="setShotMapFilter('team','away')">Away</button>
+        </div>
+        <div class="shot-map-toggle-group">
+          <button class="sm-toggle active" id="sm-type-both" onclick="setShotMapFilter('type','both')">All</button>
+          <button class="sm-toggle" id="sm-type-play" onclick="setShotMapFilter('type','play')">Play</button>
+          <button class="sm-toggle" id="sm-type-free" onclick="setShotMapFilter('type','free')">Free</button>
+        </div>
+      </div>
+      <div class="shot-map-wrap">
+        <svg id="shot-map-svg" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="shot-map-legend">
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#16a34a;"></span>Goal</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#4ade80;"></span>Point</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#ef4444;"></span>Wide</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#f59e0b;"></span>Short</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#3b82f6;"></span>Saved</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#a855f7;"></span>Blocked</span>
+      </div>
+      <div id="shot-map-tooltip" class="shot-map-tooltip" style="display:none;"></div>
     </div>
 
     <div id="stats-video-tags-section" style="display:none;">
@@ -3238,6 +3280,11 @@ function selectZone(zone) {
   if (!shotModal.team) { closeShotModal(); return; }
   if (!state.shotZones[shotModal.team][zone]) state.shotZones[shotModal.team][zone] = 0;
   state.shotZones[shotModal.team][zone]++;
+  // Store zone on the most recent shot event for that team
+  var recentShot = state.events.find(function(ev) {
+    return ev.type === 'shot' && ev.team === shotModal.team && !ev.zone;
+  });
+  if (recentShot) recentShot.zone = zone;
   closeShotModal();
 }
 
@@ -3249,10 +3296,11 @@ function addShot(team,mode,outcome) {
   if(outcome==='goal') addScore(team,'goal');
   else if(outcome==='point') addScore(team,'point');
   else if(outcome==='twopointer') { addScore(team,'point'); addScore(team,'point'); }
-  else {
-    state.events.unshift({id:Date.now(),team:team,type:'shot',shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
-    renderTimeline(); bumpMin();
-  }
+
+  // Always push to events (including goals/points) so zone data is captured
+  state.events.unshift({id:Date.now(),team:team,type:'shot',subtype:mode,shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
+  renderTimeline(); bumpMin();
+
   renderShotCounts(); renderShotSummary();
   var pfx = mode === 'play' ? 'sfp' : 'sff';
   pulseTally(pfx + '-' + team + '-tally');
@@ -6716,6 +6764,285 @@ function checkInstallPrompt() {
   }
 }
 
+// ── SHOT MAP ──────────────────────────────────────────────────────────
+
+var shotMapVisible = false;
+var shotMapTeamFilter = 'both';
+var shotMapTypeFilter = 'both';
+
+// Zone centres on a 320×480 SVG pitch
+// Pitch: home attacks top half (y 10-240), away attacks bottom half (y 240-470)
+// Zone keys match selectZone() button values
+const ZONE_COORDS_HOME = {
+  'left-d':     {x:80,  y:285},
+  'd-line':     {x:160, y:285},
+  'right-d':    {x:240, y:285},
+  'left-45':    {x:70,  y:225},
+  '45-centre':  {x:160, y:225},
+  'right-45':   {x:250, y:225},
+  'left-wing':  {x:55,  y:165},
+  'midfield':   {x:160, y:165},
+  'right-wing': {x:265, y:165},
+};
+// Away end mirrors vertically
+const ZONE_COORDS_AWAY = {
+  'left-d':     {x:240, y:195},
+  'd-line':     {x:160, y:195},
+  'right-d':    {x:80,  y:195},
+  'left-45':    {x:250, y:255},
+  '45-centre':  {x:160, y:255},
+  'right-45':   {x:70,  y:255},
+  'left-wing':  {x:265, y:315},
+  'midfield':   {x:160, y:315},
+  'right-wing': {x:55,  y:315},
+};
+
+const OUTCOME_COLOURS = {
+  goal:     '#16a34a',
+  point:    '#4ade80',
+  twopointer:'#4ade80',
+  wide:     '#ef4444',
+  short:    '#f59e0b',
+  saved:    '#3b82f6',
+  blocked:  '#a855f7',
+};
+
+function toggleShotMap() {
+  shotMapVisible = !shotMapVisible;
+  var section = document.getElementById('shot-map-section');
+  if (section) section.style.display = shotMapVisible ? 'block' : 'none';
+  if (shotMapVisible) renderShotMap();
+}
+
+function setShotMapFilter(type, value) {
+  if (type === 'team') {
+    shotMapTeamFilter = value;
+    ['both','home','away'].forEach(function(v) {
+      var btn = document.getElementById('sm-team-' + v);
+      if (btn) btn.classList.toggle('active', v === value);
+    });
+  } else {
+    shotMapTypeFilter = value;
+    ['both','play','free'].forEach(function(v) {
+      var btn = document.getElementById('sm-type-' + v);
+      if (btn) btn.classList.toggle('active', v === value);
+    });
+  }
+  renderShotMap();
+}
+
+function getShotMapData() {
+  var shots = [];
+  var eventsArr = (typeof loadedMatchState !== 'undefined' && loadedMatchState)
+    ? loadedMatchState.events : state.events;
+
+  (eventsArr || []).forEach(function(ev) {
+    if (ev.type !== 'shot') return;
+    if (shotMapTeamFilter !== 'both' && ev.team !== shotMapTeamFilter) return;
+    if (shotMapTypeFilter !== 'both' && ev.subtype !== shotMapTypeFilter && ev.shotMode !== shotMapTypeFilter) return;
+    if (!ev.zone) return;
+    shots.push({
+      team: ev.team,
+      subtype: ev.subtype || ev.shotMode || 'play',
+      outcome: ev.outcome,
+      zone: ev.zone,
+      player: ev.player || null,
+      minute: ev.min || null,
+    });
+  });
+  return shots;
+}
+
+function renderShotMap() {
+  var svg = document.getElementById('shot-map-svg');
+  if (!svg) return;
+
+  var homeName = document.getElementById('stats-home-h') ? document.getElementById('stats-home-h').textContent : 'Home';
+  var awayName = document.getElementById('stats-away-h') ? document.getElementById('stats-away-h').textContent : 'Away';
+
+  // Draw pitch
+  var pitchSvg = drawPitch(homeName, awayName);
+
+  // Get shot data
+  var shots = getShotMapData();
+
+  // Track zone counts for jitter
+  var zoneCount = {};
+
+  // Plot dots
+  var dots = shots.map(function(s) {
+    var zoneKey = s.team + '_' + s.zone;
+    zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+    var count = zoneCount[zoneKey];
+
+    var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+    var base = coordMap[s.zone];
+    if (!base) return '';
+
+    // Jitter within zone
+    var jx = (Math.sin(count * 137.5) * 14);
+    var jy = (Math.cos(count * 137.5) * 10);
+    var cx = Math.max(15, Math.min(305, base.x + jx));
+    var cy = Math.max(15, Math.min(465, base.y + jy));
+
+    var colour = OUTCOME_COLOURS[s.outcome] || '#94a3b8';
+    var radius = s.outcome === 'goal' ? 8 : 6;
+    var stroke = s.outcome === 'goal' ? 'white' : 'rgba(0,0,0,0.3)';
+    var strokeW = s.outcome === 'goal' ? '1.5' : '0.5';
+
+    var tooltip = (s.player ? s.player + ' · ' : '') +
+      (s.subtype === 'free' ? 'Free · ' : '') +
+      (s.outcome || '') +
+      (s.minute ? ' (' + s.minute + ')' : '');
+
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" ' +
+      'fill="' + colour + '" stroke="' + stroke + '" stroke-width="' + strokeW + '" ' +
+      'style="cursor:pointer;" ' +
+      'onmouseenter="showShotTooltip(event,\'' + tooltip.replace(/'/g,"'") + '\')" ' +
+      'ontouchstart="showShotTooltip(event,\'' + tooltip.replace(/'/g,"'") + '\')" ' +
+      'onmouseleave="hideShotTooltip()" ontouchend="hideShotTooltip()"/>';
+  }).join('');
+
+  // Shot counts
+  var homeCount = shots.filter(function(s) { return s.team === 'home'; }).length;
+  var awayCount = shots.filter(function(s) { return s.team === 'away'; }).length;
+
+  svg.innerHTML = pitchSvg + dots;
+
+  // Update counts in section label
+  var label = document.querySelector('#shot-map-section .sec-label');
+  if (label) {
+    label.textContent = 'Shot Map';
+    label.innerHTML += ' <span style="font-size:9px;color:var(--muted);font-weight:400;font-family:\'Inter\',sans-serif;letter-spacing:0;text-transform:none;">' +
+      homeCount + ' home · ' + awayCount + ' away</span>';
+  }
+
+  if (!shots.length) {
+    svg.innerHTML += '<text x="160" y="245" text-anchor="middle" font-family="Arial" font-size="13" fill="rgba(240,253,244,0.3)">No shots with zones recorded</text>';
+  }
+}
+
+function drawPitch(homeName, awayName) {
+  var W = 320, H = 480;
+  var goalW = 60, goalH = 12;
+  var goalX = (W - goalW) / 2;
+
+  return [
+    // Pitch background
+    '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0d2015" rx="4"/>',
+
+    // Pitch outline
+    '<rect x="10" y="10" width="300" height="460" fill="none" stroke="rgba(74,222,128,0.2)" stroke-width="1.5" rx="2"/>',
+
+    // Halfway line
+    '<line x1="10" y1="240" x2="310" y2="240" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
+    '<text x="160" y="237" text-anchor="middle" font-family="Arial" font-size="9" fill="rgba(74,222,128,0.25)">HALFWAY</text>',
+
+    // Home end (top) — 45m and 21m lines
+    '<line x1="10" y1="155" x2="310" y2="155" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
+    '<text x="14" y="152" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">45m</text>',
+    '<line x1="10" y1="210" x2="310" y2="210" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
+    '<text x="14" y="207" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">21m</text>',
+
+    // Home goal area (top)
+    '<rect x="' + (goalX-20) + '" y="10" width="' + (goalW+40) + '" height="30" fill="none" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
+    // Home goal posts
+    '<rect x="' + goalX + '" y="4" width="' + goalW + '" height="' + goalH + '" fill="none" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
+    '<line x1="' + (goalX-20) + '" y1="4" x2="' + (goalX-20) + '" y2="-4" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
+    '<line x1="' + (goalX+goalW+20) + '" y1="4" x2="' + (goalX+goalW+20) + '" y2="-4" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
+
+    // Away end (bottom) — 45m and 21m lines
+    '<line x1="10" y1="325" x2="310" y2="325" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
+    '<text x="14" y="322" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">45m</text>',
+    '<line x1="10" y1="270" x2="310" y2="270" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
+    '<text x="14" y="267" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">21m</text>',
+
+    // Away goal area (bottom)
+    '<rect x="' + (goalX-20) + '" y="440" width="' + (goalW+40) + '" height="30" fill="none" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
+    // Away goal posts
+    '<rect x="' + goalX + '" y="464" width="' + goalW + '" height="' + goalH + '" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
+    '<line x1="' + (goalX-20) + '" y1="476" x2="' + (goalX-20) + '" y2="484" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
+    '<line x1="' + (goalX+goalW+20) + '" y1="476" x2="' + (goalX+goalW+20) + '" y2="484" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
+
+    // Centre circle
+    '<circle cx="160" cy="240" r="20" fill="none" stroke="rgba(74,222,128,0.12)" stroke-width="1"/>',
+
+    // Team labels
+    '<text x="160" y="32" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="rgba(74,222,128,0.5)">' + (homeName || 'HOME') + ' →</text>',
+    '<text x="160" y="462" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="rgba(148,163,184,0.5)">← ' + (awayName || 'AWAY') + '</text>',
+  ].join('\n');
+}
+
+function showShotTooltip(event, text) {
+  var tooltip = document.getElementById('shot-map-tooltip');
+  if (!tooltip || !text) return;
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  var x = (event.touches ? event.touches[0].clientX : event.clientX) + 12;
+  var y = (event.touches ? event.touches[0].clientY : event.clientY) - 10;
+  tooltip.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function hideShotTooltip() {
+  var tooltip = document.getElementById('shot-map-tooltip');
+  if (tooltip) tooltip.style.display = 'none';
+}
+
+// ── SHOT MAP IN PDF REPORT ────────────────────────────────────────────
+
+function generateShotMapSVGString(matchRecord) {
+  if (!matchRecord) return '';
+  var shots = [];
+  var eventsArr = matchRecord.events || [];
+
+  eventsArr.forEach(function(ev) {
+    if (ev.type !== 'shot' || !ev.zone) return;
+    shots.push(ev);
+  });
+
+  if (!shots.length) return '';
+
+  var zoneCount = {};
+  var W = 280, H = 420;
+  var goalW = 52, goalX = (W - goalW) / 2;
+
+  var dots = shots.map(function(s) {
+    var zoneKey = s.team + '_' + s.zone;
+    zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+    var count = zoneCount[zoneKey];
+
+    var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+    var base = coordMap[s.zone];
+    if (!base) return '';
+
+    // Scale 320×480 → 280×420
+    var cx = Math.round(base.x * (W/320));
+    var cy = Math.round(base.y * (H/480));
+    var jx = Math.round(Math.sin(count * 137.5) * 12);
+    var jy = Math.round(Math.cos(count * 137.5) * 9);
+    cx = Math.max(8, Math.min(W-8, cx + jx));
+    cy = Math.max(8, Math.min(H-8, cy + jy));
+
+    var colour = OUTCOME_COLOURS[s.outcome] || '#94a3b8';
+    var r = s.outcome === 'goal' ? 7 : 5;
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + colour + '" stroke="white" stroke-width="0.5"/>';
+  }).join('');
+
+  return '<svg width="' + W + '" height="' + H + '" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">' +
+    '<rect width="' + W + '" height="' + H + '" fill="#f0fdf4"/>' +
+    '<rect x="8" y="8" width="264" height="404" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.3"/>' +
+    '<line x1="8" y1="210" x2="272" y2="210" stroke="#16a34a" stroke-opacity="0.2" stroke-width="1"/>' +
+    '<line x1="8" y1="136" x2="272" y2="136" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
+    '<line x1="8" y1="184" x2="272" y2="184" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
+    '<line x1="8" y1="284" x2="272" y2="284" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
+    '<line x1="8" y1="236" x2="272" y2="236" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
+    '<rect x="' + (goalX-4) + '" y="4" width="' + (goalW+8) + '" height="8" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.4"/>' +
+    '<rect x="' + (goalX-4) + '" y="408" width="' + (goalW+8) + '" height="8" fill="none" stroke="#94a3b8" stroke-width="1" stroke-opacity="0.4"/>' +
+    dots +
+    '</svg>';
+}
+
 function openEventSettings() {
   loadEventConfig();
   var note = document.getElementById('settings-club-note');
@@ -7471,9 +7798,43 @@ function generateMatchReport(id) {
     html += '</tbody></table>';
   }
 
-  // 6. Player contributions (if tagged events exist)
+  // Shot Map (half-page inset — if zone data exists)
+  var shotsWithZones = (m.events || []).filter(function(ev) { return ev.type === 'shot' && ev.zone; });
+  if (shotsWithZones.length > 0) {
+    var sectionNum = '6';
+    html += section(sectionNum + '. Shot Map');
+    var shotMapSvg = generateShotMapSVGString(m);
+    var homeShotCount = shotsWithZones.filter(function(s) { return s.team === 'home'; }).length;
+    var awayShotCount = shotsWithZones.filter(function(s) { return s.team === 'away'; }).length;
+
+    html += '<div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:16px;">';
+    // SVG pitch diagram (half page width)
+    html += '<div style="flex-shrink:0;">' + shotMapSvg + '</div>';
+    // Legend and counts alongside
+    html += '<div style="flex:1;">';
+    html += '<div style="font-size:12px;color:#374151;margin-bottom:12px;line-height:1.6;">Shots plotted by zone. Tap dots in the app to see player and outcome detail.</div>';
+    html += '<table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 6px;background:#14532d;color:#fff;">Outcome</th><th style="padding:4px 6px;background:#14532d;color:#fff;text-align:center;">' + (m.home||'Home') + '</th><th style="padding:4px 6px;background:#14532d;color:#fff;text-align:center;">' + (m.away||'Away') + '</th></tr></thead><tbody>';
+
+    ['goal','point','wide','short','saved','blocked'].forEach(function(outcome, i) {
+      var hCount = shotsWithZones.filter(function(s) { return s.team==='home' && s.outcome===outcome; }).length;
+      var aCount = shotsWithZones.filter(function(s) { return s.team==='away' && s.outcome===outcome; }).length;
+      var colour = OUTCOME_COLOURS[outcome] || '#94a3b8';
+      var bg = i % 2 === 0 ? '#f9fafb' : '#fff';
+      html += '<tr style="background:' + bg + ';">' +
+        '<td style="padding:4px 6px;display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:' + colour + ';display:inline-block;flex-shrink:0;"></span>' + outcome.charAt(0).toUpperCase() + outcome.slice(1) + '</td>' +
+        '<td style="padding:4px 6px;text-align:center;">' + (hCount || '—') + '</td>' +
+        '<td style="padding:4px 6px;text-align:center;">' + (aCount || '—') + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div style="margin-top:10px;font-size:11px;color:#6b7280;">Total shots mapped: ' + homeShotCount + ' (' + (m.home||'Home') + ') · ' + awayShotCount + ' (' + (m.away||'Away') + ')</div>';
+    html += '</div></div>';
+  }
+
+  // 7. Player contributions (if tagged events exist)
+  var playerSectionNum = shotsWithZones.length > 0 ? '7' : '6';
   if (m.players && m.players.length) {
-    html += section('6. Player Contributions');
+    html += section(playerSectionNum + '. Player Contributions');
     html += '<table><thead><tr>' + th('#') + th('Player') + th('Team') + th('Goals') + th('Points') + th('Total') + '</tr></thead><tbody>';
     m.players.forEach(function(p) {
       var total = (p.goals||0)*3 + (p.points||0);
