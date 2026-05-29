@@ -1323,6 +1323,50 @@ select option { background:#1a0505; }
 .match-notes-saved { font-size:11px; color:var(--green); margin-top:4px; height:16px; transition:opacity 0.3s; }
 .match-notes-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(74,222,128,0.1); color:#4ade80; font-family:'Oswald',sans-serif; letter-spacing:1px; margin-left:6px; }
 
+/* ── INJURY LOG ──────────────────────────────────── */
+.injury-row { padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:6px; }
+.injury-type { font-family:'Oswald',sans-serif; font-size:12px; color:var(--cream); display:flex; align-items:center; justify-content:space-between; }
+.injury-dates { font-size:11px; color:var(--muted); margin-top:3px; }
+.injury-status { font-size:9px; padding:2px 7px; border-radius:8px; font-family:'Oswald',sans-serif; letter-spacing:1px; }
+.injury-status.active { background:rgba(239,68,68,0.12); color:#f87171; }
+.injury-status.recovered { background:rgba(34,197,94,0.12); color:var(--green); }
+.injury-del { background:none; border:none; color:rgba(255,80,80,0.35); font-size:13px; cursor:pointer; }
+.squad-injury-badge { position:absolute; top:-2px; left:-2px; width:10px; height:10px; border-radius:50%; background:#ef4444; border:1px solid var(--panel); }
+
+/* ── FIXTURES ────────────────────────────────────── */
+.fixture-card { padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; }
+.fixture-card:active { background:rgba(22,163,74,0.06); }
+.fixture-card.past { opacity:0.6; }
+.fixture-date-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.fixture-date { font-family:'Oswald',sans-serif; font-size:12px; color:var(--red-light); }
+.fixture-time { font-size:11px; color:var(--muted); }
+.fixture-opponent { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:var(--cream); }
+.fixture-comp { font-size:11px; color:var(--muted); margin-top:2px; }
+.fixture-meta-row { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.fixture-ha-badge { font-size:9px; padding:2px 7px; border-radius:8px; font-family:'Oswald',sans-serif; letter-spacing:1px; }
+.fixture-ha-badge.home { background:rgba(22,163,74,0.12); color:#4ade80; }
+.fixture-ha-badge.away { background:rgba(148,163,184,0.1); color:#cbd5e1; }
+.fixture-ha-badge.neutral { background:rgba(245,158,11,0.1); color:#f59e0b; }
+.fixture-linked { font-size:10px; color:var(--green); }
+.fixture-section-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin:12px 0 6px 2px; }
+.fixture-empty { text-align:center; padding:24px; color:var(--muted); font-size:13px; font-style:italic; }
+
+/* ── OPPOSITION DATABASE ─────────────────────────── */
+.opp-club-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.opp-club-row:active { background:rgba(22,163,74,0.06); }
+.opp-club-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); flex:1; }
+.opp-record-badge { font-size:11px; color:var(--muted); font-family:'Oswald',sans-serif; }
+.opp-record-w { color:var(--green); }
+.opp-record-l { color:var(--red-light); }
+.opp-match-row { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; align-items:center; gap:10px; cursor:pointer; }
+.opp-match-row:last-child { border-bottom:none; }
+.opp-match-date { font-size:11px; color:var(--muted); width:80px; flex-shrink:0; }
+.opp-match-score { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); flex:1; }
+.opp-match-result { font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; }
+.opp-match-result.w { color:var(--green); }
+.opp-match-result.l { color:var(--red-light); }
+.opp-match-result.d { color:#f59e0b; }
+
 /* ── SHOT MAP ─────────────────────────────────────── */
 .shot-map-controls { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
 .shot-map-toggle-group { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
@@ -2560,6 +2604,8 @@ select option { background:#1a0505; }
 
     <button class="new-video-btn" onclick="openNewVideoAnalysis()">🎬 New Video Analysis</button>
     <button class="new-video-btn" onclick="openSeasonSummary()" style="background:linear-gradient(135deg,rgba(27,60,153,0.2),rgba(48,100,224,0.1));border-color:rgba(48,100,224,0.3);margin-top:-8px;">📊 Season Summary</button>
+    <button class="new-video-btn" onclick="openFixtures()" style="background:linear-gradient(135deg,rgba(153,100,27,0.2),rgba(224,166,48,0.1));border-color:rgba(224,166,48,0.3);margin-top:-8px;">📅 Fixtures</button>
+    <button class="new-video-btn" onclick="openOpposition()" style="background:linear-gradient(135deg,rgba(100,27,153,0.2),rgba(168,85,247,0.1));border-color:rgba(168,85,247,0.3);margin-top:-8px;">🏟 Opposition DB</button>
 
     <div class="history-search-wrap">
       <input class="history-search-input" id="history-search" type="search"
@@ -3702,8 +3748,10 @@ function renderSquadGrid() {
       var attStats = getPlayerAttStats(i);
       var badgeClass = trainingSessions.length ? (attStats.pct >= 85 ? 'green' : attStats.pct >= 70 ? 'yellow' : 'red') : '';
       var availIcon = p.availability ? (p.availability.status === 'available' ? ' ✅' : p.availability.status === 'unavailable' ? ' ❌' : p.availability.status === 'maybe' ? ' 🤔' : '') : '';
+      var injuredBadge = hasActiveInjury(i) ? '<div class="squad-injury-badge"></div>' : '';
       html += '<div class="squad-slot filled" data-slot="' + i + '" onclick="openPlayerEdit(' + i + ')" style="position:relative;">' +
         (badgeClass ? '<div class="squad-att-badge ' + badgeClass + '"></div>' : '') +
+        injuredBadge +
         '<div class="squad-num">' + num + '</div>' +
         '<div class="squad-name">' + p.name + availIcon + '</div>' +
         '<div class="squad-pos">' + (p.pos || '') + '</div>' +
@@ -5826,6 +5874,442 @@ function saveMatchNotesModal() {
   renderHistory();
   showSync('✓ Notes saved', 1500);
 }
+
+// ── INJURY LOG ────────────────────────────────────────────────────────
+
+function openAddInjury() {
+  var p = trainingPlayerSlot !== null ? squad[trainingPlayerSlot] : null;
+  var sub = document.getElementById('injury-modal-sub');
+  if (sub && p) sub.textContent = p.name;
+  document.getElementById('injury-type').value = '';
+  document.getElementById('injury-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('injury-return').value = '';
+  document.getElementById('injury-notes').value = '';
+  document.getElementById('add-injury-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddInjury() {
+  document.getElementById('add-injury-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveInjury() {
+  if (trainingPlayerSlot === null) return;
+  var type = document.getElementById('injury-type').value.trim();
+  if (!type) { showSync('Please enter injury type', 2000); return; }
+  var p = squad[trainingPlayerSlot];
+  if (!p) return;
+  if (!p.injuries) p.injuries = [];
+  p.injuries.push({
+    id: Date.now(),
+    type,
+    date: document.getElementById('injury-date').value,
+    returnDate: document.getElementById('injury-return').value || null,
+    notes: document.getElementById('injury-notes').value.trim(),
+    recovered: false
+  });
+  saveSquad();
+  closeAddInjury();
+  renderPtrInjuries(trainingPlayerSlot);
+  renderSquadGrid();
+  showSync('✓ Injury logged', 1500);
+}
+
+function renderPtrInjuries(slotIdx) {
+  var container = document.getElementById('ptr-injury-list');
+  if (!container) return;
+  var p = squad[slotIdx];
+  var injuries = (p && p.injuries) || [];
+  if (!injuries.length) {
+    container.innerHTML = '<div class="ptr-no-notes">No injuries logged</div>';
+    return;
+  }
+  container.innerHTML = injuries.slice().reverse().map(function(inj) {
+    var isActive = !inj.recovered && (!inj.returnDate || new Date(inj.returnDate) >= new Date());
+    var returnStr = inj.returnDate ? 'Return: ' + new Date(inj.returnDate + 'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'Return date TBC';
+    return '<div class="injury-row">' +
+      '<div class="injury-type">' +
+        '<span>' + inj.type + '</span>' +
+        '<div style="display:flex;gap:6px;align-items:center;">' +
+          '<span class="injury-status ' + (isActive ? 'active' : 'recovered') + '">' + (isActive ? 'Active' : 'Recovered') + '</span>' +
+          (!inj.recovered ? '<button class="injury-del" onclick="markInjuryRecovered(' + inj.id + ')" title="Mark recovered">✓</button>' : '') +
+          '<button class="injury-del" onclick="deleteInjury(' + inj.id + ')">✕</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="injury-dates">' + new Date(inj.date + 'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ' · ' + returnStr + '</div>' +
+      (inj.notes ? '<div class="ptr-note-text" style="margin-top:3px;">' + inj.notes + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function markInjuryRecovered(injId) {
+  if (trainingPlayerSlot === null) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p || !p.injuries) return;
+  var inj = p.injuries.find(function(i) { return i.id === injId; });
+  if (inj) { inj.recovered = true; inj.recoveredDate = new Date().toISOString().split('T')[0]; }
+  saveSquad();
+  renderPtrInjuries(trainingPlayerSlot);
+  renderSquadGrid();
+  showSync('✓ Marked recovered', 1500);
+}
+
+function deleteInjury(injId) {
+  if (trainingPlayerSlot === null) return;
+  var p = squad[trainingPlayerSlot];
+  if (!p || !p.injuries) return;
+  p.injuries = p.injuries.filter(function(i) { return i.id !== injId; });
+  saveSquad();
+  renderPtrInjuries(trainingPlayerSlot);
+  renderSquadGrid();
+}
+
+function hasActiveInjury(slotIdx) {
+  var p = squad[slotIdx];
+  if (!p || !p.injuries || !p.injuries.length) return false;
+  return p.injuries.some(function(inj) {
+    return !inj.recovered && (!inj.returnDate || new Date(inj.returnDate) >= new Date());
+  });
+}
+
+// ── FIXTURES ──────────────────────────────────────────────────────────
+
+const FIXTURES_KEY = 'cs_fixtures';
+var fixtures = [];
+var editingFixtureId = null;
+var fixtureHA = 'home';
+
+function loadFixtures() {
+  try { fixtures = JSON.parse(localStorage.getItem(FIXTURES_KEY) || '[]'); }
+  catch(e) { fixtures = []; }
+}
+
+function saveFixtures() {
+  try { localStorage.setItem(FIXTURES_KEY, JSON.stringify(fixtures)); } catch(e) {}
+}
+
+function openFixtures() {
+  loadFixtures();
+  renderFixturesList();
+  document.getElementById('fixtures-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFixtures() {
+  document.getElementById('fixtures-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderFixturesList() {
+  var container = document.getElementById('fixtures-list');
+  if (!container) return;
+  var history = loadHistory();
+  var now = new Date();
+  now.setHours(0,0,0,0);
+
+  var upcoming = fixtures.filter(function(f) { return new Date(f.date) >= now; })
+    .sort(function(a,b) { return new Date(a.date+' '+(a.time||'00:00')) - new Date(b.date+' '+(b.time||'00:00')); });
+  var past = fixtures.filter(function(f) { return new Date(f.date) < now; })
+    .sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+  if (!fixtures.length) {
+    container.innerHTML = '<div class="fixture-empty">No fixtures added yet<br><span style="font-size:11px">Tap + Add Fixture to schedule an upcoming match</span></div>';
+    return;
+  }
+
+  var html = '';
+  if (upcoming.length) {
+    html += '<div class="fixture-section-label">Upcoming</div>';
+    html += upcoming.map(function(f) { return renderFixtureCard(f, false, history); }).join('');
+  }
+  if (past.length) {
+    html += '<div class="fixture-section-label">Past</div>';
+    html += past.map(function(f) { return renderFixtureCard(f, true, history); }).join('');
+  }
+  container.innerHTML = html;
+}
+
+function renderFixtureCard(f, isPast, history) {
+  var d = new Date(f.date + 'T12:00:00');
+  var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  var linked = history.find(function(m) { return m.fixtureId === f.id; });
+  return '<div class="fixture-card' + (isPast ? ' past' : '') + '" onclick="openEditFixture(\'' + f.id + '\')">' +
+    '<div class="fixture-date-row">' +
+      '<span class="fixture-date">' + dateStr + '</span>' +
+      (f.time ? '<span class="fixture-time">' + f.time + '</span>' : '') +
+    '</div>' +
+    '<div class="fixture-opponent">' + (f.opponent||'TBC') + '</div>' +
+    '<div class="fixture-comp">' + (f.competition||'') + (f.venue ? ' · ' + f.venue : '') + '</div>' +
+    '<div class="fixture-meta-row">' +
+      '<span class="fixture-ha-badge ' + (f.ha||'home') + '">' + (f.ha||'home') + '</span>' +
+      (linked ? '<span class="fixture-linked">✓ Match recorded</span>' : '') +
+      (f.notes ? '<span style="font-size:11px;color:var(--muted);">' + f.notes + '</span>' : '') +
+    '</div>' +
+  '</div>';
+}
+
+function openAddFixture() {
+  editingFixtureId = null;
+  document.getElementById('fixture-modal-title').textContent = 'Add Fixture';
+  document.getElementById('fixture-date').value = '';
+  document.getElementById('fixture-time').value = '';
+  document.getElementById('fixture-opponent').value = '';
+  document.getElementById('fixture-competition').value = '';
+  document.getElementById('fixture-venue').value = '';
+  document.getElementById('fixture-notes').value = '';
+  document.getElementById('fixture-delete-btn').style.display = 'none';
+  setFixtureHA('home');
+  document.getElementById('add-fixture-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openEditFixture(id) {
+  var f = fixtures.find(function(x) { return x.id === id; });
+  if (!f) return;
+  editingFixtureId = id;
+  document.getElementById('fixture-modal-title').textContent = 'Edit Fixture';
+  document.getElementById('fixture-date').value = f.date || '';
+  document.getElementById('fixture-time').value = f.time || '';
+  document.getElementById('fixture-opponent').value = f.opponent || '';
+  document.getElementById('fixture-competition').value = f.competition || '';
+  document.getElementById('fixture-venue').value = f.venue || '';
+  document.getElementById('fixture-notes').value = f.notes || '';
+  document.getElementById('fixture-delete-btn').style.display = 'block';
+  setFixtureHA(f.ha || 'home');
+  document.getElementById('add-fixture-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddFixture() {
+  document.getElementById('add-fixture-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setFixtureHA(val) {
+  fixtureHA = val;
+  ['home','away','neutral'].forEach(function(v) {
+    var btn = document.getElementById('fixture-' + v + '-btn');
+    if (btn) btn.classList.toggle('active', v === val);
+  });
+}
+
+function saveFixture() {
+  var date = document.getElementById('fixture-date').value;
+  if (!date) { showSync('Please select a date', 2000); return; }
+  var fixture = {
+    id: editingFixtureId || ('f_' + Date.now()),
+    date,
+    time: document.getElementById('fixture-time').value,
+    opponent: document.getElementById('fixture-opponent').value.trim(),
+    competition: document.getElementById('fixture-competition').value.trim(),
+    venue: document.getElementById('fixture-venue').value.trim(),
+    ha: fixtureHA,
+    notes: document.getElementById('fixture-notes').value.trim(),
+  };
+  if (editingFixtureId) {
+    var idx = fixtures.findIndex(function(f) { return f.id === editingFixtureId; });
+    if (idx >= 0) fixtures[idx] = fixture;
+  } else {
+    fixtures.push(fixture);
+  }
+  saveFixtures();
+  closeAddFixture();
+  renderFixturesList();
+  showSync('✓ Fixture saved', 1500);
+}
+
+function deleteFixture() {
+  if (!editingFixtureId) return;
+  if (!confirm('Delete this fixture?')) return;
+  fixtures = fixtures.filter(function(f) { return f.id !== editingFixtureId; });
+  saveFixtures();
+  closeAddFixture();
+  renderFixturesList();
+  showSync('Fixture deleted', 1500);
+}
+
+// Init fixtures
+loadFixtures();
+
+// ── OPPOSITION DATABASE ───────────────────────────────────────────────
+
+const OPP_KEY = 'cs_opposition';
+var oppNotes = {};
+var activeOppName = null;
+
+function loadOppNotes() {
+  try { oppNotes = JSON.parse(localStorage.getItem(OPP_KEY) || '{}'); }
+  catch(e) { oppNotes = {}; }
+}
+
+function saveOppNotes() {
+  try { localStorage.setItem(OPP_KEY, JSON.stringify(oppNotes)); } catch(e) {}
+}
+
+function openOpposition() {
+  loadOppNotes();
+  renderOppositionList('');
+  document.getElementById('opposition-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOpposition() {
+  document.getElementById('opposition-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function filterOpposition(query) {
+  renderOppositionList(query);
+}
+
+function getOppositionData() {
+  var history = loadHistory();
+  var clubs = {};
+  history.forEach(function(m) {
+    var opp = m.away || '';
+    if (!opp) return;
+    if (!clubs[opp]) clubs[opp] = { name:opp, matches:[], w:0, d:0, l:0 };
+    var hT = m.homeGoals*3+m.homePoints, aT = m.awayGoals*3+m.awayPoints;
+    var result = hT > aT ? 'w' : hT < aT ? 'l' : 'd';
+    clubs[opp].matches.push({ id:m.id, date:m.savedAt, home:m.home, away:m.away,
+      homeGoals:m.homeGoals, homePoints:m.homePoints, awayGoals:m.awayGoals, awayPoints:m.awayPoints,
+      competition:m.competition, result });
+    clubs[opp][result]++;
+  });
+  return clubs;
+}
+
+function renderOppositionList(query) {
+  var container = document.getElementById('opposition-list');
+  if (!container) return;
+  var clubs = getOppositionData();
+  var keys = Object.keys(clubs);
+  if (query) keys = keys.filter(function(k) { return k.toLowerCase().includes(query.toLowerCase()); });
+  keys.sort();
+
+  if (!keys.length) {
+    container.innerHTML = '<div class="fixture-empty">No matches recorded yet<br><span style="font-size:11px">Save matches to build your opposition database</span></div>';
+    return;
+  }
+
+  container.innerHTML = keys.map(function(name) {
+    var c = clubs[name];
+    return '<div class="opp-club-row" onclick="openOppositionProfile(\'' + name.replace(/'/g,"\\'") + '\')">' +
+      '<div class="opp-club-name">' + name + '</div>' +
+      '<div class="opp-record-badge">' +
+        '<span class="opp-record-w">' + c.w + 'W</span> ' +
+        c.d + 'D ' +
+        '<span class="opp-record-l">' + c.l + 'L</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openOppositionProfile(name) {
+  activeOppName = name;
+  var clubs = getOppositionData();
+  var club = clubs[name];
+  if (!club) return;
+
+  document.getElementById('opp-profile-name').textContent = name;
+  document.getElementById('opp-profile-record').textContent =
+    club.w + ' wins · ' + club.d + ' draws · ' + club.l + ' losses · ' + club.matches.length + ' played';
+
+  // Record stats
+  var wins = club.w, draws = club.d, losses = club.l;
+  var total = club.matches.length;
+  var winPct = total ? Math.round((wins/total)*100) : 0;
+  document.getElementById('opp-record-stats').innerHTML =
+    '<div class="ptr-att-summary">' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val green">' + wins + '</div><div class="ptr-att-stat-label">Wins</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val" style="color:#f5a623">' + draws + '</div><div class="ptr-att-stat-label">Draws</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val" style="color:var(--red-light)">' + losses + '</div><div class="ptr-att-stat-label">Losses</div></div>' +
+    '<div class="ptr-att-stat"><div class="ptr-att-stat-val">' + winPct + '%</div><div class="ptr-att-stat-label">Win Rate</div></div>' +
+    '</div>';
+
+  // Match history
+  var matchHtml = club.matches.slice().sort(function(a,b) { return new Date(b.date)-new Date(a.date); }).map(function(m) {
+    var d = new Date(m.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});
+    var score = m.homeGoals+'-'+String(m.homePoints).padStart(2,'0')+' v '+m.awayGoals+'-'+String(m.awayPoints).padStart(2,'0');
+    return '<div class="opp-match-row" onclick="closeOppositionProfile();closeOpposition();generateMatchReport(' + m.id + ')">' +
+      '<div class="opp-match-date">' + d + '</div>' +
+      '<div class="opp-match-score">' + score + '<div style="font-size:10px;color:var(--muted);">' + (m.competition||'') + '</div></div>' +
+      '<div class="opp-match-result ' + m.result + '">' + m.result.toUpperCase() + '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('opp-match-history').innerHTML = matchHtml || '<div class="ptr-no-notes">No matches found</div>';
+
+  // Scout reports
+  var reports = scoutReports.filter(function(r) {
+    var m = loadHistory().find(function(x) { return x.id === r.matchId; });
+    return m && m.away === name;
+  });
+  document.getElementById('opp-scout-reports').innerHTML = reports.length
+    ? reports.map(function(r) {
+        var m = loadHistory().find(function(x) { return x.id === r.matchId; });
+        var d = m ? new Date(m.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+        return '<div class="ptr-note-item" onclick="closeOppositionProfile();closeOpposition();openScoutReport(' + r.matchId + ')" style="cursor:pointer;">' +
+          '<div class="ptr-note-date">' + d + ' · tap to view</div>' +
+          '<div class="ptr-note-text">' + (r.attacking ? r.attacking.substring(0,80)+'...' : 'Scout report saved') + '</div>' +
+        '</div>';
+      }).join('')
+    : '<div class="ptr-no-notes">No scout reports yet — tap 🔍 Scout on any match card</div>';
+
+  // Notes
+  renderOppNotes(name);
+
+  document.getElementById('opposition-profile-modal').classList.add('open');
+}
+
+function closeOppositionProfile() {
+  document.getElementById('opposition-profile-modal').classList.remove('open');
+  activeOppName = null;
+}
+
+function renderOppNotes(name) {
+  var list = document.getElementById('opp-notes-list');
+  if (!list) return;
+  var notes = (oppNotes[name] || []);
+  if (!notes.length) {
+    list.innerHTML = '<div class="ptr-no-notes">No notes yet</div>';
+    return;
+  }
+  list.innerHTML = notes.slice().reverse().map(function(n) {
+    return '<div class="ptr-note-item">' +
+      '<div class="ptr-note-date">' + new Date(n.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + '</div>' +
+      '<div class="ptr-note-text">' + n.text + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function addOppositionNote() {
+  if (!activeOppName) return;
+  var input = document.getElementById('opp-new-note');
+  var text = input ? input.value.trim() : '';
+  if (!text) return;
+  if (!oppNotes[activeOppName]) oppNotes[activeOppName] = [];
+  oppNotes[activeOppName].push({ date: new Date().toISOString(), text });
+  saveOppNotes();
+  if (input) input.value = '';
+  renderOppNotes(activeOppName);
+  showSync('✓ Note added', 1500);
+}
+
+// Init opposition notes
+loadOppNotes();
+
+// Also add Opposition Database button to History tab
+function openOppositionFromHistory() { openOpposition(); }
+
+// ── INJURY LOG INIT ───────────────────────────────────────────────────
+
+// Extend openPlayerTraining to also render injuries
+var _origOpenPlayerTraining = openPlayerTraining;
+openPlayerTraining = function(slotIdx) {
+  _origOpenPlayerTraining(slotIdx);
+  renderPtrInjuries(slotIdx);
+};
 
 // ── SEASON SUMMARY ────────────────────────────────────────────────────
 
@@ -8136,11 +8620,36 @@ function generateMatchReport(id) {
   html += '</p>';
   html += '</div></body></html>';
 
-  // Open in new window
+  // Open in new window with share buttons
   var win = window.open('', '_blank');
   if (!win) { alert('Please allow popups to generate the report'); return; }
   win.document.write(html);
   win.document.close();
+}
+
+// Share match report via Web Share API or fallback
+function shareMatchReport(id) {
+  var m = loadHistory().find(function(x) { return x.id === id; });
+  if (!m) return;
+  var text = '📊 Match Report: ' + (m.home||'Home') + ' v ' + (m.away||'Away') +
+    '\n' + (m.competition||'') +
+    '\nScore: ' + m.homeGoals + '-' + String(m.homePoints).padStart(2,'0') +
+    ' v ' + m.awayGoals + '-' + String(m.awayPoints).padStart(2,'0') +
+    '\n\nGenerated by Coach Stats — coachstats.netlify.app';
+
+  if (navigator.share) {
+    navigator.share({ title: 'Match Report', text: text })
+      .catch(function() {});
+  } else {
+    // Fallback — copy to clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        showSync('Report summary copied to clipboard', 2500);
+      });
+    } else {
+      window.prompt('Copy match summary:', text);
+    }
+  }
 }
 
 // ── HISTORY ────────────────────────────────────────
@@ -8298,6 +8807,7 @@ function renderHistory(query) {
       <div class="match-card-actions" onclick="event.stopPropagation()">
         <button class="mca-btn" onclick="openDetailModal(${m.id})">📊 Full Stats</button>
         <button class="mca-btn" onclick="generateMatchReport(${m.id})">📄 Report</button>
+        <button class="mca-btn" onclick="shareMatchReport(${m.id})">📤 Share</button>
         <button class="mca-btn" onclick="openVideoAnalysis(${m.id})">🎬 Video</button>
         <button class="mca-btn" onclick="openScoutReport(${m.id})">🔍 Scout</button>
         <button class="mca-btn" onclick="openMatchNotes(${m.id})">📝 Notes</button>
@@ -11332,6 +11842,134 @@ window.addEventListener('resize', function() {
   </div>
 </div>
 
+<!-- FIXTURES MODAL -->
+<div class="modal-overlay" id="fixtures-modal" onclick="if(event.target===this)closeFixtures()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Fixtures</div><div class="sheet-sub">Upcoming and past matches</div></div>
+      <button class="sheet-close" onclick="closeFixtures()">✕</button>
+    </div>
+    <div style="flex-shrink:0;margin-bottom:8px;">
+      <button class="training-new-btn" style="margin-bottom:0;" onclick="openAddFixture()">+ Add Fixture</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
+      <div id="fixtures-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FIXTURE MODAL -->
+<div class="modal-overlay" id="add-fixture-modal" onclick="if(event.target===this)closeAddFixture()">
+  <div class="training-sheet" style="max-height:80vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title" id="fixture-modal-title">Add Fixture</div><div class="sheet-sub">Schedule an upcoming match</div></div>
+      <button class="sheet-close" onclick="closeAddFixture()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
+      <div class="tr-session-meta">
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Date</div>
+          <input type="date" id="fixture-date" class="tr-meta-input">
+        </div>
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Time</div>
+          <input type="time" id="fixture-time" class="tr-meta-input">
+        </div>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Opponent</div>
+        <input type="text" id="fixture-opponent" class="tr-meta-input" placeholder="Opposition team name">
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Competition</div>
+        <input type="text" id="fixture-competition" class="tr-meta-input" placeholder="e.g. Down SFC, Ulster SFC">
+      </div>
+      <div class="tr-session-meta">
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Venue</div>
+          <input type="text" id="fixture-venue" class="tr-meta-input" placeholder="Ground name">
+        </div>
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Home / Away</div>
+          <div class="ee-select-row" style="margin-top:6px;">
+            <button class="ee-cat-btn active" id="fixture-home-btn" onclick="setFixtureHA('home')">Home</button>
+            <button class="ee-cat-btn" id="fixture-away-btn" onclick="setFixtureHA('away')">Away</button>
+            <button class="ee-cat-btn" id="fixture-neutral-btn" onclick="setFixtureHA('neutral')">Neutral</button>
+          </div>
+        </div>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:16px;">
+        <div class="tr-meta-label">Notes <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;">(optional)</span></div>
+        <input type="text" id="fixture-notes" class="tr-meta-input" placeholder="e.g. Replay, County Final...">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-save-player" onclick="saveFixture()" style="flex:2;">Save Fixture</button>
+        <button class="ee-delete-btn" id="fixture-delete-btn" onclick="deleteFixture()" style="display:none;flex:1;">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OPPOSITION DATABASE MODAL -->
+<div class="modal-overlay" id="opposition-modal" onclick="if(event.target===this)closeOpposition()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Opposition Database</div><div class="sheet-sub">Club profiles and history</div></div>
+      <button class="sheet-close" onclick="closeOpposition()">✕</button>
+    </div>
+    <div style="flex-shrink:0;margin-bottom:8px;">
+      <input type="text" class="history-search-input" id="opposition-search"
+        placeholder="Search clubs..." oninput="filterOpposition(this.value)">
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
+      <div id="opposition-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OPPOSITION PROFILE MODAL -->
+<div class="modal-overlay" id="opposition-profile-modal" onclick="if(event.target===this)closeOppositionProfile()">
+  <div class="training-sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="opp-profile-name"></div>
+        <div class="sheet-sub" id="opp-profile-record"></div>
+      </div>
+      <button class="sheet-close" onclick="closeOppositionProfile()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
+      <!-- Overall record -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Record vs This Club</div>
+        <div id="opp-record-stats"></div>
+      </div>
+      <!-- Match history -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Match History</div>
+        <div id="opp-match-history"></div>
+      </div>
+      <!-- Scout reports -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Scout Reports</div>
+        <div id="opp-scout-reports"></div>
+      </div>
+      <!-- Notes -->
+      <div class="ptr-section" style="border-bottom:none;">
+        <div class="ptr-section-title">Club Notes</div>
+        <div class="ptr-note-add">
+          <input type="text" id="opp-new-note" class="ptr-note-input" placeholder="Add a note about this club...">
+          <button class="ptr-add-note-btn" onclick="addOppositionNote()">Add</button>
+        </div>
+        <div id="opp-notes-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- SEASON SUMMARY MODAL -->
 <div class="modal-overlay" id="season-summary-modal" onclick="if(event.target===this)closeSeasonSummary()">
   <div class="training-sheet" style="max-height:92vh;">
@@ -11531,6 +12169,38 @@ window.addEventListener('resize', function() {
       </div>
     </div>
     <button class="btn-save-player" onclick="saveTrial()" style="margin-top:12px;">Create Trial</button>
+  </div>
+</div>
+
+<!-- ADD INJURY MODAL -->
+<div class="modal-overlay" id="add-injury-modal" onclick="if(event.target===this)closeAddInjury()">
+  <div class="training-sheet" style="max-height:75vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Log Injury</div><div class="sheet-sub" id="injury-modal-sub">Player name</div></div>
+      <button class="sheet-close" onclick="closeAddInjury()">✕</button>
+    </div>
+    <div style="padding-bottom:calc(16px + var(--safe-bottom));overflow-y:auto;">
+      <div class="tr-meta-field" style="margin-bottom:12px;">
+        <div class="tr-meta-label">Injury Type</div>
+        <input type="text" id="injury-type" class="tr-meta-input" placeholder="e.g. Hamstring strain, ankle sprain...">
+      </div>
+      <div class="tr-session-meta">
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Date of Injury</div>
+          <input type="date" id="injury-date" class="tr-meta-input">
+        </div>
+        <div class="tr-meta-field">
+          <div class="tr-meta-label">Expected Return</div>
+          <input type="date" id="injury-return" class="tr-meta-input">
+        </div>
+      </div>
+      <div class="tr-meta-field" style="margin-bottom:16px;">
+        <div class="tr-meta-label">Notes <span style="font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;">(optional)</span></div>
+        <input type="text" id="injury-notes" class="tr-meta-input" placeholder="Treatment, severity, circumstances...">
+      </div>
+      <button class="btn-save-player" onclick="saveInjury()">Save Injury</button>
+    </div>
   </div>
 </div>
 
@@ -11743,6 +12413,13 @@ window.addEventListener('resize', function() {
       <div class="ptr-section-title">Skill Ratings <span style="font-size:9px;color:var(--muted);letter-spacing:0;text-transform:none;font-family:Inter,sans-serif;">(tap to rate, 1–10)</span></div>
       <div id="ptr-skills-grid"></div>
       <button class="ptr-save-ratings-btn" onclick="saveSkillRatings()">Save Ratings</button>
+    </div>
+
+    <!-- Injury Log -->
+    <div class="ptr-section">
+      <div class="ptr-section-title">Injury Log</div>
+      <div id="ptr-injury-list"></div>
+      <button class="settings-add-btn" onclick="openAddInjury()" style="margin-top:6px;">+ Log Injury</button>
     </div>
 
     <!-- Notes history -->
