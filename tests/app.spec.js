@@ -28,6 +28,23 @@ async function navTo(page, tab) {
 
 // ── LOGIN SCREEN ─────────────────────────────────────────────────────
 
+// Clear service worker cache before all tests
+test.beforeAll(async ({ browser }) => {
+  const page = await browser.newPage();
+  await page.goto(URL);
+  await page.evaluate(async () => {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) await reg.unregister();
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      for (const key of keys) await caches.delete(key);
+    }
+  });
+  await page.close();
+});
+
 test.describe('Login Screen', () => {
   test('Login screen renders with green branding', async ({ page }) => {
     await page.goto(URL);
