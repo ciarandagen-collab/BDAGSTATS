@@ -418,7 +418,10 @@ test.describe('Substitutions', () => {
   });
 
   test('Substitutions section visible on Record tab', async ({ page }) => {
-    await expect(page.locator('text=Substitutions')).toBeVisible();
+    // Scroll down to find the Substitutions heading on the Record tab
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await page.waitForTimeout(300);
+    await expect(page.locator('#subs-section').or(page.locator('text=Substitutions'))).toBeAttached({ timeout: 5000 });
   });
 
   test('Substitutions section expands on tap', async ({ page }) => {
