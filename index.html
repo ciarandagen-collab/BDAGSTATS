@@ -6589,7 +6589,7 @@ function openStripePortal() {
   fetch('https://coachstats.app/.netlify/functions/create-portal', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId: currentUser.id })
+    body: JSON.stringify({ userId: currentUser.id, email: currentUser.email })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
