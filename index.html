@@ -6556,6 +6556,88 @@ openPlayerTraining = function(slotIdx) {
   renderPtrInjuries(slotIdx);
 };
 
+// ── PASSWORD RECOVERY ─────────────────────────────────────────────────
+
+var recoveryToken = null;
+
+function checkPasswordRecovery() {
+  var hash = window.location.hash.substring(1);
+  var params = new URLSearchParams(hash);
+  var type = params.get('type');
+  var token = params.get('access_token');
+
+  if (type === 'recovery' && token) {
+    recoveryToken = token;
+    // Hide everything else
+    document.querySelectorAll('.page,.topbar,.bottom-nav,#user-badge').forEach(function(el) {
+      if (el) el.style.display = 'none';
+    });
+    var screen = document.getElementById('password-reset-screen');
+    if (screen) screen.style.display = 'flex';
+    // Clear the hash from URL
+    history.replaceState(null, '', window.location.pathname);
+    return true;
+  }
+  return false;
+}
+
+function submitPasswordReset() {
+  var newPass = document.getElementById('reset-new-password').value;
+  var confirmPass = document.getElementById('reset-confirm-password').value;
+  var errEl = document.getElementById('reset-error');
+  var successEl = document.getElementById('reset-success');
+  var btn = document.getElementById('reset-submit-btn');
+
+  errEl.style.display = 'none';
+
+  if (!newPass || newPass.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newPass !== confirmPass) {
+    errEl.textContent = 'Passwords do not match';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!recoveryToken) {
+    errEl.textContent = 'Invalid reset link. Please request a new one.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+
+  fetch(SUPA_URL + '/auth/v1/user', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_ANON_KEY,
+      'Authorization': 'Bearer ' + recoveryToken
+    },
+    body: JSON.stringify({ password: newPass })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    document.getElementById('reset-form').style.display = 'none';
+    successEl.textContent = '✓ Password updated — redirecting to login...';
+    successEl.style.display = 'block';
+    recoveryToken = null;
+    setTimeout(function() {
+      document.getElementById('password-reset-screen').style.display = 'none';
+      showLoginScreen();
+    }, 2000);
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  });
+}
+
 // ── ACCOUNT SETTINGS ─────────────────────────────────────────────────
 
 function openAccountSettings() {
@@ -11659,6 +11741,8 @@ function syncClubSquad() {
 // Override saveSquad to also sync to club if active
 var _origSaveSquad = null;
 document.addEventListener('DOMContentLoaded', function() {
+  // Check for password recovery link
+  if (checkPasswordRecovery()) return;
   // Check for player wellness self-report URL first
   if (initWellnessCheck()) return;
   // Check for trial grading URL
@@ -13251,6 +13335,33 @@ window.addEventListener('resize', function() {
       <div class="pws-scores-summary" id="pws-scores-summary"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- PASSWORD RESET SCREEN -->
+<div id="password-reset-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:#080f0b;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Inter',sans-serif;">
+  <div style="width:100%;max-width:360px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:48px;margin-bottom:8px;">🔑</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:#16a34a;letter-spacing:3px;text-transform:uppercase;">Coach Stats</div>
+      <div style="font-size:18px;font-weight:700;color:#f0fdf4;margin-top:8px;">Reset Password</div>
+      <div style="font-size:13px;color:rgba(240,253,244,0.45);margin-top:4px;">Enter your new password</div>
+    </div>
+
+    <div id="reset-error" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.35);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;text-align:center;"></div>
+    <div id="reset-success" style="display:none;background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#86efac;text-align:center;"></div>
+
+    <div id="reset-form">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(240,253,244,0.45);text-transform:uppercase;font-family:'Oswald',sans-serif;margin-bottom:6px;">New Password</div>
+        <input id="reset-new-password" type="password" placeholder="Minimum 6 characters" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f0fdf4;font-size:15px;font-family:'Inter',sans-serif;box-sizing:border-box;outline:none;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(240,253,244,0.45);text-transform:uppercase;font-family:'Oswald',sans-serif;margin-bottom:6px;">Confirm Password</div>
+        <input id="reset-confirm-password" type="password" placeholder="Repeat your password" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 14px;color:#f0fdf4;font-size:15px;font-family:'Inter',sans-serif;box-sizing:border-box;outline:none;">
+      </div>
+      <button id="reset-submit-btn" onclick="submitPasswordReset()" style="width:100%;padding:14px;background:linear-gradient(135deg,#14532d,#16a34a);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;">Update Password</button>
+    </div>
   </div>
 </div>
 
