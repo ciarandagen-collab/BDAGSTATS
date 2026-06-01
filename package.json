@@ -1,14 +1,14 @@
 {
   "name": "coachstats-tests",
   "version": "1.0.0",
-  "description": "Automated tests for Coach Stats PWA",
+  "description": "Coach Stats — GAA Match Statistics",
   "scripts": {
     "test:unit": "node tests/unit.test.js",
     "test:browser": "npx playwright test",
-    "test:browser:ui": "npx playwright test --ui",
-    "test:browser:headed": "npx playwright test --headed",
-    "test:browser:mobile": "npx playwright test --project='Mobile Safari'",
     "test": "node tests/unit.test.js && npx playwright test"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0"
