@@ -4,11 +4,6 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Disable secret scanning — Supabase URL and anon key are intentionally
-# public in frontend code. Security is enforced via RLS policies.
-[context.production]
-  environment = { NETLIFY_SKIP_BINARY_INSTALL = "true" }
-
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
@@ -20,6 +15,11 @@
 [[redirects]]
   from = "/terms"
   to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/reset-password.html"
   status = 200
 
 [[redirects]]
