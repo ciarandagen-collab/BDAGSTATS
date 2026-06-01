@@ -1796,6 +1796,11 @@ select option { background:#1a0505; }
       <button onclick="testConnection()" style="background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 12px;color:rgba(240,253,244,0.3);font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;">Test Connection</button>
     </div>
     <div id="test-result" style="text-align:center;margin-top:8px;font-size:11px;color:rgba(240,253,244,0.5);font-family:monospace;word-break:break-all;padding:0 8px;"></div>
+    <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+      <a href="/privacy" style="font-size:11px;color:rgba(240,253,244,0.25);font-family:'Inter',sans-serif;text-decoration:none;margin:0 8px;">Privacy Policy</a>
+      <span style="color:rgba(240,253,244,0.1);font-size:11px;">·</span>
+      <a href="/terms" style="font-size:11px;color:rgba(240,253,244,0.25);font-family:'Inter',sans-serif;text-decoration:none;margin:0 8px;">Terms of Service</a>
+    </div>
   </div>
 </div>
 
@@ -1959,6 +1964,7 @@ select option { background:#1a0505; }
     <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help">?</button>
     <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings">⚙️</button>
     <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
+    <button onclick="openAccountSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Account settings">⚙ Account</button>
   </div>
 </div>
 
@@ -2963,7 +2969,7 @@ var STRIPE_ANNUAL_PRICE_ID       = 'price_1TZc1RHimBSnUeOtStGENRlU';
 var STRIPE_CLUB_MONTHLY_PRICE_ID = 'price_1Tb41RHimBSnUeOt5orveJpi';
 var STRIPE_CLUB_ANNUAL_PRICE_ID  = 'price_1Tb42zHimBSnUeOtuHLJNtJn';
 // Replace with your deployed webhook/checkout URL
-var CHECKOUT_URL = 'https://coachstats.netlify.app/.netlify/functions/create-checkout';
+var CHECKOUT_URL = 'https://coachstats.app/.netlify/functions/create-checkout';
 
 var selectedPlan = 'monthly';
 var subStatus = null; // 'trialing' | 'active' | 'expired' | null
@@ -3274,6 +3280,7 @@ function showPage(name, btn) {
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
+  if (name === 'match' && !localStorage.getItem('cs_onboarding_done')) { checkOnboarding(); }
 }
 
 // ── NAMES ──────────────────────────────────────────
@@ -6549,6 +6556,212 @@ openPlayerTraining = function(slotIdx) {
   renderPtrInjuries(slotIdx);
 };
 
+// ── ACCOUNT SETTINGS ─────────────────────────────────────────────────
+
+function openAccountSettings() {
+  var emailEl = document.getElementById('account-email-display');
+  if (emailEl && currentUser) emailEl.textContent = currentUser.email;
+  var subEl = document.getElementById('account-sub-status');
+  if (subEl) {
+    var sub = window.userSubscription;
+    if (sub && sub.status === 'active') {
+      subEl.textContent = '✅ ' + (sub.plan_name || 'Active subscription') + ' — renews ' + (sub.current_period_end ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-GB') : '');
+    } else if (sub && sub.status === 'trialing') {
+      subEl.textContent = '🎯 Free trial — ' + (sub.trial_end ? new Date(sub.trial_end * 1000).toLocaleDateString('en-GB') : '30 days');
+    } else {
+      subEl.textContent = 'No active subscription';
+    }
+  }
+  document.getElementById('account-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAccountSettings() {
+  document.getElementById('account-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── STRIPE CUSTOMER PORTAL ────────────────────────────────────────────
+
+function openStripePortal() {
+  if (!currentUser || !currentToken) { showSync('Please sign in first', 2000); return; }
+  showSync('Opening billing portal...', 2000);
+  fetch('https://coachstats.app/.netlify/functions/create-portal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: currentUser.id })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.url) {
+      window.open(data.url, '_blank');
+    } else {
+      showError('Could not open billing portal. Please contact hello@coachstats.app');
+    }
+  })
+  .catch(function() {
+    showError('Network error. Please try again.');
+  });
+}
+
+// ── DELETE ACCOUNT ────────────────────────────────────────────────────
+
+function confirmDeleteAccount() {
+  document.getElementById('delete-confirm-input').value = '';
+  document.getElementById('delete-account-modal').classList.add('open');
+}
+
+function closeDeleteAccount() {
+  document.getElementById('delete-account-modal').classList.remove('open');
+}
+
+function deleteAccount() {
+  var input = document.getElementById('delete-confirm-input').value.trim();
+  if (input !== 'DELETE') {
+    showSync('Type DELETE to confirm', 2000);
+    return;
+  }
+  if (!currentUser || !currentToken) return;
+
+  showSync('Deleting account...', 3000);
+
+  // Delete all Supabase data
+  Promise.all([
+    supaDB('matches?user_id=eq.' + currentUser.id, 'DELETE', null, currentToken),
+    supaDB('subscriptions?user_id=eq.' + currentUser.id, 'DELETE', null, currentToken),
+    supaDB('shared_trials?user_id=eq.' + currentUser.id, 'DELETE', null, currentToken),
+    supaDB('scout_reports?user_id=eq.' + currentUser.id, 'DELETE', null, currentToken),
+    supaDB('wellness_data?user_id=eq.' + currentUser.id, 'DELETE', null, currentToken),
+  ])
+  .then(function() {
+    // Clear localStorage
+    Object.keys(localStorage).forEach(function(key) {
+      localStorage.removeItem(key);
+    });
+    // Sign out from Supabase
+    return supaDB('auth/logout', 'POST', {}, currentToken);
+  })
+  .then(function() {
+    closeDeleteAccount();
+    closeAccountSettings();
+    currentUser = null;
+    currentToken = null;
+    showLoginScreen();
+    showSync('Account deleted. Sorry to see you go.', 4000);
+  })
+  .catch(function(err) {
+    showError('Delete failed. Please contact hello@coachstats.app');
+  });
+}
+
+// ── ERROR HANDLING ────────────────────────────────────────────────────
+
+function showError(msg) {
+  // Show a toast error message
+  var existing = document.getElementById('error-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'error-toast';
+  toast.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + 16px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:rgba(220,38,38,0.95);color:#fff;padding:10px 18px;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;z-index:99999;max-width:320px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+  toast.textContent = '⚠ ' + msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.remove(); }, 4000);
+}
+
+function showSuccess(msg) {
+  var existing = document.getElementById('success-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'success-toast';
+  toast.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + 16px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:rgba(22,163,74,0.95);color:#fff;padding:10px 18px;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;z-index:99999;max-width:320px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  toast.textContent = '✓ ' + msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.remove(); }, 2500);
+}
+
+// Wrap saveMatchToHistory with error handling
+var _origSaveMatch = saveMatchToHistory;
+saveMatchToHistory = function() {
+  try {
+    _origSaveMatch();
+  } catch(err) {
+    showError('Save failed — please try again. If the problem persists contact hello@coachstats.app');
+    console.error('Save error:', err);
+  }
+};
+
+// Network status indicator
+window.addEventListener('online', function() { showSuccess('Back online — your data will sync'); });
+window.addEventListener('offline', function() { showError('You are offline — changes saved locally'); });
+
+// ── ONBOARDING ────────────────────────────────────────────────────────
+
+var onboardingStep = 0;
+var onboardingSteps = [
+  {
+    icon: '🏟',
+    title: 'Welcome to Coach Stats',
+    body: 'The GAA\'s most complete coaching tool. Set up a match in seconds and record every event live on the sideline.'
+  },
+  {
+    icon: '✍️',
+    title: 'Record Live Stats',
+    body: 'Tap the Record tab during a game to log shots, possession, kickouts, cards and substitutions. Tag events to players to build performance scores.'
+  },
+  {
+    icon: '👥',
+    title: 'Manage Your Squad',
+    body: 'Add your players in the Squad tab. Track training attendance, log injuries, run player trials and monitor wellness before every session.'
+  },
+  {
+    icon: '📊',
+    title: 'Analyse & Share',
+    body: 'After the game, view your shot map, export reports and share match summaries directly to WhatsApp. Build your opposition database over time.'
+  },
+];
+
+function checkOnboarding() {
+  var seen = localStorage.getItem('cs_onboarding_done');
+  if (!seen) {
+    setTimeout(function() { showOnboarding(); }, 800);
+  }
+}
+
+function showOnboarding() {
+  onboardingStep = 0;
+  renderOnboardingStep();
+  document.getElementById('onboarding-overlay').style.display = 'flex';
+}
+
+function renderOnboardingStep() {
+  var s = onboardingSteps[onboardingStep];
+  document.getElementById('onboarding-icon').textContent = s.icon;
+  document.getElementById('onboarding-title').textContent = s.title;
+  document.getElementById('onboarding-body').textContent = s.body;
+  var isLast = onboardingStep === onboardingSteps.length - 1;
+  document.getElementById('onboarding-next-btn').textContent = isLast ? 'GET STARTED' : 'NEXT →';
+
+  // Dots
+  var dots = document.getElementById('onboarding-dots');
+  dots.innerHTML = onboardingSteps.map(function(_, i) {
+    return '<div style="width:' + (i===onboardingStep?'20':'8') + 'px;height:8px;border-radius:4px;background:' + (i===onboardingStep?'#16a34a':'rgba(22,163,74,0.25)') + ';transition:all 0.3s;"></div>';
+  }).join('');
+}
+
+function onboardingNext() {
+  if (onboardingStep < onboardingSteps.length - 1) {
+    onboardingStep++;
+    renderOnboardingStep();
+  } else {
+    dismissOnboarding();
+  }
+}
+
+function dismissOnboarding() {
+  document.getElementById('onboarding-overlay').style.display = 'none';
+  localStorage.setItem('cs_onboarding_done', '1');
+}
+
 // ── SEASON SUMMARY ────────────────────────────────────────────────────
 
 function openSeasonSummary() {
@@ -8873,7 +9086,7 @@ function shareMatchReport(id) {
     '\n' + (m.competition||'') +
     '\nScore: ' + m.homeGoals + '-' + String(m.homePoints).padStart(2,'0') +
     ' v ' + m.awayGoals + '-' + String(m.awayPoints).padStart(2,'0') +
-    '\n\nGenerated by Coach Stats — coachstats.netlify.app';
+    '\n\nGenerated by Coach Stats — coachstats.app';
 
   if (navigator.share) {
     navigator.share({ title: 'Match Report', text: text })
@@ -11619,7 +11832,7 @@ function vaExportTags() {
     lines.push('[' + time + '] ' + team + ' — ' + label + outcome);
   });
   lines.push('─────────────────────────');
-  lines.push('Generated by Coach Stats | coachstats.netlify.app');
+  lines.push('Generated by Coach Stats | coachstats.app');
   var text = lines.join('\n');
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -12343,6 +12556,82 @@ window.addEventListener('resize', function() {
     </div>
     <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
       <button class="btn-save-player" onclick="submitWellnessSelfCheck()">Submit Check-in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT SETTINGS MODAL -->
+<div class="modal-overlay" id="account-modal" onclick="if(event.target===this)closeAccountSettings()">
+  <div class="training-sheet" style="max-height:85vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">Account Settings</div><div class="sheet-sub" id="account-email-display"></div></div>
+      <button class="sheet-close" onclick="closeAccountSettings()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
+
+      <!-- Subscription -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Subscription</div>
+        <div id="account-sub-status" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></div>
+        <button class="btn-save-player" onclick="openStripePortal()" style="margin-bottom:8px;">
+          💳 Manage Subscription
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;">Cancel, update payment method or view invoices</div>
+      </div>
+
+      <!-- Privacy & Terms -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Legal</div>
+        <div style="display:flex;gap:10px;flex-direction:column;">
+          <a href="/privacy" target="_blank" style="display:block;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--cream);font-size:13px;text-decoration:none;">📄 Privacy Policy</a>
+          <a href="/terms" target="_blank" style="display:block;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--cream);font-size:13px;text-decoration:none;">📋 Terms of Service</a>
+          <a href="mailto:hello@coachstats.app" style="display:block;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--cream);font-size:13px;text-decoration:none;">✉️ Contact Support</a>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="ptr-section" style="border-bottom:none;">
+        <div class="ptr-section-title" style="color:#f87171;">Danger Zone</div>
+        <button onclick="confirmDeleteAccount()" style="width:100%;padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;color:#f87171;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">
+          🗑 Delete Account & All Data
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">This permanently deletes all your matches, squad and training data.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT CONFIRMATION -->
+<div class="modal-overlay" id="delete-account-modal" onclick="if(event.target===this)closeDeleteAccount()">
+  <div class="training-sheet" style="max-height:50vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title" style="color:#f87171;">Delete Account</div></div>
+      <button class="sheet-close" onclick="closeDeleteAccount()">✕</button>
+    </div>
+    <div style="padding:0 16px 24px;">
+      <p style="font-size:14px;color:var(--cream);margin-bottom:16px;line-height:1.6;">This will permanently delete your account and all data including match history, squad, training sessions and trial records. This cannot be undone.</p>
+      <div style="margin-bottom:16px;">
+        <div class="tr-meta-label">Type DELETE to confirm</div>
+        <input type="text" id="delete-confirm-input" class="tr-meta-input" placeholder="DELETE">
+      </div>
+      <button onclick="deleteAccount()" style="width:100%;padding:14px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:10px;color:#f87171;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;">Delete My Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING OVERLAY -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    <div id="onboarding-card" style="background:#0d2015;border:1px solid rgba(22,163,74,0.3);border-radius:20px;padding:32px 24px;max-width:360px;width:100%;text-align:center;">
+      <div id="onboarding-icon" style="font-size:56px;margin-bottom:16px;"></div>
+      <div id="onboarding-title" style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#f0fdf4;letter-spacing:1px;margin-bottom:8px;"></div>
+      <div id="onboarding-body" style="font-size:14px;color:rgba(240,253,244,0.7);line-height:1.7;margin-bottom:24px;"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;" id="onboarding-dots"></div>
+      <button id="onboarding-next-btn" onclick="onboardingNext()" style="width:100%;padding:14px;background:linear-gradient(135deg,#14532d,#16a34a);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;"></button>
+      <button onclick="dismissOnboarding()" style="background:none;border:none;color:rgba(240,253,244,0.3);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;margin-top:12px;padding:4px;">Skip</button>
     </div>
   </div>
 </div>

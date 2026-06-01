@@ -1,13 +1,14 @@
-[build]
-  functions = "netlify/functions"
-  publish = "./"
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
 
-[[headers]]
-  for = "/.netlify/functions/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type"
-    Access-Control-Allow-Methods = "POST, OPTIONS"
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
 
-[build.environment]
-  SECRETS_SCAN_ENABLED = "false"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
