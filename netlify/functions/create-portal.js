@@ -14,7 +14,7 @@ exports.handler = async function(event) {
   try { body = JSON.parse(event.body); }
   catch(e) { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  const { userId } = body;
+  const { userId, email } = body;
   if (!userId) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing userId' }) };
 
   try {
@@ -22,7 +22,9 @@ exports.handler = async function(event) {
     const SUPA_URL = process.env.SUPABASE_URL;
     const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-    // Get customer ID from subscriptions table
+    let customerId = null;
+
+    // Try to get customer ID from subscriptions table
     const res = await fetch(SUPA_URL + '/rest/v1/subscriptions?user_id=eq.' + userId + '&select=stripe_customer_id', {
       headers: {
         'apikey': SUPA_KEY,
@@ -31,16 +33,34 @@ exports.handler = async function(event) {
     });
     const subs = await res.json();
 
-    if (!subs || !subs.length || !subs[0].stripe_customer_id) {
+    if (subs && subs.length && subs[0].stripe_customer_id) {
+      customerId = subs[0].stripe_customer_id;
+    } else {
+      // No customer ID in DB — search Stripe by email
+      if (email) {
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
+        }
+      }
+    }
+
+    // Still no customer — create one so they can manage future subscriptions
+    if (!customerId && email) {
+      const customer = await stripe.customers.create({ email });
+      customerId = customer.id;
+    }
+
+    if (!customerId) {
       return {
         statusCode: 404,
         headers: CORS,
-        body: JSON.stringify({ error: 'No subscription found' })
+        body: JSON.stringify({ error: 'Could not find or create customer' })
       };
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: subs[0].stripe_customer_id,
+      customer: customerId,
       return_url: 'https://coachstats.app',
     });
 
@@ -49,6 +69,7 @@ exports.handler = async function(event) {
       headers: { ...CORS, 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: session.url })
     };
+
   } catch(err) {
     console.error('Portal error:', err.message);
     return {

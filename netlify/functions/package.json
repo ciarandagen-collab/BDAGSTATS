@@ -1,7 +1,16 @@
 {
-  "name": "coach-stats-functions",
+  "name": "coachstats-tests",
   "version": "1.0.0",
+  "description": "Coach Stats — GAA Match Statistics",
+  "scripts": {
+    "test:unit": "node tests/unit.test.js",
+    "test:browser": "npx playwright test",
+    "test": "node tests/unit.test.js && npx playwright test"
+  },
   "dependencies": {
     "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
   }
 }
