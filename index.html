@@ -6556,6 +6556,25 @@ openPlayerTraining = function(slotIdx) {
   renderPtrInjuries(slotIdx);
 };
 
+// ── EMAIL CONFIRMATION SCREEN ─────────────────────────────────────────
+
+function showEmailConfirmScreen(email) {
+  var el = document.getElementById('confirm-email-display');
+  if (el) el.textContent = email;
+  var screen = document.getElementById('email-confirm-screen');
+  if (screen) screen.style.display = 'flex';
+  var loginScreen = document.getElementById('login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
+}
+
+function hideEmailConfirmScreen() {
+  var screen = document.getElementById('email-confirm-screen');
+  if (screen) screen.style.display = 'none';
+  var loginScreen = document.getElementById('login-screen');
+  if (loginScreen) loginScreen.style.display = 'flex';
+  switchAuthTab('signin');
+}
+
 // ── PASSWORD RECOVERY ─────────────────────────────────────────────────
 
 var recoveryToken = null;
@@ -11117,10 +11136,8 @@ function attemptLogin() {
         showAuthError(data.error_description || data.msg || data.error || 'Registration failed.');
         return;
       }
-      var s = document.getElementById('login-success');
-      s.innerHTML = '✅ Account created!<br><strong>Check your email inbox for a confirmation link.</strong><br><span style="font-size:11px;opacity:0.8;">Check spam/junk if you don\'t see it within 2 minutes.</span>';
-      s.style.display = 'block';
-      switchAuthTab('signin');
+      // Show full screen email confirmation
+      showEmailConfirmScreen(email);
     }).catch(function(e) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Create Account';
       showAuthError('Error: ' + (e && e.message ? e.message : 'Unknown. Check console.'));
@@ -13339,6 +13356,26 @@ window.addEventListener('resize', function() {
       <div class="pws-scores-summary" id="pws-scores-summary"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- EMAIL CONFIRMATION SCREEN -->
+<div id="email-confirm-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:#080f0b;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Inter',sans-serif;">
+  <div style="width:100%;max-width:360px;text-align:center;">
+    <div style="font-size:72px;margin-bottom:16px;">📧</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:#4ade80;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Check Your Email</div>
+    <div style="font-size:15px;color:#f0fdf4;font-weight:600;margin-bottom:12px;">We sent a confirmation link to:</div>
+    <div id="confirm-email-display" style="font-size:14px;color:#4ade80;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:8px;padding:10px 16px;margin-bottom:20px;word-break:break-all;"></div>
+    <div style="font-size:14px;color:rgba(240,253,244,0.6);line-height:1.7;margin-bottom:28px;">
+      Tap the link in the email to confirm your account, then come back here to sign in.<br><br>
+      <span style="font-size:12px;">Can't find it? Check your <strong style="color:#f0fdf4;">spam or junk folder</strong>.</span>
+    </div>
+    <button onclick="hideEmailConfirmScreen()" style="width:100%;padding:14px;background:linear-gradient(135deg,#14532d,#16a34a);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-bottom:12px;">
+      Back to Sign In
+    </button>
+    <div style="font-size:12px;color:rgba(240,253,244,0.3);">
+      Wrong email? <button onclick="hideEmailConfirmScreen()" style="background:none;border:none;color:#4ade80;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">Start over</button>
+    </div>
   </div>
 </div>
 
