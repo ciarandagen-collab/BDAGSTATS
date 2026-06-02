@@ -6556,6 +6556,54 @@ openPlayerTraining = function(slotIdx) {
   renderPtrInjuries(slotIdx);
 };
 
+// ── PRODUCT FEEDBACK ─────────────────────────────────────────────────
+
+var feedbackCategory = 'feature';
+
+function setFeedbackCat(btn, cat) {
+  feedbackCategory = cat;
+  document.querySelectorAll('#account-modal .ee-cat-btn[data-fb]').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.fb === cat);
+  });
+}
+
+function submitFeedback() {
+  var message = document.getElementById('feedback-message').value.trim();
+  if (!message) { showSync('Please enter your feedback', 2000); return; }
+
+  var btn = document.getElementById('feedback-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  fetch('https://coachstats.app/.netlify/functions/send-feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: currentUser ? currentUser.email : '',
+      name: currentUser ? currentUser.user_metadata?.name || '' : '',
+      category: feedbackCategory,
+      message: message
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    btn.style.display = 'none';
+    document.getElementById('feedback-message').value = '';
+    document.getElementById('feedback-sent-msg').style.display = 'block';
+    setTimeout(function() {
+      document.getElementById('feedback-sent-msg').style.display = 'none';
+      btn.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '📤 Send Feedback';
+    }, 3000);
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = '📤 Send Feedback';
+    showError('Could not send feedback. Please email hello@coachstats.app directly.');
+  });
+}
+
 // ── EMAIL CONFIRMATION SCREEN ─────────────────────────────────────────
 
 function showEmailConfirmScreen(email) {
@@ -12683,6 +12731,41 @@ window.addEventListener('resize', function() {
           💳 Manage Subscription
         </button>
         <div style="font-size:11px;color:var(--muted);text-align:center;">Cancel, update payment method or view invoices</div>
+      </div>
+
+      <!-- Feedback & Roadmap -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">💡 Product Feedback</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Have an idea or feature request? Tell us what you need — your feedback shapes the Coach Stats roadmap.</p>
+        <div style="margin-bottom:10px;">
+          <div class="tr-meta-label">Category</div>
+          <div class="ee-select-row" style="margin-top:6px;">
+            <button class="ee-cat-btn active" data-fb="feature" onclick="setFeedbackCat(this,'feature')">💡 Feature Request</button>
+            <button class="ee-cat-btn" data-fb="bug" onclick="setFeedbackCat(this,'bug')">🐛 Bug Report</button>
+            <button class="ee-cat-btn" data-fb="general" onclick="setFeedbackCat(this,'general')">💬 General</button>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div class="tr-meta-label">Your Feedback</div>
+          <textarea id="feedback-message" class="match-notes-textarea" placeholder="Describe your idea, request or issue in as much detail as you like..." style="min-height:100px;margin-top:6px;"></textarea>
+        </div>
+        <button onclick="submitFeedback()" id="feedback-submit-btn" style="width:100%;padding:12px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:8px;color:#4ade80;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">
+          📤 Send Feedback
+        </button>
+        <div id="feedback-sent-msg" style="display:none;text-align:center;padding:10px;font-size:12px;color:var(--green);margin-top:8px;">✓ Feedback sent — thank you!</div>
+      </div>
+
+      <!-- What's Coming -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">🗺 What's Coming</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+          <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">🔜 &nbsp;Player photos on squad grid and team sheet</div>
+          <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">🔜 &nbsp;Push notifications for fixture reminders</div>
+          <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">🔜 &nbsp;Match data export (CSV / PDF pack)</div>
+          <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">🔜 &nbsp;Offline indicator</div>
+          <div style="padding:6px 0;">🔜 &nbsp;App Store & Play Store listing</div>
+        </div>
+        <div style="font-size:11px;color:rgba(240,253,244,0.25);margin-top:8px;text-align:center;">Have something else in mind? Use the feedback form above.</div>
       </div>
 
       <!-- Privacy & Terms -->
