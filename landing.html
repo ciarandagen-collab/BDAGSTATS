@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Stats — GAA Football Match Statistics</title>
+<meta name="description" content="The complete coaching tool for GAA football. Record live match stats, manage your squad, track training and analyse performance — all from your phone.">
+<meta property="og:title" content="Coach Stats — GAA Football Match Statistics">
+<meta property="og:description" content="The complete coaching tool for GAA football. Record live stats, manage your squad and analyse performance.">
+<meta property="og:url" content="https://coachstats.app">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080f0b">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green: #16a34a;
+  --green-light: #4ade80;
+  --bg: #080f0b;
+  --panel: #0d2015;
+  --border: rgba(22,163,74,0.2);
+  --text: #f0fdf4;
+  --muted: rgba(240,253,244,0.7);
+}
+
+html { scroll-behavior: smooth; background: #080f0b; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(8,15,11,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--text); }
+.nav-links { display: flex; gap: 8px; align-items: center; }
+.nav-link {
+  color: rgba(240,253,244,0.8);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--text); }
+.nav-cta {
+  background: var(--green);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 8px;
+  transition: filter 0.2s;
+}
+.nav-cta:hover { filter: brightness(1.1); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+  background: #080f0b;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(22,163,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-pitch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.12;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(22,163,74,0.15);
+  border: 1px solid rgba(22,163,74,0.4);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--green-light);
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(36px, 8vw, 72px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 20px;
+  max-width: 800px;
+}
+.hero h1 span { color: var(--green-light); }
+.hero p {
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: rgba(240,253,244,0.85);
+  max-width: 560px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+.hero-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 60px;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #14532d, #16a34a);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(22,163,74,0.25);
+  transition: all 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(22,163,74,0.35); }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+.hero-sub {
+  font-size: 13px;
+  color: rgba(240,253,244,0.7);
+  margin-top: -20px;
+  margin-bottom: 48px;
+}
+
+/* ── PHONE MOCKUP ── */
+.phone-mockup {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  background: #0a1a0f;
+  border: 2px solid rgba(22,163,74,0.3);
+  border-radius: 36px;
+  padding: 12px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(22,163,74,0.1);
+  position: relative;
+}
+.phone-notch {
+  width: 80px; height: 24px;
+  background: #080f0b;
+  border-radius: 12px;
+  margin: 0 auto 8px;
+}
+.phone-screen {
+  background: #0d2015;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.phone-topbar {
+  background: #0a0a0a;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(22,163,74,0.2);
+}
+.phone-score {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.phone-clock {
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  color: var(--green-light);
+  background: rgba(22,163,74,0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.phone-body { padding: 12px; }
+.phone-sec-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.phone-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.phone-btn {
+  padding: 10px 8px;
+  border-radius: 8px;
+  text-align: center;
+}
+.phone-btn.home { background: rgba(22,163,74,0.1); border-left: 2px solid #16a34a; }
+.phone-btn.away { background: rgba(148,163,184,0.07); border-left: 2px solid #94a3b8; }
+.phone-btn-icon { font-size: 16px; margin-bottom: 2px; }
+.phone-btn-label { font-size: 8px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; color: var(--muted); }
+.phone-btn-count { font-size: 14px; font-family: 'Oswald', sans-serif; font-weight: 700; }
+.phone-btn.home .phone-btn-count { color: var(--green-light); }
+.phone-btn.away .phone-btn-count { color: #cbd5e1; }
+.phone-nav {
+  background: #0a0a0a;
+  display: flex;
+  border-top: 1px solid rgba(22,163,74,0.15);
+  padding: 6px 0;
+}
+.phone-nav-item {
+  flex: 1;
+  text-align: center;
+  font-size: 7px;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 1px;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.phone-nav-item.active { color: var(--green-light); }
+.phone-nav-icon { font-size: 14px; display: block; margin-bottom: 2px; }
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding: 48px 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: #4ade80;
+  line-height: 1;
+}
+.stat-label { font-size: 14px; color: #f0fdf4; margin-top: 6px; font-weight: 500; }
+
+/* ── SECTIONS ── */
+section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; background: transparent; }
+.section-badge {
+  display: inline-block;
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green-light);
+  background: rgba(22,163,74,0.1);
+  border: 1px solid rgba(22,163,74,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+.section-sub {
+  font-size: 16px;
+  color: rgba(240,253,244,0.85);
+  max-width: 560px;
+  margin-bottom: 48px;
+  line-height: 1.7;
+}
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feature-card:hover {
+  border-color: rgba(22,163,74,0.4);
+  transform: translateY(-2px);
+}
+.feature-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+}
+.feature-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.feature-desc { font-size: 14px; color: rgba(240,253,244,0.8); line-height: 1.6; }
+
+/* ── HOW IT WORKS ── */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  counter-reset: steps;
+}
+.step {
+  text-align: center;
+  padding: 32px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+}
+.step-number {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #14532d, #16a34a);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 auto 16px;
+}
+.step-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.step-desc { font-size: 14px; color: rgba(240,253,244,0.8); line-height: 1.6; }
+
+/* ── PRICING ── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.pricing-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  text-align: center;
+  position: relative;
+}
+.pricing-card.featured {
+  border-color: var(--green);
+  background: linear-gradient(135deg, rgba(20,83,45,0.3), rgba(13,32,21,1));
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+.pricing-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,253,244,0.8);
+  margin-bottom: 12px;
+}
+.pricing-price {
+  font-family: 'Oswald', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.pricing-price span { font-size: 20px; color: var(--muted); }
+.pricing-period { font-size: 13px; color: rgba(240,253,244,0.75); margin-bottom: 24px; }
+.pricing-features { list-style: none; margin-bottom: 28px; text-align: left; }
+.pricing-features li {
+  font-size: 14px;
+  color: #f0fdf4;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pricing-features li::before { content: '✓'; color: var(--green-light); font-weight: 700; flex-shrink: 0; }
+.pricing-cta {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #14532d, #16a34a);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 10px;
+  transition: filter 0.2s;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+}
+.pricing-cta:hover { filter: brightness(1.1); }
+.pricing-cta.secondary {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.pricing-trial { font-size: 12px; color: var(--muted); margin-top: 12px; }
+
+/* ── INSTALL SECTION ── */
+.install-section {
+  text-align: center;
+  padding: 80px 24px;
+  background: linear-gradient(135deg, rgba(20,83,45,0.2), rgba(8,15,11,0));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.install-steps {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin: 32px 0;
+}
+.install-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(240,253,244,0.85);
+}
+.install-step-num {
+  width: 28px; height: 28px;
+  background: rgba(22,163,74,0.15);
+  border: 1px solid rgba(22,163,74,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-light);
+  flex-shrink: 0;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.footer-logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+.footer-logo span { color: var(--text); }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+.footer-links a { font-size: 13px; color: rgba(240,253,244,0.75); text-decoration: none; }
+.footer-links a:hover { color: var(--green-light); }
+.footer-copy { font-size: 12px; color: rgba(240,253,244,0.2); }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  .nav-links .nav-link { display: none; }
+  .stats-strip { gap: 24px; }
+  .hero-buttons { flex-direction: column; align-items: center; }
+  .btn-primary, .btn-secondary { width: 100%; max-width: 300px; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Coach <span>Stats</span></a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="/app" class="nav-cta">Sign In →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <!-- GAA Pitch background -->
+  <div class="hero-pitch">
+    <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <!-- Pitch outline -->
+      <rect x="40" y="30" width="720" height="440" fill="none" stroke="#4ade80" stroke-width="2.5"/>
+      <!-- Halfway line -->
+      <line x1="400" y1="30" x2="400" y2="470" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Centre square (kickout area) -->
+      <rect x="350" y="220" width="100" height="60" fill="none" stroke="#4ade80" stroke-width="1" stroke-dasharray="4,4"/>
+
+      <!-- Left goal area (large) -->
+      <rect x="40" y="145" width="130" height="210" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Left goal area (small) -->
+      <rect x="40" y="185" width="55" height="130" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Left penalty spot -->
+      <circle cx="152" cy="250" r="3" fill="#4ade80"/>
+      <!-- Left penalty arc -->
+      <path d="M152,220 A50,50 0 0,1 152,280" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <!-- Left goal posts -->
+      <rect x="20" y="210" width="20" height="80" fill="none" stroke="#4ade80" stroke-width="2"/>
+      <!-- Left 45m line -->
+      <line x1="220" y1="30" x2="220" y2="470" stroke="#4ade80" stroke-width="1" stroke-dasharray="6,6"/>
+      <!-- Left 21m line -->
+      <line x1="130" y1="30" x2="130" y2="470" stroke="#4ade80" stroke-width="1" stroke-dasharray="4,4"/>
+      <!-- Left 13m line -->
+      <line x1="85" y1="145" x2="85" y2="355" stroke="#4ade80" stroke-width="1" stroke-dasharray="3,3"/>
+
+      <!-- Right goal area (large) -->
+      <rect x="630" y="145" width="130" height="210" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Right goal area (small) -->
+      <rect x="705" y="185" width="55" height="130" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Right penalty spot -->
+      <circle cx="648" cy="250" r="3" fill="#4ade80"/>
+      <!-- Right penalty arc -->
+      <path d="M648,220 A50,50 0 0,0 648,280" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <!-- Right goal posts -->
+      <rect x="760" y="210" width="20" height="80" fill="none" stroke="#4ade80" stroke-width="2"/>
+      <!-- Right 45m line -->
+      <line x1="580" y1="30" x2="580" y2="470" stroke="#4ade80" stroke-width="1" stroke-dasharray="6,6"/>
+      <!-- Right 21m line -->
+      <line x1="670" y1="30" x2="670" y2="470" stroke="#4ade80" stroke-width="1" stroke-dasharray="4,4"/>
+      <!-- Right 13m line -->
+      <line x1="715" y1="145" x2="715" y2="355" stroke="#4ade80" stroke-width="1" stroke-dasharray="3,3"/>
+    </svg>
+  </div>
+  <div class="hero-badge">🏐 Built for GAA Football</div>
+  <h1>The Coaching Tool<br><span>GAA Deserves</span></h1>
+  <p>Record live match statistics, manage your squad, track training and analyse performance — all from your phone on the sideline.</p>
+  <div class="hero-buttons">
+    <a href="/app" class="btn-primary">🏐 Get Started Free</a>
+    <a href="#features" class="btn-secondary">See Features ↓</a>
+  </div>
+  <div class="hero-sub">30-day free trial · No credit card required · Works on iPhone & Android</div>
+
+  <!-- Phone mockup -->
+  <div class="phone-mockup">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="phone-topbar">
+        <div class="phone-score">1-08</div>
+        <div class="phone-clock">▶ 34:12</div>
+        <div class="phone-score">0-09</div>
+      </div>
+      <div class="phone-body">
+        <div class="phone-sec-label">Shots</div>
+        <div class="phone-btn-grid">
+          <div class="phone-btn home">
+            <div class="phone-btn-icon">⚽</div>
+            <div class="phone-btn-label">Shot from Play</div>
+            <div class="phone-btn-count">8</div>
+          </div>
+          <div class="phone-btn away">
+            <div class="phone-btn-icon">⚽</div>
+            <div class="phone-btn-label">Shot from Play</div>
+            <div class="phone-btn-count">6</div>
+          </div>
+        </div>
+        <div class="phone-sec-label">Possession</div>
+        <div class="phone-btn-grid">
+          <div class="phone-btn home">
+            <div class="phone-btn-icon">📥</div>
+            <div class="phone-btn-label">Ball Won</div>
+            <div class="phone-btn-count">12</div>
+          </div>
+          <div class="phone-btn away">
+            <div class="phone-btn-icon">📤</div>
+            <div class="phone-btn-label">Ball Lost</div>
+            <div class="phone-btn-count">9</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-nav">
+        <div class="phone-nav-item">
+          <span class="phone-nav-icon">⌂</span>Match
+        </div>
+        <div class="phone-nav-item active">
+          <span class="phone-nav-icon">●</span>Record
+        </div>
+        <div class="phone-nav-item">
+          <span class="phone-nav-icon">〜</span>Trends
+        </div>
+        <div class="phone-nav-item">
+          <span class="phone-nav-icon">👥</span>Squad
+        </div>
+        <div class="phone-nav-item">
+          <span class="phone-nav-icon">◷</span>History
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS STRIP -->
+<div style="background:var(--bg);">
+<div class="stats-strip" style="background:#080f0b;">
+  <div class="stat-item">
+    <div class="stat-num">32</div>
+    <div class="stat-label">GAA Counties</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">1,200+</div>
+    <div class="stat-label">Clubs in database</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">30+</div>
+    <div class="stat-label">Features</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">£5</div>
+    <div class="stat-label">Per month</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features" style="background:#080f0b;max-width:100%;padding:80px 24px;">
+<div style="max-width:1100px;margin:0 auto;">
+  <div class="section-badge">Everything you need</div>
+  <h2 class="section-title">Built for the sideline,<br>designed for analysis</h2>
+  <p class="section-sub">Every feature a GAA coach needs — from the first whistle to the final review.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">✍️</span>
+      <div class="feature-title">Live Match Recording</div>
+      <div class="feature-desc">Record shots, possession, kickouts, cards and substitutions in real time. Tag every event to a player. Home and Away columns clearly separated.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <div class="feature-title">Shot Map</div>
+      <div class="feature-desc">Visual pitch diagram showing where every shot came from. Colour coded by outcome. Filter by team or shot type. Included in PDF reports.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">👥</span>
+      <div class="feature-title">Squad Management</div>
+      <div class="feature-desc">34-player squad grid with attendance badges, injury tracking, skill ratings, availability status and performance scores.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🏃</span>
+      <div class="feature-title">Training & Wellness</div>
+      <div class="feature-desc">Log every training session. Share a wellness link with your squad — players rate sleep, energy, soreness, stress and mood before training.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🧪</span>
+      <div class="feature-title">Player Trials</div>
+      <div class="feature-desc">Run structured multi-week trials with 1–10 grading. Share a grading link with co-coaches. Rankings, final decisions and PDF report.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎬</span>
+      <div class="feature-title">Video Analysis</div>
+      <div class="feature-desc">Load any YouTube video and tag events with timestamps. Create highlight clips by category. Share clip sheets directly to WhatsApp.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📊</span>
+      <div class="feature-title">Season Summary</div>
+      <div class="feature-desc">W/D/L record, KPI tiles, top performers and full results table. Generate a printable PDF management report for any season.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🏟</span>
+      <div class="feature-title">Opposition Database</div>
+      <div class="feature-desc">Automatically builds from your match history. Every opponent profiled with W/D/L record, match history, scout reports and persistent notes.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📅</span>
+      <div class="feature-title">Fixture List</div>
+      <div class="feature-desc">Schedule upcoming matches with date, time, opponent and venue. Links automatically to match records when played.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- HOW IT WORKS -->
+<section id="how" style="background:#0a1a0f;max-width:100%;padding:80px 24px;">
+<div style="max-width:1100px;margin:0 auto;">
+  <div style="text-align:center;">
+    <div class="section-badge">Simple to use</div>
+    <h2 class="section-title">Up and running in minutes</h2>
+    <p class="section-sub" style="margin:0 auto 48px;">No training needed. Open the app, set up your teams and start recording.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-title">Install the App</div>
+      <div class="step-desc">Open coachstats.app in Safari on your iPhone or iPad. Tap Share → Add to Home Screen. Works like a native app, even offline.</div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-title">Set Up Your Match</div>
+      <div class="step-desc">Tap the team names to search 1,200+ GAA clubs. Select your competition. Tap Start Game — the clock starts automatically.</div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-title">Record & Analyse</div>
+      <div class="step-desc">Tap event buttons as they happen. After the game, view your shot map, share the report and build your season picture.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- PRICING -->
+<section id="pricing" style="background:#080f0b;max-width:100%;padding:80px 24px;">
+<div style="max-width:1100px;margin:0 auto;">
+  <div style="text-align:center;">
+    <div class="section-badge">Simple pricing</div>
+    <h2 class="section-title">Start free, upgrade when ready</h2>
+    <p class="section-sub" style="margin:0 auto 48px;">30-day free trial with full access. No credit card required.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-name">Individual</div>
+      <div class="pricing-price"><span>£</span>5</div>
+      <div class="pricing-period">per month · or £50/year</div>
+      <ul class="pricing-features">
+        <li>Full match recording</li>
+        <li>Squad management (34 players)</li>
+        <li>Training & wellness tracking</li>
+        <li>Video analysis & clips</li>
+        <li>Shot map & PDF reports</li>
+        <li>Season summary</li>
+        <li>Fixture list & opposition DB</li>
+        <li>Unlimited match history</li>
+      </ul>
+      <a href="/app" class="pricing-cta secondary">Start Free Trial</a>
+      <div class="pricing-trial">30 days free · Cancel anytime</div>
+    </div>
+    <div class="pricing-card featured">
+      <div class="pricing-badge">Most Popular</div>
+      <div class="pricing-name">Club</div>
+      <div class="pricing-price"><span>£</span>10</div>
+      <div class="pricing-period">per month · or £90/year</div>
+      <ul class="pricing-features">
+        <li>Everything in Individual</li>
+        <li>Multiple coaches on one club</li>
+        <li>Shared event configuration</li>
+        <li>Multi-coach trial grading</li>
+        <li>Club-wide squad access</li>
+        <li>Admin controls</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="/app" class="pricing-cta">Start Free Trial</a>
+      <div class="pricing-trial">30 days free · Cancel anytime</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- INSTALL CTA -->
+<div class="install-section">
+  <div class="section-badge">Install in 30 seconds</div>
+  <h2 class="section-title" style="margin-bottom:8px;">Ready for the sideline?</h2>
+  <p style="color:var(--muted);font-size:16px;margin-bottom:0;">Open in Safari on your iPhone or iPad</p>
+  <div class="install-steps">
+    <div class="install-step">
+      <div class="install-step-num">1</div>
+      Open in Safari
+    </div>
+    <div class="install-step">
+      <div class="install-step-num">2</div>
+      Tap Share ⎋
+    </div>
+    <div class="install-step">
+      <div class="install-step-num">3</div>
+      Add to Home Screen
+    </div>
+    <div class="install-step">
+      <div class="install-step-num">4</div>
+      Tap Add ✓
+    </div>
+  </div>
+  <a href="/app" class="btn-primary" style="display:inline-flex;">🏐 Get Started Free</a>
+  <p style="color:var(--muted);font-size:13px;margin-top:16px;">Works on iPhone, iPad and Android · No App Store required</p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Coach <span>Stats</span></div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/terms">Terms of Service</a>
+    <a href="mailto:hello@coachstats.app">Contact</a>
+    <a href="/app">Sign In</a>
+  </div>
+  <div class="footer-copy">© 2026 Ciaran Dagen trading as Coach Stats · coachstats.app</div>
+</footer>
+
+</body>
+</html>
