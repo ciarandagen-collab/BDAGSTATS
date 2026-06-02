@@ -24,10 +24,5 @@
 
 [[redirects]]
   from = "/app"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/"
-  to = "/landing.html"
+  to = "/app.html"
   status = 200
