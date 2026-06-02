@@ -11118,7 +11118,7 @@ function attemptLogin() {
         return;
       }
       var s = document.getElementById('login-success');
-      s.textContent = 'Account created! Check your email to confirm, then sign in.';
+      s.innerHTML = '✅ Account created!<br><strong>Check your email inbox for a confirmation link.</strong><br><span style="font-size:11px;opacity:0.8;">Check spam/junk if you don\'t see it within 2 minutes.</span>';
       s.style.display = 'block';
       switchAuthTab('signin');
     }).catch(function(e) {
@@ -11132,7 +11132,11 @@ function attemptLogin() {
     }).then(function(data) {
       btn.style.opacity = '1'; btn.disabled = false; btn.textContent = 'Sign In';
       if (data.error || !data.access_token) {
-        showAuthError(data.error_description || data.error || 'Incorrect email or password.');
+        var errMsg = data.error_description || data.error || 'Incorrect email or password.';
+        if (errMsg.toLowerCase().includes('email') && errMsg.toLowerCase().includes('confirm')) {
+          errMsg = '📧 Please confirm your email address first. Check your inbox (and spam folder) for a confirmation link from hello@coachstats.app';
+        }
+        showAuthError(errMsg);
         document.getElementById('login-pass').value = '';
         return;
       }
