@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gaa-stats-v47';
-const PRECACHE_URLS = ['./index.html','./manifest.json'];
+const CACHE_NAME = 'gaa-stats-v48';
+const PRECACHE_URLS = ['./app.html','./manifest.json'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting()));
 });
