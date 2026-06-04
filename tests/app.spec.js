@@ -1,10 +1,10 @@
 // ── COACH STATS — PLAYWRIGHT BROWSER TESTS ──────────────────────────
 // Run with: npx playwright test
-// Tests run against https://coachstats.netlify.app
+// Tests run against https://coachstats.app/app
 
 const { test, expect } = require('@playwright/test');
 
-const URL = 'https://coachstats.netlify.app';
+const URL = 'https://coachstats.app/app';
 const EMAIL = 'ciarandagen@icloud.com'; // free bypass account
 const PASSWORD = process.env.TEST_PASSWORD || 'testpass123';
 
@@ -350,12 +350,12 @@ test.describe('Modals & Sheets', () => {
 
 test.describe('Wellness Self-Report Screen', () => {
   test('Wellness screen loads from URL param', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     await expect(page.locator('#player-wellness-screen')).toBeVisible();
   });
 
   test('Wellness screen shows loading state initially', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     // Loading or error state (test user has no squad)
     const loading = page.locator('#pws-loading');
     const error = page.locator('#pws-error');
@@ -367,7 +367,7 @@ test.describe('Wellness Self-Report Screen', () => {
   });
 
   test('Main app hidden in wellness mode', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     await page.waitForTimeout(500);
     const topbar = page.locator('.topbar');
     const isHidden = await topbar.evaluate(el => el.style.display === 'none' || el.offsetParent === null);
@@ -379,12 +379,12 @@ test.describe('Wellness Self-Report Screen', () => {
 
 test.describe('Trial Grading Screen', () => {
   test('Trial grading screen loads from URL param', async ({ page }) => {
-    await page.goto(URL + '?trialgrade=test-user-id&trialId=123&sessionId=456');
+    await page.goto('https://coachstats.app/app?trialgrade=test-user-id&trialId=123&sessionId=456');
     await expect(page.locator('#trial-grading-screen')).toBeVisible();
   });
 
   test('Main app hidden in trial grading mode', async ({ page }) => {
-    await page.goto(URL + '?trialgrade=test-user-id&trialId=123&sessionId=456');
+    await page.goto('https://coachstats.app/app?trialgrade=test-user-id&trialId=123&sessionId=456');
     await page.waitForTimeout(500);
     const topbar = page.locator('.topbar');
     const isHidden = await topbar.evaluate(el => el.style.display === 'none' || el.offsetParent === null);
