@@ -2634,6 +2634,7 @@ select option { background:#1a0505; }
 
     <button class="new-video-btn" onclick="openNewVideoAnalysis()">🎬 New Video Analysis</button>
     <button class="new-video-btn" onclick="openSeasonSummary()" style="background:linear-gradient(135deg,rgba(27,60,153,0.2),rgba(48,100,224,0.1));border-color:rgba(48,100,224,0.3);margin-top:-8px;">📊 Season Summary</button>
+    <button class="new-video-btn" onclick="openExportModal()" style="background:linear-gradient(135deg,rgba(22,163,74,0.15),rgba(22,163,74,0.05));border-color:rgba(22,163,74,0.3);margin-top:-8px;">📥 Export Data</button>
     <button class="new-video-btn" onclick="openFixtures()" style="background:linear-gradient(135deg,rgba(153,100,27,0.2),rgba(224,166,48,0.1));border-color:rgba(224,166,48,0.3);margin-top:-8px;">📅 Fixtures</button>
     <button class="new-video-btn" onclick="openOpposition()" style="background:linear-gradient(135deg,rgba(100,27,153,0.2),rgba(168,85,247,0.1));border-color:rgba(168,85,247,0.3);margin-top:-8px;">🏟 Opposition DB</button>
 
@@ -7078,8 +7079,31 @@ saveMatchToHistory = function() {
 };
 
 // Network status indicator
-window.addEventListener('online', function() { showSuccess('Back online — your data will sync'); });
-window.addEventListener('offline', function() { showError('You are offline — changes saved locally'); });
+// ── OFFLINE INDICATOR ────────────────────────────────────────────────
+
+function updateOnlineStatus() {
+  var indicator = document.getElementById('offline-indicator');
+  if (!indicator) return;
+  if (navigator.onLine) {
+    indicator.style.display = 'none';
+  } else {
+    indicator.style.display = 'flex';
+  }
+}
+
+window.addEventListener('online', function() {
+  updateOnlineStatus();
+  showSuccess('Back online — your data will sync');
+});
+
+window.addEventListener('offline', function() {
+  updateOnlineStatus();
+});
+
+// Check on load
+document.addEventListener('DOMContentLoaded', function() {
+  updateOnlineStatus();
+});
 
 // ── ONBOARDING ────────────────────────────────────────────────────────
 
@@ -7148,6 +7172,254 @@ function dismissOnboarding() {
   document.getElementById('onboarding-overlay').style.display = 'none';
   localStorage.setItem('cs_onboarding_done', '1');
 }
+
+// ── MATCH DATA EXPORT ─────────────────────────────────────────────────
+
+function openExportModal() {
+  // Populate season selector
+  var history = loadHistory();
+  var seasons = [...new Set(history.map(function(m) { return m.season || ''; }).filter(Boolean))].sort().reverse();
+  var sel = document.getElementById('export-season');
+  sel.innerHTML = '<option value="">All seasons</option>';
+  seasons.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+  document.getElementById('export-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function getExportMatches() {
+  var history = loadHistory();
+  var season = document.getElementById('export-season').value;
+  if (season) history = history.filter(function(m) { return m.season === season; });
+  return history;
+}
+
+function exportMatchesCSV() {
+  var matches = getExportMatches();
+  if (!matches.length) { showSync('No matches to export', 2000); return; }
+
+  var rows = [
+    ['Date','Competition','Season','Home Team','Away Team','Home Goals','Home Points','Away Goals','Away Points','Home Score','Away Score','Result','Home Shots','Away Shots','Home Wides','Away Wides','Home KO Won','Home KO Lost','Away KO Won','Away KO Lost','Notes']
+  ];
+
+  matches.forEach(function(m) {
+    var hg = m.scores ? m.scores.home.goals : 0;
+    var hp = m.scores ? m.scores.home.points : 0;
+    var ag = m.scores ? m.scores.away.goals : 0;
+    var ap = m.scores ? m.scores.away.points : 0;
+    var hTotal = hg * 3 + hp;
+    var aTotal = ag * 3 + ap;
+    var result = hTotal > aTotal ? 'W' : hTotal < aTotal ? 'L' : 'D';
+
+    var shots = m.shots || {};
+    var hShotsTotal = 0, aShotsTotal = 0, hWides = 0, aWides = 0;
+    if (shots.home) {
+      ['play','free'].forEach(function(t) {
+        if (shots.home[t]) { Object.values(shots.home[t]).forEach(function(v){hShotsTotal+=v;}); hWides += (shots.home[t].wide||0); }
+      });
+    }
+    if (shots.away) {
+      ['play','free'].forEach(function(t) {
+        if (shots.away[t]) { Object.values(shots.away[t]).forEach(function(v){aShotsTotal+=v;}); aWides += (shots.away[t].wide||0); }
+      });
+    }
+    var ko = m.kickout || {};
+    var hKOW = 0, hKOL = 0, aKOW = 0, aKOL = 0;
+    if (ko.home) { hKOW = (ko.home.wonClean||0)+(ko.home.breakWon||0)+(ko.home.shortWon||0); hKOL = (ko.home.lossClean||0)+(ko.home.breakLoss||0)+(ko.home.shortLoss||0); }
+    if (ko.away) { aKOW = (ko.away.wonClean||0)+(ko.away.breakWon||0)+(ko.away.shortWon||0); aKOL = (ko.away.lossClean||0)+(ko.away.breakLoss||0)+(ko.away.shortLoss||0); }
+
+    var notes = (m.notes || '').replace(/,/g,' ').replace(/\n/g,' ');
+    rows.push([
+      m.date || '', m.competition || '', m.season || '',
+      m.home || '', m.away || '',
+      hg, hp, ag, ap,
+      hg+'-'+String(hp).padStart(2,'0'), ag+'-'+String(ap).padStart(2,'0'),
+      result, hShotsTotal, aShotsTotal, hWides, aWides,
+      hKOW, hKOL, aKOW, aKOL, '"'+notes+'"'
+    ]);
+  });
+
+  var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'coach-stats-export-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showSuccess('CSV exported — ' + (rows.length-1) + ' matches');
+}
+
+function exportMatchesJSON() {
+  var matches = getExportMatches();
+  if (!matches.length) { showSync('No matches to export', 2000); return; }
+
+  var data = {
+    exported: new Date().toISOString(),
+    app: 'Coach Stats — coachstats.app',
+    matches: matches
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'coach-stats-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showSuccess('JSON backup exported — ' + matches.length + ' matches');
+}
+
+function exportMatchesPDF() {
+  var matches = getExportMatches();
+  if (!matches.length) { showSync('No matches to export', 2000); return; }
+
+  var css = '<style>body{font-family:Arial,sans-serif;color:#111;padding:20px;font-size:12px;}h1{color:#14532d;border-bottom:3px solid #16a34a;padding-bottom:8px;}h2{color:#14532d;font-size:14px;margin:20px 0 6px;border-bottom:1px solid #e5e7eb;padding-bottom:4px;}table{width:100%;border-collapse:collapse;margin-bottom:12px;}th{background:#14532d;color:#fff;padding:6px 8px;text-align:left;font-size:11px;}td{padding:5px 8px;border-bottom:1px solid #e5e7eb;font-size:11px;}tr:nth-child(even) td{background:#f9fafb;}.score{font-size:18px;font-weight:700;color:#14532d;text-align:center;}.win{color:#16a34a;font-weight:700;}.loss{color:#dc2626;font-weight:700;}.draw{color:#d97706;font-weight:700;}@media print{h2{page-break-before:always;}h2:first-of-type{page-break-before:avoid;}}</style>';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Coach Stats Export</title>' + css + '</head><body>';
+  html += '<h1>Coach Stats — Match Report Pack</h1>';
+  html += '<p>Generated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + ' · ' + matches.length + ' matches</p>';
+
+  // Summary table
+  html += '<h2>Season Summary</h2><table><tr><th>Date</th><th>Competition</th><th>Home</th><th>Score</th><th>Away</th><th>Result</th></tr>';
+  matches.forEach(function(m) {
+    var hg = m.scores ? m.scores.home.goals : 0;
+    var hp = m.scores ? m.scores.home.points : 0;
+    var ag = m.scores ? m.scores.away.goals : 0;
+    var ap = m.scores ? m.scores.away.points : 0;
+    var hTotal = hg*3+hp, aTotal = ag*3+ap;
+    var result = hTotal > aTotal ? 'W' : hTotal < aTotal ? 'L' : 'D';
+    var cls = result==='W'?'win':result==='L'?'loss':'draw';
+    html += '<tr><td>'+(m.date||'')+'</td><td>'+(m.competition||'')+'</td><td>'+(m.home||'')+'</td>';
+    html += '<td class="score">'+hg+'-'+String(hp).padStart(2,'0')+' v '+ag+'-'+String(ap).padStart(2,'0')+'</td>';
+    html += '<td>'+(m.away||'')+'</td><td class="'+cls+'">'+result+'</td></tr>';
+  });
+  html += '</table>';
+
+  // Individual match details
+  matches.forEach(function(m) {
+    var hg = m.scores ? m.scores.home.goals : 0;
+    var hp = m.scores ? m.scores.home.points : 0;
+    var ag = m.scores ? m.scores.away.goals : 0;
+    var ap = m.scores ? m.scores.away.points : 0;
+    html += '<h2>'+(m.home||'Home')+' v '+(m.away||'Away')+' — '+(m.date||'')+'</h2>';
+    html += '<p><strong>Competition:</strong> '+(m.competition||'—')+'  <strong>Season:</strong> '+(m.season||'—')+'</p>';
+    html += '<p class="score">'+hg+'-'+String(hp).padStart(2,'0')+'  v  '+ag+'-'+String(ap).padStart(2,'0')+'</p>';
+    if (m.notes) html += '<p><strong>Notes:</strong> '+m.notes.replace(/\n/g,'<br>')+'</p>';
+  });
+
+  html += '</body></html>';
+
+  var win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(function() { win.print(); }, 500);
+  closeExportModal();
+}
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────────────────
+
+var NOTIF_KEY = 'cs_notifications_enabled';
+
+function updateNotifButton() {
+  var btn = document.getElementById('notif-btn');
+  var status = document.getElementById('notif-status');
+  if (!btn || !status) return;
+
+  if (!('Notification' in window)) {
+    status.textContent = '⚠️ Push notifications not supported in this browser. Use Safari on iPhone.';
+    btn.style.display = 'none';
+    return;
+  }
+
+  var perm = Notification.permission;
+  if (perm === 'granted' && localStorage.getItem(NOTIF_KEY) === '1') {
+    status.textContent = '✅ Fixture reminders are enabled';
+    btn.textContent = '🔕 Disable Fixture Reminders';
+    btn.style.background = 'rgba(239,68,68,0.08)';
+    btn.style.borderColor = 'rgba(239,68,68,0.25)';
+    btn.style.color = '#f87171';
+  } else if (perm === 'denied') {
+    status.textContent = '❌ Notifications blocked — enable in Safari Settings → Notifications';
+    btn.style.display = 'none';
+  } else {
+    status.textContent = 'Tap below to enable reminders 24 hours before each fixture.';
+    btn.textContent = '🔔 Enable Fixture Reminders';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+function togglePushNotifications() {
+  if (!('Notification' in window)) {
+    showError('Push notifications not supported in this browser.');
+    return;
+  }
+
+  if (Notification.permission === 'granted' && localStorage.getItem(NOTIF_KEY) === '1') {
+    // Disable
+    localStorage.setItem(NOTIF_KEY, '0');
+    updateNotifButton();
+    showSync('Fixture reminders disabled', 2000);
+    return;
+  }
+
+  // Request permission
+  Notification.requestPermission().then(function(result) {
+    if (result === 'granted') {
+      localStorage.setItem(NOTIF_KEY, '1');
+      updateNotifButton();
+      showSuccess('Fixture reminders enabled!');
+      scheduleFixtureNotifications();
+    } else {
+      showError('Permission denied — enable notifications in Safari settings.');
+    }
+  });
+}
+
+function scheduleFixtureNotifications() {
+  // Check fixtures and schedule notifications for upcoming ones
+  if (Notification.permission !== 'granted' || localStorage.getItem(NOTIF_KEY) !== '1') return;
+
+  var now = new Date();
+  var tomorrow = new Date(now.getTime() + 24*60*60*1000);
+  var dayAfter = new Date(now.getTime() + 48*60*60*1000);
+
+  fixtures.forEach(function(f) {
+    if (!f.date) return;
+    var fixtureDate = new Date(f.date);
+    // Notify if fixture is between 24-48 hours away
+    if (fixtureDate >= tomorrow && fixtureDate <= dayAfter) {
+      var timeStr = f.time ? ' at ' + f.time : '';
+      var venueStr = f.venue ? ' · ' + f.venue : '';
+      new Notification('⚽ Fixture Tomorrow', {
+        body: (f.home || 'Your Team') + ' v ' + (f.away || 'Opposition') + timeStr + venueStr,
+        icon: '/icons/icon-192.png',
+        tag: 'fixture-' + f.id
+      });
+    }
+  });
+}
+
+// Check notifications when account settings opens
+var _origOpenAccount = openAccountSettings;
+openAccountSettings = function() {
+  _origOpenAccount();
+  setTimeout(updateNotifButton, 100);
+  scheduleFixtureNotifications();
+};
 
 // ── SEASON SUMMARY ────────────────────────────────────────────────────
 
@@ -12956,6 +13228,42 @@ window.addEventListener('resize', function() {
   </div>
 </div>
 
+<!-- EXPORT DATA MODAL -->
+<div class="modal-overlay" id="export-modal" onclick="if(event.target===this)closeExportModal()">
+  <div class="training-sheet" style="max-height:70vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="sheet-title">📥 Export Data</div><div class="sheet-sub">Download your match history</div></div>
+      <button class="sheet-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div style="padding:0 16px 24px;">
+
+      <div style="margin-bottom:16px;">
+        <div class="tr-meta-label">Season (optional — leave blank for all)</div>
+        <select id="export-season" class="tr-meta-input" style="width:100%;">
+          <option value="">All seasons</option>
+        </select>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="exportMatchesCSV()" class="btn-save-player" style="background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);color:#4ade80;">
+          📊 Export as CSV
+          <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:400;margin-top:2px;letter-spacing:0;">Opens in Excel, Google Sheets — scores, stats, dates</div>
+        </button>
+        <button onclick="exportMatchesPDF()" class="btn-save-player">
+          📄 Export as PDF Report Pack
+          <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:400;margin-top:2px;letter-spacing:0;">All match reports in a single printable document</div>
+        </button>
+        <button onclick="exportMatchesJSON()" class="btn-save-player" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--muted);">
+          🗄 Export Raw Data (JSON)
+          <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:400;margin-top:2px;letter-spacing:0;">Full backup of all match data</div>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- HALF TIME DASHBOARD -->
 <div class="modal-overlay" id="halftime-dashboard" style="align-items:flex-end;">
   <div style="background:#0a0f0b;border-top:3px solid #16a34a;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + var(--safe-bottom));">
@@ -12986,6 +13294,16 @@ window.addEventListener('resize', function() {
       <button class="sheet-close" onclick="closeAccountSettings()">✕</button>
     </div>
     <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
+
+      <!-- Push Notifications -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">🔔 Fixture Reminders</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Get a notification 24 hours before an upcoming fixture.</p>
+        <div id="notif-status" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
+        <button id="notif-btn" onclick="togglePushNotifications()" class="btn-save-player" style="margin-bottom:0;">
+          🔔 Enable Fixture Reminders
+        </button>
+      </div>
 
       <!-- Subscription -->
       <div class="ptr-section">
