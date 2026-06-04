@@ -1976,12 +1976,12 @@ select option { background:#1a0505; }
 <div class="topbar">
   <div class="topbar-score">
     <div class="tb-team">
-      <div class="tb-name" id="tb-home-name">Home</div>
+      <div class="tb-name" id="tb-home-name">My Team</div>
       <div class="tb-score"><span id="tb-home-goals">0</span>-<span id="tb-home-pts">00</span></div>
     </div>
 
     <div class="tb-team">
-      <div class="tb-name" id="tb-away-name">Away</div>
+      <div class="tb-name" id="tb-away-name">Opposition</div>
       <div class="tb-score"><span id="tb-away-goals">0</span>-<span id="tb-away-pts">00</span></div>
     </div>
   </div>
@@ -2013,7 +2013,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Home</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="home-name-display">Select Home Team</button>
+              <button class="team-picker-input" id="home-name-display">Select My Team</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="home-name" value="">
             </div>
@@ -2022,7 +2022,7 @@ select option { background:#1a0505; }
           <div class="team-col">
             <div class="field-label">Away</div>
             <div class="team-picker-wrap">
-              <button class="team-picker-input" id="away-name-display">Select Away Team</button>
+              <button class="team-picker-input" id="away-name-display">Select Opposition</button>
               <span class="team-picker-chevron">▼</span>
               <input type="hidden" id="away-name" value="">
             </div>
@@ -2316,11 +2316,11 @@ select option { background:#1a0505; }
       <div class="poss-header">
         <div class="poss-team-label">
           <span class="poss-pct home-color" id="poss-home-pct">50%</span>
-          <span class="poss-name" id="poss-home-name">Home</span>
+          <span class="poss-name" id="poss-home-name">My Team</span>
         </div>
         <div class="poss-center-label" id="poss-lead-label">—</div>
         <div class="poss-team-label" style="text-align:right">
-          <span class="poss-name" id="poss-away-name">Away</span>
+          <span class="poss-name" id="poss-away-name">Opposition</span>
           <span class="poss-pct away-color" id="poss-away-pct">50%</span>
         </div>
       </div>
@@ -2334,8 +2334,8 @@ select option { background:#1a0505; }
       <div class="poss-timeline-label">Possession Trend</div>
       <canvas id="spark-poss-timeline" class="poss-timeline-canvas"></canvas>
       <div class="poss-timeline-legend">
-        <span><span style="display:inline-block;width:12px;height:2px;background:var(--red-light);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-home-name">Home</span></span>
-        <span><span style="display:inline-block;width:12px;height:2px;background:var(--blue);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-away-name">Away</span></span>
+        <span><span style="display:inline-block;width:12px;height:2px;background:var(--red-light);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-home-name">My Team</span></span>
+        <span><span style="display:inline-block;width:12px;height:2px;background:var(--blue);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-away-name">Opposition</span></span>
       </div>
     </div>
 
@@ -2345,11 +2345,11 @@ select option { background:#1a0505; }
         <div class="trend-label">Total Score</div>
         <div class="trend-values">
           <div class="trend-team-val">
-            <div class="trend-team-name" id="tr-home-name">Home</div>
+            <div class="trend-team-name" id="tr-home-name">My Team</div>
             <div class="trend-big home-color" id="tr-home-total">0</div>
           </div>
           <div class="trend-team-val">
-            <div class="trend-team-name" id="tr-away-name">Away</div>
+            <div class="trend-team-name" id="tr-away-name">Opposition</div>
             <div class="trend-big away-color" id="tr-away-total">0</div>
           </div>
         </div>
@@ -2359,11 +2359,11 @@ select option { background:#1a0505; }
         <div class="trend-label">Ball Won</div>
         <div class="trend-values">
           <div class="trend-team-val">
-            <div class="trend-team-name" id="tr-poss-home-name">Home</div>
+            <div class="trend-team-name" id="tr-poss-home-name">My Team</div>
             <div class="trend-big home-color" id="tr-poss-home">0</div>
           </div>
           <div class="trend-team-val">
-            <div class="trend-team-name" id="tr-poss-away-name">Away</div>
+            <div class="trend-team-name" id="tr-poss-away-name">Opposition</div>
             <div class="trend-big away-color" id="tr-poss-away">0</div>
           </div>
         </div>
@@ -2375,12 +2375,12 @@ select option { background:#1a0505; }
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div class="trend-label" style="margin-bottom:12px">Score Momentum (last 5 scores)</div>
       <div class="momentum-row">
-        <span class="momentum-label" id="mom-home-name" style="text-align:right">Home</span>
+        <span class="momentum-label" id="mom-home-name" style="text-align:right">My Team</span>
         <div class="momentum-bar-outer">
           <div class="momentum-bar-center"></div>
           <div class="momentum-fill" id="momentum-fill"></div>
         </div>
-        <span class="momentum-label" id="mom-away-name">Away</span>
+        <span class="momentum-label" id="mom-away-name">Opposition</span>
       </div>
       <div style="text-align:center;margin-top:6px">
         <span class="momentum-lead" id="momentum-lead-text">—</span>
@@ -3262,8 +3262,8 @@ const state = {
 };
 
 const $ = id => document.getElementById(id);
-const homeName = () => $('home-name').value || 'Home';
-const awayName = () => $('away-name').value || 'Away';
+const homeName = () => $('home-name').value || 'My Team';
+const awayName = () => $('away-name').value || 'Opposition';
 const total = t => state[t].goals*3 + state[t].points;
 const pad = n => String(n).padStart(2,'0');
 const getMin = () => parseInt($('current-min').value)||1;
@@ -6925,6 +6925,19 @@ function closeHalftimeDashboard() {
   document.getElementById('halftime-dashboard').classList.remove('open');
   document.body.style.overflow = '';
   startSecondHalf();
+}
+
+// Auto-set My Team name from club name for club accounts
+function autoSetClubTeamName() {
+  if (!currentClub || !currentClub.name) return;
+  var homeInput = document.getElementById('home-name');
+  var homeDisplay = document.getElementById('home-name-display');
+  // Only set if not already set by user
+  if (homeInput && !homeInput.value) {
+    homeInput.value = currentClub.name;
+    if (homeDisplay) homeDisplay.textContent = currentClub.name;
+    updateNames();
+  }
 }
 
 // ── ACCOUNT SETTINGS ─────────────────────────────────────────────────
@@ -11083,7 +11096,7 @@ function openPicker(team) {
   var search = $('picker-search');
   var overlay = $('team-picker-overlay');
   if (!overlay) return;
-  if (title) title.textContent = team === 'home' ? 'Select Home Team' : 'Select Away Team';
+  if (title) title.textContent = team === 'home' ? 'Select My Team' : 'Select Opposition';
   if (search) search.value = '';
   filterPicker('');
   overlay.classList.add('open');
@@ -11696,6 +11709,7 @@ function createClub() {
     }, currentToken);
   }).then(function() {
     saveClubSession();
+    autoSetClubTeamName();
     document.getElementById('club-screen').style.display = 'none';
     showSync('✓ Club created: ' + currentClub.name, 3000);
     openClubDashboard();
@@ -11730,6 +11744,7 @@ function joinClub() {
     }).then(function() {
       if (!currentClub) return;
       saveClubSession();
+      autoSetClubTeamName();
       document.getElementById('club-screen').style.display = 'none';
       showSync('✓ Joined ' + currentClub.name, 3000);
       openClubDashboard();
@@ -11769,6 +11784,7 @@ function openClubDashboard() {
           currentClub = data[0].clubs;
           currentClubRole = data[0].role;
           saveClubSession();
+          autoSetClubTeamName();
           renderClubDashboard();
         } else {
           // No club — show setup screen
