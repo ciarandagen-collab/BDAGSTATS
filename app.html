@@ -6705,6 +6705,228 @@ function submitPasswordReset() {
   });
 }
 
+// ── HALF TIME DASHBOARD ───────────────────────────────────────────────
+
+function buildHalftimeDashboard() {
+  var h = homeName(), a = awayName();
+  var ev = state.events.filter(function(e){ return e.half === 1; });
+
+  // ── SHOOTING ──
+  var hShots = state.shots.home;
+  var aShots = state.shots.away;
+  function shotTotals(s) {
+    var scored = (s.play.goal*3) + s.play.point + s.play.twopointer + (s.free.goal*3) + s.free.point + s.free.twopointer;
+    var total = 0;
+    ['play','free'].forEach(function(t){ Object.values(s[t]).forEach(function(v){ total += v; }); });
+    var missed = total - (s.play.goal + s.play.point + s.play.twopointer + s.free.goal + s.free.point + s.free.twopointer);
+    var scoring = s.play.goal + s.play.point + s.play.twopointer + s.free.goal + s.free.point + s.free.twopointer;
+    return { total: total, scoring: scoring, missed: missed, pct: total > 0 ? Math.round((scoring/total)*100) : 0 };
+  }
+  var hST = shotTotals(hShots), aST = shotTotals(aShots);
+
+  // ── KICKOUTS ──
+  var hKO = state.kickout.home, aKO = state.kickout.away;
+  var hKOWon = hKO.wonClean + hKO.breakWon + hKO.shortWon;
+  var hKOLost = hKO.lossClean + hKO.breakLoss + hKO.shortLoss;
+  var aKOWon = aKO.wonClean + aKO.breakWon + aKO.shortWon;
+  var aKOLost = aKO.lossClean + aKO.breakLoss + aKO.shortLoss;
+  var hKOTotal = hKOWon + hKOLost, aKOTotal = aKOWon + aKOLost;
+  var hKOPct = hKOTotal > 0 ? Math.round((hKOWon/hKOTotal)*100) : 0;
+  var aKOPct = aKOTotal > 0 ? Math.round((aKOWon/aKOTotal)*100) : 0;
+
+  // ── BALL WON/LOST ──
+  var hBW = state.ballWon.home, aBW = state.ballWon.away;
+  var hBL = state.ballLost.home, aBL = state.ballLost.away;
+  var hBWon = Object.values(hBW).reduce(function(a,b){return a+b;},0);
+  var aBWon = Object.values(aBW).reduce(function(a,b){return a+b;},0);
+  var hBLost = Object.values(hBL).reduce(function(a,b){return a+b;},0);
+  var aBLost = Object.values(aBL).reduce(function(a,b){return a+b;},0);
+
+  // ── POSSESSION ──
+  var possPct = state.possHistory.length > 0
+    ? Math.round(state.possHistory.reduce(function(a,b){return a+b;},0) / state.possHistory.length)
+    : 50;
+
+  // ── DISCIPLINE ──
+  var hFouls = Object.values(state.foul.home).reduce(function(a,b){return a+b;},0);
+  var aFouls = Object.values(state.foul.away).reduce(function(a,b){return a+b;},0);
+  var hCards = state.cards.home.yellow + state.cards.home.black + state.cards.home.red;
+  var aCards = state.cards.away.yellow + state.cards.away.black + state.cards.away.red;
+
+  // ── MOMENTUM (last 5 scores) ──
+  var scoreEvents = ev.filter(function(e){ return e.type==='goal'||e.type==='point'||e.outcome==='goal'||e.outcome==='point'; }).slice(0,5);
+
+  // ── ALERTS (things that have happened multiple times) ──
+  var alerts = [];
+  // Wide shots
+  var hWides = hShots.play.wide + hShots.free.wide;
+  var aWides = aShots.play.wide + aShots.free.wide;
+  if (hWides >= 3) alerts.push({ icon:'⚠️', team:'home', msg: h + ' have ' + hWides + ' wides — shooting accuracy needs attention', severity:'amber' });
+  if (aWides >= 3) alerts.push({ icon:'⚠️', team:'away', msg: a + ' have ' + aWides + ' wides', severity:'amber' });
+  // Kickout dominance
+  if (hKOPct >= 70 && hKOTotal >= 3) alerts.push({ icon:'🟢', team:'home', msg: h + ' winning ' + hKOPct + '% of kickouts (' + hKOWon + '/' + hKOTotal + ')', severity:'green' });
+  if (aKOPct >= 70 && aKOTotal >= 3) alerts.push({ icon:'🟢', team:'away', msg: a + ' winning ' + aKOPct + '% of kickouts (' + aKOWon + '/' + aKOTotal + ')', severity:'green' });
+  if (hKOPct <= 35 && hKOTotal >= 3) alerts.push({ icon:'🔴', team:'home', msg: h + ' losing kickout battle — ' + hKOPct + '% retention', severity:'red' });
+  if (aKOPct <= 35 && aKOTotal >= 3) alerts.push({ icon:'🔴', team:'away', msg: a + ' losing kickout battle — ' + aKOPct + '% retention', severity:'red' });
+  // Ball turnover pressure
+  if (hBLost >= 5) alerts.push({ icon:'⚠️', team:'home', msg: h + ' losing possession frequently — ' + hBLost + ' turnovers', severity:'amber' });
+  if (aBLost >= 5) alerts.push({ icon:'⚠️', team:'away', msg: a + ' losing possession frequently — ' + aBLost + ' turnovers', severity:'amber' });
+  // Shooting efficiency
+  if (hST.total >= 5 && hST.pct < 40) alerts.push({ icon:'🔴', team:'home', msg: h + ' shooting efficiency low — ' + hST.pct + '% (' + hST.scoring + '/' + hST.total + ')', severity:'red' });
+  if (aST.total >= 5 && aST.pct < 40) alerts.push({ icon:'🔴', team:'away', msg: a + ' shooting efficiency low — ' + aST.pct + '% (' + aST.scoring + '/' + aST.total + ')', severity:'red' });
+  if (hST.total >= 5 && hST.pct >= 70) alerts.push({ icon:'🟢', team:'home', msg: h + ' shooting efficiently — ' + hST.pct + '% conversion rate', severity:'green' });
+  // Cards warning
+  if (hCards >= 2) alerts.push({ icon:'🟡', team:'home', msg: h + ' discipline concerns — ' + hCards + ' card(s) in first half', severity:'amber' });
+  if (aCards >= 2) alerts.push({ icon:'🟡', team:'away', msg: a + ' discipline concerns — ' + aCards + ' card(s) in first half', severity:'amber' });
+
+  // ── RENDER ──
+  function statBar(hVal, aVal, label) {
+    var total = hVal + aVal;
+    var hPct = total > 0 ? Math.round((hVal/total)*100) : 50;
+    var aPct = 100 - hPct;
+    return '<div style="margin-bottom:14px;">' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(240,253,244,0.5);margin-bottom:4px;font-family:\'Oswald\',sans-serif;letter-spacing:1px;text-transform:uppercase;">' +
+        '<span style="color:#4ade80;">' + hVal + '</span>' +
+        '<span>' + label + '</span>' +
+        '<span style="color:#cbd5e1;">' + aVal + '</span>' +
+      '</div>' +
+      '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.05);">' +
+        '<div style="width:' + hPct + '%;background:linear-gradient(90deg,#14532d,#16a34a);border-radius:4px 0 0 4px;transition:width 0.5s;"></div>' +
+        '<div style="width:' + aPct + '%;background:linear-gradient(90deg,#475569,#94a3b8);border-radius:0 4px 4px 0;transition:width 0.5s;"></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function pctCircle(pct, label, color) {
+    var r = 28, circ = 2*Math.PI*r;
+    var dash = (pct/100)*circ;
+    return '<div style="text-align:center;">' +
+      '<svg width="72" height="72" viewBox="0 0 72 72">' +
+        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>' +
+        '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="6" stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" transform="rotate(-90 36 36)"/>' +
+        '<text x="36" y="40" text-anchor="middle" font-size="14" font-weight="700" fill="' + color + '" font-family="Oswald,sans-serif">' + pct + '%</text>' +
+      '</svg>' +
+      '<div style="font-size:10px;color:rgba(240,253,244,0.5);font-family:\'Oswald\',sans-serif;letter-spacing:1px;margin-top:-4px;">' + label + '</div>' +
+    '</div>';
+  }
+
+  function section(title, html) {
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:10px;">' +
+      '<div style="font-family:\'Oswald\',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin-bottom:12px;">' + title + '</div>' +
+      html +
+    '</div>';
+  }
+
+  var html = '';
+
+  // Team name headers
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 4px 14px;font-family:\'Oswald\',sans-serif;font-size:13px;font-weight:600;">' +
+    '<span style="color:#4ade80;">' + h + '</span>' +
+    '<span style="color:#94a3b8;">' + a + '</span>' +
+  '</div>';
+
+  // Alerts
+  if (alerts.length > 0) {
+    var alertHtml = alerts.map(function(al) {
+      var bg = al.severity==='red'?'rgba(239,68,68,0.1)':al.severity==='green'?'rgba(22,163,74,0.1)':'rgba(217,119,6,0.1)';
+      var border = al.severity==='red'?'rgba(239,68,68,0.25)':al.severity==='green'?'rgba(22,163,74,0.25)':'rgba(217,119,6,0.25)';
+      return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;color:#f0fdf4;line-height:1.5;">' +
+        al.icon + ' ' + al.msg +
+      '</div>';
+    }).join('');
+    html += section('🔔 Key Observations', alertHtml);
+  }
+
+  // Shooting section
+  var shootingHtml =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">' +
+      pctCircle(hST.pct, 'HOME EFF', '#4ade80') +
+      pctCircle(Math.round((possPct)), 'POSS %', '#60a5fa') +
+      pctCircle(aST.pct, 'AWAY EFF', '#94a3b8') +
+    '</div>' +
+    statBar(hST.total, aST.total, 'Total Shots') +
+    statBar(hST.scoring, aST.scoring, 'Shots Scored') +
+    statBar(hWides, aWides, 'Wides') +
+    statBar(hShots.play.goal + hShots.free.goal, aShots.play.goal + aShots.free.goal, 'Goals') +
+    statBar(hShots.play.saved + hShots.free.saved, aShots.play.saved + aShots.free.saved, 'Saved');
+  html += section('🎯 Shooting', shootingHtml);
+
+  // Kickout section
+  if (hKOTotal > 0 || aKOTotal > 0) {
+    var koHtml =
+      statBar(hKOWon, aKOWon, 'Kickouts Won') +
+      statBar(hKO.wonClean, aKO.wonClean, 'Won Clean') +
+      statBar(hKO.breakWon, aKO.breakWon, 'Break Won') +
+      statBar(hKOLost, aKOLost, 'Kickouts Lost') +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(240,253,244,0.5);padding-top:4px;">' +
+        '<span style="color:#4ade80;">' + hKOPct + '% retention</span>' +
+        '<span style="color:#94a3b8;">' + aKOPct + '% retention</span>' +
+      '</div>';
+    html += section('🦵 Kickouts', koHtml);
+  }
+
+  // Ball Won/Lost
+  if (hBWon + hBLost + aBWon + aBLost > 0) {
+    var ballHtml =
+      statBar(hBWon, aBWon, 'Ball Won') +
+      statBar(hBLost, aBLost, 'Ball Lost') +
+      statBar(Object.values(state.turnover.home).reduce(function(a,b){return a+b;},0),
+              Object.values(state.turnover.away).reduce(function(a,b){return a+b;},0), 'Turnovers');
+    html += section('💪 Possession', ballHtml);
+  }
+
+  // Discipline
+  if (hFouls + aFouls + hCards + aCards > 0) {
+    var discHtml =
+      statBar(hFouls, aFouls, 'Fouls') +
+      statBar(state.foul.home.shooting, state.foul.away.shooting, 'Shooting Fouls') +
+      statBar(hCards, aCards, 'Cards');
+    html += section('🟡 Discipline', discHtml);
+  }
+
+  // Score trend chart (mini sparkline using SVG)
+  var scoreline = state.scoreline;
+  if (scoreline.length > 1) {
+    var maxDiff = 5;
+    var svgH = 60, svgW = 280;
+    var firstHalfScores = scoreline.filter(function(s){ return s.min <= 35; });
+    if (firstHalfScores.length > 1) {
+      var pts = firstHalfScores.map(function(s, i) {
+        var diff = Math.max(-maxDiff, Math.min(maxDiff, (s.h - s.a)));
+        var x = (i / (firstHalfScores.length-1)) * svgW;
+        var y = svgH/2 - (diff/maxDiff) * (svgH/2 - 8);
+        return x + ',' + y;
+      }).join(' ');
+      var sparkline = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" style="width:100%;height:60px;">' +
+        '<line x1="0" y1="' + svgH/2 + '" x2="' + svgW + '" y2="' + svgH/2 + '" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="4,4"/>' +
+        '<polyline points="' + pts + '" fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round"/>' +
+        '<text x="2" y="14" font-size="9" fill="rgba(240,253,244,0.4)" font-family="Oswald">' + h.substring(0,8) + ' ahead</text>' +
+        '<text x="2" y="' + (svgH-4) + '" font-size="9" fill="rgba(240,253,244,0.4)" font-family="Oswald">' + a.substring(0,8) + ' ahead</text>' +
+      '</svg>';
+      html += section('📈 Score Trend', sparkline);
+    }
+  }
+
+  document.getElementById('ht-dashboard-content').innerHTML = html;
+
+  // Score display
+  var hScore = state.home.goals + '-' + pad(state.home.points);
+  var aScore = state.away.goals + '-' + pad(state.away.points);
+  document.getElementById('ht-score-display').textContent = h + ' ' + hScore + '  ·  ' + aScore + ' ' + a;
+}
+
+function showHalftimeDashboard() {
+  buildHalftimeDashboard();
+  document.getElementById('halftime-dashboard').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHalftimeDashboard() {
+  document.getElementById('halftime-dashboard').classList.remove('open');
+  document.body.style.overflow = '';
+  startSecondHalf();
+}
+
 // ── ACCOUNT SETTINGS ─────────────────────────────────────────────────
 
 function openAccountSettings() {
@@ -8800,6 +9022,8 @@ function endFirstHalf() {
   gamePhase = 'half_time';
   renderClock();
   showSync('⏸ Half Time', 0);
+  // Show half time dashboard after brief delay
+  setTimeout(function() { showHalftimeDashboard(); }, 600);
 }
 
 function startSecondHalf() {
@@ -12709,6 +12933,27 @@ window.addEventListener('resize', function() {
     </div>
     <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
       <button class="btn-save-player" onclick="submitWellnessSelfCheck()">Submit Check-in</button>
+    </div>
+  </div>
+</div>
+
+<!-- HALF TIME DASHBOARD -->
+<div class="modal-overlay" id="halftime-dashboard" style="align-items:flex-end;">
+  <div style="background:#0a0f0b;border-top:3px solid #16a34a;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + var(--safe-bottom));">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px;">
+      <div>
+        <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:#f0fdf4;letter-spacing:1px;">⏸ HALF TIME REPORT</div>
+        <div id="ht-score-display" style="font-size:13px;color:#4ade80;margin-top:2px;"></div>
+      </div>
+      <button onclick="closeHalftimeDashboard()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f0fdf4;font-size:16px;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+
+    <div id="ht-dashboard-content" style="padding:0 12px 16px;"></div>
+
+    <div style="padding:0 12px;">
+      <button onclick="closeHalftimeDashboard()" style="width:100%;padding:14px;background:linear-gradient(135deg,#14532d,#16a34a);border:none;border-radius:10px;color:#fff;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;">
+        ▶ START 2ND HALF
+      </button>
     </div>
   </div>
 </div>
