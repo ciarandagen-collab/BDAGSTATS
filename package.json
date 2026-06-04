@@ -5,12 +5,22 @@
   "scripts": {
     "test:unit": "node tests/unit.test.js",
     "test:browser": "npx playwright test",
-    "test": "node tests/unit.test.js && npx playwright test"
+    "test": "node tests/unit.test.js && npx playwright test",
+    "build": "echo 'No build step needed'",
+    "cap:add": "npx cap add ios",
+    "cap:sync": "npx cap sync ios",
+    "cap:open": "npx cap open ios"
   },
   "dependencies": {
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0"
+    "@playwright/test": "^1.44.0",
+    "@capacitor/cli": "^6.0.0"
   }
 }
