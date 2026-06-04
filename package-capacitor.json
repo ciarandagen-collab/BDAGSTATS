@@ -1,0 +1,21 @@
+{
+  "name": "coach-stats-ios",
+  "version": "1.0.0",
+  "description": "Coach Stats — GAA Football Match Statistics",
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "cap:add": "npx cap add ios",
+    "cap:sync": "npx cap sync ios",
+    "cap:open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}

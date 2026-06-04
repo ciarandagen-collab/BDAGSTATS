@@ -1,0 +1,46 @@
+workflows:
+  ios-app-store:
+    name: Coach Stats iOS App Store
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      node: v20
+      vars:
+        APP_ID: app.coachstats.ios
+        APP_NAME: Coach Stats
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.coachstats.ios
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+          npx cap add ios || true
+          npx cap sync ios
+
+      - name: Set version
+        script: |
+          LATEST_BUILD=$(app-store-connect get-latest-build-number \
+            --app-id "$APP_STORE_ID" 2>/dev/null || echo "0")
+          BUILD_NUM=$((LATEST_BUILD + 1))
+          agvtool new-version -all $BUILD_NUM
+          agvtool new-marketing-version 1.0.$BUILD_NUM
+
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false
