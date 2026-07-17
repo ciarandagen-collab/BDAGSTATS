@@ -1097,11 +1097,25 @@ select option { background:#1a0505; }
 /* Squad player attribution in outcome modal */
 .player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
 .player-attr-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
-.player-attr-list { display:flex; flex-wrap:wrap; gap:6px; max-height:120px; overflow-y:auto; }
+.player-attr-list { max-height:320px; overflow-y:auto; }
 .player-attr-btn { padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; cursor:pointer; transition:all 0.15s; }
 .player-attr-btn:hover, .player-attr-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
 .player-attr-none { padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; cursor:pointer; }
 .player-attr-none:hover { border-color:var(--muted); }
+/* ── PITCH TAG PICKER ── */
+.pitch-none-btn { display:block; margin:0 auto 8px; padding:6px 16px; border-radius:16px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.pitch-none-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
+.pitch-tag-diagram { background:#1a6b2f; border:2px solid rgba(255,255,255,0.25); border-radius:10px; padding:10px 4px 8px; position:relative; }
+.pitch-tag-diagram::before { content:''; position:absolute; top:50%; left:8%; right:8%; height:1px; background:rgba(255,255,255,0.15); }
+.pitch-tag-row { display:flex; justify-content:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; position:relative; z-index:1; }
+.pitch-tag-row:last-child { margin-bottom:0; }
+.pitch-player-marker { display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; padding:2px; cursor:pointer; min-width:42px; }
+.ppm-circle { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; color:#fff; transition:all 0.15s; }
+.ppm-name { font-size:7px; color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:0.5px; max-width:42px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pitch-player-marker.selected .ppm-circle { background:var(--red); border-color:#fff; box-shadow:0 0 0 3px rgba(220,38,38,0.35); transform:scale(1.08); }
+.pitch-player-marker.selected .ppm-name { color:#fff; font-weight:700; }
+.pitch-tag-subs-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:center; margin:8px 0 4px; }
+.pitch-tag-subs-row { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
 
 .team-select {
   width: 100%;
@@ -2232,6 +2246,20 @@ select option { background:#1a0505; }
           <span class="trig-count" id="mk-away-tally">0</span>
         </button>
       </div>
+      <div class="trigger-grid">
+        <button class="trigger-btn home-btn" onclick="openGenericModal('home','possession')">
+          <span class="trig-icon">🏉</span>
+          <span class="trig-type">Possession</span>
+          <span class="trig-team" id="ps-home-h">Home</span>
+          <span class="trig-count" id="ps-home-tally">0</span>
+        </button>
+        <button class="trigger-btn away-btn" onclick="openGenericModal('away','possession')">
+          <span class="trig-icon">🏉</span>
+          <span class="trig-type">Possession</span>
+          <span class="trig-team" id="ps-away-h">Away</span>
+          <span class="trig-count" id="ps-away-tally">0</span>
+        </button>
+      </div>
     </div>
 
     <!-- Substitutions section (collapsed) -->
@@ -3258,6 +3286,7 @@ const state = {
   kickout:{home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}},
   turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
   mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
+  possession:{home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}},
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
   shotZones:{home:{},away:{}},
@@ -3450,6 +3479,7 @@ const GENERIC_CONFIG = {
   fortyFive:{title:'🏐 45',sub:'What was the result of the 45?',outcomes:[{key:'scored',icon:'✦',label:'Scored'},{key:'wide',icon:'↗️',label:'Wide'},{key:'short',icon:'⬇️',label:'Short'},{key:'pass',icon:'👟',label:'Pass'},{key:'ballLost',icon:'❌',label:'Ball Lost'}]},
   turnover:{title:'🔄 Turnover Forced',sub:'Where on the pitch?',outcomes:[{key:'inAttack',icon:'⚡',label:'In Attack'},{key:'midfield',icon:'🔀',label:'Midfield'},{key:'inDefence',icon:'🛡️',label:'In Defence'}]},
   mark:{title:'📌 Mark',sub:'Was the mark won or lost?',outcomes:[{key:'won',icon:'✅',label:'Won'},{key:'lost',icon:'❌',label:'Lost'}]},
+  possession:{title:'🏉 Possession',sub:'What did the player do on the ball?',outcomes:[{key:'carry',icon:'🏃',label:'Carried'},{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'heldUp',icon:'✋',label:'Held Up'}]},
   foul:{title:'⚠️ Foul Given',sub:'What type of foul?',outcomes:[{key:'shooting',icon:'🎯',label:'Shooting'},{key:'cynical',icon:'🟨',label:'Cynical'},{key:'dangerous',icon:'💥',label:'Dangerous'},{key:'dissent',icon:'🗣️',label:'Dissent'}]},
   cards:{title:'🟨 Card',sub:'Select card type — tag a player first',outcomes:[{key:'yellow',icon:'🟨',label:'Yellow'},{key:'black',icon:'⬛',label:'Black'},{key:'red',icon:'🟥',label:'Red'}]}
 };
@@ -3488,13 +3518,13 @@ function selectGenericOutcome(key) {
   state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
   // Pulse the tally count for feedback
-  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',foul:'fo',cards:'cd',fortyFive:'ff'};
+  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
   var pfx = catPfxMap[gmodal.category];
   if (pfx) pulseTally(pfx + '-' + gmodal.team + '-tally');
 }
 
 function renderGenericTallies() {
-  [['ballLost','bl'],['ballWon','bw'],['kickout','ko'],['turnover','to'],['mark','mk'],['foul','fo'],['cards','cd']].forEach(([cat,pfx])=>{
+  [['ballLost','bl'],['ballWon','bw'],['kickout','ko'],['turnover','to'],['mark','mk'],['possession','ps'],['foul','fo'],['cards','cd']].forEach(([cat,pfx])=>{
     const h=Object.values(state[cat].home).reduce((a,b)=>a+b,0);
     const a=Object.values(state[cat].away).reduce((a,b)=>a+b,0);
     const hEl=$(`${pfx}-home-tally`), aEl=$(`${pfx}-away-tally`);
@@ -3855,6 +3885,16 @@ function closePlayerEdit() {
 }
 
 // ── PLAYER ATTRIBUTION ─────────────────────────────
+function pitchMarker(num, listId) {
+  // num is 1-based shirt number, matches squad[num-1]
+  var p = squad[num - 1];
+  if (!p || !p.name) return '';
+  return '<button class="pitch-player-marker" data-pid="' + (num-1) + '" onclick="selectAttrPlayer(' + (num-1) + ',\'' + listId + '\')">' +
+    '<span class="ppm-circle">' + num + '</span>' +
+    '<span class="ppm-name">' + p.name + '</span>' +
+    '</button>';
+}
+
 function buildPlayerAttrList(team, listId) {
   var list = document.getElementById(listId);
   if (!list) return;
@@ -3863,11 +3903,18 @@ function buildPlayerAttrList(team, listId) {
     list.innerHTML = '<span style="font-size:11px;color:var(--muted);font-style:italic">Add players to your squad to tag them</span>';
     return;
   }
-  var html = '<button class="player-attr-none" onclick="selectAttrPlayer(null,\'' + listId + '\')">None</button>';
-  squad.forEach(function(p, i) {
-    if (!p || !p.name) return;
-    html += '<button class="player-attr-btn" data-pid="' + i + '" onclick="selectAttrPlayer(' + i + ',\'' + listId + '\')">#' + (i+1) + ' ' + p.name + '</button>';
+  // Standard GAA lineup rows by shirt number, same layout as the printed team sheet
+  var rows = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
+  var html = '<button class="pitch-none-btn" data-pid="none" onclick="selectAttrPlayer(null,\'' + listId + '\')">None / No Tag</button>' +
+    '<div class="pitch-tag-diagram">';
+  rows.forEach(function(row) {
+    var rowHtml = row.map(function(n) { return pitchMarker(n, listId); }).join('');
+    if (rowHtml) html += '<div class="pitch-tag-row">' + rowHtml + '</div>';
   });
+  html += '</div>';
+  var subsHtml = '';
+  for (var i = 16; i <= 34; i++) { subsHtml += pitchMarker(i, listId); }
+  if (subsHtml) html += '<div class="pitch-tag-subs-label">Subs</div><div class="pitch-tag-subs-row">' + subsHtml + '</div>';
   list.innerHTML = html;
   selectedAttrPlayer = null;
 }
@@ -3876,10 +3923,12 @@ function selectAttrPlayer(slotIndex, listId) {
   selectedAttrPlayer = slotIndex;
   var list = document.getElementById(listId);
   if (!list) return;
-  var btns = list.querySelectorAll('.player-attr-btn');
+  var btns = list.querySelectorAll('.pitch-player-marker');
   for (var i=0;i<btns.length;i++) {
     btns[i].classList.toggle('selected', parseInt(btns[i].getAttribute('data-pid')) === slotIndex);
   }
+  var noneBtn = list.querySelector('.pitch-none-btn');
+  if (noneBtn) noneBtn.classList.toggle('selected', slotIndex === null);
 }
 
 // ── PLAYER STATS ───────────────────────────────────
@@ -4500,6 +4549,8 @@ const DEFAULT_EVENT_CONFIG = [
     outcomes:[{key:'inAttack',label:'In Attack',perf:5},{key:'midfield',label:'Midfield',perf:4},{key:'inDefence',label:'In Defence',perf:3}]},
   { id:'mark', label:'Mark', icon:'📌', category:'possession', context:'both', editable:true, deletable:false,
     outcomes:[{key:'won',label:'Won',perf:3},{key:'lost',label:'Lost',perf:-1}]},
+  { id:'possession', label:'Possession', icon:'🏉', category:'possession', context:'both', editable:true, deletable:false,
+    outcomes:[{key:'carry',label:'Carried',perf:1},{key:'handPass',label:'Hand Pass',perf:1},{key:'kickPass',label:'Kick Pass',perf:1},{key:'heldUp',label:'Held Up',perf:-1}]},
   { id:'foul', label:'Foul Given', icon:'⚠️', category:'discipline', context:'both', editable:true, deletable:false,
     outcomes:[{key:'shooting',label:'Shooting',perf:-1},{key:'cynical',label:'Cynical',perf:-3},{key:'dangerous',label:'Dangerous',perf:-3},{key:'dissent',label:'Dissent',perf:-2}]},
   { id:'cards', label:'Card', icon:'🟨', category:'discipline', context:'both', editable:true, deletable:false,
@@ -9397,6 +9448,7 @@ function resetMatch(){
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
+  state.possession={home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}};
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
