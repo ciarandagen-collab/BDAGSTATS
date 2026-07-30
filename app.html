@@ -1116,6 +1116,24 @@ select option { background:#1a0505; }
 .pitch-player-marker.selected .ppm-name { color:#fff; font-weight:700; }
 .pitch-tag-subs-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:center; margin:8px 0 4px; }
 .pitch-tag-subs-row { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
+.pitch-tag-confirm { text-align:center; padding:8px 12px; background:rgba(220,38,38,0.15); border:1px solid var(--red); border-radius:8px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
+/* ── RECORD TAB: PITCH-FIRST FLOW ── */
+.record-side-tabs { display:flex; gap:8px; margin-bottom:14px; }
+.record-side-tab { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.record-side-tab.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
+.record-pitch-wrap { background:#1a6b2f; border:2px solid rgba(255,255,255,0.25); border-radius:14px; padding:16px 6px 12px; position:relative; margin-bottom:16px; }
+.record-pitch-wrap::before { content:''; position:absolute; top:50%; left:6%; right:6%; height:1px; background:rgba(255,255,255,0.15); }
+.record-pitch-row { display:flex; justify-content:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; position:relative; z-index:1; }
+.record-pitch-row:last-child { margin-bottom:0; }
+.record-pitch-player { display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; padding:2px; cursor:pointer; min-width:52px; }
+.rpp-circle { width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:#fff; transition:all 0.15s; }
+.record-pitch-player:active .rpp-circle { transform:scale(0.9); background:var(--red); border-color:#fff; }
+.rpp-name { font-size:8px; color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:0.5px; max-width:52px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.record-pitch-empty { text-align:center; color:rgba(255,255,255,0.55); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; padding:16px 10px; }
+.et-picker-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.et-picker-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+.et-picker-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
+.et-icon { font-size:20px; }
 
 .team-select {
   width: 100%;
@@ -2117,150 +2135,18 @@ select option { background:#1a0505; }
   <!-- PAGE: RECORD -->\
   <div class="page" id="page-record">
 
-    <!-- Home / Away column headers -->
-    <div class="record-team-headers">
-      <div class="record-team-col home-col">
-        <div class="record-team-label" id="record-home-label">Home</div>
-      </div>
-      <div class="record-team-divider"></div>
-      <div class="record-team-col away-col">
-        <div class="record-team-label" id="record-away-label">Away</div>
-      </div>
+    <!-- Home / Away side toggle -->
+    <div class="record-side-tabs">
+      <button class="record-side-tab active" id="record-tab-home" onclick="switchRecordSide('home')">
+        <span id="record-home-label">Home</span>
+      </button>
+      <button class="record-side-tab" id="record-tab-away" onclick="switchRecordSide('away')">
+        <span id="record-away-label">Away</span>
+      </button>
     </div>
 
-    <div class="sec-label">Shots</div>
-    <div class="record-group">
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openShotModal('home','play')">
-          <span class="trig-icon">⚽</span>
-          <span class="trig-type">Shot from Play</span>
-          <span class="trig-team" id="sfp-home-h">Home</span>
-          <span class="trig-count" id="sfp-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openShotModal('away','play')">
-          <span class="trig-icon">⚽</span>
-          <span class="trig-type">Shot from Play</span>
-          <span class="trig-team" id="sfp-away-h">Away</span>
-          <span class="trig-count" id="sfp-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openShotModal('home','free')">
-          <span class="trig-icon">🎯</span>
-          <span class="trig-type">Shot from Free</span>
-          <span class="trig-team" id="sff-home-h">Home</span>
-          <span class="trig-count" id="sff-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openShotModal('away','free')">
-          <span class="trig-icon">🎯</span>
-          <span class="trig-type">Shot from Free</span>
-          <span class="trig-team" id="sff-away-h">Away</span>
-          <span class="trig-count" id="sff-away-tally">0</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="sec-label">Possession</div>
-    <div class="record-group">
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','ballWon')">
-          <span class="trig-icon">📥</span>
-          <span class="trig-type">Ball Won</span>
-          <span class="trig-team" id="bw-home-h">Home</span>
-          <span class="trig-count" id="bw-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','ballWon')">
-          <span class="trig-icon">📥</span>
-          <span class="trig-type">Ball Won</span>
-          <span class="trig-team" id="bw-away-h">Away</span>
-          <span class="trig-count" id="bw-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','ballLost')">
-          <span class="trig-icon">📤</span>
-          <span class="trig-type">Ball Lost</span>
-          <span class="trig-team" id="bl-home-h">Home</span>
-          <span class="trig-count" id="bl-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','ballLost')">
-          <span class="trig-icon">📤</span>
-          <span class="trig-type">Ball Lost</span>
-          <span class="trig-team" id="bl-away-h">Away</span>
-          <span class="trig-count" id="bl-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','kickout')">
-          <span class="trig-icon">🦶</span>
-          <span class="trig-type">Kickout</span>
-          <span class="trig-team" id="ko-home-h">Home</span>
-          <span class="trig-count" id="ko-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','kickout')">
-          <span class="trig-icon">🦶</span>
-          <span class="trig-type">Kickout</span>
-          <span class="trig-team" id="ko-away-h">Away</span>
-          <span class="trig-count" id="ko-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','fortyFive')">
-          <span class="trig-icon">🏐</span>
-          <span class="trig-type">45m Free</span>
-          <span class="trig-team" id="ff-home-h">Home</span>
-          <span class="trig-count" id="ff-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','fortyFive')">
-          <span class="trig-icon">🏐</span>
-          <span class="trig-type">45m Free</span>
-          <span class="trig-team" id="ff-away-h">Away</span>
-          <span class="trig-count" id="ff-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','turnover')">
-          <span class="trig-icon">🔄</span>
-          <span class="trig-type">Turnover Forced</span>
-          <span class="trig-team" id="to-home-h">Home</span>
-          <span class="trig-count" id="to-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','turnover')">
-          <span class="trig-icon">🔄</span>
-          <span class="trig-type">Turnover Forced</span>
-          <span class="trig-team" id="to-away-h">Away</span>
-          <span class="trig-count" id="to-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','mark')">
-          <span class="trig-icon">📌</span>
-          <span class="trig-type">Mark</span>
-          <span class="trig-team" id="mk-home-h">Home</span>
-          <span class="trig-count" id="mk-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','mark')">
-          <span class="trig-icon">📌</span>
-          <span class="trig-type">Mark</span>
-          <span class="trig-team" id="mk-away-h">Away</span>
-          <span class="trig-count" id="mk-away-tally">0</span>
-        </button>
-      </div>
-      <div class="trigger-grid">
-        <button class="trigger-btn home-btn" onclick="openGenericModal('home','possession')">
-          <span class="trig-icon">🏉</span>
-          <span class="trig-type">Possession</span>
-          <span class="trig-team" id="ps-home-h">Home</span>
-          <span class="trig-count" id="ps-home-tally">0</span>
-        </button>
-        <button class="trigger-btn away-btn" onclick="openGenericModal('away','possession')">
-          <span class="trig-icon">🏉</span>
-          <span class="trig-type">Possession</span>
-          <span class="trig-team" id="ps-away-h">Away</span>
-          <span class="trig-count" id="ps-away-tally">0</span>
-        </button>
-      </div>
-    </div>
+    <div class="sec-label">Tap a Player to Record an Event</div>
+    <div class="record-pitch-wrap" id="record-pitch-wrap"></div>
 
     <!-- Substitutions section (collapsed) -->
     <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
@@ -2271,42 +2157,6 @@ select option { background:#1a0505; }
       <div style="padding:4px 0 10px;">
         <button class="training-new-btn" style="margin-bottom:0;" onclick="openSubModal()">+ Record Substitution</button>
         <div id="subs-list-record"></div>
-      </div>
-    </div>
-
-    <div class="sec-label discipline-toggle" onclick="toggleDiscipline()" style="cursor:pointer;">
-      Discipline <span id="discipline-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
-    </div>
-    <div id="discipline-section" style="display:none;">
-      <div class="record-group">
-        <div class="trigger-grid">
-          <button class="trigger-btn home-btn" onclick="openGenericModal('home','foul')">
-            <span class="trig-icon">⚠️</span>
-            <span class="trig-type">Foul Given</span>
-            <span class="trig-team" id="fo-home-h">Home</span>
-            <span class="trig-count" id="fo-home-tally">0</span>
-          </button>
-          <button class="trigger-btn away-btn" onclick="openGenericModal('away','foul')">
-            <span class="trig-icon">⚠️</span>
-            <span class="trig-type">Foul Given</span>
-            <span class="trig-team" id="fo-away-h">Away</span>
-            <span class="trig-count" id="fo-away-tally">0</span>
-          </button>
-        </div>
-        <div class="trigger-grid">
-          <button class="trigger-btn home-btn" onclick="openGenericModal('home','cards')">
-            <span class="trig-icon">🟨</span>
-            <span class="trig-type">Card</span>
-            <span class="trig-team" id="cd-home-h">Home</span>
-            <span class="trig-count" id="cd-home-tally">0</span>
-          </button>
-          <button class="trigger-btn away-btn" onclick="openGenericModal('away','cards')">
-            <span class="trig-icon">🟨</span>
-            <span class="trig-type">Card</span>
-            <span class="trig-team" id="cd-away-h">Away</span>
-            <span class="trig-count" id="cd-away-tally">0</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -2860,6 +2710,33 @@ select option { background:#1a0505; }
   </div>
 </div>
 
+<!-- EVENT TYPE PICKER (pitch-first flow) -->
+<div class="modal-overlay" id="event-type-modal" onclick="if(event.target===this)closeEventTypePicker()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="et-picker-title">Player</div>
+        <div class="sheet-sub" id="et-picker-sub">Select event to record</div>
+      </div>
+      <button class="sheet-close" onclick="closeEventTypePicker()">✕</button>
+    </div>
+    <div class="et-picker-grid">
+      <button class="et-picker-btn" onclick="chooseEventType('shot','play')"><span class="et-icon">⚽</span><span>Shot from Play</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('shot','free')"><span class="et-icon">🎯</span><span>Shot from Free</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','ballWon')"><span class="et-icon">📥</span><span>Ball Won</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','ballLost')"><span class="et-icon">📤</span><span>Ball Lost</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','kickout')"><span class="et-icon">🦶</span><span>Kickout</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','fortyFive')"><span class="et-icon">🏐</span><span>45m Free</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','turnover')"><span class="et-icon">🔄</span><span>Turnover Forced</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','mark')"><span class="et-icon">📌</span><span>Mark</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','possession')"><span class="et-icon">🏉</span><span>Possession</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','foul')"><span class="et-icon">⚠️</span><span>Foul Given</span></button>
+      <button class="et-picker-btn" onclick="chooseEventType('generic','cards')"><span class="et-icon">🟨</span><span>Card</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- SHOT MODAL -->
 <div class="modal-overlay" id="shot-modal" onclick="if(event.target===this)closeShotModal()">
   <div class="modal-sheet">
@@ -3310,6 +3187,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
+  if (name === 'record') renderRecordPitch();
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
@@ -3386,7 +3264,9 @@ function openShotModal(team,mode) {
   var icon = mode==='play'?'⚽':'🎯';
   document.getElementById('modal-title').textContent = icon + ' ' + (team==='home'?homeName():awayName());
   document.getElementById('modal-subtitle').textContent = 'Shot ' + (mode==='play'?'from Play':'from Free') + ' — select outcome';
-  buildPlayerAttrList(team, 'shot-player-attr-list');
+  if (team === 'home') { buildPlayerAttrList(team, 'shot-player-attr-list'); }
+  else { var el=document.getElementById('shot-player-attr-list'); if(el) el.innerHTML=''; selectedAttrPlayer=null; }
+  applyPendingTag('shot-player-attr-list');
   document.getElementById('shot-modal').classList.add('open');
 }
 function closeShotModal() {
@@ -3493,7 +3373,9 @@ function openGenericModal(team,category) {
   document.getElementById('gmodal-outcomes').innerHTML=cfg.outcomes.map(function(o) {
     return '<button class="outcome-btn ob-gen" onclick="selectGenericOutcome(\'' + o.key + '\')"><span class="o-icon">' + o.icon + '</span><span class="o-label">' + o.label + '</span></button>';
   }).join('');
-  buildPlayerAttrList(team, 'gen-player-attr-list');
+  if (team === 'home') { buildPlayerAttrList(team, 'gen-player-attr-list'); }
+  else { var el=document.getElementById('gen-player-attr-list'); if(el) el.innerHTML=''; selectedAttrPlayer=null; }
+  applyPendingTag('gen-player-attr-list');
   document.getElementById('generic-modal').classList.add('open');
 }
 function closeGenericModal() { $('generic-modal').classList.remove('open'); gmodal.team=null; gmodal.category=null; }
@@ -3776,6 +3658,20 @@ const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
 var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
 var editingSlot = null;
 var selectedAttrPlayer = null; // currently selected player for attribution
+var pendingTagRef = null; // player chosen via pitch-first flow, applied when the outcome modal opens
+
+function applyPendingTag(listId) {
+  if (pendingTagRef === null || pendingTagRef === undefined) return;
+  if (typeof pendingTagRef === 'number') {
+    selectAttrPlayer(pendingTagRef, listId);
+  } else {
+    selectedAttrPlayer = pendingTagRef;
+    var list = document.getElementById(listId);
+    var num = String(pendingTagRef).split('-')[1];
+    if (list) list.insertAdjacentHTML('afterbegin', '<div class="pitch-tag-confirm">Tagging Away #' + num + '</div>');
+  }
+  pendingTagRef = null;
+}
 
 function loadSquad() {
   try {
@@ -3929,6 +3825,82 @@ function selectAttrPlayer(slotIndex, listId) {
   }
   var noneBtn = list.querySelector('.pitch-none-btn');
   if (noneBtn) noneBtn.classList.toggle('selected', slotIndex === null);
+}
+
+// ── RECORD TAB: PITCH-FIRST EVENT FLOW ─────────────
+var recordSide = 'home';
+var etPicker = {team:null, ref:null};
+
+function surnameOf(name) {
+  var parts = (name || '').trim().split(/\s+/);
+  return parts.length ? parts[parts.length - 1] : '';
+}
+
+function switchRecordSide(side) {
+  recordSide = side;
+  var hb = document.getElementById('record-tab-home');
+  var ab = document.getElementById('record-tab-away');
+  if (hb) hb.classList.toggle('active', side === 'home');
+  if (ab) ab.classList.toggle('active', side === 'away');
+  renderRecordPitch();
+}
+
+function recordPitchMarker(team, num) {
+  if (team === 'home') {
+    var p = squad[num - 1];
+    var filled = p && p.name;
+    return '<button class="record-pitch-player" onclick="openEventTypePicker(\'home\',' + (num-1) + ')">' +
+      '<span class="rpp-circle">' + num + '</span>' +
+      '<span class="rpp-name">' + (filled ? surnameOf(p.name) : '') + '</span>' +
+      '</button>';
+  }
+  return '<button class="record-pitch-player" onclick="openEventTypePicker(\'away\',' + num + ')">' +
+    '<span class="rpp-circle">' + num + '</span>' +
+    '<span class="rpp-name">&nbsp;</span>' +
+    '</button>';
+}
+
+function renderRecordPitch() {
+  var wrap = document.getElementById('record-pitch-wrap');
+  if (!wrap) return;
+  if (recordSide === 'home' && !squad.some(function(p){ return p && p.name; })) {
+    wrap.innerHTML = '<div class="record-pitch-empty">Add players to your squad on the Squad tab to tag them here</div>';
+    return;
+  }
+  var rows = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
+  var html = '';
+  rows.forEach(function(row) {
+    html += '<div class="record-pitch-row">' + row.map(function(n) { return recordPitchMarker(recordSide, n); }).join('') + '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function openEventTypePicker(team, ref) {
+  etPicker.team = team;
+  etPicker.ref = team === 'home' ? ref : ('away-' + ref);
+  var label = team === 'home' ?
+    ('#' + (ref+1) + (squad[ref] && squad[ref].name ? ' ' + squad[ref].name : '')) :
+    ('Away #' + ref);
+  var titleEl = document.getElementById('et-picker-title');
+  var subEl = document.getElementById('et-picker-sub');
+  if (titleEl) titleEl.textContent = label;
+  if (subEl) subEl.textContent = (team === 'home' ? homeName() : awayName()) + ' — select event to record';
+  var modal = document.getElementById('event-type-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeEventTypePicker() {
+  var modal = document.getElementById('event-type-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function chooseEventType(kind, arg) {
+  if (etPicker.team === null) return;
+  pendingTagRef = etPicker.ref;
+  var team = etPicker.team;
+  closeEventTypePicker();
+  if (kind === 'shot') openShotModal(team, arg);
+  else openGenericModal(team, arg);
 }
 
 // ── PLAYER STATS ───────────────────────────────────
