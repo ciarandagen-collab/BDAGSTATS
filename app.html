@@ -1136,6 +1136,8 @@ select option { background:#1a0505; }
 .et-icon { font-size:20px; }
 .record-stats-btn { display:block; width:100%; padding:12px; margin-bottom:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .record-stats-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
+.loc-pitch-wrap { border-radius:10px; overflow:hidden; }
+#location-pitch-svg { width:100%; height:auto; display:block; cursor:crosshair; touch-action:manipulation; }
 
 .team-select {
   width: 100%;
@@ -2761,22 +2763,7 @@ select option { background:#1a0505; }
       <button class="outcome-btn ob-saved"   onclick="selectShotOutcome('saved')"><span class="o-icon">🧤</span><span class="o-label">Saved</span></button>
       <button class="outcome-btn ob-short"   onclick="selectShotOutcome('short')"><span class="o-icon">⬇️</span><span class="o-label">Short</span></button>
     </div>
-    <div id="zone-picker-section" style="display:none;margin-top:12px;">
-      <div class="player-attr-label" style="margin-bottom:8px;">📍 Shot Zone (optional) <span style="font-size:10px;color:var(--muted);font-style:italic;">— tap to tag, skip to close</span></div>
-      <div class="zone-grid">
-        <button class="zone-btn" onclick="selectZone('left-d')">Left D</button>
-        <button class="zone-btn" onclick="selectZone('d-line')">D Centre</button>
-        <button class="zone-btn" onclick="selectZone('right-d')">Right D</button>
-        <button class="zone-btn" onclick="selectZone('left-45')">Left 45</button>
-        <button class="zone-btn" onclick="selectZone('45-centre')">45 Centre</button>
-        <button class="zone-btn" onclick="selectZone('right-45')">Right 45</button>
-        <button class="zone-btn" onclick="selectZone('left-wing')">Left Wing</button>
-        <button class="zone-btn" onclick="selectZone('midfield')">Midfield</button>
-        <button class="zone-btn" onclick="selectZone('right-wing')">Right Wing</button>
-      </div>
-      <button onclick="closeShotModal()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">Skip Zone</button>
-    </div>
-    <div id="zone-picker-hidden" class="player-attr-section">
+    <div class="player-attr-section">
       <div class="player-attr-label">Tag Player (optional)</div>
       <div class="player-attr-list" id="shot-player-attr-list"></div>
     </div>
@@ -2799,6 +2786,24 @@ select option { background:#1a0505; }
       <div class="player-attr-label">Tag Player (optional)</div>
       <div class="player-attr-list" id="gen-player-attr-list"></div>
     </div>
+  </div>
+</div>
+
+<!-- SHOT/45 LOCATION PICKER -->
+<div class="modal-overlay" id="location-modal" onclick="if(event.target===this)closeLocationPicker()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">📍 Shot Location</div>
+        <div class="sheet-sub">Tap the pitch where the shot was taken from</div>
+      </div>
+      <button class="sheet-close" onclick="closeLocationPicker()">✕</button>
+    </div>
+    <div class="loc-pitch-wrap">
+      <svg id="location-pitch-svg" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg" onclick="handleLocationTap(event)"></svg>
+    </div>
+    <button onclick="closeLocationPicker()" style="width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">Skip</button>
   </div>
 </div>
 
@@ -3277,10 +3282,6 @@ function openShotModal(team,mode) {
 function closeShotModal() {
   $('shot-modal').classList.remove('open');
   shotModal.team = null; shotModal.mode = null; shotModal.pendingOutcome = null;
-  var zoneSection = document.getElementById('zone-picker-section');
-  var playerSection = document.getElementById('zone-picker-hidden');
-  if (zoneSection) zoneSection.style.display = 'none';
-  if (playerSection) playerSection.style.display = '';
   document.querySelectorAll('.outcome-btn').forEach(function(b) { b.style.opacity = ''; });
 }
 
@@ -3296,23 +3297,65 @@ function selectShotOutcome(outcome) {
   }
   addShot(shotModal.team, shotModal.mode, outcome);
   shotModal.pendingOutcome = outcome;
-  // Show zone picker as optional secondary step
-  var zoneSection = document.getElementById('zone-picker-section');
-  var playerSection = document.getElementById('zone-picker-hidden');
-  if (zoneSection) zoneSection.style.display = '';
-  if (playerSection) playerSection.style.display = 'none';
+  var shotTeam = shotModal.team;
+  closeShotModal();
+  openLocationPicker(shotTeam, 'shot');
 }
 
-function selectZone(zone) {
-  if (!shotModal.team) { closeShotModal(); return; }
-  if (!state.shotZones[shotModal.team][zone]) state.shotZones[shotModal.team][zone] = 0;
-  state.shotZones[shotModal.team][zone]++;
-  // Store zone on the most recent shot event for that team
-  var recentShot = state.events.find(function(ev) {
-    return ev.type === 'shot' && ev.team === shotModal.team && !ev.zone;
+var locPicker = {team:null, kind:null}; // kind: 'shot' | 'fortyFive'
+
+function openLocationPicker(team, kind) {
+  locPicker.team = team; locPicker.kind = kind;
+  var svg = document.getElementById('location-pitch-svg');
+  if (svg) svg.innerHTML = drawPitch(homeName(), awayName());
+  var modal = document.getElementById('location-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeLocationPicker() {
+  var modal = document.getElementById('location-modal');
+  if (modal) modal.classList.remove('open');
+  locPicker.team = null; locPicker.kind = null;
+}
+
+function nearestZone(team, vx, vy) {
+  var coordMap = team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+  var best = null, bestDist = Infinity;
+  Object.keys(coordMap).forEach(function(z) {
+    var c = coordMap[z];
+    var d = (c.x - vx) * (c.x - vx) + (c.y - vy) * (c.y - vy);
+    if (d < bestDist) { bestDist = d; best = z; }
   });
-  if (recentShot) recentShot.zone = zone;
-  closeShotModal();
+  return best;
+}
+
+function handleLocationTap(evt) {
+  if (!locPicker.team) return;
+  var svg = document.getElementById('location-pitch-svg');
+  if (!svg) return;
+  var rect = svg.getBoundingClientRect();
+  var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  var px = (clientX - rect.left) / rect.width;
+  var py = (clientY - rect.top) / rect.height;
+  var vx = px * 320, vy = py * 480;
+
+  var team = locPicker.team;
+  var evType = locPicker.kind === 'fortyFive' ? 'fortyFive' : 'shot';
+  var zone = nearestZone(team, vx, vy);
+  if (zone) {
+    if (!state.shotZones[team][zone]) state.shotZones[team][zone] = 0;
+    state.shotZones[team][zone]++;
+  }
+  var recentEv = state.events.find(function(ev) {
+    return ev.type === evType && ev.team === team && ev.x === undefined;
+  });
+  if (recentEv) {
+    if (zone) recentEv.zone = zone;
+    recentEv.x = Math.round((vx / 320) * 1000) / 10;
+    recentEv.y = Math.round((vy / 480) * 1000) / 10;
+  }
+  closeLocationPicker();
 }
 
 function addShot(team,mode,outcome) {
@@ -3387,27 +3430,26 @@ function closeGenericModal() { $('generic-modal').classList.remove('open'); gmod
 function selectGenericOutcome(key) {
   if(!gmodal.team||!gmodal.category)return;
   const cfg=GENERIC_CONFIG[gmodal.category];
-  state[gmodal.category][gmodal.team][key]++;
+  const team = gmodal.team;
+  const category = gmodal.category;
+  state[category][team][key]++;
   const foundOutcome = cfg.outcomes.find(function(o){return o.key===key;});
   const outcomeLabel = foundOutcome ? foundOutcome.label : key;
   // Record against tagged player
   if (selectedAttrPlayer !== null) {
-    addStatToPlayer(selectedAttrPlayer, gmodal.category, key);
+    addStatToPlayer(selectedAttrPlayer, category, key);
   }
   // 45 scored = add 1 point to scoreboard
-  if (gmodal.category === 'fortyFive' && key === 'scored') {
-    addScore(gmodal.team, 'point');
-  } else {
-    state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
-    renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
-    return;
+  if (category === 'fortyFive' && key === 'scored') {
+    addScore(team, 'point');
   }
-  state.events.unshift({id:Date.now(),team:gmodal.team,type:gmodal.category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
+  state.events.unshift({id:Date.now(),team:team,type:category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
   // Pulse the tally count for feedback
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
-  var pfx = catPfxMap[gmodal.category];
-  if (pfx) pulseTally(pfx + '-' + gmodal.team + '-tally');
+  var pfx = catPfxMap[category];
+  if (pfx) pulseTally(pfx + '-' + team + '-tally');
+  if (category === 'fortyFive') openLocationPicker(team, 'fortyFive');
 }
 
 function renderGenericTallies() {
