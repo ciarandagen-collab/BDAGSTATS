@@ -1134,6 +1134,8 @@ select option { background:#1a0505; }
 .et-picker-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
 .et-picker-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .et-icon { font-size:20px; }
+.record-stats-btn { display:block; width:100%; padding:12px; margin-bottom:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.record-stats-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 
 .team-select {
   width: 100%;
@@ -2147,6 +2149,8 @@ select option { background:#1a0505; }
 
     <div class="sec-label">Tap a Player to Record an Event</div>
     <div class="record-pitch-wrap" id="record-pitch-wrap"></div>
+
+    <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
 
     <!-- Substitutions section (collapsed) -->
     <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
@@ -3164,6 +3168,7 @@ const state = {
   turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
   mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
   possession:{home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}},
+  pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
   shotZones:{home:{},away:{}},
@@ -3836,6 +3841,14 @@ function surnameOf(name) {
   return parts.length ? parts[parts.length - 1] : '';
 }
 
+function squadIndexByName(name) {
+  if (!name) return -1;
+  for (var i = 0; i < squad.length; i++) {
+    if (squad[i] && squad[i].name === name) return i;
+  }
+  return -1;
+}
+
 function switchRecordSide(side) {
   recordSide = side;
   var hb = document.getElementById('record-tab-home');
@@ -3847,10 +3860,12 @@ function switchRecordSide(side) {
 
 function recordPitchMarker(team, num) {
   if (team === 'home') {
-    var p = squad[num - 1];
+    var occ = (state.pitchOccupant && state.pitchOccupant[num-1] !== undefined) ? state.pitchOccupant[num-1] : (num-1);
+    var p = squad[occ];
     var filled = p && p.name;
-    return '<button class="record-pitch-player" onclick="openEventTypePicker(\'home\',' + (num-1) + ')">' +
-      '<span class="rpp-circle">' + num + '</span>' +
+    var displayNum = filled ? (occ+1) : num;
+    return '<button class="record-pitch-player" onclick="openEventTypePicker(\'home\',' + occ + ')">' +
+      '<span class="rpp-circle">' + displayNum + '</span>' +
       '<span class="rpp-name">' + (filled ? surnameOf(p.name) : '') + '</span>' +
       '</button>';
   }
@@ -3901,6 +3916,14 @@ function chooseEventType(kind, arg) {
   closeEventTypePicker();
   if (kind === 'shot') openShotModal(team, arg);
   else openGenericModal(team, arg);
+}
+
+function goToMatchStats() {
+  var navBtns = document.querySelectorAll('.nav-btn');
+  var statsBtn = null;
+  navBtns.forEach(function(b) { if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("showPage('stats'") === 0) statsBtn = b; });
+  if (!statsBtn && navBtns.length >= 5) statsBtn = navBtns[4];
+  if (statsBtn) showPage('stats', statsBtn);
 }
 
 // ── PLAYER STATS ───────────────────────────────────
@@ -5824,6 +5847,23 @@ function saveSubstitution() {
   if (!state.subs) state.subs = [];
   state.subs.push(sub);
   state.events.unshift(Object.assign({}, sub));
+
+  // Swap the player shown on the Record-tab pitch for this position
+  if (subTeam === 'home' && off && onName) {
+    var offIdx = squadIndexByName(off);
+    var onIdx = squadIndexByName(onName);
+    if (offIdx !== -1 && onIdx !== -1) {
+      if (!state.pitchOccupant) state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+      var slot = state.pitchOccupant.indexOf(offIdx);
+      if (slot !== -1) {
+        state.pitchOccupant[slot] = onIdx;
+        renderRecordPitch();
+      }
+    } else if (offIdx !== -1 && onIdx === -1) {
+      showSync('Add ' + onName + ' to your squad to tag them on the pitch', 2500);
+    }
+  }
+
   renderTimeline();
   renderSubsList();
   updateSubsBadge();
@@ -9421,6 +9461,7 @@ function resetMatch(){
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
   state.possession={home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}};
+  state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
@@ -9837,6 +9878,7 @@ function saveMatchToHistory() {
     events: state.events.slice(),
     players: state.players.slice(),
     subs: (state.subs || []).slice(),
+    pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
     matchNotes: state.matchNotes || ''
   };
 
@@ -10121,6 +10163,7 @@ function loadMatchIntoTracker(id) {
   state.events = m.events || [];
   state.players = m.players || [];
   state.subs = m.subs || [];
+  state.pitchOccupant = m.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
