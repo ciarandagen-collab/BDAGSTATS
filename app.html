@@ -2172,10 +2172,10 @@ select option { background:#1a0505; }
     <!-- Home / Away side toggle -->
     <div class="record-side-tabs">
       <button class="record-side-tab active" id="record-tab-home" onclick="switchRecordSide('home')">
-        <span id="record-home-label">Home</span>
+        <span id="record-home-label">My Team</span>
       </button>
       <button class="record-side-tab" id="record-tab-away" onclick="switchRecordSide('away')">
-        <span id="record-away-label">Away</span>
+        <span id="record-away-label">Opposition</span>
       </button>
     </div>
 
@@ -2187,10 +2187,10 @@ select option { background:#1a0505; }
     <div class="sec-label">Team Actions</div>
     <div class="team-actions-row">
       <button class="team-action-btn ta-home" onclick="openGenericModal('home','attacks')">
-        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Home</span>
+        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">My Team</span>
       </button>
       <button class="team-action-btn ta-away" onclick="openGenericModal('away','attacks')">
-        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Away</span>
+        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Opposition</span>
       </button>
     </div>
 
@@ -3210,7 +3210,7 @@ const state = {
   kickout:{home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}},
   turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
   mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
-  possession:{home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}},
+  possession:{home:{count:0},away:{count:0}},
   attacks:{home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}},
   pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
@@ -3254,11 +3254,11 @@ function updateNames() {
   $('player-away-opt').textContent=a;
   var matchLabel = document.getElementById('tb-match-label');
   if (matchLabel) matchLabel.textContent = (h && a && h !== 'Home' && a !== 'Away') ? h + ' v ' + a : '';
-  // Update record tab column headers
+  // Record tab column headers always read My Team / Opposition, regardless of match team names
   var rh = document.getElementById('record-home-label');
   var ra = document.getElementById('record-away-label');
-  if (rh) rh.textContent = (h && h !== 'Home') ? h : 'Home';
-  if (ra) ra.textContent = (a && a !== 'Away') ? a : 'Away';
+  if (rh) rh.textContent = 'My Team';
+  if (ra) ra.textContent = 'Opposition';
   updateStats(); renderShotSummary();
 }
 
@@ -3311,7 +3311,7 @@ const shotModal = {team:null, mode:null};
 function openShotModal(team,mode) {
   shotModal.team=team; shotModal.mode=mode;
   var icon = mode==='play'?'⚽':'🎯';
-  document.getElementById('modal-title').textContent = icon + ' ' + (team==='home'?homeName():awayName());
+  document.getElementById('modal-title').textContent = icon + ' ' + (team==='home'?'My Team':'Opposition');
   document.getElementById('modal-subtitle').textContent = 'Shot ' + (mode==='play'?'from Play':'from Free') + ' — select outcome';
   applyPendingTag('shot-tag-confirm');
   document.getElementById('shot-modal').classList.add('open');
@@ -3454,7 +3454,7 @@ const gmodal = {team:null,category:null};
 function openGenericModal(team,category) {
   gmodal.team=team; gmodal.category=category;
   var cfg=GENERIC_CONFIG[category];
-  document.getElementById('gmodal-title').textContent = cfg.title + ' — ' + (team==='home'?homeName():awayName());
+  document.getElementById('gmodal-title').textContent = cfg.title + ' — ' + (team==='home'?'My Team':'Opposition');
   document.getElementById('gmodal-subtitle').textContent = cfg.sub;
   document.getElementById('gmodal-outcomes').innerHTML=cfg.outcomes.map(function(o) {
     return '<button class="outcome-btn ob-gen" onclick="selectGenericOutcome(\'' + o.key + '\')"><span class="o-icon">' + o.icon + '</span><span class="o-label">' + o.label + '</span></button>';
@@ -3761,7 +3761,7 @@ function applyPendingTag(labelId) {
   } else {
     selectedAttrPlayer = pendingTagRef;
     var num = String(pendingTagRef).split('-')[1];
-    if (label) label.textContent = 'Tagged: Away #' + num;
+    if (label) label.textContent = 'Tagged: Opposition #' + num;
   }
   pendingTagRef = null;
 }
@@ -3983,11 +3983,11 @@ function openEventTypePicker(team, ref) {
   etPicker.ref = team === 'home' ? ref : ('away-' + ref);
   var label = team === 'home' ?
     ('#' + (ref+1) + (squad[ref] && squad[ref].name ? ' ' + squad[ref].name : '')) :
-    ('Away #' + ref);
+    ('Opposition #' + ref);
   var titleEl = document.getElementById('et-picker-title');
   var subEl = document.getElementById('et-picker-sub');
   if (titleEl) titleEl.textContent = label;
-  if (subEl) subEl.textContent = (team === 'home' ? homeName() : awayName()) + ' — select event to record';
+  if (subEl) subEl.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — select event to record';
   var modal = document.getElementById('event-type-modal');
   if (modal) modal.classList.add('open');
 }
@@ -3999,11 +3999,30 @@ function closeEventTypePicker() {
 
 function chooseEventType(kind, arg) {
   if (etPicker.team === null) return;
-  pendingTagRef = etPicker.ref;
   var team = etPicker.team;
+  var ref = etPicker.ref;
+  if (kind === 'generic' && arg === 'possession') {
+    closeEventTypePicker();
+    recordPossession(team, ref);
+    return;
+  }
+  pendingTagRef = ref;
   closeEventTypePicker();
   if (kind === 'shot') openShotModal(team, arg);
   else openGenericModal(team, arg);
+}
+
+function recordPossession(team, ref) {
+  state.possession[team].count++;
+  if (typeof ref === 'number') {
+    addStatToPlayer(ref, 'possession', 'count');
+  }
+  var label = typeof ref === 'number' ?
+    ('#' + (ref+1) + (squad[ref] && squad[ref].name ? ' ' + squad[ref].name : '')) :
+    ('Opposition #' + String(ref).split('-')[1]);
+  state.events.unshift({id:Date.now(),team:team,type:'possession',outcome:'count',outcomeLabel:'Possession',min:getMin(),half:state.half,player:typeof ref === 'number' ? ref : null});
+  renderTimeline(); bumpMin(); renderGenericTallies();
+  showSync('Possession — ' + label, 1200);
 }
 
 function goToMatchStats() {
@@ -4639,8 +4658,8 @@ const DEFAULT_EVENT_CONFIG = [
     outcomes:[{key:'inAttack',label:'In Attack',perf:5},{key:'midfield',label:'Midfield',perf:4},{key:'inDefence',label:'In Defence',perf:3}]},
   { id:'mark', label:'Mark', icon:'📌', category:'possession', context:'both', editable:true, deletable:false,
     outcomes:[{key:'won',label:'Won',perf:3},{key:'lost',label:'Lost',perf:-1}]},
-  { id:'possession', label:'Possession', icon:'🏉', category:'possession', context:'both', editable:true, deletable:false,
-    outcomes:[{key:'carry',label:'Carried',perf:1},{key:'handPass',label:'Hand Pass',perf:1},{key:'kickPass',label:'Kick Pass',perf:1},{key:'heldUp',label:'Held Up',perf:-1}]},
+  { id:'possession', label:'Possession', icon:'🏉', category:'possession', context:'both', editable:false, deletable:false,
+    outcomes:[{key:'count',label:'Possession',perf:1}]},
   { id:'attacks', label:'Attack', icon:'⚔️', category:'attacks', context:'both', editable:true, deletable:true,
     outcomes:[{key:'scored',label:'Score',perf:3},{key:'ballLost',label:'Ball Lost',perf:-1},{key:'turnedBack',label:'Turned Back',perf:-1}]},
   { id:'foul', label:'Foul Given', icon:'⚠️', category:'discipline', context:'both', editable:true, deletable:false,
@@ -9557,7 +9576,7 @@ function resetMatch(){
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
-  state.possession={home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}};
+  state.possession={home:{count:0},away:{count:0}};
   state.attacks={home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
