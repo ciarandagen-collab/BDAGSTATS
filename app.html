@@ -12518,7 +12518,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for a newer sw.js immediately, and periodically while the app is open
+      reg.update().catch(() => {});
+      setInterval(() => { reg.update().catch(() => {}); }, 60000);
+    }).catch(() => {});
+  });
+
+  // Once a new service worker takes control, reload so the fresh app.html actually loads
+  var swRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
   });
 }
 
