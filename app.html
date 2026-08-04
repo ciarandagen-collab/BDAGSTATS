@@ -1122,14 +1122,14 @@ select option { background:#1a0505; }
 .record-side-tabs { display:flex; gap:8px; margin-bottom:14px; }
 .record-side-tab { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .record-side-tab.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
-.record-pitch-wrap { background:#1a6b2f; border:2px solid rgba(255,255,255,0.25); border-radius:14px; padding:16px 6px 12px; position:relative; margin-bottom:16px; }
+.record-pitch-wrap { background:#1a6b2f; border:2px solid rgba(255,255,255,0.25); border-radius:14px; padding:20px 8px 16px; position:relative; margin-bottom:16px; }
 .record-pitch-wrap::before { content:''; position:absolute; top:50%; left:6%; right:6%; height:1px; background:rgba(255,255,255,0.15); }
-.record-pitch-row { display:flex; justify-content:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; position:relative; z-index:1; }
+.record-pitch-row { display:flex; justify-content:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; position:relative; z-index:1; }
 .record-pitch-row:last-child { margin-bottom:0; }
-.record-pitch-player { display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; padding:2px; cursor:pointer; min-width:52px; }
-.rpp-circle { width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:#fff; transition:all 0.15s; }
+.record-pitch-player { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; padding:3px; cursor:pointer; min-width:66px; }
+.rpp-circle { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.18); border:3px solid rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:#fff; transition:all 0.15s; }
 .record-pitch-player:active .rpp-circle { transform:scale(0.9); background:var(--red); border-color:#fff; }
-.rpp-name { font-size:8px; color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:0.5px; max-width:52px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rpp-name { font-size:11px; color:rgba(255,255,255,0.9); text-transform:uppercase; letter-spacing:0.5px; max-width:66px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
 .record-pitch-empty { text-align:center; color:rgba(255,255,255,0.55); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; padding:16px 10px; }
 .et-picker-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
 .et-picker-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
@@ -1137,6 +1137,15 @@ select option { background:#1a0505; }
 .et-icon { font-size:20px; }
 .record-stats-btn { display:block; width:100%; padding:12px; margin-bottom:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .record-stats-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
+.rec-min-display { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); letter-spacing:0.5px; }
+.rec-min-display b { color:var(--cream); font-size:14px; }
+.team-actions-row { display:flex; gap:8px; margin-bottom:16px; }
+.team-action-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; cursor:pointer; }
+.team-action-btn .ta-icon { font-size:18px; }
+.team-action-btn .ta-label { font-size:12px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+.team-action-btn .ta-team { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+.team-action-btn:active { background:var(--red); border-color:var(--red); }
+.team-action-btn:active .ta-team { color:rgba(255,255,255,0.8); }
 .loc-pitch-wrap { border-radius:10px; overflow:hidden; }
 #location-pitch-svg { width:100%; height:auto; display:block; cursor:crosshair; touch-action:manipulation; }
 
@@ -2140,6 +2149,26 @@ select option { background:#1a0505; }
   <!-- PAGE: RECORD -->\
   <div class="page" id="page-record">
 
+    <!-- Game clock (mirrors Match tab) -->
+    <div class="sec-label">Game Control</div>
+    <div class="clock-card">
+      <div class="clock-main">
+        <div class="clock-big" id="rec-clock-display">00:00</div>
+        <div class="clock-right">
+          <div class="clock-status-badge" id="rec-clock-status-badge">Ready</div>
+          <div class="clock-btns" id="rec-clock-btns-area"></div>
+        </div>
+      </div>
+      <div class="clock-meta">
+        <span class="rec-min-display">Min <b id="rec-current-min-display">1</b></span>
+        <div class="half-row">
+          <button class="half-btn active" id="rec-h1-btn" onclick="setHalf(1)">1st</button>
+          <button class="half-btn" id="rec-h2-btn" onclick="setHalf(2)">2nd</button>
+          <button class="half-btn" id="rec-het-btn" onclick="setHalf(3)">ET</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Home / Away side toggle -->
     <div class="record-side-tabs">
       <button class="record-side-tab active" id="record-tab-home" onclick="switchRecordSide('home')">
@@ -2154,6 +2183,16 @@ select option { background:#1a0505; }
     <div class="record-pitch-wrap" id="record-pitch-wrap"></div>
 
     <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
+
+    <div class="sec-label">Team Actions</div>
+    <div class="team-actions-row">
+      <button class="team-action-btn ta-home" onclick="openGenericModal('home','attacks')">
+        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Home</span>
+      </button>
+      <button class="team-action-btn ta-away" onclick="openGenericModal('away','attacks')">
+        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Away</span>
+      </button>
+    </div>
 
     <!-- Substitutions section (collapsed) -->
     <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
@@ -3172,6 +3211,7 @@ const state = {
   turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
   mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
   possession:{home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}},
+  attacks:{home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}},
   pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
@@ -3405,6 +3445,7 @@ const GENERIC_CONFIG = {
   turnover:{title:'🔄 Turnover Forced',sub:'Where on the pitch?',outcomes:[{key:'inAttack',icon:'⚡',label:'In Attack'},{key:'midfield',icon:'🔀',label:'Midfield'},{key:'inDefence',icon:'🛡️',label:'In Defence'}]},
   mark:{title:'📌 Mark',sub:'Was the mark won or lost?',outcomes:[{key:'won',icon:'✅',label:'Won'},{key:'lost',icon:'❌',label:'Lost'}]},
   possession:{title:'🏉 Possession',sub:'What did the player do on the ball?',outcomes:[{key:'carry',icon:'🏃',label:'Carried'},{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'heldUp',icon:'✋',label:'Held Up'}]},
+  attacks:{title:'⚔️ Attack',sub:'How did the attack end?',outcomes:[{key:'scored',icon:'✅',label:'Score'},{key:'ballLost',icon:'❌',label:'Ball Lost'},{key:'turnedBack',icon:'🔄',label:'Turned Back'}]},
   foul:{title:'⚠️ Foul Given',sub:'What type of foul?',outcomes:[{key:'shooting',icon:'🎯',label:'Shooting'},{key:'cynical',icon:'🟨',label:'Cynical'},{key:'dangerous',icon:'💥',label:'Dangerous'},{key:'dissent',icon:'🗣️',label:'Dissent'}]},
   cards:{title:'🟨 Card',sub:'Select card type — tag a player first',outcomes:[{key:'yellow',icon:'🟨',label:'Yellow'},{key:'black',icon:'⬛',label:'Black'},{key:'red',icon:'🟥',label:'Red'}]}
 };
@@ -3515,6 +3556,10 @@ function setHalf(h) {
   $('h2-btn').classList.toggle('active', h===2);
   var etBtn = $('het-btn');
   if (etBtn) etBtn.classList.toggle('active', h===3);
+  var rh1 = $('rec-h1-btn'), rh2 = $('rec-h2-btn'), ret = $('rec-het-btn');
+  if (rh1) rh1.classList.toggle('active', h===1);
+  if (rh2) rh2.classList.toggle('active', h===2);
+  if (ret) ret.classList.toggle('active', h===3);
 }
 
 // ── TEAM SHEET ─────────────────────────────────────
@@ -4404,15 +4449,19 @@ function renderClock() {
   const running = clock.running;
   const ot = m >= 35;
 
-  [$('clock-display'), $('tb-clock')].forEach(function(el) {
+  [$('clock-display'), $('tb-clock'), $('rec-clock-display')].forEach(function(el) {
     if (!el) return;
     el.textContent = str;
     el.classList.toggle('running', running && !ot);
     el.classList.toggle('overtime', ot);
   });
 
+  var recMin = $('rec-current-min-display');
+  if (recMin) recMin.textContent = $('current-min').value;
+
   const badge = $('clock-status-badge');
   const tbStatus = $('tb-clock-status');
+  const recBadge = $('rec-clock-status-badge');
   var badgeText = '';
   var badgeClass = '';
 
@@ -4426,13 +4475,15 @@ function renderClock() {
 
   if (badge) { badge.textContent = badgeText; badge.className = 'clock-status-badge ' + badgeClass; }
   if (tbStatus) { tbStatus.textContent = badgeText; tbStatus.className = 'tb-clock-status' + (badgeClass ? ' ' + badgeClass : ''); }
+  if (recBadge) { recBadge.textContent = badgeText; recBadge.className = 'clock-status-badge ' + badgeClass; }
 
   renderGameControls();
 }
 
 function renderGameControls() {
   var area = $('clock-btns-area');
-  if (!area) return;
+  var recArea = $('rec-clock-btns-area');
+  if (!area && !recArea) return;
   var html = '';
 
   if (gamePhase === 'pregame') {
@@ -4467,7 +4518,8 @@ function renderGameControls() {
     html = '<button class="clock-action-btn btn-clock-reset" onclick="resetMatch()">↺ New Game</button>';
   }
 
-  area.innerHTML = html;
+  if (area) area.innerHTML = html;
+  if (recArea) recArea.innerHTML = html;
 }
 
 // ── GAME FLOW FUNCTIONS ────────────────────────────
@@ -4589,6 +4641,8 @@ const DEFAULT_EVENT_CONFIG = [
     outcomes:[{key:'won',label:'Won',perf:3},{key:'lost',label:'Lost',perf:-1}]},
   { id:'possession', label:'Possession', icon:'🏉', category:'possession', context:'both', editable:true, deletable:false,
     outcomes:[{key:'carry',label:'Carried',perf:1},{key:'handPass',label:'Hand Pass',perf:1},{key:'kickPass',label:'Kick Pass',perf:1},{key:'heldUp',label:'Held Up',perf:-1}]},
+  { id:'attacks', label:'Attack', icon:'⚔️', category:'attacks', context:'both', editable:true, deletable:true,
+    outcomes:[{key:'scored',label:'Score',perf:3},{key:'ballLost',label:'Ball Lost',perf:-1},{key:'turnedBack',label:'Turned Back',perf:-1}]},
   { id:'foul', label:'Foul Given', icon:'⚠️', category:'discipline', context:'both', editable:true, deletable:false,
     outcomes:[{key:'shooting',label:'Shooting',perf:-1},{key:'cynical',label:'Cynical',perf:-3},{key:'dangerous',label:'Dangerous',perf:-3},{key:'dissent',label:'Dissent',perf:-2}]},
   { id:'cards', label:'Card', icon:'🟨', category:'discipline', context:'both', editable:true, deletable:false,
@@ -9504,6 +9558,7 @@ function resetMatch(){
   state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
   state.possession={home:{carry:0,handPass:0,kickPass:0,heldUp:0},away:{carry:0,handPass:0,kickPass:0,heldUp:0}};
+  state.attacks={home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
