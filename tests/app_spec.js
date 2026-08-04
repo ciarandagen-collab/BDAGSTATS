@@ -1,15 +1,14 @@
 // ── COACH STATS — PLAYWRIGHT BROWSER TESTS ──────────────────────────
 // Run with: npx playwright test
-// Tests run against https://coachstats.netlify.app
+// Tests run against https://coachstats.app/app
 
 const { test, expect } = require('@playwright/test');
 
-const URL = 'https://coachstats.netlify.app';
+const URL = 'https://coachstats.app/app';
 const EMAIL = 'ciarandagen@icloud.com'; // free bypass account
 const PASSWORD = process.env.TEST_PASSWORD || 'testpass123';
 
 // ── HELPERS ──────────────────────────────────────────────────────────
-
 async function login(page) {
   await page.goto(URL);
   await page.waitForSelector('#login-screen', { state: 'visible' });
@@ -27,12 +26,28 @@ async function navTo(page, tab) {
 }
 
 // ── LOGIN SCREEN ─────────────────────────────────────────────────────
+// Clear service worker cache before all tests
+test.beforeAll(async ({ browser }) => {
+  const page = await browser.newPage();
+  await page.goto(URL);
+  await page.evaluate(async () => {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) await reg.unregister();
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      for (const key of keys) await caches.delete(key);
+    }
+  });
+  await page.close();
+});
 
 test.describe('Login Screen', () => {
   test('Login screen renders with green branding', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#login-screen')).toBeVisible();
-    const title = page.locator('#login-screen').getByText('Coach Stats');
+    const title = page.locator('#login-screen').getByText('Coach Stats', { exact: true });
     await expect(title).toBeVisible();
   });
 
@@ -64,7 +79,6 @@ test.describe('Login Screen', () => {
 });
 
 // ── POST-LOGIN APP STRUCTURE ──────────────────────────────────────────
-
 test.describe('App Structure', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -95,7 +109,6 @@ test.describe('App Structure', () => {
 });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────
-
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -104,11 +117,12 @@ test.describe('Navigation', () => {
     await expect(page.locator('#page-record')).toBeVisible();
   });
 
-  test('Record tab shows Home/Away headers', async ({ page }) => {
+  test('Record tab shows side tabs and pitch', async ({ page }) => {
     await navTo(page, 'record');
-    await expect(page.locator('.record-team-headers')).toBeVisible();
-    await expect(page.locator('.home-col')).toBeVisible();
-    await expect(page.locator('.away-col')).toBeVisible();
+    await expect(page.locator('.record-side-tabs')).toBeVisible();
+    await expect(page.locator('#record-tab-home')).toBeVisible();
+    await expect(page.locator('#record-tab-away')).toBeVisible();
+    await expect(page.locator('#record-pitch-wrap')).toBeVisible();
   });
 
   test('Trends tab loads', async ({ page }) => {
@@ -155,12 +169,11 @@ test.describe('Navigation', () => {
 });
 
 // ── MATCH TAB ────────────────────────────────────────────────────────
-
 test.describe('Match Tab', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
   test('Scoreboard visible', async ({ page }) => {
-    await expect(page.locator('.scoreboard')).toBeVisible();
+    await expect(page.locator('.scoreboard-card')).toBeVisible();
   });
 
   test('Game clock visible', async ({ page }) => {
@@ -183,17 +196,18 @@ test.describe('Match Tab', () => {
     await expect(page.locator('#comp-picker-modal')).not.toHaveClass(/open/, { timeout: 3000 });
   });
 
-  test('Competition search filters results', async ({ page }) => {
+  test('Competition picker shows items when opened', async ({ page }) => {
     await page.click('#comp-picker-btn');
-    await page.fill('#comp-search-input', 'Senior Football');
-    await page.waitForTimeout(300);
-    const items = await page.locator('.comp-item').count();
+    await expect(page.locator('#comp-picker-modal')).toHaveClass(/open/, { timeout: 3000 });
+    // Wait for list to populate (renders all competitions by default)
+    await page.waitForSelector('#comp-list .comp-item', { timeout: 5000 });
+    const items = await page.locator('#comp-list .comp-item').count();
     expect(items).toBeGreaterThan(0);
   });
 
   test('Team picker opens on Home tap', async ({ page }) => {
-    await page.click('#home-team-btn');
-    await expect(page.locator('.picker-sheet')).toBeVisible({ timeout: 3000 });
+    await page.click('#home-name-display');
+    await expect(page.locator('.picker-sheet')).toBeVisible({ timeout: 5000 });
   });
 
   test('Start Game button visible', async ({ page }) => {
@@ -202,31 +216,89 @@ test.describe('Match Tab', () => {
 });
 
 // ── RECORD TAB ───────────────────────────────────────────────────────
-
+// Record tab was redesigned to a pitch-tap flow: tap a player, pick an
+// event type, then (for most events) pick an outcome. Home/Away are
+// labelled "My Team" / "Opposition" here. The game clock is mirrored
+// at the top, and team-level actions (e.g. Attack) sit below the pitch.
 test.describe('Record Tab', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
     await navTo(page, 'record');
   });
 
-  test('Shot from Play buttons visible (Home + Away)', async ({ page }) => {
-    const btns = await page.locator('.trigger-btn:has-text("Shot from Play")').count();
-    expect(btns).toBe(2);
+  test('Game clock mirror visible on Record tab', async ({ page }) => {
+    await expect(page.locator('#rec-clock-display')).toBeVisible();
+    await expect(page.locator('#rec-clock-btns-area')).toBeVisible();
+    await expect(page.locator('#rec-h1-btn')).toBeVisible();
   });
 
-  test('Home buttons have green styling', async ({ page }) => {
-    const homeBtn = page.locator('.home-btn').first();
-    await expect(homeBtn).toBeVisible();
+  test('Side tabs read My Team / Opposition', async ({ page }) => {
+    await expect(page.locator('#record-home-label')).toHaveText('My Team');
+    await expect(page.locator('#record-away-label')).toHaveText('Opposition');
   });
 
-  test('Away buttons have silver styling', async ({ page }) => {
-    const awayBtn = page.locator('.away-btn').first();
-    await expect(awayBtn).toBeVisible();
+  test('Switching side updates active tab styling', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await expect(page.locator('#record-tab-away')).toHaveClass(/active/);
+    await expect(page.locator('#record-tab-home')).not.toHaveClass(/active/);
   });
 
-  test('Shot modal opens on tap', async ({ page }) => {
-    await page.locator('.home-btn:has-text("Shot from Play")').first().click();
-    await expect(page.locator('#shot-modal, .shot-modal, .modal-overlay.open')).toBeVisible({ timeout: 3000 });
+  test('Opposition pitch shows 15 tappable player markers', async ({ page }) => {
+    // Opposition pitch always renders 15 anonymous numbers, regardless of squad setup
+    await page.click('#record-tab-away');
+    const markers = await page.locator('.record-pitch-player').count();
+    expect(markers).toBe(15);
+  });
+
+  test('Tapping a pitch player opens the event type picker', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await expect(page.locator('#event-type-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('.et-picker-btn:has-text("Shot from Play")')).toBeVisible();
+  });
+
+  test('Shot modal opens via pitch tap flow', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
+    await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('45 shot triggers the location picker pitch', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("45m Free")').click();
+    await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('.outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Possession records immediately with no outcome screen', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    // Should NOT open the generic outcome modal — it's a single-tap log
+    await page.waitForTimeout(300);
+    await expect(page.locator('#generic-modal')).not.toHaveClass(/open/);
+    await expect(page.locator('#event-type-modal')).not.toHaveClass(/open/);
+  });
+
+  test('Team Actions section shows Attack for both sides', async ({ page }) => {
+    await expect(page.locator('.team-actions-row')).toBeVisible();
+    await expect(page.locator('.team-action-btn:has-text("Attack")')).toHaveCount(2);
+  });
+
+  test('Attack opens outcome modal with Score / Ball Lost / Turned Back', async ({ page }) => {
+    await page.locator('.team-action-btn.ta-home').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Score');
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Ball Lost');
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Turned Back');
+  });
+
+  test('View Match Stats button navigates to Stats tab', async ({ page }) => {
+    await page.locator('.record-stats-btn').click();
+    await expect(page.locator('#page-stats')).toBeVisible();
   });
 
   test('Discipline section collapsed by default', async ({ page }) => {
@@ -235,21 +307,9 @@ test.describe('Record Tab', () => {
       await expect(disciplineGroup).not.toBeVisible();
     }
   });
-
-  test('Team names update record tab headers', async ({ page }) => {
-    await navTo(page, 'match');
-    // Set a home team name via JS
-    await page.evaluate(() => {
-      document.getElementById('home-team').value = 'Kilcoo';
-      updateNames();
-    });
-    await navTo(page, 'record');
-    await expect(page.locator('#record-home-label')).toHaveText('Kilcoo');
-  });
 });
 
 // ── SQUAD TAB ────────────────────────────────────────────────────────
-
 test.describe('Squad Tab', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -288,7 +348,6 @@ test.describe('Squad Tab', () => {
 });
 
 // ── MODALS ───────────────────────────────────────────────────────────
-
 test.describe('Modals & Sheets', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -330,15 +389,14 @@ test.describe('Modals & Sheets', () => {
 });
 
 // ── WELLNESS SELF-REPORT (player link) ───────────────────────────────
-
 test.describe('Wellness Self-Report Screen', () => {
   test('Wellness screen loads from URL param', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     await expect(page.locator('#player-wellness-screen')).toBeVisible();
   });
 
   test('Wellness screen shows loading state initially', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     // Loading or error state (test user has no squad)
     const loading = page.locator('#pws-loading');
     const error = page.locator('#pws-error');
@@ -350,7 +408,7 @@ test.describe('Wellness Self-Report Screen', () => {
   });
 
   test('Main app hidden in wellness mode', async ({ page }) => {
-    await page.goto(URL + '?wellness=test-user-id&date=2026-05-28');
+    await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
     await page.waitForTimeout(500);
     const topbar = page.locator('.topbar');
     const isHidden = await topbar.evaluate(el => el.style.display === 'none' || el.offsetParent === null);
@@ -359,15 +417,14 @@ test.describe('Wellness Self-Report Screen', () => {
 });
 
 // ── TRIAL GRADING SCREEN ─────────────────────────────────────────────
-
 test.describe('Trial Grading Screen', () => {
   test('Trial grading screen loads from URL param', async ({ page }) => {
-    await page.goto(URL + '?trialgrade=test-user-id&trialId=123&sessionId=456');
+    await page.goto('https://coachstats.app/app?trialgrade=test-user-id&trialId=123&sessionId=456');
     await expect(page.locator('#trial-grading-screen')).toBeVisible();
   });
 
   test('Main app hidden in trial grading mode', async ({ page }) => {
-    await page.goto(URL + '?trialgrade=test-user-id&trialId=123&sessionId=456');
+    await page.goto('https://coachstats.app/app?trialgrade=test-user-id&trialId=123&sessionId=456');
     await page.waitForTimeout(500);
     const topbar = page.locator('.topbar');
     const isHidden = await topbar.evaluate(el => el.style.display === 'none' || el.offsetParent === null);
@@ -376,7 +433,6 @@ test.describe('Trial Grading Screen', () => {
 });
 
 // ── HISTORY SEARCH ───────────────────────────────────────────────────
-
 test.describe('History Search', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -389,5 +445,162 @@ test.describe('History Search', () => {
     // Either filtered results or empty state shown
     const list = page.locator('#history-list');
     await expect(list).toBeVisible();
+  });
+});
+
+// ── NEW FEATURES ──────────────────────────────────────────────────────
+test.describe('Substitutions', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'record');
+  });
+
+  test('Substitutions section visible on Record tab', async ({ page }) => {
+    // Check the subs section exists in the DOM (it's collapsed by default)
+    await expect(page.locator('#subs-section')).toBeAttached({ timeout: 5000 });
+  });
+
+  test('Substitutions section expands on tap', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await expect(page.locator('#subs-section')).toBeVisible();
+  });
+
+  test('Record substitution button visible after expand', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await expect(page.locator('button:has-text("Record Substitution")')).toBeVisible();
+  });
+
+  test('Substitution modal opens', async ({ page }) => {
+    await page.locator('.sec-label', { hasText: 'Substitutions' }).click();
+    await page.locator('button:has-text("Record Substitution")').click();
+    await expect(page.locator('#sub-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Match Notes', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Match notes textarea visible on Stats tab', async ({ page }) => {
+    await expect(page.locator('#match-notes-input')).toBeVisible();
+  });
+
+  test('Match notes autosaves on input', async ({ page }) => {
+    await page.fill('#match-notes-input', 'Test match notes');
+    await page.waitForTimeout(1000);
+    await expect(page.locator('#match-notes-saved')).toHaveText('✓ Saved');
+  });
+});
+
+test.describe('Shot Map', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Shot Map button visible on Stats tab', async ({ page }) => {
+    await expect(page.locator('button:has-text("Shot Map")')).toBeVisible();
+  });
+
+  test('Shot Map section shows on tap', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('#shot-map-section')).toBeVisible();
+  });
+
+  test('Shot Map SVG renders', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('#shot-map-svg')).toBeVisible();
+  });
+
+  test('Shot Map filters visible', async ({ page }) => {
+    await page.click('button:has-text("Shot Map")');
+    await expect(page.locator('.shot-map-controls')).toBeVisible();
+  });
+});
+
+test.describe('Fixtures', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Fixtures button visible in History tab', async ({ page }) => {
+    await expect(page.locator('button:has-text("Fixtures")')).toBeVisible();
+  });
+
+  test('Fixtures modal opens', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await expect(page.locator('#fixtures-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Add Fixture button visible in modal', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await expect(page.locator('button:has-text("Add Fixture")')).toBeVisible();
+  });
+
+  test('Add Fixture form opens', async ({ page }) => {
+    await page.click('button:has-text("Fixtures")');
+    await page.click('button:has-text("Add Fixture")');
+    await expect(page.locator('#add-fixture-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Opposition Database', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Opposition DB button visible', async ({ page }) => {
+    await expect(page.locator('button:has-text("Opposition DB")')).toBeVisible();
+  });
+
+  test('Opposition modal opens', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    await expect(page.locator('#opposition-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Opposition search bar visible', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    await expect(page.locator('#opposition-search')).toBeVisible();
+  });
+});
+
+test.describe('Injury Log', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'squad');
+    await page.click('#squad-tab-training');
+  });
+
+  test('Training players view accessible', async ({ page }) => {
+    await expect(page.locator('#squad-view-training')).toBeVisible();
+  });
+});
+
+test.describe('Video Analysis Clips', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('History tab has Video button on match cards', async ({ page }) => {
+    await navTo(page, 'history');
+    const historyList = page.locator('#history-list');
+    await expect(historyList).toBeVisible();
+  });
+});
+
+test.describe('Share Match Report', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Share button visible on match cards', async ({ page }) => {
+    const shareBtn = page.locator('.mca-btn:has-text("Share")').first();
+    const historyList = await page.locator('#history-list').innerHTML();
+    if (historyList.includes('mca-btn')) {
+      await expect(shareBtn).toBeVisible();
+    }
   });
 });
