@@ -1117,6 +1117,7 @@ select option { background:#1a0505; }
 .pitch-tag-subs-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:center; margin:8px 0 4px; }
 .pitch-tag-subs-row { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
 .pitch-tag-confirm { text-align:center; padding:8px 12px; background:rgba(220,38,38,0.15); border:1px solid var(--red); border-radius:8px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
+.tag-confirm-label { text-align:center; padding:8px 12px; background:rgba(220,38,38,0.15); border:1px solid var(--red); border-radius:8px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 /* ── RECORD TAB: PITCH-FIRST FLOW ── */
 .record-side-tabs { display:flex; gap:8px; margin-bottom:14px; }
 .record-side-tab { flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
@@ -2764,8 +2765,7 @@ select option { background:#1a0505; }
       <button class="outcome-btn ob-short"   onclick="selectShotOutcome('short')"><span class="o-icon">⬇️</span><span class="o-label">Short</span></button>
     </div>
     <div class="player-attr-section">
-      <div class="player-attr-label">Tag Player (optional)</div>
-      <div class="player-attr-list" id="shot-player-attr-list"></div>
+      <div class="tag-confirm-label" id="shot-tag-confirm">Tagged: —</div>
     </div>
   </div>
 </div>
@@ -2783,8 +2783,7 @@ select option { background:#1a0505; }
     </div>
     <div class="outcome-grid" id="gmodal-outcomes"></div>
     <div class="player-attr-section">
-      <div class="player-attr-label">Tag Player (optional)</div>
-      <div class="player-attr-list" id="gen-player-attr-list"></div>
+      <div class="tag-confirm-label" id="gen-tag-confirm">Tagged: —</div>
     </div>
   </div>
 </div>
@@ -3274,9 +3273,7 @@ function openShotModal(team,mode) {
   var icon = mode==='play'?'⚽':'🎯';
   document.getElementById('modal-title').textContent = icon + ' ' + (team==='home'?homeName():awayName());
   document.getElementById('modal-subtitle').textContent = 'Shot ' + (mode==='play'?'from Play':'from Free') + ' — select outcome';
-  if (team === 'home') { buildPlayerAttrList(team, 'shot-player-attr-list'); }
-  else { var el=document.getElementById('shot-player-attr-list'); if(el) el.innerHTML=''; selectedAttrPlayer=null; }
-  applyPendingTag('shot-player-attr-list');
+  applyPendingTag('shot-tag-confirm');
   document.getElementById('shot-modal').classList.add('open');
 }
 function closeShotModal() {
@@ -3421,9 +3418,7 @@ function openGenericModal(team,category) {
   document.getElementById('gmodal-outcomes').innerHTML=cfg.outcomes.map(function(o) {
     return '<button class="outcome-btn ob-gen" onclick="selectGenericOutcome(\'' + o.key + '\')"><span class="o-icon">' + o.icon + '</span><span class="o-label">' + o.label + '</span></button>';
   }).join('');
-  if (team === 'home') { buildPlayerAttrList(team, 'gen-player-attr-list'); }
-  else { var el=document.getElementById('gen-player-attr-list'); if(el) el.innerHTML=''; selectedAttrPlayer=null; }
-  applyPendingTag('gen-player-attr-list');
+  applyPendingTag('gen-tag-confirm');
   document.getElementById('generic-modal').classList.add('open');
 }
 function closeGenericModal() { $('generic-modal').classList.remove('open'); gmodal.team=null; gmodal.category=null; }
@@ -3707,15 +3702,21 @@ var editingSlot = null;
 var selectedAttrPlayer = null; // currently selected player for attribution
 var pendingTagRef = null; // player chosen via pitch-first flow, applied when the outcome modal opens
 
-function applyPendingTag(listId) {
-  if (pendingTagRef === null || pendingTagRef === undefined) return;
+function applyPendingTag(labelId) {
+  var label = document.getElementById(labelId);
+  if (pendingTagRef === null || pendingTagRef === undefined) {
+    selectedAttrPlayer = null;
+    if (label) label.textContent = 'No player tagged';
+    return;
+  }
   if (typeof pendingTagRef === 'number') {
-    selectAttrPlayer(pendingTagRef, listId);
+    selectedAttrPlayer = pendingTagRef;
+    var p = squad[pendingTagRef];
+    if (label) label.textContent = 'Tagged: #' + (pendingTagRef + 1) + (p && p.name ? ' ' + p.name : '');
   } else {
     selectedAttrPlayer = pendingTagRef;
-    var list = document.getElementById(listId);
     var num = String(pendingTagRef).split('-')[1];
-    if (list) list.insertAdjacentHTML('afterbegin', '<div class="pitch-tag-confirm">Tagging Away #' + num + '</div>');
+    if (label) label.textContent = 'Tagged: Away #' + num;
   }
   pendingTagRef = null;
 }
