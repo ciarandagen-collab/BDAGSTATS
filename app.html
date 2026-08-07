@@ -1264,6 +1264,9 @@ select option { background:#1a0505; }
 .nva-field { margin-bottom:12px; }
 .nva-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
 .nva-input { width:100%; padding:11px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:var(--cream); font-size:15px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.nva-video-tabs { display:flex; gap:6px; margin-bottom:8px; }
+.nva-video-tab { flex:1; padding:9px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; }
+.nva-video-tab.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
 .nva-note { font-size:11px; color:var(--muted); text-align:center; margin-top:12px; font-style:italic; }
 
 /* ── SEASON SUMMARY ──────────────────────────────── */
@@ -1714,6 +1717,9 @@ select option { background:#1a0505; }
 .va-url-sub { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; max-width: 300px; }
 .va-url-input { width: 100%; max-width: 400px; padding: 12px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: var(--cream); font-size: 14px; font-family: 'Inter',sans-serif; outline: none; box-sizing: border-box; }
 .va-url-btn { width: 100%; max-width: 400px; padding: 13px; background: linear-gradient(135deg,var(--red-dark),var(--red)); border: none; border-radius: 10px; color: #fff; font-family: 'Oswald',sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+.va-url-or { font-family:'Oswald',sans-serif; font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.va-url-upload-btn { display:block; width:100%; max-width:400px; padding:13px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:var(--cream); font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; text-align:center; box-sizing:border-box; }
+.va-url-upload-btn:active { background:rgba(255,255,255,0.12); }
 
 /* Controls panel */
 .va-controls {
@@ -4556,14 +4562,67 @@ function startGame() {
 }
 
 // ── NEW VIDEO ANALYSIS (video-first workflow) ─────
+var nvaVideoMode = 'link'; // 'link' or 'file'
+
+// ── VIDEO FILE UPLOAD (Supabase Storage) ───────────
+function uploadMatchVideo(file, matchId, onSuccess, onError, progressElId) {
+  var maxBytes = 500 * 1024 * 1024; // 500MB safety cap
+  if (file.size > maxBytes) {
+    onError('Video is too large (' + Math.round(file.size / 1024 / 1024) + 'MB). Please keep uploads under 500MB, or paste a link instead.');
+    return;
+  }
+  var progEl = progressElId ? document.getElementById(progressElId) : null;
+  if (progEl) { progEl.style.display = 'block'; progEl.textContent = 'Uploading… 0%'; }
+
+  var safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+  var ownerId = (currentUser && currentUser.id) ? currentUser.id : 'anon';
+  var path = ownerId + '/' + matchId + '/' + Date.now() + '_' + safeName;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPA_URL + '/storage/v1/object/match-videos/' + path, true);
+  xhr.setRequestHeader('apikey', SUPA_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (currentToken || SUPA_KEY));
+  xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+  xhr.upload.onprogress = function(e) {
+    if (progEl && e.lengthComputable) {
+      progEl.textContent = 'Uploading… ' + Math.round((e.loaded / e.total) * 100) + '%';
+    }
+  };
+  xhr.onload = function() {
+    if (progEl) progEl.style.display = 'none';
+    if (xhr.status >= 200 && xhr.status < 300) {
+      var publicUrl = SUPA_URL + '/storage/v1/object/public/match-videos/' + path;
+      onSuccess(publicUrl);
+    } else {
+      onError('Upload failed (' + xhr.status + '). Make sure the "match-videos" storage bucket exists and allows uploads.');
+    }
+  };
+  xhr.onerror = function() {
+    if (progEl) progEl.style.display = 'none';
+    onError('Upload failed — check your connection and try again.');
+  };
+  xhr.send(file);
+}
+
 function openNewVideoAnalysis() {
   document.getElementById('nva-home').value = '';
   document.getElementById('nva-away').value = '';
   document.getElementById('nva-competition').value = '';
   document.getElementById('nva-url').value = '';
+  document.getElementById('nva-file').value = '';
   document.getElementById('nva-error').style.display = 'none';
+  document.getElementById('nva-upload-progress').style.display = 'none';
+  nvaSwitchVideoTab('link');
   document.getElementById('new-video-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function nvaSwitchVideoTab(mode) {
+  nvaVideoMode = mode;
+  document.getElementById('nva-tab-link').classList.toggle('active', mode === 'link');
+  document.getElementById('nva-tab-file').classList.toggle('active', mode === 'file');
+  document.getElementById('nva-url').style.display = mode === 'link' ? '' : 'none';
+  document.getElementById('nva-file').style.display = mode === 'file' ? '' : 'none';
 }
 
 function closeNewVideoAnalysis() {
@@ -4574,7 +4633,6 @@ function closeNewVideoAnalysis() {
 function startNewVideoAnalysis() {
   var home = document.getElementById('nva-home').value.trim();
   var away = document.getElementById('nva-away').value.trim();
-  var url  = document.getElementById('nva-url').value.trim();
   var errEl = document.getElementById('nva-error');
 
   if (!home || !away) {
@@ -4582,51 +4640,74 @@ function startNewVideoAnalysis() {
     errEl.style.display = 'block';
     return;
   }
+
+  var stubId = Date.now();
+  var competitionVal = document.getElementById('nva-competition').value.trim() || '';
+
+  function createStubAndOpen(videoUrl) {
+    var stub = {
+      id: stubId,
+      savedAt: new Date().toISOString(),
+      home: home,
+      away: away,
+      competition: competitionVal,
+      venue: '',
+      homeGoals: 0, homePoints: 0,
+      awayGoals: 0, awayPoints: 0,
+      homePoss: 50, awayPoss: 50,
+      homeShotsPlay: 0, awayShotsPlay: 0,
+      homeShotsFree: 0, awayShotsFree: 0,
+      homeBallWon: 0, awayBallWon: 0,
+      homeWides: 0, awayWides: 0,
+      shots: {home:{play:{},free:{}},away:{play:{},free:{}}},
+      ballLost: {home:{},away:{}},
+      ballWon: {home:{},away:{}},
+      kickout: {home:{},away:{}},
+      fortyFive: {home:{},away:{}},
+      events: [],
+      players: [],
+      isVideoStub: true
+    };
+
+    // Save to history so it appears in match cards
+    var list = loadHistory();
+    list.unshift(stub);
+    saveHistory(list);
+    syncMatchToSupabase(stub);
+
+    // Save the video URL
+    if (videoUrl) localStorage.setItem('cs_vurl_' + stubId, videoUrl);
+
+    closeNewVideoAnalysis();
+    openVideoAnalysis(stubId);
+  }
+
+  if (nvaVideoMode === 'file') {
+    var fileInput = document.getElementById('nva-file');
+    var file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      errEl.textContent = 'Please choose a video file';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    uploadMatchVideo(file, stubId, function(url) {
+      createStubAndOpen(url);
+    }, function(msg) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }, 'nva-upload-progress');
+    return;
+  }
+
+  var url = document.getElementById('nva-url').value.trim();
   if (!url) {
     errEl.textContent = 'Please enter a video URL';
     errEl.style.display = 'block';
     return;
   }
   errEl.style.display = 'none';
-
-  // Create a lightweight match stub
-  var stub = {
-    id: Date.now(),
-    savedAt: new Date().toISOString(),
-    home: home,
-    away: away,
-    competition: document.getElementById('nva-competition').value.trim() || '',
-    venue: '',
-    homeGoals: 0, homePoints: 0,
-    awayGoals: 0, awayPoints: 0,
-    homePoss: 50, awayPoss: 50,
-    homeShotsPlay: 0, awayShotsPlay: 0,
-    homeShotsFree: 0, awayShotsFree: 0,
-    homeBallWon: 0, awayBallWon: 0,
-    homeWides: 0, awayWides: 0,
-    shots: {home:{play:{},free:{}},away:{play:{},free:{}}},
-    ballLost: {home:{},away:{}},
-    ballWon: {home:{},away:{}},
-    kickout: {home:{},away:{}},
-    fortyFive: {home:{},away:{}},
-    events: [],
-    players: [],
-    isVideoStub: true
-  };
-
-  // Save to history so it appears in match cards
-  var list = loadHistory();
-  list.unshift(stub);
-  saveHistory(list);
-  syncMatchToSupabase(stub);
-
-  // Save the video URL
-  localStorage.setItem('cs_vurl_' + stub.id, url);
-
-  closeNewVideoAnalysis();
-
-  // Open video analysis directly
-  openVideoAnalysis(stub.id);
+  createStubAndOpen(url);
 }
 
 function vaToggleVideoCollapse() {
@@ -12832,6 +12913,19 @@ function vaExtractYouTubeId(url) {
   return null;
 }
 
+function vaHandleFileUpload(file) {
+  if (!file) return;
+  var errEl = document.getElementById('va-url-error');
+  errEl.style.display = 'none';
+  uploadMatchVideo(file, vaMatchId, function(url) {
+    document.getElementById('va-url-input').value = url;
+    loadVideoUrl();
+  }, function(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }, 'va-upload-progress');
+}
+
 function loadVideoUrl() {
   var url = document.getElementById('va-url-input').value.trim();
   var errEl = document.getElementById('va-url-error');
@@ -13997,7 +14091,7 @@ window.addEventListener('resize', function() {
     <div class="sheet-header">
       <div>
         <div class="sheet-title">New Video Analysis</div>
-        <div class="sheet-sub">Set up match details and paste a video link</div>
+        <div class="sheet-sub">Set up match details, then paste a link or upload a video file</div>
       </div>
       <button class="sheet-close" onclick="closeNewVideoAnalysis()">✕</button>
     </div>
@@ -14015,9 +14109,15 @@ window.addEventListener('resize', function() {
       <input type="text" id="nva-competition" placeholder="e.g. GAA Ulster SFC" class="nva-input">
     </div>
     <div class="nva-field">
-      <div class="nva-label">Video URL</div>
+      <div class="nva-label">Video</div>
+      <div class="nva-video-tabs">
+        <button type="button" class="nva-video-tab active" id="nva-tab-link" onclick="nvaSwitchVideoTab('link')">🔗 Paste Link</button>
+        <button type="button" class="nva-video-tab" id="nva-tab-file" onclick="nvaSwitchVideoTab('file')">📁 Upload File</button>
+      </div>
       <input type="url" id="nva-url" placeholder="YouTube link or direct MP4 URL" class="nva-input"
         onkeydown="if(event.key==='Enter')startNewVideoAnalysis()">
+      <input type="file" id="nva-file" accept="video/*" class="nva-input" style="display:none;">
+      <div id="nva-upload-progress" style="display:none;font-size:11px;color:var(--muted);margin-top:6px;"></div>
     </div>
 
     <div id="nva-error" style="display:none;font-size:12px;color:#ff8080;margin-bottom:8px;"></div>
@@ -14065,6 +14165,10 @@ window.addEventListener('resize', function() {
     <input class="va-url-input" id="va-url-input" type="url" placeholder="https://youtube.com/watch?v=... or MP4 URL"
       onkeydown="if(event.key==='Enter')loadVideoUrl()">
     <button class="va-url-btn" onclick="loadVideoUrl()">▶ Load Video</button>
+    <div class="va-url-or">or</div>
+    <label class="va-url-upload-btn" for="va-file-input">📁 Upload a Video File</label>
+    <input type="file" id="va-file-input" accept="video/*" style="display:none;" onchange="vaHandleFileUpload(this.files[0])">
+    <div id="va-upload-progress" style="display:none;font-size:12px;color:var(--muted);text-align:center;"></div>
     <div id="va-url-error" style="font-size:12px;color:#ff8080;display:none;text-align:center;"></div>
   </div>
 
