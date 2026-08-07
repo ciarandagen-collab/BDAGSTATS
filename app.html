@@ -1138,6 +1138,7 @@ select option { background:#1a0505; }
 .stats-half-filter { display:flex; gap:6px; margin-bottom:10px; }
 .et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
+.poss-method-note { font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); margin:-6px 0 8px; line-height:1.4; }
 .et-mgr-row { display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
 .et-mgr-icon { font-size:18px; width:24px; text-align:center; }
 .et-mgr-label { flex:1; font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); letter-spacing:0.5px; }
@@ -2264,7 +2265,8 @@ select option { background:#1a0505; }
       <div class="trends-empty-sub">Start recording events on the Record tab to see live possession, score trends and match momentum here</div>
     </div>
 
-    <div class="sec-label">Team Possession</div>
+    <div class="sec-label"><span id="poss-section-title">Team Possession</span></div>
+    <div class="poss-method-note" id="poss-method-note"></div>
     <div class="trend-card full-width" style="margin-bottom:14px">
       <div class="poss-header">
         <div class="poss-team-label">
@@ -2282,9 +2284,9 @@ select option { background:#1a0505; }
         <div class="poss-bar-away" id="poss-bar-away" style="width:50%"></div>
       </div>
       <div class="poss-legend">
-        <span class="poss-legend-item"><span class="poss-dot home"></span>Ball Won · Kickout Won · Scores from Play</span>
+        <span class="poss-legend-item"><span class="poss-dot home"></span><span id="poss-legend-basis">Ball Won · Kickout Won · Scores from Play</span></span>
       </div>
-      <div class="poss-timeline-label">Possession Trend</div>
+      <div class="poss-timeline-label" id="poss-trend-label">Possession Trend</div>
       <canvas id="spark-poss-timeline" class="poss-timeline-canvas"></canvas>
       <div class="poss-timeline-legend">
         <span><span style="display:inline-block;width:12px;height:2px;background:var(--red-light);vertical-align:middle;border-radius:1px;margin-right:4px"></span><span id="ptl-home-name">My Team</span></span>
@@ -4240,6 +4242,7 @@ function recordPossession(team, ref) {
   var possEvId = Date.now();
   state.events.unshift({id:possEvId,team:team,type:'possession',outcome:'count',outcomeLabel:'Possession',min:getMin(),half:state.half,player:typeof ref === 'number' ? ref : null});
   lastEventId = possEvId;
+  snapPossession();
   renderTimeline(); bumpMin(); renderGenericTallies();
   showUndoToast('Possession — ' + label);
 }
@@ -4444,7 +4447,11 @@ function updateStats() {
   var statsRows=[];
   statsRows.push(sec('⚽ Scoring' + (hf ? ' — ' + halfLabel(hf) : '')));
   [['Goals',hG,aG],['Points',hP,aP],['Total Score',hT,aT],['Scores Taken',hS,aS],
-   (function(){var p=calcPossession();return['Possession',p.h+'%',p.a+'%'];}()),
+   (function(){
+     var p=calcPossession();
+     if (p.method === 'counted') return [possessionLabel(p.method), p.h+'% ('+p.hCount+')', p.a+'% ('+p.aCount+')'];
+     return [possessionLabel(p.method), p.h+'%', p.a+'%'];
+   }()),
    ['1st Half Goals',countHalf('home','goal',1),countHalf('away','goal',1)],['1st Half Points',countHalf('home','point',1),countHalf('away','point',1)],
    ['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]
   ].forEach(function(r){statsRows.push(row(r));});
@@ -4581,12 +4588,24 @@ function updateStats() {
 }
 
 // ── POSSESSION CALC ────────────────────────────────
+// Possession is reported one of two ways:
+//  'counted'  — real possession counts from tagged Possession events (accurate)
+//  'derived'  — a weighted dominance estimate, used when nobody is tagging possessions
+// The two are NOT comparable, so the method travels with the numbers and the UI labels it.
 function calcPossession() {
-  // Possession points:
-  // Ball Won (all types) = 3 pts each
-  // Kickout won (wonClean, breakWon, shortWon) = 2 pts each
-  // Scoring from play (goals + points) = 1 pt each (had ball to score)
-  // Ball Lost = 0 (opponent gains — their ball won)
+  // Preferred: actual tagged possessions — but only when BOTH teams have been tagged.
+  // One-sided tagging (common: coach tags only their own players) would otherwise
+  // report a meaningless 100/0 split, so we fall back to the estimate in that case.
+  var hP = (state.possession && state.possession.home) ? (state.possession.home.count || 0) : 0;
+  var aP = (state.possession && state.possession.away) ? (state.possession.away.count || 0) : 0;
+  if (hP > 0 && aP > 0) {
+    var pTot = hP + aP;
+    return { h: Math.round((hP / pTot) * 100), a: Math.round((aP / pTot) * 100),
+             method: 'counted', hCount: hP, aCount: aP };
+  }
+
+  // Fallback: weighted dominance estimate
+  //   Ball Won = 3, Kickout won = 2, Score from play = 1
   const hBW = Object.values(state.ballWon.home).reduce((a,b)=>a+b,0);
   const aBW = Object.values(state.ballWon.away).reduce((a,b)=>a+b,0);
   const hKOW = state.kickout.home.wonClean + state.kickout.home.breakWon + state.kickout.home.shortWon;
@@ -4596,8 +4615,23 @@ function calcPossession() {
   const hScore = (hBW * 3) + (hKOW * 2) + hScores;
   const aScore = (aBW * 3) + (aKOW * 2) + aScores;
   const tot = hScore + aScore;
-  if (tot === 0) return { h: 50, a: 50 };
-  return { h: Math.round((hScore / tot) * 100), a: Math.round((aScore / tot) * 100) };
+  if (tot === 0) return { h: 50, a: 50, method: 'derived' };
+  return { h: Math.round((hScore / tot) * 100), a: Math.round((aScore / tot) * 100), method: 'derived' };
+}
+
+// Label for whichever method produced the current numbers
+function possessionLabel(method) {
+  return method === 'counted' ? 'Possession' : 'Dominance Index';
+}
+function possessionNote(method) {
+  if (method === 'counted') return 'From tagged possessions';
+  // Distinguish "nobody tagging" from "only one side tagged"
+  var hP = (state.possession && state.possession.home) ? (state.possession.home.count || 0) : 0;
+  var aP = (state.possession && state.possession.away) ? (state.possession.away.count || 0) : 0;
+  if (hP > 0 || aP > 0) {
+    return 'Estimated — possessions are only tagged for one team, so a true split isn\'t available yet';
+  }
+  return 'Estimated from ball won, kickouts and scores — tag Possession events for a true split';
 }
 
 function snapPossession() {
@@ -4619,6 +4653,15 @@ function renderTrends() {
   // ── POSSESSION SPLIT ──
   const poss = calcPossession();
   const pH = poss.h, pA = poss.a;
+  var possTitle = $('poss-section-title');
+  if (possTitle) possTitle.textContent = poss.method === 'counted' ? 'Team Possession' : 'Dominance Index';
+  var possNote = $('poss-method-note');
+  if (possNote) possNote.textContent = possessionNote(poss.method);
+  var possBasis = $('poss-legend-basis');
+  if (possBasis) possBasis.textContent = poss.method === 'counted'
+    ? 'Tagged possessions' : 'Ball Won · Kickout Won · Scores from Play';
+  var possTrend = $('poss-trend-label');
+  if (possTrend) possTrend.textContent = poss.method === 'counted' ? 'Possession Trend' : 'Dominance Trend';
   $('poss-home-pct').textContent = pH + '%';
   $('poss-away-pct').textContent = pA + '%';
   $('poss-home-name').textContent = homeName();
@@ -4628,8 +4671,9 @@ function renderTrends() {
   $('poss-bar-home').style.width = pH + '%';
   $('poss-bar-away').style.width = pA + '%';
   const leadEl = $('poss-lead-label');
-  if (pH > pA + 4) { leadEl.textContent = homeName() + ' dominating'; leadEl.className = 'poss-center-label home-lead'; }
-  else if (pA > pH + 4) { leadEl.textContent = awayName() + ' dominating'; leadEl.className = 'poss-center-label away-lead'; }
+  var verb = poss.method === 'counted' ? ' more possession' : ' dominating';
+  if (pH > pA + 4) { leadEl.textContent = homeName() + verb; leadEl.className = 'poss-center-label home-lead'; }
+  else if (pA > pH + 4) { leadEl.textContent = awayName() + verb; leadEl.className = 'poss-center-label away-lead'; }
   else { leadEl.textContent = 'Evenly matched'; leadEl.className = 'poss-center-label level'; }
 
   // ── POSSESSION TIMELINE ──
@@ -7338,9 +7382,9 @@ function buildHalftimeDashboard() {
   var aBLost = Object.values(aBL).reduce(function(a,b){return a+b;},0);
 
   // ── POSSESSION ──
-  var possPct = state.possHistory.length > 0
-    ? Math.round(state.possHistory.reduce(function(a,b){return a+b;},0) / state.possHistory.length)
-    : 50;
+  var possNow = calcPossession();
+  var possPct = possNow.h;
+  var possCircleLabel = possNow.method === 'counted' ? 'POSS %' : 'DOM. IDX';
 
   // ── DISCIPLINE ──
   var hFouls = Object.values(state.foul.home).reduce(function(a,b){return a+b;},0);
@@ -7436,7 +7480,7 @@ function buildHalftimeDashboard() {
   var shootingHtml =
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">' +
       pctCircle(hST.pct, 'HOME EFF', '#4ade80') +
-      pctCircle(Math.round((possPct)), 'POSS %', '#60a5fa') +
+      pctCircle(Math.round((possPct)), possCircleLabel, '#60a5fa') +
       pctCircle(aST.pct, 'AWAY EFF', '#94a3b8') +
     '</div>' +
     statBar(hST.total, aST.total, 'Total Shots') +
@@ -10121,8 +10165,9 @@ function generateMatchReport(id) {
   html += '<div class="kpi-grid">';
   html += '<div class="kpi-cell"><div class="kpi-val">' + hConv + '%</div><div class="kpi-label">' + m.home + ' Conv.</div></div>';
   html += '<div class="kpi-cell"><div class="kpi-val">' + aConv + '%</div><div class="kpi-label">' + m.away + ' Conv.</div></div>';
-  html += '<div class="kpi-cell"><div class="kpi-val">' + m.homePoss + '%</div><div class="kpi-label">' + m.home + ' Poss.</div></div>';
-  html += '<div class="kpi-cell"><div class="kpi-val">' + m.awayPoss + '%</div><div class="kpi-label">' + m.away + ' Poss.</div></div>';
+  var possAbbr = (m.possMethod === 'counted') ? ' Poss.' : ' Dom.';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + m.homePoss + '%</div><div class="kpi-label">' + m.home + possAbbr + '</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val">' + m.awayPoss + '%</div><div class="kpi-label">' + m.away + possAbbr + '</div></div>';
   html += '</div>';
 
   // 1. Full stats comparison
@@ -10131,7 +10176,7 @@ function generateMatchReport(id) {
   html += statRow('Goals', m.homeGoals, m.awayGoals);
   html += statRow('Points', m.homePoints, m.awayPoints);
   html += statRow('Total Score', hT, aT);
-  html += statRow('Possession %', m.homePoss+'%', m.awayPoss+'%');
+  html += statRow((m.possMethod === 'counted' ? 'Possession %' : 'Dominance Index'), m.homePoss+'%', m.awayPoss+'%');
   html += statRow('Total Shots', hShots, aShots);
   html += statRow('Shot Conversion', hConv+'%', aConv+'%');
   html += statRow('Shots from Play', hFP, aFP);
@@ -10394,6 +10439,9 @@ function saveMatchToHistory() {
     homeGoals: state.home.goals, homePoints: state.home.points,
     awayGoals: state.away.goals, awayPoints: state.away.points,
     homePoss: poss.h, awayPoss: poss.a,
+    possMethod: poss.method,
+    homePossCount: poss.hCount || 0, awayPossCount: poss.aCount || 0,
+    possession: JSON.parse(JSON.stringify(state.possession || {home:{count:0},away:{count:0}})),
     homeShotsPlay: hFP, awayShotsPlay: aFP,
     homeShotsFree: hFF, awayShotsFree: aFF,
     homeBallWon: hBW, awayBallWon: aBW,
@@ -10588,7 +10636,7 @@ function openDetailModal(id) {
   html += row('Conversion Rate',
     hConv ? hConv.pct+'% ('+hConv.sc+'/'+hConv.tot+')' : '—',
     aConv ? aConv.pct+'% ('+aConv.sc+'/'+aConv.tot+')' : '—');
-  html += row('Possession', m.homePoss+'%', m.awayPoss+'%');
+  html += row((m.possMethod === 'counted' ? 'Possession' : 'Dominance Index'), m.homePoss+'%', m.awayPoss+'%');
 
   if (m.shots) {
     const hFP = Object.values(m.shots.home.play).reduce((a,b)=>a+b,0);
