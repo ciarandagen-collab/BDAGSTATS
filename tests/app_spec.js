@@ -288,6 +288,52 @@ test.describe('Record Tab', () => {
     await expect(page.locator('.team-action-btn:has-text("Attack")')).toHaveCount(2);
   });
 
+  test('Undo toast appears after recording an event', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
+    await expect(page.locator('#undo-toast-text')).toContainText('Possession');
+  });
+
+  test('Undo toast removes the recorded event', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
+    const before = await page.locator('#timeline-list .event-item').count();
+    await page.locator('#undo-toast button').click();
+    await expect(page.locator('#undo-toast')).not.toHaveClass(/show/);
+    const after = await page.locator('#timeline-list .event-item').count();
+    expect(after).toBe(before - 1);
+  });
+
+  test('Event picker has a manage-events button', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await expect(page.locator('.et-manage-btn')).toBeVisible();
+  });
+
+  test('Event type manager opens and lists event types', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-manage-btn').click();
+    await expect(page.locator('#et-manager-modal')).toHaveClass(/open/, { timeout: 3000 });
+    const rows = await page.locator('.et-mgr-row').count();
+    expect(rows).toBeGreaterThan(5);
+  });
+
+  test('Hiding an event type removes it from the picker', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    const before = await page.locator('.et-picker-btn').count();
+    await page.locator('.et-manage-btn').click();
+    await page.locator('.et-mgr-row:has-text("Card")').first().click();
+    await page.locator('#et-manager-modal .sheet-close').click();
+    const after = await page.locator('.et-picker-btn').count();
+    expect(after).toBe(before - 1);
+  });
+
   test('Attack opens outcome modal with Score / Ball Lost / Turned Back', async ({ page }) => {
     await page.locator('.team-action-btn.ta-home').click();
     await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
@@ -491,6 +537,41 @@ test.describe('Match Notes', () => {
     await page.fill('#match-notes-input', 'Test match notes');
     await page.waitForTimeout(1000);
     await expect(page.locator('#match-notes-saved')).toHaveText('✓ Saved');
+  });
+});
+
+test.describe('Match Analysis (Stats tab)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Half filter toggle is visible with three options', async ({ page }) => {
+    await expect(page.locator('.stats-half-filter')).toBeVisible();
+    await expect(page.locator('#sh-filter-0')).toBeVisible();
+    await expect(page.locator('#sh-filter-1')).toBeVisible();
+    await expect(page.locator('#sh-filter-2')).toBeVisible();
+  });
+
+  test('Full Match is the default half filter', async ({ page }) => {
+    await expect(page.locator('#sh-filter-0')).toHaveClass(/active/);
+  });
+
+  test('Selecting 1st Half switches the active filter', async ({ page }) => {
+    await page.click('#sh-filter-1');
+    await expect(page.locator('#sh-filter-1')).toHaveClass(/active/);
+    await expect(page.locator('#sh-filter-0')).not.toHaveClass(/active/);
+    await expect(page.locator('#stats-body')).toContainText('1st Half');
+  });
+
+  test('Shooting Efficiency section is present', async ({ page }) => {
+    await expect(page.locator('#stats-body')).toContainText('Shooting Efficiency');
+    await expect(page.locator('#stats-body')).toContainText('Conversion');
+    await expect(page.locator('#stats-body')).toContainText('Kickout Retention');
+  });
+
+  test('Old misleading Scoring Eff. metric is gone', async ({ page }) => {
+    await expect(page.locator('#stats-body')).not.toContainText('Scoring Eff.');
   });
 });
 
