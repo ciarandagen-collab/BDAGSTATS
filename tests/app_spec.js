@@ -633,6 +633,93 @@ test.describe('UI Fixes (Phase A)', () => {
   });
 });
 
+test.describe('UI Fixes (Phase B)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Club button does not use error-red text', async ({ page }) => {
+    const colour = await page.locator('button[title="Club"]')
+      .evaluate(el => getComputedStyle(el).color);
+    // Was rgb(255, 128, 128) — red on green, which reads as an error state
+    expect(colour).not.toBe('rgb(255, 128, 128)');
+  });
+
+  test('Timeline delete button meets the 44px touch target', async ({ page }) => {
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    const box = await page.locator('#timeline-list .del-btn').first().boundingBox();
+    if (box) {
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test('Squad delete button has an enlarged touch target', async ({ page }) => {
+    await navTo(page, 'squad');
+    const del = page.locator('.squad-slot-del').first();
+    if (await del.count()) {
+      const box = await del.boundingBox();
+      if (box) {
+        expect(box.width).toBeGreaterThanOrEqual(36);
+        expect(box.height).toBeGreaterThanOrEqual(36);
+      }
+    }
+  });
+
+  test('Muted text opacity meets contrast requirements', async ({ page }) => {
+    const muted = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--muted').trim());
+    const alpha = parseFloat(muted.match(/,\s*([\d.]+)\)/)[1]);
+    expect(alpha).toBeGreaterThanOrEqual(0.55);
+  });
+});
+
+test.describe('Accessibility (Phase D)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('No icon-only buttons are left without a label', async ({ page }) => {
+    const unlabelled = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('button'))
+        .filter(b => b.offsetParent !== null)
+        .filter(b => !b.getAttribute('aria-label'))
+        .filter(b => !/[a-zA-Z0-9]/.test(b.textContent || ''))
+        .length;
+    });
+    expect(unlabelled).toBe(0);
+  });
+
+  test('Modals are marked up as dialogs', async ({ page }) => {
+    const role = await page.locator('#shot-modal').getAttribute('role');
+    const modal = await page.locator('#shot-modal').getAttribute('aria-modal');
+    expect(role).toBe('dialog');
+    expect(modal).toBe('true');
+  });
+
+  test('Close buttons are labelled', async ({ page }) => {
+    const label = await page.locator('#shot-modal .sheet-close').getAttribute('aria-label');
+    expect(label).toBe('Close');
+  });
+
+  test('Active nav tab is marked with aria-current', async ({ page }) => {
+    await navTo(page, 'record');
+    const current = await page.locator('.nav-btn[aria-current="page"]').count();
+    expect(current).toBe(1);
+  });
+
+  test('Escape closes an open sheet', async ({ page }) => {
+    await page.click('#comp-picker-btn');
+    await expect(page.locator('#comp-picker-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#comp-picker-modal')).not.toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Status messages are announced politely', async ({ page }) => {
+    const live = await page.locator('#sync-banner').getAttribute('aria-live');
+    expect(live).toBe('polite');
+  });
+});
+
 test.describe('Match Analysis (Stats tab)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
