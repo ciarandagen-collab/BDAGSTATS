@@ -3256,8 +3256,8 @@ function updateNames() {
   const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','ff-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label','poss-away-name','ptl-away-name'];
   hIds.forEach(id=>{const el=$(id);if(el)el.textContent=h;});
   aIds.forEach(id=>{const el=$(id);if(el)el.textContent=a;});
-  $('player-home-opt').textContent=h;
-  $('player-away-opt').textContent=a;
+  var phOpt = $('player-home-opt'); if (phOpt) phOpt.textContent = h;
+  var paOpt = $('player-away-opt'); if (paOpt) paOpt.textContent = a;
   var matchLabel = document.getElementById('tb-match-label');
   if (matchLabel) matchLabel.textContent = (h && a && h !== 'Home' && a !== 'Away') ? h + ' v ' + a : '';
   // Record tab column headers always read My Team / Opposition, regardless of match team names
