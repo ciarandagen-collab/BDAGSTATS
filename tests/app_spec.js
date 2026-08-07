@@ -588,6 +588,51 @@ test.describe('Starting Team Selector', () => {
   });
 });
 
+test.describe('UI Fixes (Phase A)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Undo toast sits above modal overlays', async ({ page }) => {
+    const toastZ = await page.locator('#undo-toast').evaluate(el => parseInt(getComputedStyle(el).zIndex));
+    const modalZ = await page.locator('#shot-modal').evaluate(el => parseInt(getComputedStyle(el).zIndex));
+    expect(toastZ).toBeGreaterThan(modalZ);
+  });
+
+  test('Undo remains tappable while the location picker is open', async ({ page }) => {
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
+    await page.locator('#shot-modal .outcome-btn').first().click();
+    // Location picker opens over the toast — the Undo button must still be hittable
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/);
+    await expect(page.locator('#undo-toast button')).toBeVisible();
+  });
+
+  test('Attack buttons are visually distinct for each side', async ({ page }) => {
+    await navTo(page, 'record');
+    const home = await page.locator('.team-action-btn.ta-home')
+      .evaluate(el => getComputedStyle(el).backgroundColor);
+    const away = await page.locator('.team-action-btn.ta-away')
+      .evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(home).not.toBe(away);
+  });
+
+  test('Text inputs are at least 16px so iOS does not zoom', async ({ page }) => {
+    await navTo(page, 'history');
+    const size = await page.locator('#history-search')
+      .evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    expect(size).toBeGreaterThanOrEqual(16);
+  });
+
+  test('Match notes textarea is at least 16px', async ({ page }) => {
+    await navTo(page, 'stats');
+    const size = await page.locator('#match-notes-input')
+      .evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    expect(size).toBeGreaterThanOrEqual(16);
+  });
+});
+
 test.describe('Match Analysis (Stats tab)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
