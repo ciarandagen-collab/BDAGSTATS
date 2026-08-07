@@ -1139,6 +1139,14 @@ select option { background:#1a0505; }
 .et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
 .poss-method-note { font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); margin:-6px 0 8px; line-height:1.4; }
+.opp-player-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.opp-player-num { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:var(--cream); flex-shrink:0; }
+.opp-player-num.danger { background:rgba(224,48,48,0.22); border-color:var(--red); color:#ff9d9d; }
+.opp-player-main { flex:1; min-width:0; }
+.opp-player-name-input { width:100%; padding:4px 6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--cream); font-family:'Inter',sans-serif; font-size:13px; outline:none; box-sizing:border-box; }
+.opp-player-name-input:focus { border-color:var(--red); }
+.opp-player-meta { font-size:10px; color:var(--muted); margin-top:3px; font-family:'Inter',sans-serif; }
+.opp-player-flag { font-size:14px; flex-shrink:0; }
 .et-mgr-row { display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
 .et-mgr-icon { font-size:18px; width:24px; text-align:center; }
 .et-mgr-label { flex:1; font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); letter-spacing:0.5px; }
@@ -3275,9 +3283,11 @@ const state = {
   possession:{home:{count:0},away:{count:0}},
   attacks:{home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}},
   pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+  startingFifteen:null,
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
   shotZones:{home:{},away:{}},
+  turnoverZones:{home:{},away:{}},
   scoreline:[], // [{min, h, a}]
   possHistory:[] // [homePercent 0-100] after each possession event
 };
@@ -3403,11 +3413,25 @@ function selectShotOutcome(outcome) {
 
 var locPicker = {team:null, kind:null}; // kind: 'shot' | 'fortyFive'
 
+var LOC_PICKER_COPY = {
+  shot:       { title:'📍 Shot Location',     sub:'Tap the pitch where the shot was taken from' },
+  fortyFive:  { title:'📍 45 Location',       sub:'Tap where the 45 was struck from' },
+  ballLost:   { title:'📍 Where was it lost?', sub:'Tap where possession was conceded' },
+  turnover:   { title:'📍 Where was it won?',  sub:'Tap where the turnover was forced' }
+};
+
 function openLocationPicker(team, kind) {
   locPicker.team = team; locPicker.kind = kind;
+  var copy = LOC_PICKER_COPY[kind] || LOC_PICKER_COPY.shot;
+  var modal = document.getElementById('location-modal');
+  if (modal) {
+    var t = modal.querySelector('.sheet-title');
+    var s = modal.querySelector('.sheet-sub');
+    if (t) t.textContent = copy.title;
+    if (s) s.textContent = copy.sub;
+  }
   var svg = document.getElementById('location-pitch-svg');
   if (svg) svg.innerHTML = drawPitch(homeName(), awayName());
-  var modal = document.getElementById('location-modal');
   if (modal) modal.classList.add('open');
 }
 
@@ -3440,12 +3464,22 @@ function handleLocationTap(evt) {
   var vx = px * 320, vy = py * 480;
 
   var team = locPicker.team;
-  var evType = locPicker.kind === 'fortyFive' ? 'fortyFive' : 'shot';
+  var evType = locPicker.kind || 'shot';
   var zone = nearestZone(team, vx, vy);
+
+  // Only shots and 45s feed the shot-zone map; turnovers get their own territory map
   if (zone) {
-    if (!state.shotZones[team][zone]) state.shotZones[team][zone] = 0;
-    state.shotZones[team][zone]++;
+    if (evType === 'shot' || evType === 'fortyFive') {
+      if (!state.shotZones[team][zone]) state.shotZones[team][zone] = 0;
+      state.shotZones[team][zone]++;
+    } else {
+      if (!state.turnoverZones) state.turnoverZones = { home:{}, away:{} };
+      if (!state.turnoverZones[team]) state.turnoverZones[team] = {};
+      if (!state.turnoverZones[team][zone]) state.turnoverZones[team][zone] = { ballLost:0, turnover:0 };
+      state.turnoverZones[team][zone][evType] = (state.turnoverZones[team][zone][evType] || 0) + 1;
+    }
   }
+
   var recentEv = state.events.find(function(ev) {
     return ev.type === evType && ev.team === team && ev.x === undefined;
   });
@@ -3553,7 +3587,8 @@ function selectGenericOutcome(key) {
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
   var pfx = catPfxMap[category];
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
-  if (category === 'fortyFive') openLocationPicker(team, 'fortyFive');
+  // Location matters for these: where a 45 was struck, and where possession was conceded/won
+  if (['fortyFive','ballLost','turnover'].indexOf(category) !== -1) openLocationPicker(team, category);
 }
 
 function renderGenericTallies() {
@@ -3886,7 +3921,8 @@ function applyPendingTag(labelId) {
   } else {
     selectedAttrPlayer = pendingTagRef;
     var num = String(pendingTagRef).split('-')[1];
-    if (label) label.textContent = 'Tagged: Opposition #' + num;
+    var oppNm = oppPlayerName(awayName(), num);
+    if (label) label.textContent = 'Tagged: Opposition ' + (oppNm ? ('#' + num + ' ' + oppNm) : ('#' + num));
   }
   pendingTagRef = null;
 }
@@ -4082,9 +4118,10 @@ function recordPitchMarker(team, num) {
       '<span class="rpp-name">' + (filled ? surnameOf(p.name) : '') + '</span>' +
       '</button>';
   }
+  var oppNm = oppPlayerName(awayName(), num);
   return '<button class="record-pitch-player" onclick="openEventTypePicker(\'away\',' + num + ')">' +
     '<span class="rpp-circle">' + num + '</span>' +
-    '<span class="rpp-name">&nbsp;</span>' +
+    '<span class="rpp-name">' + (oppNm ? surnameOf(oppNm) : '&nbsp;') + '</span>' +
     '</button>';
 }
 
@@ -4200,7 +4237,7 @@ function openEventTypePicker(team, ref) {
   etPicker.ref = team === 'home' ? ref : ('away-' + ref);
   var label = team === 'home' ?
     ('#' + (ref+1) + (squad[ref] && squad[ref].name ? ' ' + squad[ref].name : '')) :
-    ('Opposition #' + ref);
+    oppPlayerLabel(awayName(), ref);
   var titleEl = document.getElementById('et-picker-title');
   var subEl = document.getElementById('et-picker-sub');
   if (titleEl) titleEl.textContent = label;
@@ -4267,6 +4304,48 @@ function addStatToPlayer(slotIndex, statKey, statSubKey) {
   saveSquad();
 }
 
+// ── MINUTES PLAYED ─────────────────────────────────
+// Derived from the starting fifteen plus the substitution log.
+// Only meaningful for your own squad (no opposition roster exists).
+function playerMinutes() {
+  var nowMin = getMin();
+  var subs = (state.subs || []).filter(function(s){ return s.team === 'home'; })
+                               .slice().sort(function(a,b){ return (a.min||0) - (b.min||0); });
+  var mins = {};   // squad index -> minutes
+  var onPitch = {}; // squad index -> minute they came on
+
+  // Starters: whoever occupied the pitch at throw-in
+  var starters = state.startingFifteen || state.pitchOccupant || [];
+  starters.slice(0, 15).forEach(function(idx) {
+    if (typeof idx === 'number') onPitch[idx] = 0;
+  });
+
+  subs.forEach(function(s) {
+    var offIdx = s.off ? squadIndexByName(s.off) : -1;
+    var onIdx  = s.on  ? squadIndexByName(s.on)  : -1;
+    var m = s.min || 0;
+    if (offIdx !== -1 && onPitch[offIdx] !== undefined) {
+      mins[offIdx] = (mins[offIdx] || 0) + (m - onPitch[offIdx]);
+      delete onPitch[offIdx];
+    }
+    if (onIdx !== -1 && onPitch[onIdx] === undefined) onPitch[onIdx] = m;
+  });
+
+  // Anyone still on the pitch accrues up to the current minute
+  Object.keys(onPitch).forEach(function(k) {
+    var idx = parseInt(k);
+    mins[idx] = (mins[idx] || 0) + Math.max(0, nowMin - onPitch[idx]);
+  });
+
+  return mins;
+}
+
+// Per-90-style rate so bench players aren't punished by raw counts
+function per60(count, minutes) {
+  if (!minutes || minutes <= 0) return null;
+  return Math.round((count / minutes) * 60 * 10) / 10;
+}
+
 function renderPlayerStats() {
   var container = document.getElementById('player-stats-list');
   if (!container) return;
@@ -4276,11 +4355,15 @@ function renderPlayerStats() {
     return;
   }
 
+  var mins = {};
+  try { mins = playerMinutes(); } catch(e) { mins = {}; }
+
   var html = '';
   activePlayers.forEach(function(x) {
     var p = x.p;
     var num = x.i + 1;
     var s = p.stats || {};
+    var mp = mins[x.i] || 0;
     var goals = (s.shots && s.shots.goal) || 0;
     var points = (s.shots && s.shots.point) || 0;
     var shotsPlay = Object.keys((s.shotsPlay||{})).reduce(function(a,k){return a+(s.shotsPlay[k]||0);},0);
@@ -4321,6 +4404,11 @@ function renderPlayerStats() {
           '<div class="psc-stat"><div class="psc-stat-val">' + ballWon + '</div><div class="psc-stat-label">Ball Won</div></div>' +
           '<div class="psc-stat"><div class="psc-stat-val">' + ballLost + '</div><div class="psc-stat-label">Ball Lost</div></div>' +
           '<div class="psc-stat"><div class="psc-stat-val">' + kickouts + '</div><div class="psc-stat-label">Kickouts</div></div>' +
+        '</div>' +
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (mp > 0 ? mp + "'" : '—') + '</div><div class="psc-stat-label">Mins Played</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (per60(goals*3+points, mp) !== null ? per60(goals*3+points, mp) : '—') + '</div><div class="psc-stat-label">Score /60min</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (per60(ballWon, mp) !== null ? per60(ballWon, mp) : '—') + '</div><div class="psc-stat-label">Ball Won /60</div></div>' +
         '</div>' +
         '<div class="psc-matches">' + matches + ' match' + (matches !== 1 ? 'es' : '') + '</div>' +
       '</div>' +
@@ -4384,6 +4472,24 @@ function shotZoneStats(team, half) {
   Object.keys(zones).forEach(function(z) {
     zones[z].pct = zones[z].total > 0 ? Math.round((zones[z].scores / zones[z].total) * 100) : 0;
   });
+  return zones;
+}
+
+var ZONE_LABELS = {
+  'left-d':'Left D', 'd-line':'D Centre', 'right-d':'Right D',
+  'left-45':'Left 45', '45-centre':'45 Centre', 'right-45':'Right 45',
+  'left-wing':'Left Wing', 'midfield':'Midfield', 'right-wing':'Right Wing'
+};
+
+// Where possession was conceded, by zone (from tapped locations)
+function turnoverZoneStats(team, half) {
+  var evs = state.events.filter(function(e) {
+    if (e.type !== 'ballLost' || e.team !== team || !e.zone) return false;
+    if (half && e.half !== half) return false;
+    return true;
+  });
+  var zones = {};
+  evs.forEach(function(e) { zones[e.zone] = (zones[e.zone] || 0) + 1; });
   return zones;
 }
 
@@ -4476,11 +4582,6 @@ function updateStats() {
 
   // ── SHOOTING BY ZONE (from tapped shot locations) ──
   var hZ = shotZoneStats('home', hf), aZ = shotZoneStats('away', hf);
-  var ZONE_LABELS = {
-    'left-d':'Left D', 'd-line':'D Centre', 'right-d':'Right D',
-    'left-45':'Left 45', '45-centre':'45 Centre', 'right-45':'Right 45',
-    'left-wing':'Left Wing', 'midfield':'Midfield', 'right-wing':'Right Wing'
-  };
   var zoneKeys = Object.keys(ZONE_LABELS).filter(function(z){ return hZ[z] || aZ[z]; });
   if (zoneKeys.length) {
     statsRows.push(sec('📍 Shooting by Zone' + (hf ? ' — ' + halfLabel(hf) : '')));
@@ -4490,6 +4591,35 @@ function updateStats() {
         h ? h.pct+'% ('+h.scores+'/'+h.total+')' : '—',
         a ? a.pct+'% ('+a.scores+'/'+a.total+')' : '—']));
     });
+  }
+
+  // ── TURNOVER TERRITORY ──
+  var hTZ = turnoverZoneStats('home', hf), aTZ = turnoverZoneStats('away', hf);
+  var tzKeys = Object.keys(ZONE_LABELS).filter(function(z){ return hTZ[z] || aTZ[z]; });
+  if (tzKeys.length) {
+    statsRows.push(sec('🔻 Ball Lost by Zone' + (hf ? ' — ' + halfLabel(hf) : '')));
+    tzKeys.forEach(function(z) {
+      statsRows.push(row([ZONE_LABELS[z], hTZ[z] || 0, aTZ[z] || 0]));
+    });
+  }
+
+  // ── ATTACK CONVERSION ──
+  var hAtt = eventStats('home','attacks',hf).byOutcome, aAtt = eventStats('away','attacks',hf).byOutcome;
+  var hAttTot = (hAtt.scored||0)+(hAtt.ballLost||0)+(hAtt.turnedBack||0);
+  var aAttTot = (aAtt.scored||0)+(aAtt.ballLost||0)+(aAtt.turnedBack||0);
+  if (hAttTot || aAttTot) {
+    statsRows.push(sec('⚔️ Attacks' + (hf ? ' — ' + halfLabel(hf) : '')));
+    [['Total Attacks', hAttTot, aAttTot],
+     ['Ended in Score', hAtt.scored||0, aAtt.scored||0],
+     ['Ball Lost', hAtt.ballLost||0, aAtt.ballLost||0],
+     ['Turned Back', hAtt.turnedBack||0, aAtt.turnedBack||0],
+     ['Attack Conversion',
+       hAttTot ? Math.round(((hAtt.scored||0)/hAttTot)*100)+'%' : '—',
+       aAttTot ? Math.round(((aAtt.scored||0)/aAttTot)*100)+'%' : '—'],
+     ['Attacks per Score',
+       (hAtt.scored||0) ? (Math.round((hAttTot/(hAtt.scored||1))*10)/10) : '—',
+       (aAtt.scored||0) ? (Math.round((aAttTot/(aAtt.scored||1))*10)/10) : '—']
+    ].forEach(function(r){statsRows.push(row(r));});
   }
 
   statsRows.push(sec('📤 Ball Lost'));
@@ -4929,6 +5059,8 @@ function startGame() {
   $('current-min').value = 1;
   clockReset();
   clockStart();
+  // Lock in who started, so minutes played can be derived from subs
+  state.startingFifteen = (state.pitchOccupant || []).slice(0, 15);
   // Auto-collapse match info when game starts
   var sec = $('match-info-section');
   var chev = $('match-info-chevron');
@@ -7090,6 +7222,68 @@ function renderOppositionList(query) {
   }).join('');
 }
 
+// ── OPPOSITION PLAYER TRACKING ─────────────────────
+// Names are stored per opposition club and keyed by jersey number, so tagging
+// "Opposition #11" in a match resolves to a name in reports and the club profile.
+const OPP_PLAYERS_KEY = 'cs_opp_players';
+var oppPlayers = {};   // { clubName: { "11": "J. Murphy", ... } }
+
+function loadOppPlayers() {
+  try { oppPlayers = JSON.parse(localStorage.getItem(OPP_PLAYERS_KEY) || '{}'); }
+  catch(e) { oppPlayers = {}; }
+}
+function saveOppPlayers() {
+  try { localStorage.setItem(OPP_PLAYERS_KEY, JSON.stringify(oppPlayers)); } catch(e) {}
+}
+function oppPlayerName(club, num) {
+  if (!club || !oppPlayers[club]) return null;
+  return oppPlayers[club][String(num)] || null;
+}
+function oppPlayerLabel(club, num) {
+  var n = oppPlayerName(club, num);
+  return n ? ('#' + num + ' ' + n) : ('#' + num);
+}
+
+// Aggregate what an opposition number has done against us, across all saved matches
+function oppPlayerStats(club) {
+  var out = {}; // num -> {scores, goals, points, shots, ballWon, ballLost, fouls, matches:Set}
+  function bucket(num) {
+    if (!out[num]) out[num] = { goals:0, points:0, twoPointers:0, shots:0, ballWon:0,
+                                ballLost:0, fouls:0, cards:0, turnovers:0, matchIds:{} };
+    return out[num];
+  }
+  loadHistory().forEach(function(m) {
+    if (m.away !== club || !m.events) return;
+    m.events.forEach(function(e) {
+      if (e.team !== 'away') return;
+      // Opposition tags are stored as the string "away-<number>"
+      if (typeof e.player !== 'string' || e.player.indexOf('away-') !== 0) return;
+      var num = e.player.split('-')[1];
+      if (!num) return;
+      var b = bucket(num);
+      b.matchIds[m.id] = true;
+      if (e.type === 'shot') {
+        b.shots++;
+        if (e.outcome === 'goal') b.goals++;
+        else if (e.outcome === 'point') b.points++;
+        else if (e.outcome === 'twopointer') b.twoPointers++;
+      }
+      else if (e.type === 'ballWon') b.ballWon++;
+      else if (e.type === 'ballLost') b.ballLost++;
+      else if (e.type === 'turnover') b.turnovers++;
+      else if (e.type === 'foul') b.fouls++;
+      else if (e.type === 'cards') b.cards++;
+    });
+  });
+  Object.keys(out).forEach(function(n) {
+    var b = out[n];
+    b.matches = Object.keys(b.matchIds).length;
+    b.scoreTotal = b.goals*3 + b.points + b.twoPointers*2;
+    delete b.matchIds;
+  });
+  return out;
+}
+
 function openOppositionProfile(name) {
   activeOppName = name;
   var clubs = getOppositionData();
@@ -7140,6 +7334,9 @@ function openOppositionProfile(name) {
       }).join('')
     : '<div class="ptr-no-notes">No scout reports yet — tap 🔍 Scout on any match card</div>';
 
+  // Opposition players (roster + what they've done against us)
+  renderOppPlayers(name);
+
   // Notes
   renderOppNotes(name);
 
@@ -7149,6 +7346,53 @@ function openOppositionProfile(name) {
 function closeOppositionProfile() {
   document.getElementById('opposition-profile-modal').classList.remove('open');
   activeOppName = null;
+}
+
+function renderOppPlayers(club) {
+  var list = document.getElementById('opp-players-list');
+  if (!list) return;
+  var stats = oppPlayerStats(club);
+  var roster = oppPlayers[club] || {};
+  // Show any number we have either a name or recorded stats for
+  var nums = Object.keys(stats).concat(Object.keys(roster))
+    .filter(function(v,i,a){ return a.indexOf(v) === i; })
+    .sort(function(a,b){ return parseInt(a) - parseInt(b); });
+
+  if (!nums.length) {
+    list.innerHTML = '<div class="ptr-no-notes">No opposition players tagged yet — tag Opposition players on the Record tab and they\'ll build up here</div>';
+    return;
+  }
+
+  // Danger man: most scored against us
+  var topNum = null, topScore = 0;
+  nums.forEach(function(n) {
+    if (stats[n] && stats[n].scoreTotal > topScore) { topScore = stats[n].scoreTotal; topNum = n; }
+  });
+
+  list.innerHTML = nums.map(function(n) {
+    var s = stats[n] || { goals:0, points:0, twoPointers:0, shots:0, ballWon:0, fouls:0, matches:0, scoreTotal:0 };
+    var nm = roster[n] || '';
+    var isDanger = (n === topNum && topScore > 0);
+    var scoreStr = s.goals + '-' + String(s.points + s.twoPointers*2).padStart(2,'0');
+    return '<div class="opp-player-row">' +
+      '<div class="opp-player-num' + (isDanger ? ' danger' : '') + '">' + n + '</div>' +
+      '<div class="opp-player-main">' +
+        '<input class="opp-player-name-input" placeholder="Add name…" value="' + nm.replace(/"/g,'&quot;') + '" ' +
+          'onchange="setOppPlayerName(\'' + club.replace(/'/g,"\\'") + '\',\'' + n + '\',this.value)">' +
+        '<div class="opp-player-meta">' + scoreStr + ' from ' + s.shots + ' shot' + (s.shots!==1?'s':'') +
+          ' · ' + s.ballWon + ' ball won · ' + s.matches + ' match' + (s.matches!==1?'es':'') + '</div>' +
+      '</div>' +
+      (isDanger ? '<div class="opp-player-flag">⚠️</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function setOppPlayerName(club, num, name) {
+  if (!oppPlayers[club]) oppPlayers[club] = {};
+  var v = (name || '').trim();
+  if (v) oppPlayers[club][String(num)] = v;
+  else delete oppPlayers[club][String(num)];
+  saveOppPlayers();
 }
 
 function renderOppNotes(name) {
@@ -7182,6 +7426,7 @@ function addOppositionNote() {
 
 // Init opposition notes
 loadOppNotes();
+loadOppPlayers();
 
 // Also add Opposition Database button to History tab
 function openOppositionFromHistory() { openOpposition(); }
@@ -9371,53 +9616,90 @@ function renderShotMap() {
 }
 
 function drawPitch(homeName, awayName) {
-  var W = 320, H = 480;
-  var goalW = 60, goalH = 12;
-  var goalX = (W - goalW) / 2;
+  // Proper GAA football pitch, scaled from 145m x 90m into a 320x480 box.
+  // 1m = 3.1724 units. Playing area: x 17.2-302.8, y 10-470 (halfway = 240).
+  var LINE   = 'rgba(74,222,128,0.20)';
+  var FAINT  = 'rgba(74,222,128,0.13)';
+  var ARC    = 'rgba(74,222,128,0.16)';
+  var TXT    = 'rgba(74,222,128,0.22)';
+  var POST_H = 'rgba(74,222,128,0.45)';
+  var POST_A = 'rgba(148,163,184,0.45)';
+  var X0 = 17.2, X1 = 302.8, Y0 = 10, Y1 = 470, CX = 160;
+
+  function hline(y, colour, dash) {
+    return '<line x1="' + X0 + '" y1="' + y + '" x2="' + X1 + '" y2="' + y + '" stroke="' + colour +
+           '" stroke-width="1"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') + '/>';
+  }
+  function distLabel(y, txt, above) {
+    return '<text x="' + (X0 + 4) + '" y="' + (y + (above ? -3 : 9)) +
+           '" font-family="Arial" font-size="7.5" fill="' + TXT + '">' + txt + '</text>';
+  }
+  // Goal furniture at one end. dir = 1 for the top goal, -1 for the bottom.
+  function goalEnd(gy, dir, postColour) {
+    var small = { w:44.4, d:14.3 }, large = { w:60.3, d:41.2 }, goalW = 20.6;
+    var sY = dir === 1 ? gy : gy - small.d;
+    var lY = dir === 1 ? gy : gy - large.d;
+    return [
+      // Large rectangle (19m x 13m)
+      '<rect x="' + (CX - large.w/2) + '" y="' + lY + '" width="' + large.w + '" height="' + large.d +
+        '" fill="none" stroke="' + LINE + '" stroke-width="1"/>',
+      // Small rectangle (14m x 4.5m)
+      '<rect x="' + (CX - small.w/2) + '" y="' + sY + '" width="' + small.w + '" height="' + small.d +
+        '" fill="none" stroke="' + LINE + '" stroke-width="1"/>',
+      // Goalposts (6.5m apart), drawn just outside the end line
+      '<line x1="' + (CX - goalW/2) + '" y1="' + gy + '" x2="' + (CX - goalW/2) + '" y2="' + (gy - dir*7) +
+        '" stroke="' + postColour + '" stroke-width="2" stroke-linecap="round"/>',
+      '<line x1="' + (CX + goalW/2) + '" y1="' + gy + '" x2="' + (CX + goalW/2) + '" y2="' + (gy - dir*7) +
+        '" stroke="' + postColour + '" stroke-width="2" stroke-linecap="round"/>',
+      // Crossbar
+      '<line x1="' + (CX - goalW/2) + '" y1="' + (gy - dir*4.5) + '" x2="' + (CX + goalW/2) + '" y2="' + (gy - dir*4.5) +
+        '" stroke="' + postColour + '" stroke-width="1.5"/>'
+    ].join('\n');
+  }
 
   return [
-    // Pitch background
-    '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0d2015" rx="4"/>',
+    // Grass
+    '<rect x="0" y="0" width="320" height="480" fill="#0d2015" rx="4"/>',
+    // Mown stripes for readability
+    '<rect x="' + X0 + '" y="10"  width="' + (X1-X0) + '" height="115" fill="rgba(255,255,255,0.012)"/>',
+    '<rect x="' + X0 + '" y="240" width="' + (X1-X0) + '" height="115" fill="rgba(255,255,255,0.012)"/>',
 
-    // Pitch outline
-    '<rect x="10" y="10" width="300" height="460" fill="none" stroke="rgba(74,222,128,0.2)" stroke-width="1.5" rx="2"/>',
+    // Sidelines / end lines
+    '<rect x="' + X0 + '" y="' + Y0 + '" width="' + (X1-X0) + '" height="' + (Y1-Y0) +
+      '" fill="none" stroke="' + LINE + '" stroke-width="1.5"/>',
 
-    // Halfway line
-    '<line x1="10" y1="240" x2="310" y2="240" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
-    '<text x="160" y="237" text-anchor="middle" font-family="Arial" font-size="9" fill="rgba(74,222,128,0.25)">HALFWAY</text>',
+    // Halfway line + centre mark (GAA has no centre circle)
+    hline(240, LINE),
+    '<line x1="' + (CX-8) + '" y1="240" x2="' + (CX+8) + '" y2="240" stroke="' + LINE + '" stroke-width="2"/>',
 
-    // Home end (top) — 45m and 21m lines
-    '<line x1="10" y1="155" x2="310" y2="155" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
-    '<text x="14" y="152" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">45m</text>',
-    '<line x1="10" y1="210" x2="310" y2="210" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
-    '<text x="14" y="207" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">21m</text>',
+    // ── TOP END (attacking this way) ──
+    hline(51.2,  FAINT, '3,3'),  distLabel(51.2,  '13m'),
+    hline(73.4,  FAINT, '3,3'),  distLabel(73.4,  '20m'),
+    hline(152.8, FAINT, '4,4'),  distLabel(152.8, '45m'),
+    hline(216.2, FAINT, '2,5'),  distLabel(216.2, '65m'),
+    // 13m semicircle off the 20m line
+    '<path d="M 118.8 73.4 A 41.2 41.2 0 0 0 201.2 73.4" fill="none" stroke="' + ARC + '" stroke-width="1"/>',
+    // 40m two-point arc
+    '<path d="M 33.1 10 A 126.9 126.9 0 0 0 286.9 10" fill="none" stroke="' + ARC +
+      '" stroke-width="1" stroke-dasharray="6,4"/>',
+    '<text x="' + CX + '" y="140" text-anchor="middle" font-family="Arial" font-size="7" fill="' + TXT + '">40m — 2 PT ARC</text>',
+    goalEnd(10, 1, POST_H),
 
-    // Home goal area (top)
-    '<rect x="' + (goalX-20) + '" y="10" width="' + (goalW+40) + '" height="30" fill="none" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
-    // Home goal posts
-    '<rect x="' + goalX + '" y="4" width="' + goalW + '" height="' + goalH + '" fill="none" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
-    '<line x1="' + (goalX-20) + '" y1="4" x2="' + (goalX-20) + '" y2="-4" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
-    '<line x1="' + (goalX+goalW+20) + '" y1="4" x2="' + (goalX+goalW+20) + '" y2="-4" stroke="rgba(74,222,128,0.4)" stroke-width="1.5"/>',
+    // ── BOTTOM END ──
+    hline(428.8, FAINT, '3,3'), distLabel(428.8, '13m', true),
+    hline(406.6, FAINT, '3,3'), distLabel(406.6, '20m', true),
+    hline(327.2, FAINT, '4,4'), distLabel(327.2, '45m', true),
+    hline(263.8, FAINT, '2,5'), distLabel(263.8, '65m', true),
+    '<path d="M 118.8 406.6 A 41.2 41.2 0 0 1 201.2 406.6" fill="none" stroke="' + ARC + '" stroke-width="1"/>',
+    '<path d="M 33.1 470 A 126.9 126.9 0 0 1 286.9 470" fill="none" stroke="' + ARC +
+      '" stroke-width="1" stroke-dasharray="6,4"/>',
+    '<text x="' + CX + '" y="345" text-anchor="middle" font-family="Arial" font-size="7" fill="' + TXT + '">40m — 2 PT ARC</text>',
+    goalEnd(470, -1, POST_A),
 
-    // Away end (bottom) — 45m and 21m lines
-    '<line x1="10" y1="325" x2="310" y2="325" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
-    '<text x="14" y="322" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">45m</text>',
-    '<line x1="10" y1="270" x2="310" y2="270" stroke="rgba(74,222,128,0.12)" stroke-width="1" stroke-dasharray="4,4"/>',
-    '<text x="14" y="267" font-family="Arial" font-size="8" fill="rgba(74,222,128,0.2)">21m</text>',
-
-    // Away goal area (bottom)
-    '<rect x="' + (goalX-20) + '" y="440" width="' + (goalW+40) + '" height="30" fill="none" stroke="rgba(74,222,128,0.15)" stroke-width="1"/>',
-    // Away goal posts
-    '<rect x="' + goalX + '" y="464" width="' + goalW + '" height="' + goalH + '" fill="none" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
-    '<line x1="' + (goalX-20) + '" y1="476" x2="' + (goalX-20) + '" y2="484" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
-    '<line x1="' + (goalX+goalW+20) + '" y1="476" x2="' + (goalX+goalW+20) + '" y2="484" stroke="rgba(148,163,184,0.4)" stroke-width="1.5"/>',
-
-    // Centre circle
-    '<circle cx="160" cy="240" r="20" fill="none" stroke="rgba(74,222,128,0.12)" stroke-width="1"/>',
-
-    // Team labels
-    '<text x="160" y="32" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="rgba(74,222,128,0.5)">' + (homeName || 'HOME') + ' →</text>',
-    '<text x="160" y="462" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="rgba(148,163,184,0.5)">← ' + (awayName || 'AWAY') + '</text>',
+    // Attacking direction — matches where shots actually plot:
+    // My Team shoots at the bottom goal, the Opposition at the top goal.
+    '<text x="' + CX + '" y="182" text-anchor="middle" font-family="Arial" font-size="8.5" font-weight="bold" fill="rgba(148,163,184,0.45)">\u25B2 ' + (awayName || 'OPPOSITION') + ' ATTACK</text>',
+    '<text x="' + CX + '" y="302" text-anchor="middle" font-family="Arial" font-size="8.5" font-weight="bold" fill="rgba(74,222,128,0.45)">' + (homeName || 'MY TEAM') + ' ATTACK \u25BC</text>',
   ].join('\n');
 }
 
@@ -9479,14 +9761,35 @@ function generateShotMapSVGString(matchRecord) {
 
   return '<svg width="' + W + '" height="' + H + '" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">' +
     '<rect width="' + W + '" height="' + H + '" fill="#f0fdf4"/>' +
-    '<rect x="8" y="8" width="264" height="404" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.3"/>' +
-    '<line x1="8" y1="210" x2="272" y2="210" stroke="#16a34a" stroke-opacity="0.2" stroke-width="1"/>' +
-    '<line x1="8" y1="136" x2="272" y2="136" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
-    '<line x1="8" y1="184" x2="272" y2="184" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
-    '<line x1="8" y1="284" x2="272" y2="284" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
-    '<line x1="8" y1="236" x2="272" y2="236" stroke="#16a34a" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="3,3"/>' +
-    '<rect x="' + (goalX-4) + '" y="4" width="' + (goalW+8) + '" height="8" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.4"/>' +
-    '<rect x="' + (goalX-4) + '" y="408" width="' + (goalW+8) + '" height="8" fill="none" stroke="#94a3b8" stroke-width="1" stroke-opacity="0.4"/>' +
+    // GAA markings, 404 units = 145m (2.7862 u/m), playing area x 14.6..265.4, y 8..412
+    '<rect x="14.6" y="8" width="250.8" height="404" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.35"/>' +
+    '<line x1="14.6" y1="210" x2="265.4" y2="210" stroke="#16a34a" stroke-opacity="0.25" stroke-width="1"/>' +
+    // 13m / 20m / 45m / 65m from the top goal
+    '<line x1="14.6" y1="44.2" x2="265.4" y2="44.2" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="63.7" x2="265.4" y2="63.7" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="133.4" x2="265.4" y2="133.4" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="4,4"/>' +
+    '<line x1="14.6" y1="189.1" x2="265.4" y2="189.1" stroke="#16a34a" stroke-opacity="0.1" stroke-width="0.8" stroke-dasharray="2,5"/>' +
+    // and from the bottom goal
+    '<line x1="14.6" y1="375.8" x2="265.4" y2="375.8" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="356.3" x2="265.4" y2="356.3" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="286.6" x2="265.4" y2="286.6" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="4,4"/>' +
+    '<line x1="14.6" y1="230.9" x2="265.4" y2="230.9" stroke="#16a34a" stroke-opacity="0.1" stroke-width="0.8" stroke-dasharray="2,5"/>' +
+    // 40m two-point arcs
+    '<path d="M 28.6 8 A 111.4 111.4 0 0 0 251.4 8" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="5,4"/>' +
+    '<path d="M 28.6 412 A 111.4 111.4 0 0 1 251.4 412" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="5,4"/>' +
+    // 13m arcs off the 20m lines
+    '<path d="M 103.8 63.7 A 36.2 36.2 0 0 0 176.2 63.7" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8"/>' +
+    '<path d="M 103.8 356.3 A 36.2 36.2 0 0 1 176.2 356.3" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8"/>' +
+    // Large (19x13m) and small (14x4.5m) rectangles
+    '<rect x="113.5" y="8" width="53" height="36.2" fill="none" stroke="#16a34a" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="120.5" y="8" width="39" height="12.5" fill="none" stroke="#16a34a" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="113.5" y="375.8" width="53" height="36.2" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="120.5" y="399.5" width="39" height="12.5" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    // Goalposts (6.5m)
+    '<line x1="130.9" y1="8" x2="130.9" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="149.1" y1="8" x2="149.1" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="130.9" y1="412" x2="130.9" y2="418" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="149.1" y1="412" x2="149.1" y2="418" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.5"/>' +
     dots +
     '</svg>';
 }
@@ -10035,6 +10338,8 @@ function resetMatch(){
   state.possession={home:{count:0},away:{count:0}};
   state.attacks={home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.startingFifteen=null;
+  state.turnoverZones={home:{},away:{}};
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
@@ -10456,6 +10761,9 @@ function saveMatchToHistory() {
     players: state.players.slice(),
     subs: (state.subs || []).slice(),
     pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
+    startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
+    turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
+    playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
     matchNotes: state.matchNotes || ''
   };
 
@@ -10754,6 +11062,8 @@ function loadMatchIntoTracker(id) {
   state.players = m.players || [];
   state.subs = m.subs || [];
   state.pitchOccupant = m.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.startingFifteen = m.startingFifteen || null;
+  state.turnoverZones = m.turnoverZones || {home:{},away:{}};
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
@@ -13864,6 +14174,11 @@ window.addEventListener('resize', function() {
       <div class="ptr-section">
         <div class="ptr-section-title">Match History</div>
         <div id="opp-match-history"></div>
+      </div>
+      <!-- Opposition players -->
+      <div class="ptr-section">
+        <div class="ptr-section-title">Their Players</div>
+        <div id="opp-players-list"></div>
       </div>
       <!-- Scout reports -->
       <div class="ptr-section">
