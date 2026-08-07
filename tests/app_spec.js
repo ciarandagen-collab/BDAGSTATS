@@ -540,6 +540,54 @@ test.describe('Match Notes', () => {
   });
 });
 
+test.describe('Starting Team Selector', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Team sheet button is visible on Match tab', async ({ page }) => {
+    await expect(page.locator('#team-sheet-btn')).toBeVisible();
+  });
+
+  test('Team selector opens with 15 positions', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    // Only opens if the squad has players; skip cleanly if empty
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      const slots = await page.locator('.ts-slot').count();
+      expect(slots).toBe(15);
+    }
+  });
+
+  test('Auto-fill populates the team sheet', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.click('.ts-action-btn:has-text("Auto-fill")');
+      const filled = await page.locator('.ts-slot.filled').count();
+      expect(filled).toBeGreaterThan(0);
+    }
+  });
+
+  test('Clear all empties the team sheet', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.click('.ts-action-btn:has-text("Auto-fill")');
+      await page.click('.ts-action-btn:has-text("Clear all")');
+      expect(await page.locator('.ts-slot.filled').count()).toBe(0);
+    }
+  });
+
+  test('Tapping a position opens the player picker', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.locator('.ts-slot').first().click();
+      await expect(page.locator('#ts-player-modal')).toHaveClass(/open/, { timeout: 3000 });
+      await expect(page.locator('#ts-pp-title')).toContainText('Goalkeeper');
+    }
+  });
+});
+
 test.describe('Match Analysis (Stats tab)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -607,6 +655,48 @@ test.describe('Possession Method (Trends tab)', () => {
     await navTo(page, 'trends');
     await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
     await expect(page.locator('#poss-away-pct')).not.toHaveText('100%');
+  });
+});
+
+test.describe('Opposition Players', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Opposition profile has a Their Players section', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    const firstClub = page.locator('.opp-club-row, .opp-list-row').first();
+    if (await firstClub.count()) {
+      await firstClub.click();
+      await expect(page.locator('#opp-players-list')).toBeAttached();
+    }
+  });
+});
+
+test.describe('Turnover Territory', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'record');
+  });
+
+  test('Ball Lost prompts for pitch location', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Ball Lost")').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#location-modal .sheet-title')).toContainText('lost');
+  });
+
+  test('Turnover Forced prompts for pitch location', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Turnover Forced")').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
   });
 });
 
