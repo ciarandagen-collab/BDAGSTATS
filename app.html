@@ -12233,10 +12233,10 @@ function createClub() {
     county: county || null,
     created_by: currentUser.id
   }, currentToken).then(function(data) {
-    if (data.error || !data[0]) {
-      errEl.textContent = data.error || data.message || 'Failed to create club.';
-      errEl.style.display = 'block';
-      return;
+    if (data.error || data.code || !data[0]) {
+      var detail = data.message || data.error_description || data.details || data.hint || data.error || '';
+      var code = data.code ? ' [' + data.code + ']' : '';
+      throw new Error('Could not create club' + code + (detail ? ': ' + detail : '. The server rejected the request.'));
     }
     currentClub = data[0];
     currentClubRole = 'admin';
@@ -12247,7 +12247,10 @@ function createClub() {
       role: 'admin',
       name: (currentUser.user_metadata && currentUser.user_metadata.name) || currentUser.email
     }, currentToken);
-  }).then(function() {
+  }).then(function(memberData) {
+    if (memberData && memberData.error) {
+      throw new Error(memberData.error || memberData.message || 'Club was created, but adding you as admin failed.');
+    }
     saveClubSession();
     autoSetClubTeamName();
     document.getElementById('club-screen').style.display = 'none';
@@ -12269,9 +12272,7 @@ function joinClub() {
   supaDB('clubs?invite_code=eq.' + code + '&select=*', 'GET', null, currentToken)
     .then(function(data) {
       if (!data || !data.length) {
-        errEl.textContent = 'Invalid invite code — please check and try again.';
-        errEl.style.display = 'block';
-        return;
+        throw new Error('Invalid invite code — please check and try again.');
       }
       currentClub = data[0];
       currentClubRole = 'coach';
@@ -12281,8 +12282,10 @@ function joinClub() {
         role: 'coach',
         name: (currentUser.user_metadata && currentUser.user_metadata.name) || currentUser.email
       }, currentToken);
-    }).then(function() {
-      if (!currentClub) return;
+    }).then(function(memberData) {
+      if (memberData && memberData.error) {
+        throw new Error(memberData.error || memberData.message || 'Could not join this club.');
+      }
       saveClubSession();
       autoSetClubTeamName();
       document.getElementById('club-screen').style.display = 'none';
@@ -12343,6 +12346,12 @@ function closeClubDashboard() {
 }
 
 function renderClubDashboard() {
+  if (!currentClub) {
+    // No club loaded — fall back to the setup screen instead of crashing
+    var setup = document.getElementById('club-screen');
+    if (setup) setup.style.display = 'block';
+    return;
+  }
   var dash = document.getElementById('club-dashboard');
   dash.style.display = 'block';
 
