@@ -1135,6 +1135,22 @@ select option { background:#1a0505; }
 .et-picker-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
 .et-picker-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .et-icon { font-size:20px; }
+.stats-half-filter { display:flex; gap:6px; margin-bottom:10px; }
+.et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
+.et-mgr-row { display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; }
+.et-mgr-icon { font-size:18px; width:24px; text-align:center; }
+.et-mgr-label { flex:1; font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); letter-spacing:0.5px; }
+.et-mgr-count { display:block; font-size:10px; color:var(--muted); font-family:'Inter',sans-serif; letter-spacing:0; margin-top:2px; }
+.et-mgr-check { width:24px; height:24px; border-radius:6px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; flex-shrink:0; }
+.et-mgr-check.on { background:var(--red); border-color:var(--red); }
+.sh-filter-btn { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.sh-filter-btn.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
+#undo-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(140%); bottom:calc(74px + var(--safe-bottom)); z-index:900; display:flex; align-items:center; gap:14px; padding:11px 14px 11px 18px; background:rgba(20,22,20,0.96); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45); transition:transform 0.25s cubic-bezier(0.22,1,0.36,1); max-width:92vw; }
+#undo-toast.show { transform:translateX(-50%) translateY(0); }
+#undo-toast span { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.5px; color:var(--cream); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#undo-toast button { padding:6px 14px; border-radius:8px; border:1px solid var(--red); background:rgba(224,48,48,0.15); color:#ff8080; font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; flex-shrink:0; }
+#undo-toast button:active { background:var(--red); color:#fff; }
 .record-stats-btn { display:block; width:100%; padding:12px; margin-bottom:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .record-stats-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .rec-min-display { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); letter-spacing:0.5px; }
@@ -2152,8 +2168,8 @@ select option { background:#1a0505; }
         </div>
       </div>
       <div class="sb-undo-row">
-        <button class="undo-btn" onclick="undoLast('home')">↩ Undo <span id="undo-home-label">Home</span></button>
-        <button class="undo-btn" onclick="undoLast('away')">↩ Undo <span id="undo-away-label">Away</span></button>
+        <button class="undo-btn" onclick="undoLast('home')">↩ Undo <span id="undo-home-label">My Team</span></button>
+        <button class="undo-btn" onclick="undoLast('away')">↩ Undo <span id="undo-away-label">Opposition</span></button>
       </div>
     </div>
 
@@ -2192,7 +2208,7 @@ select option { background:#1a0505; }
       </button>
     </div>
 
-    <div class="sec-label">Tap a Player to Record an Event</div>
+    <div class="sec-label">Tap a Player to Record an Event <span id="rec-active-squad" class="rec-squad-chip" style="display:none;"></span></div>
     <div class="record-pitch-wrap" id="record-pitch-wrap"></div>
 
     <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
@@ -2500,7 +2516,12 @@ select option { background:#1a0505; }
       <button class="btn-save-match" onclick="saveMatchToHistory()">Save Match</button>
     </div>
 
-    <div class="sec-label">Full Match Stats <span id="stats-context-label" style="font-size:9px;color:var(--muted);font-weight:400;letter-spacing:1px;text-transform:none;margin-left:6px;font-family:'Inter',sans-serif;"></span></div>
+    <div class="sec-label">Match Stats <span id="stats-context-label" style="font-size:9px;color:var(--muted);font-weight:400;letter-spacing:1px;text-transform:none;margin-left:6px;font-family:'Inter',sans-serif;"></span></div>
+    <div class="stats-half-filter">
+      <button class="sh-filter-btn active" id="sh-filter-0" onclick="setStatsHalfFilter(0)">Full Match</button>
+      <button class="sh-filter-btn" id="sh-filter-1" onclick="setStatsHalfFilter(1)">1st Half</button>
+      <button class="sh-filter-btn" id="sh-filter-2" onclick="setStatsHalfFilter(2)">2nd Half</button>
+    </div>
     <div class="card">
       <table class="stats-table">
         <thead>
@@ -2633,6 +2654,28 @@ select option { background:#1a0505; }
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="comp-list" id="comp-list"></div>
   </div>
+</div>
+
+<!-- EVENT TYPE MANAGER -->
+<div class="modal-overlay" id="et-manager-modal" onclick="if(event.target===this)closeEventTypeManager()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Quick Record Events</div>
+        <div class="sheet-sub">Untick anything you don't tag during a match</div>
+      </div>
+      <button class="sheet-close" onclick="closeEventTypeManager()">✕</button>
+    </div>
+    <div id="et-manager-list"></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">Most-used events move to the top automatically</div>
+  </div>
+</div>
+
+<!-- UNDO TOAST -->
+<div id="undo-toast">
+  <span id="undo-toast-text">Event recorded</span>
+  <button onclick="undoLastEvent()">Undo</button>
 </div>
 
 <!-- SQUAD PICKER -->
@@ -2795,19 +2838,8 @@ select option { background:#1a0505; }
       </div>
       <button class="sheet-close" onclick="closeEventTypePicker()">✕</button>
     </div>
-    <div class="et-picker-grid">
-      <button class="et-picker-btn" onclick="chooseEventType('shot','play')"><span class="et-icon">⚽</span><span>Shot from Play</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('shot','free')"><span class="et-icon">🎯</span><span>Shot from Free</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','ballWon')"><span class="et-icon">📥</span><span>Ball Won</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','ballLost')"><span class="et-icon">📤</span><span>Ball Lost</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','kickout')"><span class="et-icon">🦶</span><span>Kickout</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','fortyFive')"><span class="et-icon">🏐</span><span>45m Free</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','turnover')"><span class="et-icon">🔄</span><span>Turnover Forced</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','mark')"><span class="et-icon">📌</span><span>Mark</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','possession')"><span class="et-icon">🏉</span><span>Possession</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','foul')"><span class="et-icon">⚠️</span><span>Foul Given</span></button>
-      <button class="et-picker-btn" onclick="chooseEventType('generic','cards')"><span class="et-icon">🟨</span><span>Card</span></button>
-    </div>
+    <div class="et-picker-grid" id="et-picker-grid"></div>
+    <button class="et-manage-btn" onclick="openEventTypeManager()">⚙️ Choose which events show here</button>
   </div>
 </div>
 
@@ -3264,7 +3296,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
-  if (name === 'record') renderRecordPitch();
+  if (name === 'record') { renderRecordPitch(); try { refreshSquadPickerDisplay(); } catch(e) {} }
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
@@ -3274,8 +3306,8 @@ function showPage(name, btn) {
 // ── NAMES ──────────────────────────────────────────
 function updateNames() {
   const h=homeName(), a=awayName();
-  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','ff-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','undo-home-label','poss-home-name','ptl-home-name'];
-  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','ff-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','undo-away-label','poss-away-name','ptl-away-name'];
+  const hIds=['home-display','sfp-home-h','sff-home-h','bl-home-h','bw-home-h','ko-home-h','ff-home-h','stats-home-h','ss-h-fp','ss-h-ff','tr-home-name','tr-poss-home-name','mom-home-name','tb-home-name','poss-home-name','ptl-home-name'];
+  const aIds=['away-display','sfp-away-h','sff-away-h','bl-away-h','bw-away-h','ko-away-h','ff-away-h','stats-away-h','ss-a-fp','ss-a-ff','tr-away-name','tr-poss-away-name','mom-away-name','tb-away-name','poss-away-name','ptl-away-name'];
   hIds.forEach(id=>{const el=$(id);if(el)el.textContent=h;});
   aIds.forEach(id=>{const el=$(id);if(el)el.textContent=a;});
   var phOpt = $('player-home-opt'); if (phOpt) phOpt.textContent = h;
@@ -3433,7 +3465,10 @@ function addShot(team,mode,outcome) {
   else if(outcome==='twopointer') { addScore(team,'point'); addScore(team,'point'); }
 
   // Always push to events (including goals/points) so zone data is captured
-  state.events.unshift({id:Date.now(),team:team,type:'shot',subtype:mode,shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
+  var shotEvId = Date.now();
+  state.events.unshift({id:shotEvId,team:team,type:'shot',subtype:mode,shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
+  lastEventId = shotEvId;
+  showUndoToast((mode==='play'?'Shot from Play':'Shot from Free') + ' — ' + String(outcome).toUpperCase());
   renderTimeline(); bumpMin();
 
   renderShotCounts(); renderShotSummary();
@@ -3507,7 +3542,10 @@ function selectGenericOutcome(key) {
   if (category === 'fortyFive' && key === 'scored') {
     addScore(team, 'point');
   }
-  state.events.unshift({id:Date.now(),team:team,type:category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
+  var genEvId = Date.now();
+  state.events.unshift({id:genEvId,team:team,type:category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
+  lastEventId = genEvId;
+  showUndoToast((cfg.title || category).replace(/^[^\w]+\s*/, '') + ' — ' + outcomeLabel);
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
   // Pulse the tally count for feedback
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
@@ -3569,12 +3607,69 @@ function renderTimeline() {
 function deleteEvent(id) {
   const idx=state.events.findIndex(e=>e.id===id); if(idx===-1)return;
   const ev=state.events[idx];
-  if(ev.type==='goal') state[ev.team].goals=Math.max(0,state[ev.team].goals-1);
-  else if(ev.type==='point') state[ev.team].points=Math.max(0,state[ev.team].points-1);
-  else if(ev.type==='shot'){state.shots[ev.team][ev.shotMode][ev.outcome]=Math.max(0,state.shots[ev.team][ev.shotMode][ev.outcome]-1);renderShotCounts();renderShotSummary();}
-  else if(['ballLost','ballWon','kickout'].includes(ev.type)){state[ev.type][ev.team][ev.outcome]=Math.max(0,state[ev.type][ev.team][ev.outcome]-1);renderGenericTallies();}
+  const t = ev.team;
+
+  if(ev.type==='goal') state[t].goals=Math.max(0,state[t].goals-1);
+  else if(ev.type==='point') state[t].points=Math.max(0,state[t].points-1);
+  else if(ev.type==='shot'){
+    if (state.shots[t] && state.shots[t][ev.shotMode] && state.shots[t][ev.shotMode][ev.outcome] !== undefined) {
+      state.shots[t][ev.shotMode][ev.outcome]=Math.max(0,state.shots[t][ev.shotMode][ev.outcome]-1);
+    }
+    // Reverse the scoreboard too — a scoring shot added to the score when recorded
+    if (ev.outcome==='goal') state[t].goals=Math.max(0,state[t].goals-1);
+    else if (ev.outcome==='point') state[t].points=Math.max(0,state[t].points-1);
+    else if (ev.outcome==='twopointer') state[t].points=Math.max(0,state[t].points-2);
+    renderShotCounts();renderShotSummary();
+  }
+  else if(ev.type==='fortyFive'){
+    if (state.fortyFive[t] && state.fortyFive[t][ev.outcome] !== undefined) {
+      state.fortyFive[t][ev.outcome]=Math.max(0,state.fortyFive[t][ev.outcome]-1);
+    }
+    if (ev.outcome==='scored') state[t].points=Math.max(0,state[t].points-1);
+    renderGenericTallies();
+  }
+  else if(['ballLost','ballWon','kickout','turnover','mark','possession','attacks','foul','cards'].includes(ev.type)){
+    if (state[ev.type] && state[ev.type][t] && state[ev.type][t][ev.outcome] !== undefined) {
+      state[ev.type][t][ev.outcome]=Math.max(0,state[ev.type][t][ev.outcome]-1);
+    }
+    renderGenericTallies();
+  }
+
+  // Reverse the player's stat line if this event was tagged to a squad player
+  if (typeof ev.player === 'number' && squad[ev.player] && squad[ev.player].stats) {
+    var st = squad[ev.player].stats;
+    var key = ev.type==='shot' ? (ev.shotMode==='free' ? 'shotsFree' : 'shotsPlay') : ev.type;
+    if (st[key] && st[key][ev.outcome]) st[key][ev.outcome] = Math.max(0, st[key][ev.outcome]-1);
+    if (ev.type==='shot' && st.shots && st.shots[ev.outcome]) st.shots[ev.outcome] = Math.max(0, st.shots[ev.outcome]-1);
+    saveSquad();
+  }
+
   state.events.splice(idx,1);
   updateScoreboard(); renderTimeline();
+  try { updateStats(); } catch(e) {}
+}
+
+// ── UNDO TOAST ─────────────────────────────────────
+var lastEventId = null;
+var undoToastTimer = null;
+
+function showUndoToast(label) {
+  var toast = document.getElementById('undo-toast');
+  var txt = document.getElementById('undo-toast-text');
+  if (!toast || !txt) return;
+  txt.textContent = label;
+  toast.classList.add('show');
+  if (undoToastTimer) clearTimeout(undoToastTimer);
+  undoToastTimer = setTimeout(function() { toast.classList.remove('show'); }, 4000);
+}
+
+function undoLastEvent() {
+  if (lastEventId === null) return;
+  deleteEvent(lastEventId);
+  lastEventId = null;
+  var toast = document.getElementById('undo-toast');
+  if (toast) toast.classList.remove('show');
+  if (undoToastTimer) clearTimeout(undoToastTimer);
 }
 
 // ── HALF ───────────────────────────────────────────
@@ -4006,6 +4101,98 @@ function renderRecordPitch() {
   wrap.innerHTML = html;
 }
 
+// ── EVENT PICKER: ORDERING & VISIBILITY ────────────
+var ET_PICKER_TYPES = [
+  { kind:'shot',    arg:'play',       icon:'⚽',  label:'Shot from Play' },
+  { kind:'shot',    arg:'free',       icon:'🎯',  label:'Shot from Free' },
+  { kind:'generic', arg:'ballWon',    icon:'📥',  label:'Ball Won' },
+  { kind:'generic', arg:'ballLost',   icon:'📤',  label:'Ball Lost' },
+  { kind:'generic', arg:'kickout',    icon:'🦶',  label:'Kickout' },
+  { kind:'generic', arg:'fortyFive',  icon:'🏐',  label:'45m Free' },
+  { kind:'generic', arg:'turnover',   icon:'🔄',  label:'Turnover Forced' },
+  { kind:'generic', arg:'mark',       icon:'📌',  label:'Mark' },
+  { kind:'generic', arg:'possession', icon:'🏉',  label:'Possession' },
+  { kind:'generic', arg:'attacks',    icon:'⚔️',  label:'Attack' },
+  { kind:'generic', arg:'foul',       icon:'⚠️',  label:'Foul Given' },
+  { kind:'generic', arg:'cards',      icon:'🟨',  label:'Card' }
+];
+
+function etKey(t) { return t.kind + ':' + t.arg; }
+
+function loadEtUsage() {
+  try { return JSON.parse(localStorage.getItem('cs_et_usage') || '{}'); } catch(e) { return {}; }
+}
+function bumpEtUsage(kind, arg) {
+  try {
+    var u = loadEtUsage();
+    var k = kind + ':' + arg;
+    u[k] = (u[k] || 0) + 1;
+    localStorage.setItem('cs_et_usage', JSON.stringify(u));
+  } catch(e) {}
+}
+function loadEtHidden() {
+  try { return JSON.parse(localStorage.getItem('cs_et_hidden') || '[]'); } catch(e) { return []; }
+}
+function saveEtHidden(arr) {
+  try { localStorage.setItem('cs_et_hidden', JSON.stringify(arr)); } catch(e) {}
+}
+
+function visibleEtTypes() {
+  var usage = loadEtUsage();
+  var hidden = loadEtHidden();
+  return ET_PICKER_TYPES
+    .filter(function(t) { return hidden.indexOf(etKey(t)) === -1; })
+    .map(function(t, i) { return { t:t, i:i, n: usage[etKey(t)] || 0 }; })
+    .sort(function(a, b) { return b.n - a.n || a.i - b.i; })  // most used first, then original order
+    .map(function(x) { return x.t; });
+}
+
+function renderEventTypePicker() {
+  var grid = document.getElementById('et-picker-grid');
+  if (!grid) return;
+  var types = visibleEtTypes();
+  if (!types.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;font-style:italic;">All events hidden — tap below to re-enable some</div>';
+    return;
+  }
+  grid.innerHTML = types.map(function(t) {
+    return '<button class="et-picker-btn" onclick="chooseEventType(\'' + t.kind + '\',\'' + t.arg + '\')">' +
+      '<span class="et-icon">' + t.icon + '</span><span>' + t.label + '</span></button>';
+  }).join('');
+}
+
+function openEventTypeManager() {
+  var list = document.getElementById('et-manager-list');
+  if (!list) return;
+  var hidden = loadEtHidden();
+  var usage = loadEtUsage();
+  list.innerHTML = ET_PICKER_TYPES.map(function(t) {
+    var k = etKey(t);
+    var on = hidden.indexOf(k) === -1;
+    var n = usage[k] || 0;
+    return '<div class="et-mgr-row" onclick="toggleEtType(\'' + k + '\')">' +
+      '<span class="et-mgr-icon">' + t.icon + '</span>' +
+      '<span class="et-mgr-label">' + t.label +
+        (n ? '<span class="et-mgr-count">used ' + n + '×</span>' : '') + '</span>' +
+      '<span class="et-mgr-check ' + (on ? 'on' : '') + '">' + (on ? '✓' : '') + '</span>' +
+      '</div>';
+  }).join('');
+  document.getElementById('et-manager-modal').classList.add('open');
+}
+
+function closeEventTypeManager() {
+  document.getElementById('et-manager-modal').classList.remove('open');
+  renderEventTypePicker();
+}
+
+function toggleEtType(key) {
+  var hidden = loadEtHidden();
+  var idx = hidden.indexOf(key);
+  if (idx === -1) hidden.push(key); else hidden.splice(idx, 1);
+  saveEtHidden(hidden);
+  openEventTypeManager();
+}
+
 function openEventTypePicker(team, ref) {
   etPicker.team = team;
   etPicker.ref = team === 'home' ? ref : ('away-' + ref);
@@ -4016,6 +4203,7 @@ function openEventTypePicker(team, ref) {
   var subEl = document.getElementById('et-picker-sub');
   if (titleEl) titleEl.textContent = label;
   if (subEl) subEl.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — select event to record';
+  renderEventTypePicker();
   var modal = document.getElementById('event-type-modal');
   if (modal) modal.classList.add('open');
 }
@@ -4029,6 +4217,7 @@ function chooseEventType(kind, arg) {
   if (etPicker.team === null) return;
   var team = etPicker.team;
   var ref = etPicker.ref;
+  bumpEtUsage(kind, arg);
   if (kind === 'generic' && arg === 'possession') {
     closeEventTypePicker();
     recordPossession(team, ref);
@@ -4048,9 +4237,11 @@ function recordPossession(team, ref) {
   var label = typeof ref === 'number' ?
     ('#' + (ref+1) + (squad[ref] && squad[ref].name ? ' ' + squad[ref].name : '')) :
     ('Opposition #' + String(ref).split('-')[1]);
-  state.events.unshift({id:Date.now(),team:team,type:'possession',outcome:'count',outcomeLabel:'Possession',min:getMin(),half:state.half,player:typeof ref === 'number' ? ref : null});
+  var possEvId = Date.now();
+  state.events.unshift({id:possEvId,team:team,type:'possession',outcome:'count',outcomeLabel:'Possession',min:getMin(),half:state.half,player:typeof ref === 'number' ? ref : null});
+  lastEventId = possEvId;
   renderTimeline(); bumpMin(); renderGenericTallies();
-  showSync('Possession — ' + label, 1200);
+  showUndoToast('Possession — ' + label);
 }
 
 function goToMatchStats() {
@@ -4143,10 +4334,95 @@ function renderPlayers() { renderSquadGrid(); }
 
 // ── STATS ──────────────────────────────────────────
 function countHalf(team,type,half){ return state.events.filter(e=>e.team===team&&e.type===type&&e.half===half).length; }
+// ── SHARED ANALYSIS HELPERS ────────────────────────
+// Half filter: 0 = full match, 1 = first half, 2 = second half
+var statsHalfFilter = 0;
+
+var SCORING_OUTCOMES = ['point','twopointer','goal'];
+
+// Shot stats computed from the event log so they can be filtered by half.
+function shotStats(team, half, shotMode) {
+  var evs = state.events.filter(function(e) {
+    if (e.type !== 'shot' || e.team !== team) return false;
+    if (half && e.half !== half) return false;
+    if (shotMode && e.shotMode !== shotMode) return false;
+    return true;
+  });
+  var res = { total: evs.length, scores: 0, goals: 0, points: 0, twoPointers: 0,
+              wides: 0, short: 0, saved: 0, blocked: 0, pct: 0, scoreTotal: 0 };
+  evs.forEach(function(e) {
+    switch (e.outcome) {
+      case 'goal': res.goals++; res.scores++; res.scoreTotal += 3; break;
+      case 'point': res.points++; res.scores++; res.scoreTotal += 1; break;
+      case 'twopointer': res.twoPointers++; res.scores++; res.scoreTotal += 2; break;
+      case 'wide': res.wides++; break;
+      case 'short': res.short++; break;
+      case 'saved': res.saved++; break;
+      case 'blocked': res.blocked++; break;
+    }
+  });
+  res.pct = res.total > 0 ? Math.round((res.scores / res.total) * 100) : 0;
+  return res;
+}
+
+// Shooting efficiency broken down by pitch zone (uses tapped shot locations)
+function shotZoneStats(team, half) {
+  var evs = state.events.filter(function(e) {
+    if (e.type !== 'shot' || e.team !== team || !e.zone) return false;
+    if (half && e.half !== half) return false;
+    return true;
+  });
+  var zones = {};
+  evs.forEach(function(e) {
+    if (!zones[e.zone]) zones[e.zone] = { total: 0, scores: 0 };
+    zones[e.zone].total++;
+    if (SCORING_OUTCOMES.indexOf(e.outcome) !== -1) zones[e.zone].scores++;
+  });
+  Object.keys(zones).forEach(function(z) {
+    zones[z].pct = zones[z].total > 0 ? Math.round((zones[z].scores / zones[z].total) * 100) : 0;
+  });
+  return zones;
+}
+
+// Generic per-category event counts, half-filterable
+function eventStats(team, type, half) {
+  var evs = state.events.filter(function(e) {
+    if (e.type !== type || e.team !== team) return false;
+    if (half && e.half !== half) return false;
+    return true;
+  });
+  var byOutcome = {};
+  evs.forEach(function(e) {
+    var k = e.outcome || 'count';
+    byOutcome[k] = (byOutcome[k] || 0) + 1;
+  });
+  return { total: evs.length, byOutcome: byOutcome };
+}
+
+function kickoutRetention(team, half) {
+  var s = eventStats(team, 'kickout', half).byOutcome;
+  var won = (s.wonClean||0) + (s.breakWon||0) + (s.shortWon||0);
+  var lost = (s.lossClean||0) + (s.breakLoss||0) + (s.shortLoss||0);
+  var tot = won + lost;
+  return { won: won, lost: lost, total: tot, pct: tot > 0 ? Math.round((won/tot)*100) : 0 };
+}
+
+function halfLabel(half) {
+  return half === 1 ? '1st Half' : half === 2 ? '2nd Half' : 'Full Match';
+}
+
+function setStatsHalfFilter(half) {
+  statsHalfFilter = half;
+  ['sh-filter-0','sh-filter-1','sh-filter-2'].forEach(function(id, i) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', i === half);
+  });
+  updateStats();
+}
+
 function updateStats() {
   const hG=state.home.goals,aG=state.away.goals,hP=state.home.points,aP=state.away.points;
   const hT=total('home'),aT=total('away'),hS=hG+hP,aS=aG+aP;
-  const hAcc=hS?Math.round((hT/(hS*3))*100):0, aAcc=aS?Math.round((aT/(aS*3))*100):0;
   const hFP=Object.values(state.shots.home.play).reduce((a,b)=>a+b,0);
   const aFP=Object.values(state.shots.away.play).reduce((a,b)=>a+b,0);
   const hFF=Object.values(state.shots.home.free).reduce((a,b)=>a+b,0);
@@ -4159,12 +4435,26 @@ function updateStats() {
   const aKO=Object.values(state.kickout.away).reduce((a,b)=>a+b,0);
   const sec=l=>`<tr class="stats-section-row"><td colspan="3">${l}</td></tr>`;
   const row=([l,h,a])=>{const hw=parseFloat(h)>parseFloat(a),aw=parseFloat(a)>parseFloat(h);return`<tr><td>${l}</td><td><span class="stat-val ${hw?'stat-leader':''}">${h}</span></td><td><span class="stat-val ${aw?'stat-leader':''}">${a}</span></td></tr>`;};
+  var hf = statsHalfFilter;
+  var hSP = shotStats('home', hf, 'play'), aSP = shotStats('away', hf, 'play');
+  var hSF = shotStats('home', hf, 'free'), aSF = shotStats('away', hf, 'free');
+  var hSA = shotStats('home', hf, null),   aSA = shotStats('away', hf, null);
+  var hKOR = kickoutRetention('home', hf), aKOR = kickoutRetention('away', hf);
+
   var statsRows=[];
-  statsRows.push(sec('⚽ Scoring'));
-  [['Goals',hG,aG],['Points',hP,aP],['Total Score',hT,aT],['Scores Taken',hS,aS],['Scoring Eff.',hAcc+'%',aAcc+'%'],
+  statsRows.push(sec('⚽ Scoring' + (hf ? ' — ' + halfLabel(hf) : '')));
+  [['Goals',hG,aG],['Points',hP,aP],['Total Score',hT,aT],['Scores Taken',hS,aS],
    (function(){var p=calcPossession();return['Possession',p.h+'%',p.a+'%'];}()),
    ['1st Half Goals',countHalf('home','goal',1),countHalf('away','goal',1)],['1st Half Points',countHalf('home','point',1),countHalf('away','point',1)],
    ['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]
+  ].forEach(function(r){statsRows.push(row(r));});
+
+  statsRows.push(sec('📊 Shooting Efficiency' + (hf ? ' — ' + halfLabel(hf) : '')));
+  [['Conversion (All)', hSA.pct+'% ('+hSA.scores+'/'+hSA.total+')', aSA.pct+'% ('+aSA.scores+'/'+aSA.total+')'],
+   ['From Play', hSP.pct+'% ('+hSP.scores+'/'+hSP.total+')', aSP.pct+'% ('+aSP.scores+'/'+aSP.total+')'],
+   ['From Frees', hSF.pct+'% ('+hSF.scores+'/'+hSF.total+')', aSF.pct+'% ('+aSF.scores+'/'+aSF.total+')'],
+   ['Wides', hSA.wides, aSA.wides],
+   ['Kickout Retention', hKOR.pct+'% ('+hKOR.won+'/'+hKOR.total+')', aKOR.pct+'% ('+aKOR.won+'/'+aKOR.total+')']
   ].forEach(function(r){statsRows.push(row(r));});
   statsRows.push(sec('🎯 Shots from Play'));
   [['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['2 Pointer',state.shots.home.play.twopointer||0,state.shots.away.play.twopointer||0],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],
@@ -4176,6 +4466,25 @@ function updateStats() {
    ['Blocked',state.shots.home.free.blocked,state.shots.away.free.blocked],['Wide',state.shots.home.free.wide,state.shots.away.free.wide],
    ['Saved',state.shots.home.free.saved,state.shots.away.free.saved],['Short',state.shots.home.free.short,state.shots.away.free.short]
   ].forEach(function(r){statsRows.push(row(r));});
+
+  // ── SHOOTING BY ZONE (from tapped shot locations) ──
+  var hZ = shotZoneStats('home', hf), aZ = shotZoneStats('away', hf);
+  var ZONE_LABELS = {
+    'left-d':'Left D', 'd-line':'D Centre', 'right-d':'Right D',
+    'left-45':'Left 45', '45-centre':'45 Centre', 'right-45':'Right 45',
+    'left-wing':'Left Wing', 'midfield':'Midfield', 'right-wing':'Right Wing'
+  };
+  var zoneKeys = Object.keys(ZONE_LABELS).filter(function(z){ return hZ[z] || aZ[z]; });
+  if (zoneKeys.length) {
+    statsRows.push(sec('📍 Shooting by Zone' + (hf ? ' — ' + halfLabel(hf) : '')));
+    zoneKeys.forEach(function(z) {
+      var h = hZ[z], a = aZ[z];
+      statsRows.push(row([ZONE_LABELS[z],
+        h ? h.pct+'% ('+h.scores+'/'+h.total+')' : '—',
+        a ? a.pct+'% ('+a.scores+'/'+a.total+')' : '—']));
+    });
+  }
+
   statsRows.push(sec('📤 Ball Lost'));
   [['Total',hBL,aBL],['Hand Pass',state.ballLost.home.handPass,state.ballLost.away.handPass],['Kick Pass',state.ballLost.home.kickPass,state.ballLost.away.kickPass],
    ['In Contact',state.ballLost.home.inContact,state.ballLost.away.inContact],['Handling',state.ballLost.home.handling,state.ballLost.away.handling],
@@ -10246,8 +10555,19 @@ function openDetailModal(id) {
   };
 
   const hS = m.homeGoals + m.homePoints, aS = m.awayGoals + m.awayPoints;
-  const hAcc = hS ? Math.round((hT/(hS*3))*100) : 0;
-  const aAcc = aS ? Math.round((aT/(aS*3))*100) : 0;
+  // Real conversion rate: scores / total shots (falls back to '—' for old records without shot data)
+  function convFromShots(sideShots) {
+    if (!sideShots) return null;
+    var tot = 0, sc = 0;
+    ['play','free'].forEach(function(mode) {
+      var o = sideShots[mode] || {};
+      Object.keys(o).forEach(function(k) { tot += (o[k]||0); });
+      sc += (o.goal||0) + (o.point||0) + (o.twopointer||0);
+    });
+    return tot > 0 ? { pct: Math.round((sc/tot)*100), sc: sc, tot: tot } : null;
+  }
+  const hConv = m.shots ? convFromShots(m.shots.home) : null;
+  const aConv = m.shots ? convFromShots(m.shots.away) : null;
   const hBL = m.ballLost ? Object.values(m.ballLost.home).reduce((a,b)=>a+b,0) : 0;
   const aBL = m.ballLost ? Object.values(m.ballLost.away).reduce((a,b)=>a+b,0) : 0;
   const hKO = m.kickout ? Object.values(m.kickout.home).reduce((a,b)=>a+b,0) : 0;
@@ -10265,7 +10585,9 @@ function openDetailModal(id) {
   html += row('Points', m.homePoints, m.awayPoints);
   html += row('Total Score', hT, aT);
   html += row('Scores Taken', hS, aS);
-  html += row('Scoring Eff.', hAcc+'%', aAcc+'%');
+  html += row('Conversion Rate',
+    hConv ? hConv.pct+'% ('+hConv.sc+'/'+hConv.tot+')' : '—',
+    aConv ? aConv.pct+'% ('+aConv.sc+'/'+aConv.tot+')' : '—');
   html += row('Possession', m.homePoss+'%', m.awayPoss+'%');
 
   if (m.shots) {
@@ -12432,12 +12754,20 @@ function refreshSquadPickerDisplay() {
   // Only relevant for club accounts that actually have squads
   if (!currentClub || !clubSquads || !clubSquads.length) {
     row.style.display = 'none';
+    var chipOff = document.getElementById('rec-active-squad');
+    if (chipOff) chipOff.style.display = 'none';
     return;
   }
   row.style.display = '';
   var sq = clubSquads.find(function(s){ return String(s.id) === String(currentClubSquadId); });
   txt.textContent = sq ? sq.name : 'Select Squad';
   txt.style.color = sq ? '' : 'var(--muted)';
+  // Mirror onto the Record tab so the active squad is visible mid-match
+  var chip = document.getElementById('rec-active-squad');
+  if (chip) {
+    if (sq) { chip.textContent = sq.name; chip.style.display = ''; }
+    else chip.style.display = 'none';
+  }
 }
 
 function openSquadPicker() {
