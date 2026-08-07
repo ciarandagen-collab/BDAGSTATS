@@ -1139,6 +1139,33 @@ select option { background:#1a0505; }
 .et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
 .poss-method-note { font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); margin:-6px 0 8px; line-height:1.4; }
+/* ── STARTING TEAM SELECTOR ── */
+.ts-actions { display:flex; gap:8px; margin-bottom:12px; }
+.ts-action-btn { flex:1; padding:9px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.ts-action-btn:active { background:rgba(255,255,255,0.1); color:var(--cream); }
+.ts-pitch { background:#1a6b2f; border:2px solid rgba(255,255,255,0.22); border-radius:12px; padding:14px 6px; position:relative; }
+.ts-pitch::before { content:''; position:absolute; top:50%; left:6%; right:6%; height:1px; background:rgba(255,255,255,0.13); }
+.ts-row { display:flex; justify-content:center; gap:6px; margin-bottom:10px; position:relative; z-index:1; }
+.ts-row:last-child { margin-bottom:0; }
+.ts-slot { display:flex; flex-direction:column; align-items:center; gap:1px; min-width:62px; padding:6px 3px; border-radius:8px; border:1px dashed rgba(255,255,255,0.35); background:rgba(255,255,255,0.06); cursor:pointer; }
+.ts-slot.filled { border-style:solid; border-color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.14); }
+.ts-slot-pos { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:0.5px; color:rgba(255,255,255,0.65); text-transform:uppercase; }
+.ts-slot-num { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; color:#fff; line-height:1.1; }
+.ts-slot-name { font-size:8px; color:rgba(255,255,255,0.85); max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-transform:uppercase; }
+.ts-slot:not(.filled) .ts-slot-name { color:rgba(255,255,255,0.4); font-style:italic; }
+.ts-confirm-btn { width:100%; margin-top:14px; padding:13px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; }
+.ts-player-list { max-height:60vh; overflow-y:auto; }
+.ts-player-row { display:flex; align-items:center; gap:10px; width:100%; padding:11px 8px; border:none; border-bottom:1px solid rgba(255,255,255,0.06); background:none; cursor:pointer; text-align:left; }
+.ts-player-row.selected { background:rgba(224,48,48,0.12); }
+.ts-player-row.clear { color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; justify-content:center; }
+.ts-pr-num { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; color:var(--cream); flex-shrink:0; }
+.ts-pr-name { flex:1; font-family:'Inter',sans-serif; font-size:14px; color:var(--cream); }
+.ts-pr-pos { display:block; font-size:10px; color:var(--muted); margin-top:1px; }
+.ts-pr-tag { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:3px 7px; border-radius:6px; flex-shrink:0; }
+.ts-pr-tag.here { background:var(--red); color:#fff; }
+.ts-pr-tag.used { background:rgba(255,255,255,0.08); color:var(--muted); }
+.rpp-circle.empty { background:rgba(255,255,255,0.06); border-style:dashed; font-size:11px; color:rgba(255,255,255,0.5); }
+.record-pitch-player.empty .rpp-name { color:rgba(255,255,255,0.45); font-style:italic; }
 .opp-player-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
 .opp-player-num { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:var(--cream); flex-shrink:0; }
 .opp-player-num.danger { background:rgba(224,48,48,0.22); border-color:var(--red); color:#ff9d9d; }
@@ -2122,6 +2149,13 @@ select option { background:#1a0505; }
             <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
           </button>
         </div>
+        <div class="meta-row">
+          <button class="comp-picker-btn" id="team-sheet-btn" onclick="openTeamSelector()" type="button">
+            <span style="color:var(--muted);font-size:11px;">📋</span>
+            <span id="team-sheet-text">Select Starting 15</span>
+            <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2663,6 +2697,41 @@ select option { background:#1a0505; }
       placeholder="Search competitions..." oninput="filterComps(this.value)"
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="comp-list" id="comp-list"></div>
+  </div>
+</div>
+
+<!-- STARTING TEAM SELECTOR -->
+<div class="modal-overlay" id="team-selector-modal" onclick="if(event.target===this)closeTeamSelector()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">📋 Starting 15</div>
+        <div class="sheet-sub" id="ts-subtitle">Tap a position to pick a player</div>
+      </div>
+      <button class="sheet-close" onclick="closeTeamSelector()">✕</button>
+    </div>
+    <div class="ts-actions">
+      <button class="ts-action-btn" onclick="autoFillTeam()">Auto-fill 1–15</button>
+      <button class="ts-action-btn" onclick="clearTeamSheet()">Clear all</button>
+    </div>
+    <div class="ts-pitch" id="ts-pitch"></div>
+    <button class="ts-confirm-btn" onclick="confirmTeamSheet()">Confirm Starting 15</button>
+  </div>
+</div>
+
+<!-- TEAM SELECTOR: PLAYER PICKER -->
+<div class="modal-overlay" id="ts-player-modal" onclick="if(event.target===this)closeTsPlayerPicker()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="ts-pp-title">Select Player</div>
+        <div class="sheet-sub" id="ts-pp-sub"></div>
+      </div>
+      <button class="sheet-close" onclick="closeTsPlayerPicker()">✕</button>
+    </div>
+    <div class="ts-player-list" id="ts-player-list"></div>
   </div>
 </div>
 
@@ -3309,6 +3378,7 @@ function showPage(name, btn) {
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
   if (name === 'record') { renderRecordPitch(); try { refreshSquadPickerDisplay(); } catch(e) {} }
+  if (name === 'match') { try { refreshTeamSheetLabel(); } catch(e) {} }
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
@@ -4110,12 +4180,18 @@ function switchRecordSide(side) {
 function recordPitchMarker(team, num) {
   if (team === 'home') {
     var occ = (state.pitchOccupant && state.pitchOccupant[num-1] !== undefined) ? state.pitchOccupant[num-1] : (num-1);
-    var p = squad[occ];
+    var p = (typeof occ === 'number') ? squad[occ] : null;
     var filled = p && p.name;
-    var displayNum = filled ? (occ+1) : num;
+    if (!filled) {
+      // Position left empty on the team sheet — tapping opens the selector rather than tagging nobody
+      return '<button class="record-pitch-player empty" onclick="openTeamSelector()">' +
+        '<span class="rpp-circle empty">' + (GAA_POS_SHORT[num-1] || num) + '</span>' +
+        '<span class="rpp-name">Tap to set</span>' +
+        '</button>';
+    }
     return '<button class="record-pitch-player" onclick="openEventTypePicker(\'home\',' + occ + ')">' +
-      '<span class="rpp-circle">' + displayNum + '</span>' +
-      '<span class="rpp-name">' + (filled ? surnameOf(p.name) : '') + '</span>' +
+      '<span class="rpp-circle">' + (occ+1) + '</span>' +
+      '<span class="rpp-name">' + surnameOf(p.name) + '</span>' +
       '</button>';
   }
   var oppNm = oppPlayerName(awayName(), num);
@@ -4123,6 +4199,152 @@ function recordPitchMarker(team, num) {
     '<span class="rpp-circle">' + num + '</span>' +
     '<span class="rpp-name">' + (oppNm ? surnameOf(oppNm) : '&nbsp;') + '</span>' +
     '</button>';
+}
+
+// ── STARTING TEAM SELECTOR ─────────────────────────
+// GAA football positions by shirt number
+var GAA_POSITIONS = [
+  'Goalkeeper',
+  'Right Corner Back','Full Back','Left Corner Back',
+  'Right Half Back','Centre Half Back','Left Half Back',
+  'Midfield','Midfield',
+  'Right Half Forward','Centre Half Forward','Left Half Forward',
+  'Right Corner Forward','Full Forward','Left Corner Forward'
+];
+var GAA_POS_SHORT = ['GK','RCB','FB','LCB','RHB','CHB','LHB','MF','MF','RHF','CHF','LHF','RCF','FF','LCF'];
+var TS_ROWS = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
+
+var tsDraft = null;      // working copy while the sheet is open
+var tsActiveSlot = null; // 1-based position being filled
+
+function openTeamSelector() {
+  if (!squad.some(function(p){ return p && p.name; })) {
+    showSync('Add players to your squad first', 2500);
+    return;
+  }
+  // Start from the current lineup so edits are incremental
+  tsDraft = (state.pitchOccupant || []).slice(0, 15);
+  while (tsDraft.length < 15) tsDraft.push(null);
+  renderTeamSelector();
+  document.getElementById('team-selector-modal').classList.add('open');
+}
+
+function closeTeamSelector() {
+  document.getElementById('team-selector-modal').classList.remove('open');
+  tsDraft = null; tsActiveSlot = null;
+}
+
+function renderTeamSelector() {
+  var pitch = document.getElementById('ts-pitch');
+  if (!pitch || !tsDraft) return;
+  var filled = tsDraft.filter(function(v){ return typeof v === 'number'; }).length;
+  var sub = document.getElementById('ts-subtitle');
+  if (sub) sub.textContent = filled + ' of 15 selected — tap a position to pick a player';
+
+  pitch.innerHTML = TS_ROWS.map(function(row) {
+    return '<div class="ts-row">' + row.map(function(pos) {
+      var idx = tsDraft[pos-1];
+      var p = (typeof idx === 'number') ? squad[idx] : null;
+      var has = !!(p && p.name);
+      return '<button class="ts-slot' + (has ? ' filled' : '') + '" onclick="openTsPlayerPicker(' + pos + ')">' +
+        '<span class="ts-slot-pos">' + GAA_POS_SHORT[pos-1] + '</span>' +
+        '<span class="ts-slot-num">' + (has ? (idx+1) : '–') + '</span>' +
+        '<span class="ts-slot-name">' + (has ? surnameOf(p.name) : 'Empty') + '</span>' +
+        '</button>';
+    }).join('') + '</div>';
+  }).join('');
+}
+
+function openTsPlayerPicker(pos) {
+  tsActiveSlot = pos;
+  document.getElementById('ts-pp-title').textContent = GAA_POSITIONS[pos-1];
+  document.getElementById('ts-pp-sub').textContent = 'Position ' + pos;
+  var list = document.getElementById('ts-player-list');
+  var current = tsDraft[pos-1];
+
+  var html = '';
+  if (typeof current === 'number') {
+    html += '<button class="ts-player-row clear" onclick="assignTsSlot(null)">✕ Leave this position empty</button>';
+  }
+  squad.forEach(function(p, i) {
+    if (!p || !p.name) return;
+    var usedAt = tsDraft.indexOf(i);
+    var isHere = usedAt === (pos-1);
+    var usedElsewhere = usedAt !== -1 && !isHere;
+    html += '<button class="ts-player-row' + (isHere ? ' selected' : '') + '" onclick="assignTsSlot(' + i + ')">' +
+      '<span class="ts-pr-num">' + (i+1) + '</span>' +
+      '<span class="ts-pr-name">' + p.name +
+        (p.pos ? '<span class="ts-pr-pos">' + p.pos + '</span>' : '') + '</span>' +
+      (isHere ? '<span class="ts-pr-tag here">Selected</span>'
+              : usedElsewhere ? '<span class="ts-pr-tag used">' + GAA_POS_SHORT[usedAt] + '</span>' : '') +
+      '</button>';
+  });
+  list.innerHTML = html || '<div class="ptr-no-notes">No players in your squad</div>';
+  document.getElementById('ts-player-modal').classList.add('open');
+}
+
+function closeTsPlayerPicker() {
+  document.getElementById('ts-player-modal').classList.remove('open');
+  tsActiveSlot = null;
+}
+
+function assignTsSlot(squadIdx) {
+  if (tsActiveSlot === null || !tsDraft) return;
+  if (squadIdx !== null) {
+    // A player can only occupy one position — clear their old slot first
+    var existing = tsDraft.indexOf(squadIdx);
+    if (existing !== -1) tsDraft[existing] = null;
+  }
+  tsDraft[tsActiveSlot-1] = squadIdx;
+  closeTsPlayerPicker();
+  renderTeamSelector();
+}
+
+function autoFillTeam() {
+  if (!tsDraft) return;
+  var named = [];
+  squad.forEach(function(p,i){ if (p && p.name) named.push(i); });
+  for (var s = 0; s < 15; s++) tsDraft[s] = named[s] !== undefined ? named[s] : null;
+  renderTeamSelector();
+}
+
+function clearTeamSheet() {
+  if (!tsDraft) return;
+  for (var s = 0; s < 15; s++) tsDraft[s] = null;
+  renderTeamSelector();
+}
+
+function confirmTeamSheet() {
+  if (!tsDraft) return;
+  var filled = tsDraft.filter(function(v){ return typeof v === 'number'; }).length;
+  if (filled === 0) { showSync('Pick at least one player', 2000); return; }
+  state.pitchOccupant = tsDraft.slice();
+  // If the game hasn't started, this is also the starting fifteen
+  if (gamePhase === 'pregame') state.startingFifteen = null;
+  saveTeamSheetSession();
+  refreshTeamSheetLabel();
+  renderRecordPitch();
+  closeTeamSelector();
+  showSync('✓ Starting 15 set (' + filled + ' players)', 2000);
+}
+
+function refreshTeamSheetLabel() {
+  var el = document.getElementById('team-sheet-text');
+  if (!el) return;
+  var occ = state.pitchOccupant || [];
+  var filled = occ.slice(0,15).filter(function(v){ return typeof v === 'number' && squad[v] && squad[v].name; }).length;
+  el.textContent = filled ? ('Starting 15 — ' + filled + ' selected') : 'Select Starting 15';
+  el.style.color = filled ? '' : 'var(--muted)';
+}
+
+function saveTeamSheetSession() {
+  try { localStorage.setItem('cs_team_sheet', JSON.stringify(state.pitchOccupant || [])); } catch(e) {}
+}
+function loadTeamSheetSession() {
+  try {
+    var v = JSON.parse(localStorage.getItem('cs_team_sheet') || 'null');
+    if (Array.isArray(v) && v.length) state.pitchOccupant = v;
+  } catch(e) {}
 }
 
 function renderRecordPitch() {
@@ -12735,6 +12957,8 @@ function onSignedIn() {
   // Restore club session
   loadClubSession();
   loadActiveSquadSession();
+  loadTeamSheetSession();
+  try { refreshTeamSheetLabel(); } catch(e) {}
 
   // Check subscription status before loading data
   checkSubscription();
@@ -13159,6 +13383,10 @@ function selectMatchSquad(squadId) {
   currentClubSquadId = squadId;
   saveActiveSquadSession();
   saveSquad();
+  // Different squad means a different panel of players — reset the team sheet
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  saveTeamSheetSession();
+  refreshTeamSheetLabel();
   refreshSquadPickerDisplay();
   renderSquadGrid();
   try { renderRecordPitch(); } catch(e) {}
