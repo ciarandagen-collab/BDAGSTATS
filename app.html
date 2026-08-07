@@ -215,6 +215,17 @@ input, select {
 }
 input:focus, select:focus { outline:none; border-color:var(--red); }
 select option { background:#1a0505; }
+/* iOS zooms the page in whenever a focused field is under 16px. That's
+   disruptive mid-match, so text-entry fields are held at 16px regardless of
+   whatever smaller size their own rule sets. Non-input text is unaffected. */
+input[type="text"], input[type="url"], input[type="email"], input[type="password"],
+input[type="number"], input[type="search"], input[type="tel"], input[type="date"],
+input:not([type]), textarea, select {
+  font-size: 16px !important;
+}
+/* Fields deliberately larger than 16px keep their size — the rule above is a
+   floor to stop iOS zooming, not a fixed size. */
+.ee-input-sm { font-size: 22px !important; }
 .team-name-input { font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; text-align:center; border-color:rgba(22,163,74,0.3); }
 .vs-mid { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); text-align:center; padding-bottom:11px; }
 .meta-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -1182,7 +1193,7 @@ select option { background:#1a0505; }
 .et-mgr-check.on { background:var(--red); border-color:var(--red); }
 .sh-filter-btn { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .sh-filter-btn.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
-#undo-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(140%); bottom:calc(74px + var(--safe-bottom)); z-index:900; display:flex; align-items:center; gap:14px; padding:11px 14px 11px 18px; background:rgba(20,22,20,0.96); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45); transition:transform 0.25s cubic-bezier(0.22,1,0.36,1); max-width:92vw; }
+#undo-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(140%); bottom:calc(var(--nav-h) + var(--safe-bottom) + 6px); z-index:6000; display:flex; align-items:center; gap:14px; padding:11px 14px 11px 18px; background:rgba(20,22,20,0.96); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45); transition:transform 0.25s cubic-bezier(0.22,1,0.36,1); max-width:92vw; }
 #undo-toast.show { transform:translateX(-50%) translateY(0); }
 #undo-toast span { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.5px; color:var(--cream); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #undo-toast button { padding:6px 14px; border-radius:8px; border:1px solid var(--red); background:rgba(224,48,48,0.15); color:#ff8080; font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; flex-shrink:0; }
@@ -1198,6 +1209,14 @@ select option { background:#1a0505; }
 .team-action-btn .ta-team { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
 .team-action-btn:active { background:var(--red); border-color:var(--red); }
 .team-action-btn:active .ta-team { color:rgba(255,255,255,0.8); }
+/* Distinguish the two sides the same way the rest of the app does:
+   green for My Team, silver for the Opposition. */
+.team-action-btn.ta-home { background:rgba(22,163,74,0.14); border-color:rgba(22,163,74,0.45); }
+.team-action-btn.ta-home .ta-label { color:#86efac; }
+.team-action-btn.ta-home .ta-team { color:rgba(134,239,172,0.75); }
+.team-action-btn.ta-away { background:rgba(226,232,240,0.09); border-color:rgba(226,232,240,0.35); }
+.team-action-btn.ta-away .ta-label { color:#e2e8f0; }
+.team-action-btn.ta-away .ta-team { color:rgba(226,232,240,0.65); }
 .loc-pitch-wrap { border-radius:10px; overflow:hidden; }
 #location-pitch-svg { width:100%; height:auto; display:block; cursor:crosshair; touch-action:manipulation; }
 
@@ -3772,6 +3791,11 @@ function showUndoToast(label) {
 
 function undoLastEvent() {
   if (lastEventId === null) return;
+  // The location picker may be open over the toast — close it first so it
+  // can't attach a zone to the event we're about to remove.
+  if (typeof locPicker !== 'undefined' && locPicker && locPicker.team) {
+    try { closeLocationPicker(); } catch(e) {}
+  }
   deleteEvent(lastEventId);
   lastEventId = null;
   var toast = document.getElementById('undo-toast');
