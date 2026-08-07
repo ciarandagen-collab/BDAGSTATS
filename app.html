@@ -1823,7 +1823,7 @@ input:not([type]), textarea, select {
 
     <!-- Install prompt banner (shown only in Safari browser, not when installed) -->
     <div id="install-prompt" style="display:none;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.3);border-radius:14px;padding:14px 16px;margin-bottom:20px;position:relative;">
-      <button onclick="document.getElementById('install-prompt').style.display='none'" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(240,253,244,0.4);font-size:16px;cursor:pointer;padding:0;">✕</button>
+      <button aria-label="Close" onclick="document.getElementById('install-prompt').style.display='none'" style="position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(240,253,244,0.4);font-size:16px;cursor:pointer;padding:0;">✕</button>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <span style="font-size:24px;">📲</span>
         <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#4ade80;text-transform:uppercase;">Install Coach Stats</div>
@@ -2065,15 +2065,15 @@ input:not([type]), textarea, select {
     <div style="width:24px;height:24px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <button onclick="openClubDashboard()" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:6px;padding:3px 8px;color:#86efac;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club" aria-label="Club dashboard">🏟</button>
-    <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help">?</button>
-    <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings">⚙️</button>
-    <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
-    <button onclick="openAccountSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Account settings">⚙ Account</button>
+    <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help" aria-label="Help">?</button>
+    <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings" aria-label="Event Settings">⚙️</button>
+    <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out" aria-label="Sign out">⏻ Sign Out</button>
+    <button onclick="openAccountSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Account settings" aria-label="Account settings">⚙ Account</button>
   </div>
 </div>
 
 <!-- ── SYNC STATUS BANNER ── -->
-<div id="sync-banner" style="display:none;position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px);left:12px;right:12px;background:#1e3a2f;border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 14px;z-index:8000;font-family:'Oswald',sans-serif;font-size:11px;color:#86efac;letter-spacing:1px;text-align:center;"></div>
+<div id="sync-banner" role="status" aria-live="polite" style="display:none;position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px);left:12px;right:12px;background:#1e3a2f;border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 14px;z-index:8000;font-family:'Oswald',sans-serif;font-size:11px;color:#86efac;letter-spacing:1px;text-align:center;"></div>
 
 
 <!-- TOP BAR -->
@@ -2185,7 +2185,7 @@ input:not([type]), textarea, select {
     </div>
 
     <div class="sec-label">Scoreboard</div>
-    <div class="scoreboard-card">
+    <div class="scoreboard-card" role="status" aria-live="polite">
       <div class="sb-header">
         <span class="sb-comp" id="comp-display">Select Competition</span>
       </div>
@@ -2441,7 +2441,7 @@ input:not([type]), textarea, select {
             <div class="trial-detail-name" id="trial-detail-name"></div>
             <div class="trial-detail-meta" id="trial-detail-meta"></div>
           </div>
-          <button class="trial-menu-btn" onclick="openTrialMenu()">⋯</button>
+          <button aria-label="Trial options" class="trial-menu-btn" onclick="openTrialMenu()">⋯</button>
         </div>
         <div class="trial-detail-tabs">
           <button class="trial-dtab active" id="tdtab-sessions" onclick="switchTrialDetailTab('sessions')">Sessions</button>
@@ -2525,7 +2525,7 @@ input:not([type]), textarea, select {
   </div><!-- /page-squad -->
 
   <!-- PLAYER EDIT MODAL -->
-  <div class="modal-overlay" id="player-edit-modal" onclick="if(event.target===this)closePlayerEdit()">
+  <div class="modal-overlay" role="dialog" aria-modal="true" id="player-edit-modal" onclick="if(event.target===this)closePlayerEdit()">
     <div class="player-edit-sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
@@ -2533,7 +2533,7 @@ input:not([type]), textarea, select {
           <div class="sheet-title" id="player-edit-title">Add Player</div>
           <div class="sheet-sub" id="player-edit-sub">Enter player details</div>
         </div>
-        <button class="sheet-close" onclick="closePlayerEdit()">✕</button>
+        <button class="sheet-close" aria-label="Close" onclick="closePlayerEdit()">✕</button>
       </div>
       <div class="edit-field">
         <div class="edit-label">Name</div>
@@ -2656,7 +2656,7 @@ input:not([type]), textarea, select {
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="showPage('match',this)">
+  <button class="nav-btn active" aria-current="page" onclick="showPage('match',this)">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
     <span class="nav-label">Match</span>
   </button>
@@ -2683,7 +2683,7 @@ input:not([type]), textarea, select {
 </nav>
 
 <!-- COMPETITION PICKER MODAL -->
-<div class="modal-overlay" id="comp-picker-modal" onclick="if(event.target===this)closeCompPicker()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="comp-picker-modal" onclick="if(event.target===this)closeCompPicker()">
   <div class="comp-picker-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2691,7 +2691,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title">Competition</div>
         <div class="sheet-sub">Search or browse</div>
       </div>
-      <button class="sheet-close" onclick="closeCompPicker()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeCompPicker()">✕</button>
     </div>
     <input class="comp-search-input" id="comp-search-input" type="text"
       placeholder="Search competitions..." oninput="filterComps(this.value)"
@@ -2701,7 +2701,7 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- STARTING TEAM SELECTOR -->
-<div class="modal-overlay" id="team-selector-modal" onclick="if(event.target===this)closeTeamSelector()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="team-selector-modal" onclick="if(event.target===this)closeTeamSelector()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2709,7 +2709,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title">📋 Starting 15</div>
         <div class="sheet-sub" id="ts-subtitle">Tap a position to pick a player</div>
       </div>
-      <button class="sheet-close" onclick="closeTeamSelector()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeTeamSelector()">✕</button>
     </div>
     <div class="ts-actions">
       <button class="ts-action-btn" onclick="autoFillTeam()">Auto-fill 1–15</button>
@@ -2721,7 +2721,7 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- TEAM SELECTOR: PLAYER PICKER -->
-<div class="modal-overlay" id="ts-player-modal" onclick="if(event.target===this)closeTsPlayerPicker()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="ts-player-modal" onclick="if(event.target===this)closeTsPlayerPicker()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2729,14 +2729,14 @@ input:not([type]), textarea, select {
         <div class="sheet-title" id="ts-pp-title">Select Player</div>
         <div class="sheet-sub" id="ts-pp-sub"></div>
       </div>
-      <button class="sheet-close" onclick="closeTsPlayerPicker()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeTsPlayerPicker()">✕</button>
     </div>
     <div class="ts-player-list" id="ts-player-list"></div>
   </div>
 </div>
 
 <!-- EVENT TYPE MANAGER -->
-<div class="modal-overlay" id="et-manager-modal" onclick="if(event.target===this)closeEventTypeManager()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="et-manager-modal" onclick="if(event.target===this)closeEventTypeManager()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2744,7 +2744,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title">Quick Record Events</div>
         <div class="sheet-sub">Untick anything you don't tag during a match</div>
       </div>
-      <button class="sheet-close" onclick="closeEventTypeManager()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeEventTypeManager()">✕</button>
     </div>
     <div id="et-manager-list"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">Most-used events move to the top automatically</div>
@@ -2752,13 +2752,13 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- UNDO TOAST -->
-<div id="undo-toast">
+<div id="undo-toast" role="status" aria-live="assertive">
   <span id="undo-toast-text">Event recorded</span>
   <button onclick="undoLastEvent()">Undo</button>
 </div>
 
 <!-- SQUAD PICKER -->
-<div class="modal-overlay" id="squad-picker-modal" onclick="if(event.target===this)closeSquadPicker()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="squad-picker-modal" onclick="if(event.target===this)closeSquadPicker()">
   <div class="comp-picker-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2766,14 +2766,14 @@ input:not([type]), textarea, select {
         <div class="sheet-title">Squad</div>
         <div class="sheet-sub">Which squad is this match for?</div>
       </div>
-      <button class="sheet-close" onclick="closeSquadPicker()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeSquadPicker()">✕</button>
     </div>
     <div class="comp-list" id="squad-picker-list"></div>
   </div>
 </div>
 
 <!-- HELP SHEET -->
-<div class="modal-overlay" id="help-modal" onclick="if(event.target===this)closeHelp()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="help-modal" onclick="if(event.target===this)closeHelp()">
   <div class="help-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2781,7 +2781,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title">Help & Guide</div>
         <div class="sheet-sub">Coach Stats — Quick Reference</div>
       </div>
-      <button class="sheet-close" onclick="closeHelp()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeHelp()">✕</button>
     </div>
 
     <!-- Download Guide -->
@@ -2900,14 +2900,14 @@ input:not([type]), textarea, select {
       <div class="detail-handle"></div>
       <div class="detail-title" id="detail-title">Match Details</div>
       <div class="detail-sub" id="detail-sub"></div>
-      <button class="detail-close" onclick="closeDetailModal()">✕</button>
+      <button aria-label="Close" class="detail-close" onclick="closeDetailModal()">✕</button>
     </div>
     <div class="detail-body" id="detail-body"></div>
   </div>
 </div>
 
 <!-- EVENT TYPE PICKER (pitch-first flow) -->
-<div class="modal-overlay" id="event-type-modal" onclick="if(event.target===this)closeEventTypePicker()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="event-type-modal" onclick="if(event.target===this)closeEventTypePicker()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2915,7 +2915,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title" id="et-picker-title">Player</div>
         <div class="sheet-sub" id="et-picker-sub">Select event to record</div>
       </div>
-      <button class="sheet-close" onclick="closeEventTypePicker()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeEventTypePicker()">✕</button>
     </div>
     <div class="et-picker-grid" id="et-picker-grid"></div>
     <button class="et-manage-btn" onclick="openEventTypeManager()">⚙️ Choose which events show here</button>
@@ -2923,7 +2923,7 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- SHOT MODAL -->
-<div class="modal-overlay" id="shot-modal" onclick="if(event.target===this)closeShotModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="shot-modal" onclick="if(event.target===this)closeShotModal()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2931,7 +2931,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title" id="modal-title">Shot Outcome</div>
         <div class="sheet-sub" id="modal-subtitle">Select outcome</div>
       </div>
-      <button class="sheet-close" onclick="closeShotModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeShotModal()">✕</button>
     </div>
     <div class="outcome-grid">
       <button class="outcome-btn ob-point"   onclick="selectShotOutcome('point')"><span class="o-icon">✦</span><span class="o-label">Point</span></button>
@@ -2949,7 +2949,7 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- GENERIC MODAL -->
-<div class="modal-overlay" id="generic-modal" onclick="if(event.target===this)closeGenericModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="generic-modal" onclick="if(event.target===this)closeGenericModal()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2957,7 +2957,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title" id="gmodal-title">Select Outcome</div>
         <div class="sheet-sub" id="gmodal-subtitle"></div>
       </div>
-      <button class="sheet-close" onclick="closeGenericModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeGenericModal()">✕</button>
     </div>
     <div class="outcome-grid" id="gmodal-outcomes"></div>
     <div class="player-attr-section">
@@ -2967,7 +2967,7 @@ input:not([type]), textarea, select {
 </div>
 
 <!-- SHOT/45 LOCATION PICKER -->
-<div class="modal-overlay" id="location-modal" onclick="if(event.target===this)closeLocationPicker()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="location-modal" onclick="if(event.target===this)closeLocationPicker()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -2975,7 +2975,7 @@ input:not([type]), textarea, select {
         <div class="sheet-title">📍 Shot Location</div>
         <div class="sheet-sub">Tap the pitch where the shot was taken from</div>
       </div>
-      <button class="sheet-close" onclick="closeLocationPicker()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeLocationPicker()">✕</button>
     </div>
     <div class="loc-pitch-wrap">
       <svg id="location-pitch-svg" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg" onclick="handleLocationTap(event)"></svg>
@@ -3372,9 +3372,13 @@ const bumpMin = () => { $('current-min').value = Math.min(80, parseInt($('curren
 // ── NAVIGATION ─────────────────────────────────────
 function showPage(name, btn) {
   Array.prototype.slice.call(document.querySelectorAll('.page')).forEach(function(p){p.classList.remove('active');});
-  Array.prototype.slice.call(document.querySelectorAll('.nav-btn')).forEach(function(b){b.classList.remove('active');});
+  Array.prototype.slice.call(document.querySelectorAll('.nav-btn')).forEach(function(b){
+    b.classList.remove('active');
+    b.removeAttribute('aria-current');
+  });
   $('page-'+name).classList.add('active');
   btn.classList.add('active');
+  btn.setAttribute('aria-current', 'page');
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
   if (name === 'record') { renderRecordPitch(); try { refreshSquadPickerDisplay(); } catch(e) {} }
@@ -3706,7 +3710,7 @@ function renderTimeline() {
       <span class="event-icon">${icon}</span>
       <span class="event-text">${label} — ${td}</span>
       <span class="event-team-tag">H${e.half}</span>
-      <button class="del-btn" onclick="deleteEvent(${e.id})">✕</button>
+      <button aria-label="Delete event" class="del-btn" onclick="deleteEvent(${e.id})">✕</button>
     </div>`;
   }).join('');
 }
@@ -5201,18 +5205,18 @@ function renderGameControls() {
   } else if (gamePhase === 'first_half') {
     html = '<button class="clock-action-btn btn-halftime" onclick="endFirstHalf()">⏸ Half Time</button>';
     if (clock.running) {
-      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+      html += '<button aria-label="Pause clock" class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
     } else {
-      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+      html += '<button aria-label="Start clock" class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
     }
   } else if (gamePhase === 'half_time') {
     html = '<button class="clock-action-btn btn-start" onclick="startSecondHalf()">▶ 2nd Half</button>';
   } else if (gamePhase === 'second_half') {
     html = '<button class="clock-action-btn btn-end-game" onclick="endFullTime()">⏹ Full Time</button>';
     if (clock.running) {
-      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+      html += '<button aria-label="Pause clock" class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
     } else {
-      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+      html += '<button aria-label="Start clock" class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
     }
   } else if (gamePhase === 'full_time') {
     html = '<button class="clock-action-btn btn-start" onclick="startExtraTime()">▶ Extra Time</button>';
@@ -5220,9 +5224,9 @@ function renderGameControls() {
   } else if (gamePhase === 'extra_time') {
     html = '<button class="btn-end-game" onclick="endGame()">🏁 End Game</button>';
     if (clock.running) {
-      html += '<button class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
+      html += '<button aria-label="Pause clock" class="clock-action-btn btn-pause" onclick="clockPause()">⏸</button>';
     } else {
-      html += '<button class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
+      html += '<button aria-label="Start clock" class="clock-action-btn btn-start" onclick="clockStart()">▶</button>';
     }
   } else if (gamePhase === 'finished') {
     html = '<button class="clock-action-btn btn-clock-reset" onclick="resetMatch()">↺ New Game</button>';
@@ -6412,7 +6416,7 @@ function renderAttendanceGrid(attendance, notes) {
     var current = attendance[x.i] || 'present';
     var btns = ATT_STATUSES.map(function(s) {
       return '<button class="tr-att-btn' + (current === s ? ' selected' : '') + '" ' +
-        'onclick="setAttStatus(this,' + x.i + ',\'' + s + '\')" title="' + s + '">' +
+        'onclick="setAttStatus(this,' + x.i + ',\'' + s + '\')" title="' + s + '" aria-label="' + s + '">' +
         ATT_ICONS[s] + '</button>';
     }).join('');
     return '<div class="tr-att-row">' +
@@ -6769,7 +6773,7 @@ function renderSubsList() {
       '<div class="sub-minute">' + (s.min||'?') + '\'</div>' +
       '<div class="sub-detail">' + detail + '</div>' +
       '<span class="sub-team-badge ' + s.team + '">' + teamLabel + '</span>' +
-      '<button class="sub-del-btn" onclick="deleteSub(' + s.id + ')">✕</button>' +
+      '<button aria-label="Delete substitution" class="sub-del-btn" onclick="deleteSub(' + s.id + ')">✕</button>' +
     '</div>';
   }).join('');
 }
@@ -7025,7 +7029,7 @@ function vaRenderClips() {
       '<div class="va-clip-times-small">' + vaFormatTime(c.inSec) + ' → ' + vaFormatTime(c.outSec) + '</div>' +
       '<div class="va-clip-label">' + c.label + '<div style="font-size:10px;color:var(--muted);">' + teamLabel + ' · ' + c.duration + 's</div></div>' +
       '<span class="va-clip-cat ' + c.category + '">' + c.category + '</span>' +
-      '<button class="va-clip-del" onclick="event.stopPropagation();vaDeleteClip(' + c.id + ')">✕</button>' +
+      '<button aria-label="Close" class="va-clip-del" onclick="event.stopPropagation();vaDeleteClip(' + c.id + ')">✕</button>' +
     '</div>';
   }).join('');
   if (exportBtn) exportBtn.style.display = 'block';
@@ -7129,8 +7133,8 @@ function renderPtrInjuries(slotIdx) {
         '<span>' + inj.type + '</span>' +
         '<div style="display:flex;gap:6px;align-items:center;">' +
           '<span class="injury-status ' + (isActive ? 'active' : 'recovered') + '">' + (isActive ? 'Active' : 'Recovered') + '</span>' +
-          (!inj.recovered ? '<button class="injury-del" onclick="markInjuryRecovered(' + inj.id + ')" title="Mark recovered">✓</button>' : '') +
-          '<button class="injury-del" onclick="deleteInjury(' + inj.id + ')">✕</button>' +
+          (!inj.recovered ? '<button class="injury-del" onclick="markInjuryRecovered(' + inj.id + ')" title="Mark recovered" aria-label="Mark recovered">✓</button>' : '') +
+          '<button aria-label="Delete injury record" class="injury-del" onclick="deleteInjury(' + inj.id + ')">✕</button>' +
         '</div>' +
       '</div>' +
       '<div class="injury-dates">' + new Date(inj.date + 'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ' · ' + returnStr + '</div>' +
@@ -8793,7 +8797,7 @@ function renderScoutPlayers(players) {
       '<input class="scout-player-name" type="text" value="' + (p.name||'') + '" placeholder="Player name">' +
       '<input class="scout-player-pos" type="text" value="' + (p.pos||'') + '" placeholder="Pos">' +
       '<input class="scout-player-notes" type="text" value="' + (p.notes||'') + '" placeholder="Notes on this player">' +
-      '<button class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>' +
+      '<button aria-label="Close" class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>' +
     '</div>';
   }).join('');
 }
@@ -8805,7 +8809,7 @@ function addScoutPlayer() {
   row.innerHTML = '<input class="scout-player-name" type="text" placeholder="Player name">' +
     '<input class="scout-player-pos" type="text" placeholder="Pos">' +
     '<input class="scout-player-notes" type="text" placeholder="Notes on this player">' +
-    '<button class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>';
+    '<button aria-label="Close" class="scout-player-del" onclick="this.closest(\'.scout-player-row\').remove()">✕</button>';
   list.appendChild(row);
   row.querySelector('input').focus();
 }
@@ -9361,7 +9365,7 @@ function renderTrialSessions() {
       '</div>' +
       '<span class="tsc-graded">' + gradedCount + ' graded</span>' +
       (coachCount > 0 ? '<span class="tsc-graded" style="background:rgba(68,136,255,0.1);color:#6699ff;">👥 ' + coachCount + ' coach' + (coachCount!==1?'es':'') + '</span>' : '') +
-      '<button class="tsc-share-btn" onclick="event.stopPropagation();copyTrialGradingLink(' + s.id + ')" title="Share grading link">📤</button>' +
+      '<button class="tsc-share-btn" onclick="event.stopPropagation();copyTrialGradingLink(' + s.id + ')" title="Share grading link" aria-label="Share grading link">📤</button>' +
     '</div>';
   }).join('');
 
@@ -10138,7 +10142,7 @@ function renderEeOutcomes(outcomes) {
     return '<div class="ee-outcome-row">' +
       '<input class="ee-outcome-label-input" type="text" value="' + o.label + '" placeholder="Outcome label">' +
       '<input class="ee-perf-input" type="number" value="' + (o.perf || 0) + '" title="Performance value">' +
-      '<button class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>' +
+      '<button aria-label="Remove outcome" class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>' +
       '</div>';
   }).join('');
 }
@@ -10149,7 +10153,7 @@ function eeAddOutcome() {
   row.className = 'ee-outcome-row';
   row.innerHTML = '<input class="ee-outcome-label-input" type="text" placeholder="Outcome label">' +
     '<input class="ee-perf-input" type="number" value="0" title="Performance value">' +
-    '<button class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>';
+    '<button aria-label="Remove outcome" class="ee-outcome-del" onclick="eeRemoveOutcome(this)">✕</button>';
   list.appendChild(row);
   row.querySelector('input').focus();
 }
@@ -13456,7 +13460,7 @@ function renderClubMembers() {
           '<div style="font-family:\'Oswald\',sans-serif;font-size:13px;color:#f0fdf4;">' + (m.name || 'Unknown') + '</div>' +
           '<div style="font-size:10px;color:rgba(240,253,244,0.4);text-transform:uppercase;letter-spacing:1px;">' + m.role + '</div>' +
         '</div>' +
-        (m.user_id !== currentUser.id ? '<button onclick="removeMember(\'' + m.id + '\')" style="background:none;border:none;color:rgba(255,80,80,0.4);font-size:16px;cursor:pointer;" title="Remove">✕</button>' : '') +
+        (m.user_id !== currentUser.id ? '<button onclick="removeMember(\'' + m.id + '\')" style="background:none;border:none;color:rgba(255,80,80,0.4);font-size:16px;cursor:pointer;" title="Remove" aria-label="Remove">✕</button>' : '') +
       '</div>';
     }).join('');
 }
@@ -13598,6 +13602,82 @@ document.addEventListener('DOMContentLoaded', function() {
   try { buildTeamSelects(); } catch(e) {}
 });
 
+// ── ACCESSIBILITY: MODAL FOCUS MANAGEMENT ──────────
+// Rather than editing every open/close call site, watch for the `open` class
+// on any overlay and manage focus centrally.
+(function () {
+  var lastFocused = null;
+
+  function focusableIn(el) {
+    return Array.prototype.filter.call(
+      el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      function (n) { return n.offsetParent !== null && !n.disabled; }
+    );
+  }
+
+  function onOpen(overlay) {
+    lastFocused = document.activeElement;
+    var f = focusableIn(overlay);
+    // Prefer the first real control over the close button, which is usually first in the DOM
+    var target = f.find(function (n) { return !/close|dismiss/i.test(n.getAttribute('aria-label') || ''); }) || f[0];
+    if (target) { try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); } }
+  }
+
+  function onClose() {
+    if (lastFocused && document.contains(lastFocused)) {
+      try { lastFocused.focus({ preventScroll: true }); } catch (e) {}
+    }
+    lastFocused = null;
+  }
+
+  function openOverlays() {
+    return Array.prototype.filter.call(
+      document.querySelectorAll('.modal-overlay, .detail-modal-overlay'),
+      function (n) { return n.classList.contains('open'); }
+    );
+  }
+
+  if (typeof MutationObserver !== 'undefined') {
+    var obs = new MutationObserver(function (muts) {
+      muts.forEach(function (m) {
+        if (m.attributeName !== 'class') return;
+        var el = m.target;
+        if (!el.classList || !el.classList.contains('modal-overlay')) return;
+        var isOpen = el.classList.contains('open');
+        var wasOpen = el.__csWasOpen === true;
+        if (isOpen && !wasOpen) onOpen(el);
+        if (!isOpen && wasOpen && !openOverlays().length) onClose();
+        el.__csWasOpen = isOpen;
+      });
+    });
+    document.querySelectorAll('.modal-overlay').forEach(function (el) {
+      el.__csWasOpen = el.classList.contains('open');
+      obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+
+  // Escape closes the topmost open sheet, and Tab is kept inside it.
+  document.addEventListener('keydown', function (e) {
+    var open = openOverlays();
+    if (!open.length) return;
+    var top = open[open.length - 1];
+
+    if (e.key === 'Escape') {
+      var closeBtn = top.querySelector('[aria-label="Close"], .sheet-close, .detail-close');
+      if (closeBtn) { e.preventDefault(); closeBtn.click(); }
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      var f = focusableIn(top);
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+})();
+
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -13642,7 +13722,7 @@ function showInstallBanner() {
         <div style="font-size:11px;color:rgba(240,253,244,0.5);margin-top:2px;">Add to your home screen for offline use</div>
       </div>
       <button onclick="installApp()" style="background:#16a34a;border:none;border-radius:8px;padding:8px 14px;color:#fff;font-family:Oswald,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;">Install</button>
-      <button onclick="dismissInstall()" style="background:none;border:none;color:rgba(240,253,244,0.4);font-size:18px;cursor:pointer;padding:4px;">✕</button>
+      <button aria-label="Dismiss" onclick="dismissInstall()" style="background:none;border:none;color:rgba(240,253,244,0.4);font-size:18px;cursor:pointer;padding:4px;">✕</button>
     </div>`;
   document.body.appendChild(banner);
 }
@@ -14146,7 +14226,7 @@ function vaRenderTagList() {
         '<span class="va-tag-ts">' + vaFormatTime(t.ts) + '</span>' +
         '<span class="va-tag-label">' + label + '</span>' +
         '<span class="va-tag-team">' + (t.teamName || t.team) + '</span>' +
-        '<button class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
+        '<button aria-label="Close" class="va-tag-del" onclick="event.stopPropagation();vaDeleteTag(' + t.id + ')">✕</button>' +
         '<button class="va-tag-item-create-clip" onclick="event.stopPropagation();vaCreateClipFromTag(' + t.id + ')">✂️ clip</button>' +
         '</div>';
     }).join('');
@@ -14165,7 +14245,7 @@ window.addEventListener('resize', function() {
 });
 </script>
 <!-- EVENT SETTINGS SHEET -->
-<div class="modal-overlay" id="event-settings-modal" onclick="if(event.target===this)closeEventSettings()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="event-settings-modal" onclick="if(event.target===this)closeEventSettings()">
   <div class="settings-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -14173,7 +14253,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title">Event Settings</div>
         <div class="sheet-sub" id="event-settings-sub">Configure recording events and performance scoring</div>
       </div>
-      <button class="sheet-close" onclick="closeEventSettings()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeEventSettings()">✕</button>
     </div>
 
     <!-- Tabs -->
@@ -14201,7 +14281,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- EVENT EDITOR SHEET -->
-<div class="modal-overlay" id="event-editor-modal" onclick="if(event.target===this)closeEventEditor()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="event-editor-modal" onclick="if(event.target===this)closeEventEditor()">
   <div class="event-editor-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -14209,7 +14289,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title" id="event-editor-title">Edit Event</div>
         <div class="sheet-sub">Configure label, icon, context and outcomes</div>
       </div>
-      <button class="sheet-close" onclick="closeEventEditor()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeEventEditor()">✕</button>
     </div>
 
     <div class="ee-field">
@@ -14252,12 +14332,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- FIXTURES MODAL -->
-<div class="modal-overlay" id="fixtures-modal" onclick="if(event.target===this)closeFixtures()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="fixtures-modal" onclick="if(event.target===this)closeFixtures()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Fixtures</div><div class="sheet-sub">Upcoming and past matches</div></div>
-      <button class="sheet-close" onclick="closeFixtures()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeFixtures()">✕</button>
     </div>
     <div style="flex-shrink:0;margin-bottom:8px;">
       <button class="training-new-btn" style="margin-bottom:0;" onclick="openAddFixture()">+ Add Fixture</button>
@@ -14269,12 +14349,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- ADD FIXTURE MODAL -->
-<div class="modal-overlay" id="add-fixture-modal" onclick="if(event.target===this)closeAddFixture()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="add-fixture-modal" onclick="if(event.target===this)closeAddFixture()">
   <div class="training-sheet" style="max-height:80vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title" id="fixture-modal-title">Add Fixture</div><div class="sheet-sub">Schedule an upcoming match</div></div>
-      <button class="sheet-close" onclick="closeAddFixture()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeAddFixture()">✕</button>
     </div>
     <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
       <div class="tr-session-meta">
@@ -14322,12 +14402,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- OPPOSITION DATABASE MODAL -->
-<div class="modal-overlay" id="opposition-modal" onclick="if(event.target===this)closeOpposition()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="opposition-modal" onclick="if(event.target===this)closeOpposition()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Opposition Database</div><div class="sheet-sub">Club profiles and history</div></div>
-      <button class="sheet-close" onclick="closeOpposition()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeOpposition()">✕</button>
     </div>
     <div style="flex-shrink:0;margin-bottom:8px;">
       <input type="text" class="history-search-input" id="opposition-search"
@@ -14340,7 +14420,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- OPPOSITION PROFILE MODAL -->
-<div class="modal-overlay" id="opposition-profile-modal" onclick="if(event.target===this)closeOppositionProfile()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="opposition-profile-modal" onclick="if(event.target===this)closeOppositionProfile()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -14348,7 +14428,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title" id="opp-profile-name"></div>
         <div class="sheet-sub" id="opp-profile-record"></div>
       </div>
-      <button class="sheet-close" onclick="closeOppositionProfile()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeOppositionProfile()">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
       <!-- Overall record -->
@@ -14385,12 +14465,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- SEASON SUMMARY MODAL -->
-<div class="modal-overlay" id="season-summary-modal" onclick="if(event.target===this)closeSeasonSummary()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="season-summary-modal" onclick="if(event.target===this)closeSeasonSummary()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Season Summary</div><div class="sheet-sub">Aggregated stats across all matches</div></div>
-      <button class="sheet-close" onclick="closeSeasonSummary()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeSeasonSummary()">✕</button>
     </div>
     <div class="tr-session-meta" style="flex-shrink:0;">
       <div class="tr-meta-field">
@@ -14412,12 +14492,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- SCOUT REPORT MODAL -->
-<div class="modal-overlay" id="scout-report-modal" onclick="if(event.target===this)closeScoutReport()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="scout-report-modal" onclick="if(event.target===this)closeScoutReport()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title" id="scout-sheet-title">Scout Report</div><div class="sheet-sub" id="scout-sheet-sub">Opposition analysis</div></div>
-      <button class="sheet-close" onclick="closeScoutReport()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeScoutReport()">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
       <!-- Key Players -->
@@ -14460,12 +14540,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- WELLNESS CHECKIN MODAL (Coach view) -->
-<div class="modal-overlay" id="wellness-modal" onclick="if(event.target===this)closeWellnessModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="wellness-modal" onclick="if(event.target===this)closeWellnessModal()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Readiness Dashboard</div><div class="sheet-sub" id="wellness-date-label">Today's check-in</div></div>
-      <button class="sheet-close" onclick="closeWellnessModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeWellnessModal()">✕</button>
     </div>
     <div style="flex-shrink:0;margin-bottom:12px;">
       <div class="ptr-section-title" style="margin-bottom:8px;">Player Self-Report Link</div>
@@ -14482,12 +14562,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- WELLNESS SELF-REPORT (Player facing - embedded in app for now) -->
-<div class="modal-overlay" id="wellness-selfcheck-modal" onclick="if(event.target===this)closeWellnessSelfCheck()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="wellness-selfcheck-modal" onclick="if(event.target===this)closeWellnessSelfCheck()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">How are you feeling?</div><div class="sheet-sub">Your coach will see your scores</div></div>
-      <button class="sheet-close" onclick="closeWellnessSelfCheck()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeWellnessSelfCheck()">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
       <div class="ptr-section">
@@ -14507,12 +14587,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- EXPORT DATA MODAL -->
-<div class="modal-overlay" id="export-modal" onclick="if(event.target===this)closeExportModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="export-modal" onclick="if(event.target===this)closeExportModal()">
   <div class="training-sheet" style="max-height:70vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">📥 Export Data</div><div class="sheet-sub">Download your match history</div></div>
-      <button class="sheet-close" onclick="closeExportModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeExportModal()">✕</button>
     </div>
     <div style="padding:0 16px 24px;">
 
@@ -14543,14 +14623,14 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- HALF TIME DASHBOARD -->
-<div class="modal-overlay" id="halftime-dashboard" style="align-items:flex-end;">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="halftime-dashboard" style="align-items:flex-end;">
   <div style="background:#0a0f0b;border-top:3px solid #16a34a;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding-bottom:calc(20px + var(--safe-bottom));">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px;">
       <div>
         <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:#f0fdf4;letter-spacing:1px;">⏸ HALF TIME REPORT</div>
         <div id="ht-score-display" style="font-size:13px;color:#4ade80;margin-top:2px;"></div>
       </div>
-      <button onclick="closeHalftimeDashboard()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f0fdf4;font-size:16px;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <button aria-label="Close" onclick="closeHalftimeDashboard()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f0fdf4;font-size:16px;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
 
     <div id="ht-dashboard-content" style="padding:0 12px 16px;"></div>
@@ -14564,12 +14644,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- ACCOUNT SETTINGS MODAL -->
-<div class="modal-overlay" id="account-modal" onclick="if(event.target===this)closeAccountSettings()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="account-modal" onclick="if(event.target===this)closeAccountSettings()">
   <div class="training-sheet" style="max-height:85vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Account Settings</div><div class="sheet-sub" id="account-email-display"></div></div>
-      <button class="sheet-close" onclick="closeAccountSettings()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeAccountSettings()">✕</button>
     </div>
     <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
 
@@ -14652,12 +14732,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- DELETE ACCOUNT CONFIRMATION -->
-<div class="modal-overlay" id="delete-account-modal" onclick="if(event.target===this)closeDeleteAccount()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="delete-account-modal" onclick="if(event.target===this)closeDeleteAccount()">
   <div class="training-sheet" style="max-height:50vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title" style="color:#f87171;">Delete Account</div></div>
-      <button class="sheet-close" onclick="closeDeleteAccount()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeDeleteAccount()">✕</button>
     </div>
     <div style="padding:0 16px 24px;">
       <p style="font-size:14px;color:var(--cream);margin-bottom:16px;line-height:1.6;">This will permanently delete your account and all data including match history, squad, training sessions and trial records. This cannot be undone.</p>
@@ -14685,12 +14765,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- SUBSTITUTION MODAL -->
-<div class="modal-overlay" id="sub-modal" onclick="if(event.target===this)closeSubModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="sub-modal" onclick="if(event.target===this)closeSubModal()">
   <div class="training-sheet" style="max-height:70vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Record Substitution</div><div class="sheet-sub">Who came on and off?</div></div>
-      <button class="sheet-close" onclick="closeSubModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeSubModal()">✕</button>
     </div>
     <div style="padding-bottom:calc(16px + var(--safe-bottom));overflow-y:auto;">
       <div class="tr-session-meta">
@@ -14721,12 +14801,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- MATCH NOTES MODAL (from History) -->
-<div class="modal-overlay" id="match-notes-modal" onclick="if(event.target===this)closeMatchNotes()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="match-notes-modal" onclick="if(event.target===this)closeMatchNotes()">
   <div class="training-sheet" style="max-height:80vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Match Notes</div><div class="sheet-sub" id="match-notes-modal-sub">Add notes for this match</div></div>
-      <button class="sheet-close" onclick="closeMatchNotes()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeMatchNotes()">✕</button>
     </div>
     <div style="flex:1;display:flex;flex-direction:column;padding-bottom:calc(16px + var(--safe-bottom));">
       <textarea id="match-notes-modal-input" class="match-notes-textarea" style="flex:1;min-height:200px;"
@@ -14739,12 +14819,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- NEW TRIAL MODAL -->
-<div class="modal-overlay" id="new-trial-modal" onclick="if(event.target===this)closeNewTrial()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="new-trial-modal" onclick="if(event.target===this)closeNewTrial()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">New Trial</div><div class="sheet-sub">Set up a player trial process</div></div>
-      <button class="sheet-close" onclick="closeNewTrial()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeNewTrial()">✕</button>
     </div>
     <div class="tr-meta-field" style="margin-bottom:12px;">
       <div class="tr-meta-label">Trial Name</div>
@@ -14765,12 +14845,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- SAVE CLIP MODAL -->
-<div class="modal-overlay" id="save-clip-modal" onclick="if(event.target===this)closeSaveClipModal()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="save-clip-modal" onclick="if(event.target===this)closeSaveClipModal()">
   <div class="training-sheet" style="max-height:75vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Save Clip</div><div class="sheet-sub" id="save-clip-times"></div></div>
-      <button class="sheet-close" onclick="closeSaveClipModal()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeSaveClipModal()">✕</button>
     </div>
     <div style="overflow-y:auto;padding-bottom:calc(16px + var(--safe-bottom));">
       <div class="tr-meta-field" style="margin-bottom:12px;">
@@ -14810,12 +14890,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- ADD INJURY MODAL -->
-<div class="modal-overlay" id="add-injury-modal" onclick="if(event.target===this)closeAddInjury()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="add-injury-modal" onclick="if(event.target===this)closeAddInjury()">
   <div class="training-sheet" style="max-height:75vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Log Injury</div><div class="sheet-sub" id="injury-modal-sub">Player name</div></div>
-      <button class="sheet-close" onclick="closeAddInjury()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeAddInjury()">✕</button>
     </div>
     <div style="padding-bottom:calc(16px + var(--safe-bottom));overflow-y:auto;">
       <div class="tr-meta-field" style="margin-bottom:12px;">
@@ -14842,12 +14922,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- ADD TRIALIST MODAL -->
-<div class="modal-overlay" id="add-trialist-modal" onclick="if(event.target===this)closeAddTrialist()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="add-trialist-modal" onclick="if(event.target===this)closeAddTrialist()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Add Trialist</div><div class="sheet-sub">Enter player details</div></div>
-      <button class="sheet-close" onclick="closeAddTrialist()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeAddTrialist()">✕</button>
     </div>
     <div class="tr-meta-field" style="margin-bottom:12px;">
       <div class="tr-meta-label">Name</div>
@@ -14873,12 +14953,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- NEW TRIAL SESSION MODAL -->
-<div class="modal-overlay" id="new-trial-session-modal" onclick="if(event.target===this)closeNewTrialSession()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="new-trial-session-modal" onclick="if(event.target===this)closeNewTrialSession()">
   <div class="training-sheet" style="max-height:92vh;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title" id="trial-session-sheet-title">New Trial Session</div><div class="sheet-sub">Grade each trialist</div></div>
-      <button class="sheet-close" onclick="closeNewTrialSession()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeNewTrialSession()">✕</button>
     </div>
     <div class="tr-session-meta" style="flex-shrink:0;">
       <div class="tr-meta-field">
@@ -14900,7 +14980,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- TRIALIST PROFILE MODAL -->
-<div class="modal-overlay" id="trialist-profile-modal" onclick="if(event.target===this)closeTrialistProfile()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="trialist-profile-modal" onclick="if(event.target===this)closeTrialistProfile()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -14908,7 +14988,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title" id="tpro-name"></div>
         <div class="sheet-sub" id="tpro-meta"></div>
       </div>
-      <button class="sheet-close" onclick="closeTrialistProfile()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeTrialistProfile()">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px;">
       <!-- Grade history -->
@@ -14945,12 +15025,12 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- BUILD SQUAD MODAL -->
-<div class="modal-overlay" id="build-squad-modal" onclick="if(event.target===this)closeBuildSquad()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="build-squad-modal" onclick="if(event.target===this)closeBuildSquad()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div><div class="sheet-title">Build Squad from Trial</div><div class="sheet-sub">Select promoted trialists to add</div></div>
-      <button class="sheet-close" onclick="closeBuildSquad()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeBuildSquad()">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding-bottom:24px;">
       <div id="build-squad-list"></div>
@@ -14962,7 +15042,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- TRIAL MENU MODAL -->
-<div class="modal-overlay" id="trial-menu-modal" onclick="if(event.target===this)closeTrialMenu()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="trial-menu-modal" onclick="if(event.target===this)closeTrialMenu()">
   <div class="training-sheet" style="max-height:40vh;">
     <div class="sheet-handle"></div>
     <div style="padding:8px 0 calc(16px + var(--safe-bottom));">
@@ -14974,7 +15054,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- NEW TRAINING SESSION SHEET -->
-<div class="modal-overlay" id="new-session-modal" onclick="if(event.target===this)closeNewSession()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="new-session-modal" onclick="if(event.target===this)closeNewSession()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -14982,7 +15062,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title" id="session-sheet-title">New Training Session</div>
         <div class="sheet-sub">Mark attendance and add notes</div>
       </div>
-      <button class="sheet-close" onclick="closeNewSession()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeNewSession()">✕</button>
     </div>
 
     <div class="tr-session-meta">
@@ -15015,7 +15095,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- PLAYER TRAINING PROFILE SHEET -->
-<div class="modal-overlay" id="player-training-modal" onclick="if(event.target===this)closePlayerTraining()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="player-training-modal" onclick="if(event.target===this)closePlayerTraining()">
   <div class="training-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -15023,7 +15103,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title" id="ptr-player-name">Player</div>
         <div class="sheet-sub" id="ptr-player-pos"></div>
       </div>
-      <button class="sheet-close" onclick="closePlayerTraining()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closePlayerTraining()">✕</button>
     </div>
 
     <!-- Attendance summary -->
@@ -15073,7 +15153,7 @@ window.addEventListener('resize', function() {
 </div>
 
 <!-- NEW VIDEO ANALYSIS SETUP SHEET -->
-<div class="modal-overlay" id="new-video-modal" onclick="if(event.target===this)closeNewVideoAnalysis()">
+<div class="modal-overlay" role="dialog" aria-modal="true" id="new-video-modal" onclick="if(event.target===this)closeNewVideoAnalysis()">
   <div class="new-video-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -15081,7 +15161,7 @@ window.addEventListener('resize', function() {
         <div class="sheet-title">New Video Analysis</div>
         <div class="sheet-sub">Set up match details, then paste a link or upload a video file</div>
       </div>
-      <button class="sheet-close" onclick="closeNewVideoAnalysis()">✕</button>
+      <button class="sheet-close" aria-label="Close" onclick="closeNewVideoAnalysis()">✕</button>
     </div>
 
     <div class="nva-field">
