@@ -573,6 +573,41 @@ test.describe('Match Analysis (Stats tab)', () => {
   test('Old misleading Scoring Eff. metric is gone', async ({ page }) => {
     await expect(page.locator('#stats-body')).not.toContainText('Scoring Eff.');
   });
+
+  test('Possession shows as Dominance Index when no possessions tagged', async ({ page }) => {
+    // With nothing tagged, the estimate is used and must be labelled as such
+    await expect(page.locator('#stats-body')).toContainText('Dominance Index');
+  });
+});
+
+test.describe('Possession Method (Trends tab)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'trends');
+  });
+
+  test('Possession method note is shown', async ({ page }) => {
+    await expect(page.locator('#poss-method-note')).toBeVisible();
+  });
+
+  test('Untagged match labels the section as Dominance Index', async ({ page }) => {
+    await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
+    await expect(page.locator('#poss-method-note')).toContainText('Estimated');
+  });
+
+  test('One-sided possession tagging does not produce a 100/0 split', async ({ page }) => {
+    // Tag possessions for the opposition only, then check we fall back to the estimate
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    for (let i = 0; i < 3; i++) {
+      await page.locator('.record-pitch-player').first().click();
+      await page.locator('.et-picker-btn:has-text("Possession")').click();
+      await page.waitForTimeout(150);
+    }
+    await navTo(page, 'trends');
+    await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
+    await expect(page.locator('#poss-away-pct')).not.toHaveText('100%');
+  });
 });
 
 test.describe('Shot Map', () => {
