@@ -2090,6 +2090,13 @@ select option { background:#1a0505; }
             <option value="">Select Competition</option>
           </select>
         </div>
+        <div class="meta-row" id="squad-picker-row" style="display:none;">
+          <button class="comp-picker-btn" id="squad-picker-btn" onclick="openSquadPicker()" type="button">
+            <span style="color:var(--muted);font-size:11px;">👥</span>
+            <span id="squad-display-text">Select Squad</span>
+            <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2625,6 +2632,21 @@ select option { background:#1a0505; }
       placeholder="Search competitions..." oninput="filterComps(this.value)"
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="comp-list" id="comp-list"></div>
+  </div>
+</div>
+
+<!-- SQUAD PICKER -->
+<div class="modal-overlay" id="squad-picker-modal" onclick="if(event.target===this)closeSquadPicker()">
+  <div class="comp-picker-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Squad</div>
+        <div class="sheet-sub">Which squad is this match for?</div>
+      </div>
+      <button class="sheet-close" onclick="closeSquadPicker()">✕</button>
+    </div>
+    <div class="comp-list" id="squad-picker-list"></div>
   </div>
 </div>
 
@@ -12032,12 +12054,18 @@ function onSignedIn() {
 
   // Restore club session
   loadClubSession();
+  loadActiveSquadSession();
 
   // Check subscription status before loading data
   checkSubscription();
   handleCheckoutReturn();
 
   loadUserData();
+
+  // Populate club squads so the Match tab squad picker works without opening the dashboard
+  if (currentClub && currentClub.id) {
+    try { loadClubSquads(); } catch(e) {}
+  }
 }
 
 function signOut() {
@@ -12378,11 +12406,81 @@ function loadClubSquads() {
     .then(function(data) {
       clubSquads = data || [];
       renderClubSquads();
+      refreshSquadPickerDisplay();
     }).catch(function() {});
+}
+
+// ── MATCH TAB SQUAD PICKER ─────────────────────────
+function saveActiveSquadSession() {
+  try {
+    if (currentClubSquadId) localStorage.setItem('cs_active_squad', currentClubSquadId);
+    else localStorage.removeItem('cs_active_squad');
+  } catch(e) {}
+}
+
+function loadActiveSquadSession() {
+  try {
+    var id = localStorage.getItem('cs_active_squad');
+    if (id) currentClubSquadId = id;
+  } catch(e) {}
+}
+
+function refreshSquadPickerDisplay() {
+  var row = document.getElementById('squad-picker-row');
+  var txt = document.getElementById('squad-display-text');
+  if (!row || !txt) return;
+  // Only relevant for club accounts that actually have squads
+  if (!currentClub || !clubSquads || !clubSquads.length) {
+    row.style.display = 'none';
+    return;
+  }
+  row.style.display = '';
+  var sq = clubSquads.find(function(s){ return String(s.id) === String(currentClubSquadId); });
+  txt.textContent = sq ? sq.name : 'Select Squad';
+  txt.style.color = sq ? '' : 'var(--muted)';
+}
+
+function openSquadPicker() {
+  var list = document.getElementById('squad-picker-list');
+  if (!list) return;
+  if (!clubSquads || !clubSquads.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(240,253,244,0.3);font-size:12px;font-style:italic;">No squads yet — create one in the Club dashboard</div>';
+  } else {
+    list.innerHTML = clubSquads.map(function(sq) {
+      var filled = sq.players ? sq.players.filter(function(p){return p && p.name;}).length : 0;
+      var active = String(sq.id) === String(currentClubSquadId);
+      return '<div class="comp-item" onclick="selectMatchSquad(\'' + sq.id + '\')" style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><div style="font-weight:600;">' + sq.name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' + filled + ' players</div></div>' +
+        (active ? '<div style="color:var(--red-light);font-size:16px;">✓</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('squad-picker-modal').classList.add('open');
+}
+
+function closeSquadPicker() {
+  document.getElementById('squad-picker-modal').classList.remove('open');
+}
+
+function selectMatchSquad(squadId) {
+  var sq = clubSquads.find(function(s){ return String(s.id) === String(squadId); });
+  if (!sq) return;
+  squad = sq.players || [];
+  while (squad.length < 34) squad.push(null);
+  currentClubSquadId = squadId;
+  saveActiveSquadSession();
+  saveSquad();
+  refreshSquadPickerDisplay();
+  renderSquadGrid();
+  try { renderRecordPitch(); } catch(e) {}
+  closeSquadPicker();
+  showSync('Squad: ' + sq.name, 2000);
 }
 
 function renderClubSquads() {
   var list = document.getElementById('club-squads-list');
+  if (!list) return;
   if (!clubSquads.length) {
     list.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(240,253,244,0.3);font-size:12px;font-style:italic;">No squads yet' + (currentClubRole === 'admin' ? ' — tap + Add Squad to create one' : '') + '</div>';
     return;
@@ -12409,6 +12507,8 @@ function openSquad(squadId) {
   squad = sq.players || [];
   while (squad.length < 34) squad.push(null);
   currentClubSquadId = squadId;
+  saveActiveSquadSession();
+  refreshSquadPickerDisplay();
   closeClubDashboard();
   renderSquadGrid();
   // Switch to squad tab
