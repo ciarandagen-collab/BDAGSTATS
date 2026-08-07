@@ -30,7 +30,7 @@
   --panel: #0a1a0f;
   --panel2: #0d2015;
   --border: rgba(22,163,74,0.22);
-  --muted: rgba(240,253,244,0.4);
+  --muted: rgba(240,253,244,0.55);
   --green: #4ade80;
   --blue: #3b82f6;
   --amber: #f59e0b;
@@ -520,7 +520,9 @@ input:not([type]), textarea, select {
 }
 .psb:hover { background:rgba(22,163,74,0.15); border-color:var(--red); color:var(--red); }
 .psb-g:hover { background:rgba(245,166,35,0.15); border-color:var(--gold); color:var(--gold); }
-.del-btn { background:none; border:none; color:rgba(255,80,80,0.35); cursor:pointer; font-size:15px; padding:4px; border-radius:4px; transition:all 0.15s; }
+/* Delete controls are destructive, so they get the full 44px touch target.
+   The visible glyph stays small; the hit area around it does the work. */
+.del-btn { background:none; border:none; color:rgba(255,80,80,0.35); cursor:pointer; font-size:15px; min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:0; border-radius:6px; transition:all 0.15s; flex-shrink:0; }
 .del-btn:hover { color:#ff6060; background:rgba(255,0,0,0.1); }
 
 /* ── TIMELINE ── */
@@ -540,7 +542,7 @@ input:not([type]), textarea, select {
 .event-icon { font-size:15px; }
 .event-text { font-size:13px; color:rgba(245,232,232,0.85); flex:1; font-weight:500; }
 .event-team-tag { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-.empty-note { text-align:center; padding:28px; color:rgba(240,253,244,0.2); font-style:italic; font-size:14px; }
+.empty-note { text-align:center; padding:28px; color:rgba(240,253,244,0.55); font-style:italic; font-size:14px; }
 
 /* ── STATS TABLE ── */
 .stats-table { width:100%; border-collapse:collapse; }
@@ -711,7 +713,7 @@ input:not([type]), textarea, select {
 .pw-cta:hover { filter: brightness(1.1); }
 .pw-cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .pw-note { font-size: 11px; color: rgba(245,232,232,0.25); text-align: center; font-family: 'Inter', sans-serif; max-width: 340px; }
-.pw-signout { background: none; border: none; color: rgba(240,253,244,0.2); font-size: 11px; cursor: pointer; margin-top: 20px; font-family: 'Inter', sans-serif; }
+.pw-signout { background: none; border: none; color: rgba(240,253,244,0.6); font-size: 11px; cursor: pointer; margin-top: 20px; font-family: 'Inter', sans-serif; }
 .pw-signout:hover { color: rgba(240,253,244,0.5); }
 .pw-expired-msg { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.3); border-radius: 10px; padding: 12px 16px; text-align: center; margin-bottom: 24px; max-width: 400px; width: 100%; }
 .pw-expired-msg p { font-family: 'Inter', sans-serif; font-size: 12px; color: #fca5a5; line-height: 1.5; }
@@ -778,7 +780,7 @@ input:not([type]), textarea, select {
 .trends-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 20px; text-align:center; }
 .trends-empty-icon { font-size:40px; opacity:0.3; margin-bottom:12px; }
 .trends-empty-title { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
-.trends-empty-sub { font-size:12px; color:rgba(240,253,244,0.3); line-height:1.6; max-width:280px; }
+.trends-empty-sub { font-size:12px; color:rgba(240,253,244,0.55); line-height:1.6; max-width:280px; }
 .mcs-divider { font-family:'Oswald',sans-serif; font-size:16px; color:rgba(245,232,232,0.15); text-align:center; }
 
 .match-card-stats {
@@ -1050,9 +1052,12 @@ input:not([type]), textarea, select {
 .squad-num { font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--gold); line-height:1; }
 .squad-name { font-size:13px; font-weight:500; color:var(--cream); }
 .squad-pos { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-.squad-empty-name { font-size:12px; color:rgba(240,253,244,0.2); font-style:italic; }
+.squad-empty-name { font-size:12px; color:rgba(240,253,244,0.45); font-style:italic; }
 .squad-slot-actions { display:flex; gap:4px; position:absolute; top:6px; right:6px; }
-.squad-slot-del { background:none; border:none; color:rgba(255,80,80,0.3); font-size:13px; cursor:pointer; padding:2px; }
+/* 36px rather than the usual 44px: this sits in the corner of a ~150x84 squad
+   card, and a full 44px target would cover half the card and steal taps meant
+   for editing the player. Still more than double the old 17px. */
+.squad-slot-del { background:none; border:none; color:rgba(255,80,80,0.3); font-size:13px; cursor:pointer; min-width:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; padding:0; border-radius:6px; flex-shrink:0; }
 .squad-slot-del:hover { color:#ff6060; }
 
 /* Player edit modal */
@@ -1064,9 +1069,6 @@ input:not([type]), textarea, select {
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
 .pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.zone-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:4px; }
-.zone-btn { padding:10px 4px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
-.zone-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .pos-btn { padding:8px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
 .pos-btn.selected, .pos-btn:hover { background:var(--red); border-color:var(--red); color:#fff; }
 .btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
@@ -1107,27 +1109,6 @@ input:not([type]), textarea, select {
 
 /* Squad player attribution in outcome modal */
 .player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
-.player-attr-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
-.player-attr-list { max-height:320px; overflow-y:auto; }
-.player-attr-btn { padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; font-size:11px; cursor:pointer; transition:all 0.15s; }
-.player-attr-btn:hover, .player-attr-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
-.player-attr-none { padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; cursor:pointer; }
-.player-attr-none:hover { border-color:var(--muted); }
-/* ── PITCH TAG PICKER ── */
-.pitch-none-btn { display:block; margin:0 auto 8px; padding:6px 16px; border-radius:16px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
-.pitch-none-btn.selected { background:var(--red); border-color:var(--red); color:#fff; }
-.pitch-tag-diagram { background:#1a6b2f; border:2px solid rgba(255,255,255,0.25); border-radius:10px; padding:10px 4px 8px; position:relative; }
-.pitch-tag-diagram::before { content:''; position:absolute; top:50%; left:8%; right:8%; height:1px; background:rgba(255,255,255,0.15); }
-.pitch-tag-row { display:flex; justify-content:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; position:relative; z-index:1; }
-.pitch-tag-row:last-child { margin-bottom:0; }
-.pitch-player-marker { display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; padding:2px; cursor:pointer; min-width:42px; }
-.ppm-circle { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; color:#fff; transition:all 0.15s; }
-.ppm-name { font-size:7px; color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:0.5px; max-width:42px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pitch-player-marker.selected .ppm-circle { background:var(--red); border-color:#fff; box-shadow:0 0 0 3px rgba(220,38,38,0.35); transform:scale(1.08); }
-.pitch-player-marker.selected .ppm-name { color:#fff; font-weight:700; }
-.pitch-tag-subs-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:center; margin:8px 0 4px; }
-.pitch-tag-subs-row { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
-.pitch-tag-confirm { text-align:center; padding:8px 12px; background:rgba(220,38,38,0.15); border:1px solid var(--red); border-radius:8px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 .tag-confirm-label { text-align:center; padding:8px 12px; background:rgba(220,38,38,0.15); border:1px solid var(--red); border-radius:8px; color:#fff; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 /* ── RECORD TAB: PITCH-FIRST FLOW ── */
 .record-side-tabs { display:flex; gap:8px; margin-bottom:14px; }
@@ -1382,7 +1363,7 @@ input:not([type]), textarea, select {
 .wellness-overall.red { color:var(--red-light); }
 .wellness-metrics { display:flex; gap:6px; flex-wrap:wrap; }
 .wellness-metric-chip { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,0.05); color:var(--muted); font-family:'Oswald',sans-serif; letter-spacing:0.5px; }
-.wellness-no-data { font-size:11px; color:rgba(240,253,244,0.2); font-style:italic; }
+.wellness-no-data { font-size:11px; color:rgba(240,253,244,0.55); font-style:italic; }
 .wellness-metric-row { padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
 .wellness-metric-row:last-child { border-bottom:none; }
 .wellness-metric-name { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
@@ -2083,7 +2064,7 @@ input:not([type]), textarea, select {
   <div style="background:rgba(13,0,0,0.85);border:1px solid rgba(22,163,74,0.3);border-radius:20px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:8px;">
     <div style="width:24px;height:24px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-    <button onclick="openClubDashboard()" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.3);border-radius:6px;padding:3px 8px;color:#ff8080;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club">🏟</button>
+    <button onclick="openClubDashboard()" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:6px;padding:3px 8px;color:#86efac;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club" aria-label="Club dashboard">🏟</button>
     <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help">?</button>
     <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings">⚙️</button>
     <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out">⏻ Sign Out</button>
@@ -4126,53 +4107,6 @@ function closePlayerEdit() {
   document.getElementById('player-edit-modal').classList.remove('open');
   document.body.style.overflow = '';
   editingSlot = null;
-}
-
-// ── PLAYER ATTRIBUTION ─────────────────────────────
-function pitchMarker(num, listId) {
-  // num is 1-based shirt number, matches squad[num-1]
-  var p = squad[num - 1];
-  if (!p || !p.name) return '';
-  return '<button class="pitch-player-marker" data-pid="' + (num-1) + '" onclick="selectAttrPlayer(' + (num-1) + ',\'' + listId + '\')">' +
-    '<span class="ppm-circle">' + num + '</span>' +
-    '<span class="ppm-name">' + p.name + '</span>' +
-    '</button>';
-}
-
-function buildPlayerAttrList(team, listId) {
-  var list = document.getElementById(listId);
-  if (!list) return;
-  var squadPlayers = squad.filter(function(p) { return p && p.name; });
-  if (!squadPlayers.length) {
-    list.innerHTML = '<span style="font-size:11px;color:var(--muted);font-style:italic">Add players to your squad to tag them</span>';
-    return;
-  }
-  // Standard GAA lineup rows by shirt number, same layout as the printed team sheet
-  var rows = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
-  var html = '<button class="pitch-none-btn" data-pid="none" onclick="selectAttrPlayer(null,\'' + listId + '\')">None / No Tag</button>' +
-    '<div class="pitch-tag-diagram">';
-  rows.forEach(function(row) {
-    var rowHtml = row.map(function(n) { return pitchMarker(n, listId); }).join('');
-    if (rowHtml) html += '<div class="pitch-tag-row">' + rowHtml + '</div>';
-  });
-  html += '</div>';
-  var subsHtml = '';
-  for (var i = 16; i <= 34; i++) { subsHtml += pitchMarker(i, listId); }
-  if (subsHtml) html += '<div class="pitch-tag-subs-label">Subs</div><div class="pitch-tag-subs-row">' + subsHtml + '</div>';
-  list.innerHTML = html;
-  selectedAttrPlayer = null;
-}
-
-function selectAttrPlayer(slotIndex, listId) {
-  selectedAttrPlayer = slotIndex;
-  var list = document.getElementById(listId);
-  if (!list) return;
-  var btns = list.querySelectorAll('.pitch-player-marker');
-  for (var i=0;i<btns.length;i++) {
-    btns[i].classList.toggle('selected', parseInt(btns[i].getAttribute('data-pid')) === slotIndex);
-  }
-  var noneBtn = list.querySelector('.pitch-none-btn');
-  if (noneBtn) noneBtn.classList.toggle('selected', slotIndex === null);
 }
 
 // ── RECORD TAB: PITCH-FIRST EVENT FLOW ─────────────
