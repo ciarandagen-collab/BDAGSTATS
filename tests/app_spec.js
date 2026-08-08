@@ -720,6 +720,59 @@ test.describe('Accessibility (Phase D)', () => {
   });
 });
 
+test.describe('Match Report Analysis', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Analysis engine handles a sparse legacy match without crashing', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      // A match with nothing but a scoreline, as older records look
+      const a = analyseMatch({ home:'A', away:'B', homeGoals:2, homePoints:11,
+                               awayGoals:1, awayPoints:9, events:[], players:[] });
+      return { verdict: a.verdict, sections: a.sections.length, note: !!a.dataNote };
+    });
+    expect(result.verdict).toContain('2-11');
+    expect(result.sections).toBeGreaterThan(0);
+    expect(result.note).toBe(true);
+  });
+
+  test('Analysis produces observations for a fully recorded match', async ({ page }) => {
+    const count = await page.evaluate(() => {
+      const a = analyseMatch({
+        home:'A', away:'B', homeGoals:0, homePoints:7, awayGoals:0, awayPoints:12,
+        shots:{ home:{play:{point:5,wide:8},free:{point:2,wide:2}},
+                away:{play:{point:10,wide:3},free:{point:2,wide:0}} },
+        kickout:{ home:{wonClean:4,breakWon:1,lossClean:5,breakLoss:5,shortWon:0,shortLoss:0},
+                  away:{wonClean:8,breakWon:2,lossClean:1,breakLoss:1,shortWon:0,shortLoss:0} },
+        ballLost:{ home:{handPass:9,kickPass:4}, away:{handPass:3} },
+        ballWon:{ home:{tackle:7,interception:4} },
+        events:[], players:[]
+      });
+      return a.sections.reduce((n,s) => n + s.points.length, 0);
+    });
+    expect(count).toBeGreaterThan(5);
+  });
+
+  test('Analysis never returns an empty report', async ({ page }) => {
+    const ok = await page.evaluate(() => {
+      const a = analyseMatch({ home:'A', away:'B', homeGoals:0, homePoints:0,
+                               awayGoals:0, awayPoints:0, events:[], players:[] });
+      return a.sections.length > 0 && a.verdict.length > 0;
+    });
+    expect(ok).toBe(true);
+  });
+
+  test('Event log is returned in chronological order', async ({ page }) => {
+    const ordered = await page.evaluate(() => {
+      const log = matchEventLog({ events:[
+        {min:40,half:2,type:'shot'}, {min:5,half:1,type:'shot'},
+        {min:20,half:1,type:'shot'}, {min:12,half:2,type:'shot'}
+      ]});
+      return log.map(e => e.half + ':' + e.min).join(',');
+    });
+    expect(ordered).toBe('1:5,1:20,2:12,2:40');
+  });
+});
+
 test.describe('Match Analysis (Stats tab)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
