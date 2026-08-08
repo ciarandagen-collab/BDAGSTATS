@@ -10529,6 +10529,336 @@ function resetMatch(){
 }
 
 // ── MATCH REPORT GENERATOR ─────────────────────────
+// ── MATCH ANALYSIS ENGINE ──────────────────────────
+// Produces written observations from a saved match record.
+//
+// Every insight is guarded on the data it needs, because older saved matches
+// predate several fields (zones, possession counts, attacks, minutes). A match
+// recorded before those existed must still produce a sensible report — it just
+// produces fewer observations rather than wrong ones.
+//
+// Returns { verdict, sections:[{title, points:[{text, tone}]}], dataNote }
+// tone: 'good' | 'bad' | 'neutral'
+
+function analyseMatch(m) {
+  var out = { verdict: '', sections: [], dataNote: '' };
+  if (!m) return out;
+
+  var evs = m.events || [];
+  var hasEvents = evs.length > 0;
+  var us = m.home || 'My Team', them = m.away || 'Opposition';
+
+  var hT = m.homeGoals*3 + m.homePoints;
+  var aT = m.awayGoals*3 + m.awayPoints;
+  var margin = hT - aT;
+
+  function sum(o) { return o ? Object.keys(o).reduce(function(a,k){ return a + (o[k]||0); }, 0) : 0; }
+  function pct(n, d) { return d > 0 ? Math.round((n/d)*100) : null; }
+  function pt(text, tone) { return { text: text, tone: tone || 'neutral' }; }
+  function scoreStr(g, p) { return g + '-' + String(p).padStart(2,'0'); }
+
+  // ── Shooting ──────────────────────────────────────
+  var hShots = m.shots ? sum(m.shots.home.play) + sum(m.shots.home.free) : 0;
+  var aShots = m.shots ? sum(m.shots.away.play) + sum(m.shots.away.free) : 0;
+  var hScores = m.homeGoals + m.homePoints;
+  var aScores = m.awayGoals + m.awayPoints;
+  var hConv = pct(hScores, hShots), aConv = pct(aScores, aShots);
+  var hWides = m.shots ? (m.shots.home.play.wide||0) + (m.shots.home.free.wide||0) : 0;
+
+  // ── Kickouts ──────────────────────────────────────
+  var hKO = m.kickout ? sum(m.kickout.home) : 0;
+  var aKO = m.kickout ? sum(m.kickout.away) : 0;
+  var hKOW = m.kickout ? (m.kickout.home.wonClean||0)+(m.kickout.home.breakWon||0)+(m.kickout.home.shortWon||0) : 0;
+  var aKOW = m.kickout ? (m.kickout.away.wonClean||0)+(m.kickout.away.breakWon||0)+(m.kickout.away.shortWon||0) : 0;
+  var hKOPct = pct(hKOW, hKO), aKOPct = pct(aKOW, aKO);
+
+  // ── Turnovers ─────────────────────────────────────
+  var hBL = m.ballLost ? sum(m.ballLost.home) : 0;
+  var aBL = m.ballLost ? sum(m.ballLost.away) : 0;
+  var hBW = m.ballWon ? sum(m.ballWon.home) : 0;
+
+  // ── Halves ────────────────────────────────────────
+  function halfScore(team, half) {
+    var g = 0, p = 0;
+    evs.forEach(function(e) {
+      if (e.team !== team || e.half !== half) return;
+      if (e.type === 'goal') g++;
+      else if (e.type === 'point') p++;
+      else if (e.type === 'shot') {
+        if (e.outcome === 'goal') g++;
+        else if (e.outcome === 'point') p++;
+        else if (e.outcome === 'twopointer') p += 2;
+      } else if (e.type === 'fortyFive' && e.outcome === 'scored') p++;
+    });
+    return { g: g, p: p, total: g*3 + p };
+  }
+
+  // ════════════ VERDICT ════════════
+  var resultWord = margin > 0 ? 'Win' : margin < 0 ? 'Defeat' : 'Draw';
+  var absM = Math.abs(margin);
+  var closeness = absM === 0 ? 'level' : absM <= 2 ? 'by the minimum' :
+                  absM <= 4 ? 'a tight game' : absM <= 8 ? 'clear enough' :
+                  absM <= 12 ? 'comfortable' : 'emphatic';
+  out.verdict = scoreStr(m.homeGoals, m.homePoints) + ' to ' + scoreStr(m.awayGoals, m.awayPoints) +
+    ' — ' + resultWord + (absM ? ', ' + closeness : '') + '.';
+
+  // ════════════ SCORING ════════════
+  var scoring = { title: 'Scoring', points: [] };
+
+  if (hShots > 0) {
+    var convWord = hConv >= 60 ? 'excellent' : hConv >= 50 ? 'solid' : hConv >= 40 ? 'workable' : 'poor';
+    scoring.points.push(pt(
+      'Converted ' + hScores + ' of ' + hShots + ' shots (' + hConv + '%) — ' + convWord + '.',
+      hConv >= 50 ? 'good' : hConv >= 40 ? 'neutral' : 'bad'));
+
+    if (aConv !== null && Math.abs(hConv - aConv) >= 12) {
+      scoring.points.push(hConv > aConv
+        ? pt('Sharper in front of the posts than ' + them + ' (' + hConv + '% v ' + aConv + '%). That efficiency is what won the shooting exchange.', 'good')
+        : pt(them + ' were the more clinical side (' + aConv + '% v ' + hConv + '%). They needed fewer chances to hurt you.', 'bad'));
+    }
+
+    if (hWides >= 8) {
+      scoring.points.push(pt(hWides + ' wides is a lot of possession turned into nothing. Worth reviewing shot selection rather than shooting technique.', 'bad'));
+    } else if (hWides >= 5 && hShots > 0 && (hWides/hShots) >= 0.3) {
+      scoring.points.push(pt(hWides + ' wides from ' + hShots + ' shots — nearly a third of attempts. Some of those were likely low-percentage efforts.', 'bad'));
+    }
+
+    if (m.homeGoals === 0 && hT >= 12) {
+      scoring.points.push(pt('No goals. You built a total through points, which works, but a goal changes games you are losing.', 'neutral'));
+    }
+    if (m.homeGoals >= 3) {
+      scoring.points.push(pt(m.homeGoals + ' goals — the forwards got in behind repeatedly.', 'good'));
+    }
+  }
+
+  // Free-taking split
+  if (m.shots) {
+    var hFF = sum(m.shots.home.free);
+    var hFFScored = (m.shots.home.free.point||0) + (m.shots.home.free.goal||0) + (m.shots.home.free.twopointer||0);
+    if (hFF >= 4) {
+      var ffPct = pct(hFFScored, hFF);
+      scoring.points.push(pt('Frees: ' + hFFScored + ' from ' + hFF + ' (' + ffPct + '%).' +
+        (ffPct < 60 ? ' Below where you want a dead-ball striker to be.' : ' Reliable from placed balls.'),
+        ffPct >= 70 ? 'good' : ffPct < 55 ? 'bad' : 'neutral'));
+    }
+  }
+
+  if (scoring.points.length) out.sections.push(scoring);
+
+  // ════════════ HALVES ════════════
+  if (hasEvents) {
+    var h1 = halfScore('home', 1), h2 = halfScore('home', 2);
+    var a1 = halfScore('away', 1), a2 = halfScore('away', 2);
+    if (h1.total + h2.total > 0 || a1.total + a2.total > 0) {
+      var halves = { title: 'How it unfolded', points: [] };
+      var d1 = h1.total - a1.total, d2 = h2.total - a2.total;
+
+      halves.points.push(pt('First half ' + scoreStr(h1.g,h1.p) + ' to ' + scoreStr(a1.g,a1.p) +
+        ', second half ' + scoreStr(h2.g,h2.p) + ' to ' + scoreStr(a2.g,a2.p) + '.', 'neutral'));
+
+      if (d1 < 0 && d2 > 0) {
+        halves.points.push(pt('You turned the game around after the break — whatever was said at half time worked.', 'good'));
+      } else if (d1 > 0 && d2 < 0) {
+        halves.points.push(pt('The second half got away from you after leading the first. Worth asking whether that was fitness, substitutions, or ' + them + ' changing shape.', 'bad'));
+      } else if (d2 >= 5) {
+        halves.points.push(pt('You finished much the stronger — ' + d2 + ' points to the good in the second half.', 'good'));
+      } else if (d2 <= -5) {
+        halves.points.push(pt('Faded badly in the second half, outscored by ' + Math.abs(d2) + ' points. Late-game conditioning and bench impact are the questions.', 'bad'));
+      }
+
+      // Scoring droughts
+      var ourScores = evs.filter(function(e) {
+        return e.team === 'home' && ((e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1) ||
+               e.type === 'goal' || e.type === 'point' || (e.type === 'fortyFive' && e.outcome === 'scored'));
+      }).map(function(e){ return e.min || 0; }).sort(function(a,b){ return a-b; });
+
+      if (ourScores.length >= 2) {
+        var maxGap = 0, gapStart = 0;
+        for (var i = 1; i < ourScores.length; i++) {
+          if (ourScores[i] - ourScores[i-1] > maxGap) { maxGap = ourScores[i] - ourScores[i-1]; gapStart = ourScores[i-1]; }
+        }
+        if (maxGap >= 12) {
+          halves.points.push(pt('Longest scoreless spell was ' + maxGap + ' minutes (from the ' + gapStart + 'th). Droughts that long usually decide tight games.', 'bad'));
+        }
+      }
+      if (halves.points.length) out.sections.push(halves);
+    }
+  }
+
+  // ════════════ KICKOUTS ════════════
+  if (hKO >= 4) {
+    var ko = { title: 'Kickouts', points: [] };
+    ko.points.push(pt('Retained ' + hKOW + ' of ' + hKO + ' own kickouts (' + hKOPct + '%).',
+      hKOPct >= 75 ? 'good' : hKOPct >= 60 ? 'neutral' : 'bad'));
+
+    if (hKOPct < 60) {
+      ko.points.push(pt('Losing more than a third of your own restarts hands ' + them + ' possession in good areas. This is usually the first thing to fix.', 'bad'));
+    } else if (hKOPct >= 80) {
+      ko.points.push(pt('Excellent retention — the restart platform was secure all day.', 'good'));
+    }
+
+    if (aKO >= 4 && aKOPct !== null) {
+      var oppLost = aKO - aKOW;
+      if (oppLost >= 4) {
+        ko.points.push(pt('Won ' + oppLost + ' of ' + them + '\u2019s kickouts. The press was working.', 'good'));
+      } else if (aKOPct >= 80) {
+        ko.points.push(pt(them + ' kept ' + aKOPct + '% of their own restarts — you rarely got a foothold on their kickout.', 'bad'));
+      }
+    }
+
+    if (m.kickout && (m.kickout.home.breakLoss||0) > (m.kickout.home.breakWon||0) + 2) {
+      ko.points.push(pt('Losing the breaking ball more often than winning it (' + (m.kickout.home.breakWon||0) + ' won, ' + (m.kickout.home.breakLoss||0) + ' lost). That is a midfield and support-runner issue rather than the goalkeeper.', 'bad'));
+    }
+    out.sections.push(ko);
+  }
+
+  // ════════════ POSSESSION & TURNOVERS ════════════
+  var poss = { title: 'Possession and turnovers', points: [] };
+
+  if (m.possMethod === 'counted') {
+    poss.points.push(pt('Possession ' + m.homePoss + '% / ' + m.awayPoss + '% (from tagged possessions).',
+      m.homePoss >= 55 ? 'good' : m.homePoss <= 45 ? 'bad' : 'neutral'));
+    if (m.homePoss >= 55 && margin < 0) {
+      poss.points.push(pt('Had the majority of the ball and still lost. That points to what you did with it rather than getting it.', 'bad'));
+    }
+  }
+
+  if (hBL >= 12) {
+    poss.points.push(pt('Coughed up possession ' + hBL + ' times. Cutting that by a third is worth several scores.', 'bad'));
+  } else if (hBL > 0 && aBL > 0 && hBL < aBL - 4) {
+    poss.points.push(pt('Looked after the ball better than ' + them + ' (' + hBL + ' turnovers to ' + aBL + ').', 'good'));
+  }
+
+  if (m.ballLost && m.ballLost.home) {
+    var bl = m.ballLost.home;
+    var worst = null, worstN = 0;
+    Object.keys(bl).forEach(function(k){ if ((bl[k]||0) > worstN) { worstN = bl[k]; worst = k; } });
+    var blLabels = { handPass:'hand passes', kickPass:'kick passes', inContact:'in contact',
+                     handling:'handling errors', overCarrying:'over-carrying' };
+    if (worst && worstN >= 5 && blLabels[worst]) {
+      poss.points.push(pt('Most possession was lost through ' + blLabels[worst] + ' (' + worstN + ' times) — a specific, coachable pattern.', 'bad'));
+    }
+  }
+
+  if (hBW >= 12) poss.points.push(pt('Won ' + hBW + ' turnovers. The work rate off the ball was there.', 'good'));
+
+  if (poss.points.length) out.sections.push(poss);
+
+  // ════════════ ATTACKS ════════════
+  if (hasEvents) {
+    var hAtt = evs.filter(function(e){ return e.type === 'attacks' && e.team === 'home'; });
+    if (hAtt.length >= 5) {
+      var scored = hAtt.filter(function(e){ return e.outcome === 'scored'; }).length;
+      var attPct = pct(scored, hAtt.length);
+      var att = { title: 'Attacking play', points: [] };
+      att.points.push(pt(scored + ' of ' + hAtt.length + ' attacks ended in a score (' + attPct + '%), roughly ' +
+        (Math.round((hAtt.length/Math.max(scored,1))*10)/10) + ' attacks per score.',
+        attPct >= 45 ? 'good' : attPct >= 30 ? 'neutral' : 'bad'));
+      var turnedBack = hAtt.filter(function(e){ return e.outcome === 'turnedBack'; }).length;
+      if (turnedBack >= Math.ceil(hAtt.length * 0.35)) {
+        att.points.push(pt(turnedBack + ' attacks were turned back without a shot. Getting bodies forward in support is the fix.', 'bad'));
+      }
+      out.sections.push(att);
+    }
+  }
+
+  // ════════════ DISCIPLINE ════════════
+  if (hasEvents) {
+    var cards = evs.filter(function(e){ return e.type === 'cards' && e.team === 'home'; });
+    var fouls = evs.filter(function(e){ return e.type === 'foul' && e.team === 'home'; });
+    var disc = { title: 'Discipline', points: [] };
+    if (cards.length) {
+      var y = cards.filter(function(e){return e.outcome==='yellow';}).length;
+      var b = cards.filter(function(e){return e.outcome==='black';}).length;
+      var r = cards.filter(function(e){return e.outcome==='red';}).length;
+      var bits = [];
+      if (y) bits.push(y + ' yellow'); if (b) bits.push(b + ' black'); if (r) bits.push(r + ' red');
+      disc.points.push(pt('Cards: ' + bits.join(', ') + '.', (r || b >= 2) ? 'bad' : 'neutral'));
+      if (r) disc.points.push(pt('Playing with fourteen changes everything. Worth reviewing what led to it.', 'bad'));
+    }
+    if (fouls.length >= 12) {
+      disc.points.push(pt(fouls.length + ' fouls conceded — a steady supply of frees for ' + them + '.', 'bad'));
+    }
+    var shootingFouls = fouls.filter(function(e){ return e.outcome === 'shooting'; }).length;
+    if (shootingFouls >= 4) {
+      disc.points.push(pt(shootingFouls + ' fouls conceded in shooting positions. Those are the cheapest scores you can give away.', 'bad'));
+    }
+    if (disc.points.length) out.sections.push(disc);
+  }
+
+  // ════════════ PLAYERS ════════════
+  if (m.players && m.players.length) {
+    var scorers = m.players
+      .map(function(p, i) {
+        var s = p.stats || {};
+        var g = ((s.shotsPlay&&s.shotsPlay.goal)||0) + ((s.shotsFree&&s.shotsFree.goal)||0);
+        var pts = ((s.shotsPlay&&s.shotsPlay.point)||0) + ((s.shotsFree&&s.shotsFree.point)||0) +
+                  2*(((s.shotsPlay&&s.shotsPlay.twopointer)||0) + ((s.shotsFree&&s.shotsFree.twopointer)||0));
+        return { name: p.name, num: i+1, g: g, p: pts, total: g*3 + pts };
+      })
+      .filter(function(x){ return x.name && x.total > 0; })
+      .sort(function(a,b){ return b.total - a.total; });
+
+    if (scorers.length) {
+      var pl = { title: 'Players', points: [] };
+      var top = scorers[0];
+      pl.points.push(pt('Top scorer: ' + top.name + ' with ' + scoreStr(top.g, top.p) + '.', 'good'));
+
+      var totalScored = scorers.reduce(function(a,x){ return a + x.total; }, 0);
+      if (totalScored > 0 && top.total / totalScored >= 0.45 && scorers.length > 1) {
+        pl.points.push(pt('Nearly half the total came from one player. Dangerous if he is marked out of the next game — the scoring needs spreading.', 'bad'));
+      }
+      if (scorers.length >= 6) {
+        pl.points.push(pt(scorers.length + ' different scorers — the threat was shared across the team.', 'good'));
+      }
+      out.sections.push(pl);
+    }
+  }
+
+  // ════════════ FALLBACK FOR SPARSE RECORDS ════════════
+  // A legacy match may have nothing but a scoreline. Say what can honestly be
+  // said from that rather than returning an empty report.
+  if (!out.sections.length) {
+    var basic = { title: 'Result', points: [] };
+    var ourG = m.homeGoals, ourP = m.homePoints;
+    basic.points.push(pt('Final score ' + scoreStr(ourG, ourP) + ' to ' + scoreStr(m.awayGoals, m.awayPoints) + '.', 'neutral'));
+    if (ourG >= 2) {
+      basic.points.push(pt(ourG + ' goals carried the total — ' + (ourG*3) + ' of your ' + hT + ' points came from green flags.',
+        'good'));
+    } else if (ourG === 0 && hT >= 10) {
+      basic.points.push(pt('The total was built entirely from points. No goals is workable, but it leaves little margin when chasing a game.', 'neutral'));
+    }
+    if (m.awayGoals >= 2) {
+      basic.points.push(pt('Conceded ' + m.awayGoals + ' goals. Goals conceded usually matter more than total scores conceded.', 'bad'));
+    }
+    out.sections.push(basic);
+  }
+
+  // ════════════ DATA COMPLETENESS ════════════
+  var missing = [];
+  if (!m.shots) missing.push('shot detail');
+  if (!m.kickout) missing.push('kickouts');
+  if (!hasEvents) missing.push('the event timeline');
+  if (m.possMethod !== 'counted') missing.push('tagged possessions');
+  if (missing.length) {
+    var missingStr = missing.length === 1 ? missing[0]
+      : missing.slice(0,-1).join(', ') + ' and ' + missing[missing.length-1];
+    out.dataNote = 'This match was recorded without ' + missingStr +
+      ', so some analysis is unavailable. Later matches will produce a fuller report.';
+  }
+
+  return out;
+}
+
+// Full chronological event log for the report
+function matchEventLog(m) {
+  var evs = (m.events || []).slice().sort(function(a,b) {
+    if ((a.half||1) !== (b.half||1)) return (a.half||1) - (b.half||1);
+    return (a.min||0) - (b.min||0);
+  });
+  return evs;
+}
+
 function generateMatchReport(id) {
   var m = loadHistory().find(function(x){ return x.id === id; });
   if (!m) return;
@@ -10852,6 +11182,70 @@ function generateMatchReport(id) {
         '</tr>';
     });
     html += '</tbody></table>';
+  }
+
+  // ── COACH'S ANALYSIS ──
+  var analysis = analyseMatch(m);
+  html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0f5f2c;border-bottom:2px solid #16a34a;padding-bottom:5px;">Coach\u2019s Analysis</h2>';
+  html += '<p style="font-size:15px;font-weight:600;margin:10px 0 4px;color:#111;">' + analysis.verdict + '</p>';
+  if (analysis.dataNote) {
+    html += '<p style="font-size:11px;color:#888;font-style:italic;margin:0 0 14px;">' + analysis.dataNote + '</p>';
+  }
+  var toneColour = { good:'#16a34a', bad:'#dc2626', neutral:'#666' };
+  analysis.sections.forEach(function(sec) {
+    html += '<h3 style="font-size:12px;margin:18px 0 6px;color:#333;text-transform:uppercase;letter-spacing:1px;">' + sec.title + '</h3>';
+    html += '<ul style="margin:0 0 4px;padding-left:18px;">';
+    sec.points.forEach(function(p) {
+      html += '<li style="font-size:12.5px;line-height:1.6;margin-bottom:5px;color:#222;">' +
+              '<span style="color:' + (toneColour[p.tone]||'#666') + ';font-weight:700;">\u25CF</span> ' +
+              p.text + '</li>';
+    });
+    html += '</ul>';
+  });
+
+  // ── FULL EVENT LOG ──
+  var logEvents = matchEventLog(m);
+  if (logEvents.length) {
+    html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0f5f2c;border-bottom:2px solid #16a34a;padding-bottom:5px;">Match Events</h2>';
+    html += '<p style="font-size:11px;color:#888;margin:0 0 10px;">' + logEvents.length + ' events recorded, in order of play.</p>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:11.5px;">';
+    html += '<tr style="background:#f2f7f3;">' +
+            '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #ddd;width:38px;">Min</th>' +
+            '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #ddd;width:34px;">Half</th>' +
+            '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #ddd;">Event</th>' +
+            '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #ddd;">Team</th>' +
+            '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #ddd;">Player</th></tr>';
+    var typeNames = { shot:'Shot', goal:'Goal', point:'Point', ballWon:'Ball Won', ballLost:'Ball Lost',
+                      kickout:'Kickout', fortyFive:'45m Free', turnover:'Turnover Forced', mark:'Mark',
+                      possession:'Possession', attacks:'Attack', foul:'Foul', cards:'Card', sub:'Substitution' };
+    logEvents.forEach(function(e, i) {
+      var label = typeNames[e.type] || e.type;
+      if (e.type === 'shot') label += ' (' + (e.shotMode === 'free' ? 'Free' : 'Play') + ')';
+      var outcome = e.outcomeLabel || (e.outcome ? String(e.outcome) : '');
+      if (outcome) label += ' \u2014 ' + outcome;
+      if (e.type === 'sub') label = 'Substitution: ' + (e.off||'?') + ' \u2192 ' + (e.on||'?');
+      if (e.zone) label += ' [' + (ZONE_LABELS[e.zone] || e.zone) + ']';
+
+      // Resolve the player: squad index for us, jersey number for the opposition
+      var who = '';
+      if (typeof e.player === 'number') {
+        var sp = (m.players && m.players[e.player]) ? m.players[e.player] : null;
+        who = sp && sp.name ? '#' + (e.player+1) + ' ' + sp.name : '#' + (e.player+1);
+      } else if (typeof e.player === 'string' && e.player.indexOf('away-') === 0) {
+        var num = e.player.split('-')[1];
+        var oppNm = (typeof oppPlayerName === 'function') ? oppPlayerName(m.away, num) : null;
+        who = oppNm ? '#' + num + ' ' + oppNm : '#' + num;
+      }
+      var teamNm = e.team === 'home' ? m.home : e.team === 'away' ? m.away : '';
+      var bg = i % 2 ? '#fafafa' : '#fff';
+      html += '<tr style="background:' + bg + ';">' +
+              '<td style="padding:4px 6px;border-bottom:1px solid #f0f0f0;color:#666;">' + (e.min||'') + "'" + '</td>' +
+              '<td style="padding:4px 6px;border-bottom:1px solid #f0f0f0;color:#999;">' + (e.half === 2 ? 'H2' : e.half === 3 ? 'ET' : 'H1') + '</td>' +
+              '<td style="padding:4px 6px;border-bottom:1px solid #f0f0f0;">' + label + '</td>' +
+              '<td style="padding:4px 6px;border-bottom:1px solid #f0f0f0;color:#555;">' + teamNm + '</td>' +
+              '<td style="padding:4px 6px;border-bottom:1px solid #f0f0f0;color:#555;">' + who + '</td></tr>';
+    });
+    html += '</table>';
   }
 
   // Footer
