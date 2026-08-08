@@ -1106,6 +1106,10 @@ input:not([type]), textarea, select {
 .psc-stat-val.points { color:var(--red-light); }
 .psc-stat-label { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:3px; }
 .psc-matches { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:right; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05); }
+.psc-season { margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.07); }
+.psc-season-title { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:5px; }
+.psc-season-row { display:flex; flex-wrap:wrap; gap:12px; font-family:'Inter',sans-serif; font-size:11px; color:var(--muted); }
+.psc-season-row b { color:var(--cream); font-family:'Oswald',sans-serif; font-size:13px; }
 
 /* Squad player attribution in outcome modal */
 .player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
@@ -1157,6 +1161,24 @@ input:not([type]), textarea, select {
 .ts-pr-tag.here { background:var(--red); color:#fff; }
 .ts-pr-tag.used { background:rgba(255,255,255,0.08); color:var(--muted); }
 .rpp-circle.empty { background:rgba(255,255,255,0.06); border-style:dashed; font-size:11px; color:rgba(255,255,255,0.5); }
+/* Discipline warnings on the pitch — a player already on a card is the one you
+   most need to see before recording whatever he just did. */
+.rpp-circle { position:relative; }
+.rpp-circle.on-yellow { box-shadow:0 0 0 3px rgba(250,204,21,0.9); }
+.rpp-circle.on-black  { box-shadow:0 0 0 3px rgba(20,20,20,0.95); }
+.rpp-circle.on-red    { box-shadow:0 0 0 3px rgba(220,38,38,0.95); }
+.rpp-card-flag { position:absolute; bottom:-3px; right:-5px; font-size:11px; line-height:1; }
+.record-pitch-player.sent-off { opacity:0.45; }
+.et-card-warning { margin-top:8px; padding:9px 12px; border-radius:8px; background:rgba(250,204,21,0.14); border:1px solid rgba(250,204,21,0.5); color:#fde68a; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.5px; }
+.et-card-warning.red { background:rgba(220,38,38,0.16); border-color:rgba(220,38,38,0.6); color:#fca5a5; }
+/* Substitution prompts — deliberately worded as a suggestion, not a verdict. */
+#sub-signal:not(:empty) { margin-bottom:12px; padding:10px 12px; border-radius:10px; background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.28); }
+.sub-signal-title { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fde68a; margin-bottom:8px; }
+.sub-signal-row { display:flex; align-items:flex-start; gap:9px; padding:5px 0; }
+.ssr-num { width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; color:var(--cream); flex-shrink:0; }
+.ssr-body { font-family:'Inter',sans-serif; font-size:12px; color:var(--cream); line-height:1.35; }
+.ssr-why { display:block; font-size:11px; color:var(--muted); margin-top:1px; }
+.sub-signal-note { font-size:10px; color:var(--muted); font-style:italic; margin-top:7px; }
 .record-pitch-player.empty .rpp-name { color:rgba(255,255,255,0.45); font-style:italic; }
 .opp-player-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
 .opp-player-num { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:var(--cream); flex-shrink:0; }
@@ -2272,6 +2294,7 @@ input:not([type]), textarea, select {
       <span id="subs-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
     </div>
     <div id="subs-section" style="display:none;">
+      <div id="sub-signal"></div>
       <div style="padding:4px 0 10px;">
         <button class="training-new-btn" style="margin-bottom:0;" onclick="openSubModal()">+ Record Substitution</button>
         <div id="subs-list-record"></div>
@@ -2917,6 +2940,7 @@ input:not([type]), textarea, select {
       </div>
       <button class="sheet-close" aria-label="Close" onclick="closeEventTypePicker()">✕</button>
     </div>
+    <div class="et-card-warning" id="et-card-warning" style="display:none;"></div>
     <div class="et-picker-grid" id="et-picker-grid"></div>
     <button class="et-manage-btn" onclick="openEventTypeManager()">⚙️ Choose which events show here</button>
   </div>
@@ -3491,7 +3515,8 @@ var LOC_PICKER_COPY = {
   shot:       { title:'📍 Shot Location',     sub:'Tap the pitch where the shot was taken from' },
   fortyFive:  { title:'📍 45 Location',       sub:'Tap where the 45 was struck from' },
   ballLost:   { title:'📍 Where was it lost?', sub:'Tap where possession was conceded' },
-  turnover:   { title:'📍 Where was it won?',  sub:'Tap where the turnover was forced' }
+  turnover:   { title:'📍 Where was it won?',  sub:'Tap where the turnover was forced' },
+  kickout:    { title:'📍 Kickout',            sub:'Tap where the kickout landed' }
 };
 
 function openLocationPicker(team, kind) {
@@ -3513,6 +3538,21 @@ function closeLocationPicker() {
   var modal = document.getElementById('location-modal');
   if (modal) modal.classList.remove('open');
   locPicker.team = null; locPicker.kind = null;
+}
+
+// Where a kickout landed, relative to the kicking team's own goal.
+// My Team defends the top goal (y=10); the Opposition defends the bottom (y=470).
+function kickoutBands(team, vx, vy) {
+  var ownGoalY = (team === 'home') ? 10 : 470;
+  var metres = Math.abs(vy - ownGoalY) / 3.1724;
+  var distance = metres < 45 ? 'short' : metres < 72.5 ? 'middle' : 'long';
+  // Channel is named from the kicking goalkeeper's point of view, so "left"
+  // means the same thing to a coach at either end of the pitch.
+  var side = vx < 112.4 ? 'A' : vx < 207.6 ? 'centre' : 'B';
+  var channel = side === 'centre' ? 'centre'
+              : (team === 'home') ? (side === 'A' ? 'right' : 'left')
+                                  : (side === 'A' ? 'left'  : 'right');
+  return { channel: channel, distance: distance, metres: Math.round(metres) };
 }
 
 function nearestZone(team, vx, vy) {
@@ -3561,6 +3601,12 @@ function handleLocationTap(evt) {
     if (zone) recentEv.zone = zone;
     recentEv.x = Math.round((vx / 320) * 1000) / 10;
     recentEv.y = Math.round((vy / 480) * 1000) / 10;
+    if (evType === 'kickout') {
+      var b = kickoutBands(team, vx, vy);
+      recentEv.koChannel = b.channel;
+      recentEv.koDistance = b.distance;
+      recentEv.koMetres = b.metres;
+    }
   }
   closeLocationPicker();
 }
@@ -3657,12 +3703,13 @@ function selectGenericOutcome(key) {
   lastEventId = genEvId;
   showUndoToast((cfg.title || category).replace(/^[^\w]+\s*/, '') + ' — ' + outcomeLabel);
   renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
+  if (category === 'cards') { try { renderRecordPitch(); } catch(e) {} }
   // Pulse the tally count for feedback
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
   var pfx = catPfxMap[category];
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
   // Location matters for these: where a 45 was struck, and where possession was conceded/won
-  if (['fortyFive','ballLost','turnover'].indexOf(category) !== -1) openLocationPicker(team, category);
+  if (['fortyFive','ballLost','turnover','kickout'].indexOf(category) !== -1) openLocationPicker(team, category);
 }
 
 function renderGenericTallies() {
@@ -4139,6 +4186,96 @@ function switchRecordSide(side) {
   renderRecordPitch();
 }
 
+// ── SUBSTITUTION SIGNAL ────────────────────────────
+// Who is fading. Derived entirely from event timestamps already recorded —
+// no extra tagging needed. Intended as a prompt, not a verdict.
+function playerFormSignal(windowMins) {
+  var w = windowMins || 15;
+  var now = getMin();
+  var mins = {};
+  try { mins = playerMinutes(); } catch (e) { mins = {}; }
+  var cards = cardStatus('home');
+  var onPitch = (state.pitchOccupant || []).slice(0, 15)
+    .filter(function (i) { return typeof i === 'number' && squad[i] && squad[i].name; });
+
+  var out = [];
+  onPitch.forEach(function (idx) {
+    var evs = state.events.filter(function (e) {
+      return e.player === idx && e.team === 'home';
+    });
+    var recent = evs.filter(function (e) { return (now - (e.min || 0)) <= w; });
+    var mp = mins[idx] || 0;
+
+    // Rate of involvement across the whole time on the pitch vs the recent window
+    var overallRate = mp > 0 ? evs.length / mp : 0;
+    var recentRate = recent.length / Math.min(w, Math.max(mp, 1));
+
+    var lost = recent.filter(function (e) { return e.type === 'ballLost'; }).length;
+    var pos = recent.filter(function (e) {
+      return e.type === 'ballWon' || e.type === 'turnover' ||
+             (e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1);
+    }).length;
+
+    var reasons = [], score = 0;
+    if (mp >= 20 && recent.length === 0) {
+      reasons.push('no involvement in ' + w + ' minutes'); score += 3;
+    } else if (mp >= 20 && overallRate > 0 && recentRate < overallRate * 0.4) {
+      reasons.push('involvement dropped off sharply'); score += 2;
+    }
+    if (lost >= 3) { reasons.push('lost possession ' + lost + ' times recently'); score += 2; }
+    else if (lost >= 2 && pos === 0) { reasons.push('turning the ball over without winning it back'); score += 1; }
+    if (cards[idx] === 'yellow') { reasons.push('on a yellow'); score += 2; }
+    if (cards[idx] === 'black') { reasons.push('on a black'); score += 3; }
+    if (mp >= 55) { reasons.push(mp + ' minutes played'); score += 1; }
+
+    if (score >= 2) {
+      out.push({ idx: idx, num: idx + 1, name: squad[idx].name, mins: mp,
+                 score: score, reasons: reasons });
+    }
+  });
+  return out.sort(function (a, b) { return b.score - a.score; });
+}
+
+function renderSubSignal() {
+  var el = document.getElementById('sub-signal');
+  if (!el) return;
+  // Only meaningful once the game has been running a while
+  if (gamePhase === 'pregame' || getMin() < 20) { el.innerHTML = ''; return; }
+  var list = playerFormSignal(15);
+  if (!list.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="sub-signal-title">Worth a look</div>' +
+    list.slice(0, 4).map(function (p) {
+      return '<div class="sub-signal-row">' +
+        '<span class="ssr-num">' + p.num + '</span>' +
+        '<span class="ssr-body"><b>' + p.name + '</b>' +
+          '<span class="ssr-why">' + p.reasons.join(' \u00B7 ') + '</span></span>' +
+        '</div>';
+    }).join('') +
+    '<div class="sub-signal-note">Based on recorded events only \u2014 your eyes still win.</div>';
+}
+
+// ── DISCIPLINE STATUS ──────────────────────────────
+// Who is already carrying a card, so the pitch can warn before a second one.
+function cardStatus(team) {
+  var rank = { yellow:1, black:2, red:3 };
+  var out = {};
+  state.events.forEach(function(e) {
+    if (e.type !== 'cards' || e.team !== team || e.player === null || e.player === undefined) return;
+    var cur = out[e.player];
+    if (cur === 'yellow' && e.outcome === 'yellow') { out[e.player] = 'red'; return; }  // two yellows = red
+    if (!cur || rank[e.outcome] > rank[cur]) out[e.player] = e.outcome;
+  });
+  return out;
+}
+
+function cardMinute(team, ref) {
+  var hit = null;
+  state.events.forEach(function(e) {
+    if (e.type === 'cards' && e.team === team && String(e.player) === String(ref)) hit = e.min;
+  });
+  return hit;
+}
+
 function recordPitchMarker(team, num) {
   if (team === 'home') {
     var occ = (state.pitchOccupant && state.pitchOccupant[num-1] !== undefined) ? state.pitchOccupant[num-1] : (num-1);
@@ -4151,14 +4288,22 @@ function recordPitchMarker(team, num) {
         '<span class="rpp-name">Tap to set</span>' +
         '</button>';
     }
-    return '<button class="record-pitch-player" onclick="openEventTypePicker(\'home\',' + occ + ')">' +
-      '<span class="rpp-circle">' + (occ+1) + '</span>' +
+    var card = homeCards[occ];
+    var cardCls = card ? ' on-' + card : '';
+    var flag = card === 'red' ? '\uD83D\uDFE5' : card === 'black' ? '\u2B1B' : card === 'yellow' ? '\uD83D\uDFE8' : '';
+    return '<button class="record-pitch-player' + (card === 'red' ? ' sent-off' : '') + '" onclick="openEventTypePicker(\'home\',' + occ + ')">' +
+      '<span class="rpp-circle' + cardCls + '">' + (occ+1) +
+        (flag ? '<span class="rpp-card-flag">' + flag + '</span>' : '') + '</span>' +
       '<span class="rpp-name">' + surnameOf(p.name) + '</span>' +
       '</button>';
   }
   var oppNm = oppPlayerName(awayName(), num);
-  return '<button class="record-pitch-player" onclick="openEventTypePicker(\'away\',' + num + ')">' +
-    '<span class="rpp-circle">' + num + '</span>' +
+  var aCard = awayCards['away-' + num];
+  var aCls = aCard ? ' on-' + aCard : '';
+  var aFlag = aCard === 'red' ? '\uD83D\uDFE5' : aCard === 'black' ? '\u2B1B' : aCard === 'yellow' ? '\uD83D\uDFE8' : '';
+  return '<button class="record-pitch-player' + (aCard === 'red' ? ' sent-off' : '') + '" onclick="openEventTypePicker(\'away\',' + num + ')">' +
+    '<span class="rpp-circle' + aCls + '">' + num +
+      (aFlag ? '<span class="rpp-card-flag">' + aFlag + '</span>' : '') + '</span>' +
     '<span class="rpp-name">' + (oppNm ? surnameOf(oppNm) : '&nbsp;') + '</span>' +
     '</button>';
 }
@@ -4309,9 +4454,13 @@ function loadTeamSheetSession() {
   } catch(e) {}
 }
 
+var homeCards = {}, awayCards = {};
+
 function renderRecordPitch() {
   var wrap = document.getElementById('record-pitch-wrap');
   if (!wrap) return;
+  homeCards = cardStatus('home');
+  awayCards = cardStatus('away');
   if (recordSide === 'home' && !squad.some(function(p){ return p && p.name; })) {
     wrap.innerHTML = '<div class="record-pitch-empty">Add players to your squad on the Squad tab to tag them here</div>';
     return;
@@ -4426,6 +4575,22 @@ function openEventTypePicker(team, ref) {
   var subEl = document.getElementById('et-picker-sub');
   if (titleEl) titleEl.textContent = label;
   if (subEl) subEl.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — select event to record';
+
+  // Warn if this player is already carrying a card — this is the moment it matters
+  var warnEl = document.getElementById('et-card-warning');
+  var cards = cardStatus(team);
+  var card = cards[etPicker.ref];
+  if (warnEl) {
+    if (card === 'red') {
+      warnEl.textContent = '\u26A0\uFE0F Sent off (' + (cardMinute(team, etPicker.ref) || '?') + "') — this player is off the field";
+      warnEl.className = 'et-card-warning red'; warnEl.style.display = '';
+    } else if (card) {
+      warnEl.textContent = '\u26A0\uFE0F Already on a ' + card + ' card (' + (cardMinute(team, etPicker.ref) || '?') + "')";
+      warnEl.className = 'et-card-warning'; warnEl.style.display = '';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
   renderEventTypePicker();
   var modal = document.getElementById('event-type-modal');
   if (modal) modal.classList.add('open');
@@ -4530,6 +4695,49 @@ function per60(count, minutes) {
   return Math.round((count / minutes) * 60 * 10) / 10;
 }
 
+// ── SEASON TOTALS ──────────────────────────────────
+// Aggregated from saved matches. squad[].stats holds only the CURRENT match;
+// anything season-long has to be derived from history or it double-counts.
+var _seasonCache = null, _seasonCacheAt = 0;
+
+function seasonPlayerStats(force) {
+  var now = Date.now();
+  if (!force && _seasonCache && (now - _seasonCacheAt) < 5000) return _seasonCache;
+  var out = {};   // playerName -> { matches, mins, goals, points, twoPointers, shots, freeShots, freeScores, wides, ballWon, ballLost }
+  loadHistory().forEach(function(m) {
+    (m.players || []).forEach(function(p) {
+      if (!p || !p.name) return;
+      var s = p.stats || {};
+      var b = out[p.name] || (out[p.name] = { matches:0, mins:0, goals:0, points:0, twoPointers:0,
+                                              shots:0, freeShots:0, freeScores:0, wides:0,
+                                              ballWon:0, ballLost:0 });
+      // Only count an appearance if they actually did something or logged minutes
+      var did = Object.keys(s).length > 0 || (p.mins || 0) > 0;
+      if (did) b.matches++;
+      b.mins += p.mins || 0;
+      var sp = s.shotsPlay || {}, sf = s.shotsFree || {};
+      b.goals       += (sp.goal||0) + (sf.goal||0);
+      b.points      += (sp.point||0) + (sf.point||0);
+      b.twoPointers += (sp.twopointer||0) + (sf.twopointer||0);
+      b.wides       += (sp.wide||0) + (sf.wide||0);
+      b.shots       += Object.keys(sp).reduce(function(a,k){return a+(sp[k]||0);},0)
+                     + Object.keys(sf).reduce(function(a,k){return a+(sf[k]||0);},0);
+      b.freeShots   += Object.keys(sf).reduce(function(a,k){return a+(sf[k]||0);},0);
+      b.freeScores  += (sf.point||0) + (sf.goal||0) + (sf.twopointer||0);
+      b.ballWon     += Object.keys(s.ballWon||{}).reduce(function(a,k){return a+(s.ballWon[k]||0);},0);
+      b.ballLost    += Object.keys(s.ballLost||{}).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
+    });
+  });
+  Object.keys(out).forEach(function(n) {
+    var b = out[n];
+    b.scoreTotal = b.goals*3 + b.points + b.twoPointers*2;
+    b.conv = b.shots > 0 ? Math.round(((b.goals + b.points + b.twoPointers) / b.shots) * 100) : null;
+    b.freeConv = b.freeShots > 0 ? Math.round((b.freeScores / b.freeShots) * 100) : null;
+  });
+  _seasonCache = out; _seasonCacheAt = now;
+  return out;
+}
+
 function renderPlayerStats() {
   var container = document.getElementById('player-stats-list');
   if (!container) return;
@@ -4541,6 +4749,8 @@ function renderPlayerStats() {
 
   var mins = {};
   try { mins = playerMinutes(); } catch(e) { mins = {}; }
+  var seasonAll = {};
+  try { seasonAll = seasonPlayerStats(); } catch(e) { seasonAll = {}; }
 
   var html = '';
   activePlayers.forEach(function(x) {
@@ -4556,7 +4766,31 @@ function renderPlayerStats() {
     var ballLost = Object.keys((s.ballLost||{})).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
     var wides = ((s.shotsPlay && s.shotsPlay.wide)||0) + ((s.shotsFree && s.shotsFree.wide)||0);
     var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
-    var matches = p.matchCount || 0;
+    // Per-match figures (squad[].stats is current match only)
+    var scoresThis = goals + points + (((s.shotsPlay&&s.shotsPlay.twopointer)||0) + ((s.shotsFree&&s.shotsFree.twopointer)||0));
+    var shotsThis = shotsPlay + shotsFree;
+    var matchConv = shotsThis > 0 ? Math.round((scoresThis / shotsThis) * 100) : null;
+    var freeScoredThis = ((s.shotsFree&&s.shotsFree.point)||0) + ((s.shotsFree&&s.shotsFree.goal)||0) +
+                         ((s.shotsFree&&s.shotsFree.twopointer)||0);
+    var freeConv = shotsFree > 0 ? Math.round((freeScoredThis / shotsFree) * 100) : null;
+
+    // Season to date, from saved matches — NOT from squad[].stats, which would
+    // otherwise double-count the current match against itself.
+    var sn = (seasonAll[p.name] || null);
+    var seasonBlock = '';
+    if (sn && sn.matches > 0) {
+      var perMatch = sn.matches > 0 ? Math.round((sn.scoreTotal / sn.matches) * 10) / 10 : 0;
+      seasonBlock =
+        '<div class="psc-season">' +
+          '<div class="psc-season-title">Season \u2014 ' + sn.matches + ' match' + (sn.matches !== 1 ? 'es' : '') + '</div>' +
+          '<div class="psc-season-row">' +
+            '<span><b>' + sn.goals + '-' + String(sn.points + sn.twoPointers*2).padStart(2,'0') + '</b> scored</span>' +
+            '<span><b>' + perMatch + '</b> pts/match</span>' +
+            (sn.conv !== null ? '<span><b>' + sn.conv + '%</b> conv</span>' : '') +
+            (sn.freeConv !== null && sn.freeShots >= 3 ? '<span><b>' + sn.freeConv + '%</b> frees</span>' : '') +
+          '</div>' +
+        '</div>';
+    }
 
     var perfScore = calcPlayerPerformance(p.stats);
     var perfClass = perfScore > 0 ? 'positive' : perfScore < 0 ? 'negative' : 'neutral';
@@ -4591,10 +4825,10 @@ function renderPlayerStats() {
         '</div>' +
         '<div class="psc-stat-row">' +
           '<div class="psc-stat"><div class="psc-stat-val">' + (mp > 0 ? mp + "'" : '—') + '</div><div class="psc-stat-label">Mins Played</div></div>' +
-          '<div class="psc-stat"><div class="psc-stat-val">' + (per60(goals*3+points, mp) !== null ? per60(goals*3+points, mp) : '—') + '</div><div class="psc-stat-label">Score /60min</div></div>' +
-          '<div class="psc-stat"><div class="psc-stat-val">' + (per60(ballWon, mp) !== null ? per60(ballWon, mp) : '—') + '</div><div class="psc-stat-label">Ball Won /60</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (freeConv !== null ? freeConv + '%' : '—') + '</div><div class="psc-stat-label">Frees</div></div>' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + (matchConv !== null ? matchConv + '%' : '—') + '</div><div class="psc-stat-label">Conversion</div></div>' +
         '</div>' +
-        '<div class="psc-matches">' + matches + ' match' + (matches !== 1 ? 'es' : '') + '</div>' +
+        seasonBlock +
       '</div>' +
       '</div>';
   });
@@ -4804,6 +5038,39 @@ function updateStats() {
        (hAtt.scored||0) ? (Math.round((hAttTot/(hAtt.scored||1))*10)/10) : '—',
        (aAtt.scored||0) ? (Math.round((aAttTot/(aAtt.scored||1))*10)/10) : '—']
     ].forEach(function(r){statsRows.push(row(r));});
+  }
+
+  // ── KICKOUT DESTINATION ──
+  function koBand(team, key, val) {
+    var evs = state.events.filter(function(e) {
+      if (e.type !== 'kickout' || e.team !== team || e[key] !== val) return false;
+      if (hf && e.half !== hf) return false;
+      return true;
+    });
+    var won = evs.filter(function(e) {
+      return ['wonClean','breakWon','shortWon'].indexOf(e.outcome) !== -1;
+    }).length;
+    return evs.length ? { won: won, tot: evs.length, pct: Math.round((won/evs.length)*100) } : null;
+  }
+  function koRow(label, key, val) {
+    var h = koBand('home', key, val), a = koBand('away', key, val);
+    if (!h && !a) return null;
+    return row([label,
+      h ? h.pct + '% (' + h.won + '/' + h.tot + ')' : '—',
+      a ? a.pct + '% (' + a.won + '/' + a.tot + ')' : '—']);
+  }
+  var koRows = [
+    koRow('Short (own 45)', 'koDistance', 'short'),
+    koRow('Middle third', 'koDistance', 'middle'),
+    koRow('Long (past halfway)', 'koDistance', 'long'),
+    koRow('Left channel', 'koChannel', 'left'),
+    koRow('Centre', 'koChannel', 'centre'),
+    koRow('Right channel', 'koChannel', 'right')
+  ].filter(Boolean);
+  if (koRows.length) {
+    statsRows.push(sec('🦶 Kickout Destination' + (hf ? ' — ' + halfLabel(hf) : '')));
+    statsRows.push(row(['', 'Retained', 'Retained']));
+    koRows.forEach(function(r){ statsRows.push(r); });
   }
 
   statsRows.push(sec('📤 Ball Lost'));
@@ -6671,6 +6938,7 @@ loadTraining();
 var subTeam = 'home';
 
 function toggleSubs() {
+  try { renderSubSignal(); } catch(e) {}
   var sec = document.getElementById('subs-section');
   var chev = document.getElementById('subs-chevron');
   if (!sec) return;
@@ -10513,6 +10781,10 @@ function resetMatch(){
   state.home={goals:0,points:0}; state.away={goals:0,points:0};
   state.events=[]; state.players=[]; state.half=1; state.scoreline=[]; state.possHistory=[];
   state.subs=[]; state.matchNotes='';
+  // Player stats are per-match. They're snapshotted into history on save, so
+  // clearing here is what stops them accumulating across the whole season.
+  squad.forEach(function(p){ if (p) p.stats = {}; });
+  saveSquad();
   loadMatchNotes(); renderSubsList(); updateSubsBadge();
   state.shots={home:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}},away:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}}};
   state.ballLost={home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}};
@@ -11336,7 +11608,19 @@ function saveMatchToHistory() {
     kickout: JSON.parse(JSON.stringify(state.kickout)),
     fortyFive: JSON.parse(JSON.stringify(state.fortyFive || {home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}})),
     events: state.events.slice(),
-    players: state.players.slice(),
+    // Snapshot the squad's per-match stat lines into the record. Previously this
+    // saved state.players, which was only ever [] — so no match ever stored
+    // player data and the report's Players section could never populate.
+    players: squad.map(function(p, i) {
+      if (!p || !p.name) return null;
+      return {
+        name: p.name,
+        pos: p.pos || '',
+        num: i + 1,
+        stats: p.stats ? JSON.parse(JSON.stringify(p.stats)) : {},
+        mins: (function(){ try { return playerMinutes()[i] || 0; } catch(e) { return 0; } }())
+      };
+    }),
     subs: (state.subs || []).slice(),
     pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
