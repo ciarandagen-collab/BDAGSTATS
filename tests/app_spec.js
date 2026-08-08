@@ -773,6 +773,96 @@ test.describe('Match Report Analysis', () => {
   });
 });
 
+test.describe('Player Stats Model', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Season stats aggregate from history, not from live squad stats', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const orig = window.loadHistory;
+      window.loadHistory = () => ([
+        { id:1, players:[{name:'Test A', mins:60, stats:{shotsPlay:{point:3},shotsFree:{point:2,wide:1}}}] },
+        { id:2, players:[{name:'Test A', mins:60, stats:{shotsPlay:{point:2,goal:1}}}] }
+      ]);
+      const s = seasonPlayerStats(true);
+      window.loadHistory = orig;
+      return s['Test A'];
+    });
+    expect(r.matches).toBe(2);
+    expect(r.goals).toBe(1);
+    expect(r.points).toBe(7);
+    expect(r.freeConv).toBe(67);   // 2 scored of 3 free shots
+  });
+
+  test('A player who did not feature counts zero matches', async ({ page }) => {
+    const m = await page.evaluate(() => {
+      const orig = window.loadHistory;
+      window.loadHistory = () => ([{ id:1, players:[{name:'Bench B', mins:0, stats:{}}] }]);
+      const s = seasonPlayerStats(true);
+      window.loadHistory = orig;
+      return s['Bench B'].matches;
+    });
+    expect(m).toBe(0);
+  });
+});
+
+test.describe('Discipline Warnings', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Two yellows escalate to a red', async ({ page }) => {
+    const s = await page.evaluate(() => {
+      state.events = [
+        { type:'cards', team:'home', outcome:'yellow', player:4, min:20 },
+        { type:'cards', team:'home', outcome:'yellow', player:4, min:55 }
+      ];
+      return cardStatus('home')[4];
+    });
+    expect(s).toBe('red');
+  });
+
+  test('A yellow after a black does not downgrade the player', async ({ page }) => {
+    const s = await page.evaluate(() => {
+      state.events = [
+        { type:'cards', team:'home', outcome:'black', player:7, min:10 },
+        { type:'cards', team:'home', outcome:'yellow', player:7, min:40 }
+      ];
+      return cardStatus('home')[7];
+    });
+    expect(s).toBe('black');
+  });
+});
+
+test.describe('Kickout Destination', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Channel is named from the kicking keeper perspective at both ends', async ({ page }) => {
+    const r = await page.evaluate(() => ({
+      // My Team kicks from the top looking down: screen-right is his left
+      homeScreenRight: kickoutBands('home', 260, 150).channel,
+      homeScreenLeft:  kickoutBands('home', 60, 150).channel,
+      // Opposition kicks from the bottom looking up: screen-left is his left
+      awayScreenLeft:  kickoutBands('away', 60, 330).channel,
+      awayScreenRight: kickoutBands('away', 260, 330).channel
+    }));
+    expect(r.homeScreenRight).toBe('left');
+    expect(r.homeScreenLeft).toBe('right');
+    expect(r.awayScreenLeft).toBe('left');
+    expect(r.awayScreenRight).toBe('right');
+  });
+
+  test('Distance bands are measured from the kicking team own goal', async ({ page }) => {
+    const r = await page.evaluate(() => ({
+      shortHome: kickoutBands('home', 160, 60).distance,
+      longHome:  kickoutBands('home', 160, 400).distance,
+      shortAway: kickoutBands('away', 160, 420).distance,
+      longAway:  kickoutBands('away', 160, 80).distance
+    }));
+    expect(r.shortHome).toBe('short');
+    expect(r.longHome).toBe('long');
+    expect(r.shortAway).toBe('short');
+    expect(r.longAway).toBe('long');
+  });
+});
+
 test.describe('Match Analysis (Stats tab)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
