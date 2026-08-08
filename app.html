@@ -11061,12 +11061,13 @@ function analyseMatch(m) {
   // ════════════ PLAYERS ════════════
   if (m.players && m.players.length) {
     var scorers = m.players
+      .filter(function(p) { return p && p.name; })   // saved records hold null for empty squad slots
       .map(function(p, i) {
         var s = p.stats || {};
         var g = ((s.shotsPlay&&s.shotsPlay.goal)||0) + ((s.shotsFree&&s.shotsFree.goal)||0);
         var pts = ((s.shotsPlay&&s.shotsPlay.point)||0) + ((s.shotsFree&&s.shotsFree.point)||0) +
                   2*(((s.shotsPlay&&s.shotsPlay.twopointer)||0) + ((s.shotsFree&&s.shotsFree.twopointer)||0));
-        return { name: p.name, num: i+1, g: g, p: pts, total: g*3 + pts };
+        return { name: p.name, num: p.num || (i+1), g: g, p: pts, total: g*3 + pts };
       })
       .filter(function(x){ return x.name && x.total > 0; })
       .sort(function(a,b){ return b.total - a.total; });
