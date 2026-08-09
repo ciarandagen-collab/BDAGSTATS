@@ -2121,6 +2121,7 @@ input:not([type]), textarea, select {
 </div>
 
 
+<div id="cs-build-stamp" style="position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 2px);left:4px;z-index:9500;font:9px monospace;color:rgba(240,253,244,0.35);pointer-events:none;"></div>
 <div id="user-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:9000;display:none;align-items:center;gap:8px;">
   <div style="background:rgba(13,0,0,0.85);border:1px solid rgba(22,163,74,0.3);border-radius:20px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:8px;">
     <div style="width:24px;height:24px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
@@ -3132,6 +3133,8 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
+var CS_BUILD = 'v53-2026-08-09';
+
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
 // stops all initialisation silently, and the app just appears dead.
@@ -3586,7 +3589,8 @@ function selectShotOutcome(outcome) {
   var team = shotModal.team, mode = shotModal.mode;
   closeShotModal();
   if (pendingEvent) {
-    pendingEvent.outcome = String(outcome).toUpperCase();
+    pendingEvent.outcomeKey = outcome;                        // data value
+    pendingEvent.outcomeLabel = String(outcome).toUpperCase(); // display only
     openPlayerPick();
     return;
   }
@@ -3713,7 +3717,18 @@ function handleLocationTap(evt) {
   closeLocationPicker();
 }
 
+var VALID_SHOT_OUTCOMES = ['point','twopointer','goal','blocked','wide','saved','short'];
+
 function addShot(team,mode,outcome) {
+  // Guard against a mis-cased or mislabelled outcome reaching this far. This
+  // previously failed silently: the event logged but no score was added.
+  if (VALID_SHOT_OUTCOMES.indexOf(outcome) === -1) {
+    var msg = 'Bad shot outcome "' + outcome + '" (expected one of: ' +
+              VALID_SHOT_OUTCOMES.join(', ') + ')';
+    if (window.__csShowError) window.__csShowError(msg);
+    console.error(msg);
+    return;
+  }
   if (!state.shots[team][mode][outcome] && state.shots[team][mode][outcome] !== 0) {
     state.shots[team][mode][outcome] = 0;
   }
@@ -3801,7 +3816,8 @@ function selectGenericOutcome(key) {
     return;
   }
   if (pendingEvent) {
-    pendingEvent.outcome = outcomeLabel;
+    pendingEvent.outcomeKey = key;              // data value
+    pendingEvent.outcomeLabel = outcomeLabel;   // display only
     openPlayerPick();
     return;
   }
@@ -3812,7 +3828,14 @@ function selectGenericOutcome(key) {
 function commitGeneric(team, category, key, playerRef) {
   var cfg = GENERIC_CONFIG[category];
   var found = cfg.outcomes.find(function(o){ return o.key === key; });
-  var outcomeLabel = found ? found.label : key;
+  if (!found) {
+    var m = 'Bad outcome "' + key + '" for ' + category + ' (expected one of: ' +
+            cfg.outcomes.map(function(o){return o.key;}).join(', ') + ')';
+    if (window.__csShowError) window.__csShowError(m);
+    console.error(m);
+    return;
+  }
+  var outcomeLabel = found.label;
 
   state[category][team][key]++;
   if (playerRef !== null && playerRef !== undefined) {
@@ -4366,7 +4389,7 @@ function openPlayerPick() {
   var label = pendingEvent.kind === 'shot'
     ? (pendingEvent.arg === 'free' ? 'Shot from Free' : 'Shot from Play')
     : ((GENERIC_CONFIG[pendingEvent.arg] || {}).title || pendingEvent.arg).replace(/^[^\w]+\s*/, '');
-  if (title) title.textContent = label + (pendingEvent.outcome ? ' — ' + pendingEvent.outcome : '');
+  if (title) title.textContent = label + (pendingEvent.outcomeLabel ? ' — ' + pendingEvent.outcomeLabel : '');
   if (sub) sub.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — tap the player';
 
   if (team === 'home') {
@@ -4434,8 +4457,8 @@ function confirmPlayerPick(ref) {
     renderRecordEventGrid();
     return;
   }
-  if (ev.kind === 'shot') commitShot(ev.team, ev.arg, ev.outcome, ref);
-  else commitGeneric(ev.team, ev.arg, ev.outcome, ref);
+  if (ev.kind === 'shot') commitShot(ev.team, ev.arg, ev.outcomeKey, ref);
+  else commitGeneric(ev.team, ev.arg, ev.outcomeKey, ref);
   pendingEvent = null;
   refreshEventTallies();
 }
@@ -14583,6 +14606,7 @@ document.addEventListener('DOMContentLoaded', function() {
   try { renderShotSummary(); } catch(e) {}
   try { renderGenericTallies(); } catch(e) {}
   try { renderTrends(); } catch(e) {}
+  try { var bs = document.getElementById('cs-build-stamp'); if (bs) bs.textContent = CS_BUILD; } catch(e) {}
   try { renderClock(); } catch(e) {}
   try { renderGameControls(); } catch(e) {}   // populates the clock buttons — was missing
   try { renderRecordEventGrid(); } catch(e) {}
