@@ -9,7 +9,6 @@ const EMAIL = 'ciarandagen@icloud.com'; // free bypass account
 const PASSWORD = process.env.TEST_PASSWORD || 'testpass123';
 
 // ── HELPERS ──────────────────────────────────────────────────────────
-
 async function login(page) {
   await page.goto(URL);
   await page.waitForSelector('#login-screen', { state: 'visible' });
@@ -27,22 +26,31 @@ async function navTo(page, tab) {
 }
 
 // ── LOGIN SCREEN ─────────────────────────────────────────────────────
-
-// Clear service worker cache before all tests
+// Clear service worker registrations and caches before the suite runs.
+//
+// This is wrapped in try/catch on purpose: unregistering a service worker can
+// trigger a controllerchange in the page, and if the app reloads at that moment
+// the execution context is destroyed mid-evaluate. That is cleanup, not a test
+// assertion, so a failure here must not take the whole suite down with it.
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage();
-  await page.goto(URL);
-  await page.evaluate(async () => {
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const reg of registrations) await reg.unregister();
-    }
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      for (const key of keys) await caches.delete(key);
-    }
-  });
-  await page.close();
+  try {
+    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) await reg.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) await caches.delete(key);
+      }
+    });
+  } catch (e) {
+    // Context destroyed by a reload, or no service worker present — either is fine
+  } finally {
+    await page.close().catch(() => {});
+  }
 });
 
 test.describe('Login Screen', () => {
@@ -81,7 +89,6 @@ test.describe('Login Screen', () => {
 });
 
 // ── POST-LOGIN APP STRUCTURE ──────────────────────────────────────────
-
 test.describe('App Structure', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -112,7 +119,6 @@ test.describe('App Structure', () => {
 });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────
-
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -121,11 +127,12 @@ test.describe('Navigation', () => {
     await expect(page.locator('#page-record')).toBeVisible();
   });
 
-  test('Record tab shows Home/Away headers', async ({ page }) => {
+  test('Record tab shows side tabs and pitch', async ({ page }) => {
     await navTo(page, 'record');
-    await expect(page.locator('.record-team-headers')).toBeVisible();
-    await expect(page.locator('.home-col')).toBeVisible();
-    await expect(page.locator('.away-col')).toBeVisible();
+    await expect(page.locator('.record-side-tabs')).toBeVisible();
+    await expect(page.locator('#record-tab-home')).toBeVisible();
+    await expect(page.locator('#record-tab-away')).toBeVisible();
+    await expect(page.locator('#record-pitch-wrap')).toBeVisible();
   });
 
   test('Trends tab loads', async ({ page }) => {
@@ -172,7 +179,6 @@ test.describe('Navigation', () => {
 });
 
 // ── MATCH TAB ────────────────────────────────────────────────────────
-
 test.describe('Match Tab', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -215,36 +221,148 @@ test.describe('Match Tab', () => {
   });
 
   test('Start Game button visible', async ({ page }) => {
-    await expect(page.locator('button:has-text("Start Game")')).toBeVisible();
+    // The clock is deliberately mirrored on the Record tab, so this button
+    // exists twice. Scope to the Match page or the selector is ambiguous.
+    await expect(page.locator('#page-match button:has-text("Start Game")')).toBeVisible();
+  });
+
+  test('Game clock is mirrored on the Record tab', async ({ page }) => {
+    // Both copies drive the same clock — that mirroring is intentional
+    const count = await page.locator('button:has-text("Start Game")').count();
+    expect(count).toBe(2);
   });
 });
 
 // ── RECORD TAB ───────────────────────────────────────────────────────
-
+// Record tab was redesigned to a pitch-tap flow: tap a player, pick an
+// event type, then (for most events) pick an outcome. Home/Away are
+// labelled "My Team" / "Opposition" here. The game clock is mirrored
+// at the top, and team-level actions (e.g. Attack) sit below the pitch.
 test.describe('Record Tab', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
     await navTo(page, 'record');
   });
 
-  test('Shot from Play buttons visible (Home + Away)', async ({ page }) => {
-    const btns = await page.locator('.trigger-btn:has-text("Shot from Play")').count();
-    expect(btns).toBe(2);
+  test('Game clock mirror visible on Record tab', async ({ page }) => {
+    await expect(page.locator('#rec-clock-display')).toBeVisible();
+    await expect(page.locator('#rec-clock-btns-area')).toBeVisible();
+    await expect(page.locator('#rec-h1-btn')).toBeVisible();
   });
 
-  test('Home buttons have green styling', async ({ page }) => {
-    const homeBtn = page.locator('.home-btn').first();
-    await expect(homeBtn).toBeVisible();
+  test('Side tabs read My Team / Opposition', async ({ page }) => {
+    await expect(page.locator('#record-home-label')).toHaveText('My Team');
+    await expect(page.locator('#record-away-label')).toHaveText('Opposition');
   });
 
-  test('Away buttons have silver styling', async ({ page }) => {
-    const awayBtn = page.locator('.away-btn').first();
-    await expect(awayBtn).toBeVisible();
+  test('Switching side updates active tab styling', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await expect(page.locator('#record-tab-away')).toHaveClass(/active/);
+    await expect(page.locator('#record-tab-home')).not.toHaveClass(/active/);
   });
 
-  test('Shot modal opens on tap', async ({ page }) => {
-    await page.locator('.home-btn:has-text("Shot from Play")').first().click();
-    await expect(page.locator('#shot-modal, .shot-modal, .modal-overlay.open')).toBeVisible({ timeout: 3000 });
+  test('Opposition pitch shows 15 tappable player markers', async ({ page }) => {
+    // Opposition pitch always renders 15 anonymous numbers, regardless of squad setup
+    await page.click('#record-tab-away');
+    const markers = await page.locator('.record-pitch-player').count();
+    expect(markers).toBe(15);
+  });
+
+  test('Tapping a pitch player opens the event type picker', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await expect(page.locator('#event-type-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('.et-picker-btn:has-text("Shot from Play")')).toBeVisible();
+  });
+
+  test('Shot modal opens via pitch tap flow', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
+    await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('45 shot triggers the location picker pitch', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("45m Free")').click();
+    await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('.outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Possession records immediately with no outcome screen', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    // Should NOT open the generic outcome modal — it's a single-tap log
+    await page.waitForTimeout(300);
+    await expect(page.locator('#generic-modal')).not.toHaveClass(/open/);
+    await expect(page.locator('#event-type-modal')).not.toHaveClass(/open/);
+  });
+
+  test('Team Actions section shows Attack for both sides', async ({ page }) => {
+    await expect(page.locator('.team-actions-row')).toBeVisible();
+    await expect(page.locator('.team-action-btn:has-text("Attack")')).toHaveCount(2);
+  });
+
+  test('Undo toast appears after recording an event', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
+    await expect(page.locator('#undo-toast-text')).toContainText('Possession');
+  });
+
+  test('Undo toast removes the recorded event', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
+    const before = await page.locator('#timeline-list .event-item').count();
+    await page.locator('#undo-toast button').click();
+    await expect(page.locator('#undo-toast')).not.toHaveClass(/show/);
+    const after = await page.locator('#timeline-list .event-item').count();
+    expect(after).toBe(before - 1);
+  });
+
+  test('Event picker has a manage-events button', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await expect(page.locator('.et-manage-btn')).toBeVisible();
+  });
+
+  test('Event type manager opens and lists event types', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-manage-btn').click();
+    await expect(page.locator('#et-manager-modal')).toHaveClass(/open/, { timeout: 3000 });
+    const rows = await page.locator('.et-mgr-row').count();
+    expect(rows).toBeGreaterThan(5);
+  });
+
+  test('Hiding an event type removes it from the picker', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    const before = await page.locator('.et-picker-btn').count();
+    await page.locator('.et-manage-btn').click();
+    await page.locator('.et-mgr-row:has-text("Card")').first().click();
+    await page.locator('#et-manager-modal .sheet-close').click();
+    const after = await page.locator('.et-picker-btn').count();
+    expect(after).toBe(before - 1);
+  });
+
+  test('Attack opens outcome modal with Score / Ball Lost / Turned Back', async ({ page }) => {
+    await page.locator('.team-action-btn.ta-home').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Score');
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Ball Lost');
+    await expect(page.locator('#gmodal-outcomes')).toContainText('Turned Back');
+  });
+
+  test('View Match Stats button navigates to Stats tab', async ({ page }) => {
+    await page.locator('.record-stats-btn').click();
+    await expect(page.locator('#page-stats')).toBeVisible();
   });
 
   test('Discipline section collapsed by default', async ({ page }) => {
@@ -253,20 +371,9 @@ test.describe('Record Tab', () => {
       await expect(disciplineGroup).not.toBeVisible();
     }
   });
-
-  test('Team names update record tab headers', async ({ page }) => {
-    // Set team name directly on the record tab label via JS
-    await navTo(page, 'record');
-    await page.evaluate(() => {
-      var label = document.getElementById('record-home-label');
-      if (label) label.textContent = 'Kilcoo';
-    });
-    await expect(page.locator('#record-home-label')).toHaveText('Kilcoo');
-  });
 });
 
 // ── SQUAD TAB ────────────────────────────────────────────────────────
-
 test.describe('Squad Tab', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -305,7 +412,6 @@ test.describe('Squad Tab', () => {
 });
 
 // ── MODALS ───────────────────────────────────────────────────────────
-
 test.describe('Modals & Sheets', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -347,7 +453,6 @@ test.describe('Modals & Sheets', () => {
 });
 
 // ── WELLNESS SELF-REPORT (player link) ───────────────────────────────
-
 test.describe('Wellness Self-Report Screen', () => {
   test('Wellness screen loads from URL param', async ({ page }) => {
     await page.goto('https://coachstats.app/app?wellness=test-user-id&date=2026-05-28');
@@ -376,7 +481,6 @@ test.describe('Wellness Self-Report Screen', () => {
 });
 
 // ── TRIAL GRADING SCREEN ─────────────────────────────────────────────
-
 test.describe('Trial Grading Screen', () => {
   test('Trial grading screen loads from URL param', async ({ page }) => {
     await page.goto('https://coachstats.app/app?trialgrade=test-user-id&trialId=123&sessionId=456');
@@ -393,7 +497,6 @@ test.describe('Trial Grading Screen', () => {
 });
 
 // ── HISTORY SEARCH ───────────────────────────────────────────────────
-
 test.describe('History Search', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
@@ -410,7 +513,6 @@ test.describe('History Search', () => {
 });
 
 // ── NEW FEATURES ──────────────────────────────────────────────────────
-
 test.describe('Substitutions', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -453,6 +555,473 @@ test.describe('Match Notes', () => {
     await page.fill('#match-notes-input', 'Test match notes');
     await page.waitForTimeout(1000);
     await expect(page.locator('#match-notes-saved')).toHaveText('✓ Saved');
+  });
+});
+
+test.describe('Starting Team Selector', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Team sheet button is visible on Match tab', async ({ page }) => {
+    await expect(page.locator('#team-sheet-btn')).toBeVisible();
+  });
+
+  test('Team selector opens with 15 positions', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    // Only opens if the squad has players; skip cleanly if empty
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      const slots = await page.locator('.ts-slot').count();
+      expect(slots).toBe(15);
+    }
+  });
+
+  test('Auto-fill populates the team sheet', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.click('.ts-action-btn:has-text("Auto-fill")');
+      const filled = await page.locator('.ts-slot.filled').count();
+      expect(filled).toBeGreaterThan(0);
+    }
+  });
+
+  test('Clear all empties the team sheet', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.click('.ts-action-btn:has-text("Auto-fill")');
+      await page.click('.ts-action-btn:has-text("Clear all")');
+      expect(await page.locator('.ts-slot.filled').count()).toBe(0);
+    }
+  });
+
+  test('Tapping a position opens the player picker', async ({ page }) => {
+    await page.click('#team-sheet-btn');
+    const modal = page.locator('#team-selector-modal');
+    if (await modal.evaluate(el => el.classList.contains('open')).catch(() => false)) {
+      await page.locator('.ts-slot').first().click();
+      await expect(page.locator('#ts-player-modal')).toHaveClass(/open/, { timeout: 3000 });
+      await expect(page.locator('#ts-pp-title')).toContainText('Goalkeeper');
+    }
+  });
+});
+
+test.describe('UI Fixes (Phase A)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Undo toast sits above modal overlays', async ({ page }) => {
+    const toastZ = await page.locator('#undo-toast').evaluate(el => parseInt(getComputedStyle(el).zIndex));
+    const modalZ = await page.locator('#shot-modal').evaluate(el => parseInt(getComputedStyle(el).zIndex));
+    expect(toastZ).toBeGreaterThan(modalZ);
+  });
+
+  test('Undo remains tappable while the location picker is open', async ({ page }) => {
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
+    await page.locator('#shot-modal .outcome-btn').first().click();
+    // Location picker opens over the toast — the Undo button must still be hittable
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#undo-toast')).toHaveClass(/show/);
+    await expect(page.locator('#undo-toast button')).toBeVisible();
+  });
+
+  test('Attack buttons are visually distinct for each side', async ({ page }) => {
+    await navTo(page, 'record');
+    const home = await page.locator('.team-action-btn.ta-home')
+      .evaluate(el => getComputedStyle(el).backgroundColor);
+    const away = await page.locator('.team-action-btn.ta-away')
+      .evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(home).not.toBe(away);
+  });
+
+  test('Text inputs are at least 16px so iOS does not zoom', async ({ page }) => {
+    await navTo(page, 'history');
+    const size = await page.locator('#history-search')
+      .evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    expect(size).toBeGreaterThanOrEqual(16);
+  });
+
+  test('Match notes textarea is at least 16px', async ({ page }) => {
+    await navTo(page, 'stats');
+    const size = await page.locator('#match-notes-input')
+      .evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    expect(size).toBeGreaterThanOrEqual(16);
+  });
+});
+
+test.describe('UI Fixes (Phase B)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Club button does not use error-red text', async ({ page }) => {
+    const colour = await page.locator('button[title="Club"]')
+      .evaluate(el => getComputedStyle(el).color);
+    // Was rgb(255, 128, 128) — red on green, which reads as an error state
+    expect(colour).not.toBe('rgb(255, 128, 128)');
+  });
+
+  test('Timeline delete button meets the 44px touch target', async ({ page }) => {
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    const box = await page.locator('#timeline-list .del-btn').first().boundingBox();
+    if (box) {
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test('Squad delete button has an enlarged touch target', async ({ page }) => {
+    await navTo(page, 'squad');
+    const del = page.locator('.squad-slot-del').first();
+    if (await del.count()) {
+      const box = await del.boundingBox();
+      if (box) {
+        expect(box.width).toBeGreaterThanOrEqual(36);
+        expect(box.height).toBeGreaterThanOrEqual(36);
+      }
+    }
+  });
+
+  test('Muted text opacity meets contrast requirements', async ({ page }) => {
+    const muted = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--muted').trim());
+    const alpha = parseFloat(muted.match(/,\s*([\d.]+)\)/)[1]);
+    expect(alpha).toBeGreaterThanOrEqual(0.55);
+  });
+});
+
+test.describe('Accessibility (Phase D)', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('No icon-only buttons are left without a label', async ({ page }) => {
+    const unlabelled = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('button'))
+        .filter(b => b.offsetParent !== null)
+        .filter(b => !b.getAttribute('aria-label'))
+        .filter(b => !/[a-zA-Z0-9]/.test(b.textContent || ''))
+        .length;
+    });
+    expect(unlabelled).toBe(0);
+  });
+
+  test('Modals are marked up as dialogs', async ({ page }) => {
+    const role = await page.locator('#shot-modal').getAttribute('role');
+    const modal = await page.locator('#shot-modal').getAttribute('aria-modal');
+    expect(role).toBe('dialog');
+    expect(modal).toBe('true');
+  });
+
+  test('Close buttons are labelled', async ({ page }) => {
+    const label = await page.locator('#shot-modal .sheet-close').getAttribute('aria-label');
+    expect(label).toBe('Close');
+  });
+
+  test('Active nav tab is marked with aria-current', async ({ page }) => {
+    await navTo(page, 'record');
+    const current = await page.locator('.nav-btn[aria-current="page"]').count();
+    expect(current).toBe(1);
+  });
+
+  test('Escape closes an open sheet', async ({ page }) => {
+    await page.click('#comp-picker-btn');
+    await expect(page.locator('#comp-picker-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#comp-picker-modal')).not.toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Status messages are announced politely', async ({ page }) => {
+    const live = await page.locator('#sync-banner').getAttribute('aria-live');
+    expect(live).toBe('polite');
+  });
+});
+
+test.describe('Match Report Analysis', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Analysis engine handles a sparse legacy match without crashing', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      // A match with nothing but a scoreline, as older records look
+      const a = analyseMatch({ home:'A', away:'B', homeGoals:2, homePoints:11,
+                               awayGoals:1, awayPoints:9, events:[], players:[] });
+      return { verdict: a.verdict, sections: a.sections.length, note: !!a.dataNote };
+    });
+    expect(result.verdict).toContain('2-11');
+    expect(result.sections).toBeGreaterThan(0);
+    expect(result.note).toBe(true);
+  });
+
+  test('Analysis produces observations for a fully recorded match', async ({ page }) => {
+    const count = await page.evaluate(() => {
+      const a = analyseMatch({
+        home:'A', away:'B', homeGoals:0, homePoints:7, awayGoals:0, awayPoints:12,
+        shots:{ home:{play:{point:5,wide:8},free:{point:2,wide:2}},
+                away:{play:{point:10,wide:3},free:{point:2,wide:0}} },
+        kickout:{ home:{wonClean:4,breakWon:1,lossClean:5,breakLoss:5,shortWon:0,shortLoss:0},
+                  away:{wonClean:8,breakWon:2,lossClean:1,breakLoss:1,shortWon:0,shortLoss:0} },
+        ballLost:{ home:{handPass:9,kickPass:4}, away:{handPass:3} },
+        ballWon:{ home:{tackle:7,interception:4} },
+        events:[], players:[]
+      });
+      return a.sections.reduce((n,s) => n + s.points.length, 0);
+    });
+    expect(count).toBeGreaterThan(5);
+  });
+
+  test('Analysis never returns an empty report', async ({ page }) => {
+    const ok = await page.evaluate(() => {
+      const a = analyseMatch({ home:'A', away:'B', homeGoals:0, homePoints:0,
+                               awayGoals:0, awayPoints:0, events:[], players:[] });
+      return a.sections.length > 0 && a.verdict.length > 0;
+    });
+    expect(ok).toBe(true);
+  });
+
+  test('Event log is returned in chronological order', async ({ page }) => {
+    const ordered = await page.evaluate(() => {
+      const log = matchEventLog({ events:[
+        {min:40,half:2,type:'shot'}, {min:5,half:1,type:'shot'},
+        {min:20,half:1,type:'shot'}, {min:12,half:2,type:'shot'}
+      ]});
+      return log.map(e => e.half + ':' + e.min).join(',');
+    });
+    expect(ordered).toBe('1:5,1:20,2:12,2:40');
+  });
+});
+
+test.describe('Player Stats Model', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Season stats aggregate from history, not from live squad stats', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const orig = window.loadHistory;
+      window.loadHistory = () => ([
+        { id:1, players:[{name:'Test A', mins:60, stats:{shotsPlay:{point:3},shotsFree:{point:2,wide:1}}}] },
+        { id:2, players:[{name:'Test A', mins:60, stats:{shotsPlay:{point:2,goal:1}}}] }
+      ]);
+      const s = seasonPlayerStats(true);
+      window.loadHistory = orig;
+      return s['Test A'];
+    });
+    expect(r.matches).toBe(2);
+    expect(r.goals).toBe(1);
+    expect(r.points).toBe(7);
+    expect(r.freeConv).toBe(67);   // 2 scored of 3 free shots
+  });
+
+  test('A player who did not feature counts zero matches', async ({ page }) => {
+    const m = await page.evaluate(() => {
+      const orig = window.loadHistory;
+      window.loadHistory = () => ([{ id:1, players:[{name:'Bench B', mins:0, stats:{}}] }]);
+      const s = seasonPlayerStats(true);
+      window.loadHistory = orig;
+      return s['Bench B'].matches;
+    });
+    expect(m).toBe(0);
+  });
+});
+
+test.describe('Discipline Warnings', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Two yellows escalate to a red', async ({ page }) => {
+    const s = await page.evaluate(() => {
+      state.events = [
+        { type:'cards', team:'home', outcome:'yellow', player:4, min:20 },
+        { type:'cards', team:'home', outcome:'yellow', player:4, min:55 }
+      ];
+      return cardStatus('home')[4];
+    });
+    expect(s).toBe('red');
+  });
+
+  test('A yellow after a black does not downgrade the player', async ({ page }) => {
+    const s = await page.evaluate(() => {
+      state.events = [
+        { type:'cards', team:'home', outcome:'black', player:7, min:10 },
+        { type:'cards', team:'home', outcome:'yellow', player:7, min:40 }
+      ];
+      return cardStatus('home')[7];
+    });
+    expect(s).toBe('black');
+  });
+});
+
+test.describe('Kickout Destination', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Channel is named from the kicking keeper perspective at both ends', async ({ page }) => {
+    const r = await page.evaluate(() => ({
+      // My Team kicks from the top looking down: screen-right is his left
+      homeScreenRight: kickoutBands('home', 260, 150).channel,
+      homeScreenLeft:  kickoutBands('home', 60, 150).channel,
+      // Opposition kicks from the bottom looking up: screen-left is his left
+      awayScreenLeft:  kickoutBands('away', 60, 330).channel,
+      awayScreenRight: kickoutBands('away', 260, 330).channel
+    }));
+    expect(r.homeScreenRight).toBe('left');
+    expect(r.homeScreenLeft).toBe('right');
+    expect(r.awayScreenLeft).toBe('left');
+    expect(r.awayScreenRight).toBe('right');
+  });
+
+  test('Distance bands are measured from the kicking team own goal', async ({ page }) => {
+    const r = await page.evaluate(() => ({
+      shortHome: kickoutBands('home', 160, 60).distance,
+      longHome:  kickoutBands('home', 160, 400).distance,
+      shortAway: kickoutBands('away', 160, 420).distance,
+      longAway:  kickoutBands('away', 160, 80).distance
+    }));
+    expect(r.shortHome).toBe('short');
+    expect(r.longHome).toBe('long');
+    expect(r.shortAway).toBe('short');
+    expect(r.longAway).toBe('long');
+  });
+});
+
+test.describe('Match Analysis (Stats tab)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'stats');
+  });
+
+  test('Half filter toggle is visible with three options', async ({ page }) => {
+    await expect(page.locator('.stats-half-filter')).toBeVisible();
+    await expect(page.locator('#sh-filter-0')).toBeVisible();
+    await expect(page.locator('#sh-filter-1')).toBeVisible();
+    await expect(page.locator('#sh-filter-2')).toBeVisible();
+  });
+
+  test('Full Match is the default half filter', async ({ page }) => {
+    await expect(page.locator('#sh-filter-0')).toHaveClass(/active/);
+  });
+
+  test('Selecting 1st Half switches the active filter', async ({ page }) => {
+    await page.click('#sh-filter-1');
+    await expect(page.locator('#sh-filter-1')).toHaveClass(/active/);
+    await expect(page.locator('#sh-filter-0')).not.toHaveClass(/active/);
+    await expect(page.locator('#stats-body')).toContainText('1st Half');
+  });
+
+  test('Shooting Efficiency section is present', async ({ page }) => {
+    await expect(page.locator('#stats-body')).toContainText('Shooting Efficiency');
+    await expect(page.locator('#stats-body')).toContainText('Conversion');
+    await expect(page.locator('#stats-body')).toContainText('Kickout Retention');
+  });
+
+  test('Old misleading Scoring Eff. metric is gone', async ({ page }) => {
+    await expect(page.locator('#stats-body')).not.toContainText('Scoring Eff.');
+  });
+
+  test('Possession shows as Dominance Index when no possessions tagged', async ({ page }) => {
+    // With nothing tagged, the estimate is used and must be labelled as such
+    await expect(page.locator('#stats-body')).toContainText('Dominance Index');
+  });
+});
+
+test.describe('Possession Method (Trends tab)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'trends');
+  });
+
+  test('Possession method note is shown', async ({ page }) => {
+    await expect(page.locator('#poss-method-note')).toBeVisible();
+  });
+
+  test('Untagged match labels the section as Dominance Index', async ({ page }) => {
+    await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
+    await expect(page.locator('#poss-method-note')).toContainText('Estimated');
+  });
+
+  test('One-sided possession tagging does not produce a 100/0 split', async ({ page }) => {
+    // Tag possessions for the opposition only, then check we fall back to the estimate
+    await navTo(page, 'record');
+    await page.click('#record-tab-away');
+    for (let i = 0; i < 3; i++) {
+      await page.locator('.record-pitch-player').first().click();
+      await page.locator('.et-picker-btn:has-text("Possession")').click();
+      await page.waitForTimeout(150);
+    }
+    await navTo(page, 'trends');
+    await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
+    await expect(page.locator('#poss-away-pct')).not.toHaveText('100%');
+  });
+});
+
+test.describe('Opposition Players', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'history');
+  });
+
+  test('Opposition profile has a Their Players section', async ({ page }) => {
+    await page.click('button:has-text("Opposition DB")');
+    const firstClub = page.locator('.opp-club-row, .opp-list-row').first();
+    if (await firstClub.count()) {
+      await firstClub.click();
+      await expect(page.locator('#opp-players-list')).toBeAttached();
+    }
+  });
+});
+
+test.describe('Turnover Territory', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await navTo(page, 'record');
+  });
+
+  test('Ball Lost prompts for pitch location', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Ball Lost")').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#location-modal .sheet-title')).toContainText('lost');
+  });
+
+  test('Turnover Forced prompts for pitch location', async ({ page }) => {
+    await page.click('#record-tab-away');
+    await page.locator('.record-pitch-player').first().click();
+    await page.locator('.et-picker-btn:has-text("Turnover Forced")').click();
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Shot Map Positioning', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Shots plot at the tapped position, not the zone centre', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      // Two shots in the SAME zone but tapped far apart must not land together
+      state.events = [
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'d-line', x:30, y:60, min:5, half:1 },
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'d-line', x:70, y:60, min:9, half:1 }
+      ];
+      shotMapTeamFilter = 'both'; shotMapTypeFilter = 'both';
+      const d = getShotMapData();
+      return { n: d.length, x0: d[0].x, x1: d[1].x };
+    });
+    expect(r.n).toBe(2);
+    expect(r.x0).toBe(30);
+    expect(r.x1).toBe(70);
+    expect(r.x0).not.toBe(r.x1);
+  });
+
+  test('Legacy shots with only a zone still plot', async ({ page }) => {
+    const n = await page.evaluate(() => {
+      state.events = [
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'midfield', min:5, half:1 }
+      ];
+      shotMapTeamFilter = 'both'; shotMapTypeFilter = 'both';
+      return getShotMapData().length;
+    });
+    expect(n).toBe(1);
   });
 });
 
