@@ -1132,6 +1132,45 @@ input:not([type]), textarea, select {
 .et-picker-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .et-icon { font-size:20px; }
 .stats-half-filter { display:flex; gap:6px; margin-bottom:10px; }
+/* ── RECORD TAB: SPLIT EVENT BOXES ── */
+.rec-legend { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.rec-legend-item { display:flex; align-items:center; gap:5px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.rl-swatch { width:12px; height:12px; border-radius:3px; }
+.rl-swatch.home { background:rgba(22,163,74,0.55); border:1px solid rgba(22,163,74,0.8); }
+.rl-swatch.away { background:rgba(226,232,240,0.35); border:1px solid rgba(226,232,240,0.6); }
+.rec-event-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:12px; }
+.rec-ev-box { border:1px solid var(--border); border-radius:11px; overflow:hidden; background:rgba(255,255,255,0.03); }
+.rev-label { padding:7px 8px 5px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; color:var(--cream); text-align:center; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rev-icon { margin-right:4px; }
+.rev-halves { display:flex; border-top:1px solid rgba(255,255,255,0.07); }
+.rev-half { flex:1; border:none; padding:14px 4px; cursor:pointer; font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; transition:filter 0.1s; }
+.rev-half.home { background:rgba(22,163,74,0.16); color:#86efac; border-right:1px solid rgba(255,255,255,0.09); }
+.rev-half.away { background:rgba(226,232,240,0.09); color:#e2e8f0; }
+.rev-half:active { filter:brightness(1.9); }
+.rev-tally { pointer-events:none; }
+.rec-grid-empty { grid-column:1/-1; text-align:center; padding:22px; color:var(--muted); font-size:12px; font-style:italic; }
+/* ── PLAYER PICKER ── */
+.pp-pitch { background:#1a6b2f; border:2px solid rgba(255,255,255,0.22); border-radius:12px; padding:14px 6px; position:relative; }
+.pp-pitch::before { content:''; position:absolute; top:50%; left:6%; right:6%; height:1px; background:rgba(255,255,255,0.13); }
+.pp-row { display:flex; justify-content:center; gap:7px; margin-bottom:11px; position:relative; z-index:1; }
+.pp-row:last-child { margin-bottom:0; }
+.pp-player { display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; padding:2px; cursor:pointer; min-width:60px; }
+.pp-circle { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid rgba(255,255,255,0.55); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:18px; font-weight:700; color:#fff; }
+.pp-player:active .pp-circle { transform:scale(0.9); background:var(--red); border-color:#fff; }
+.pp-player.on-yellow .pp-circle { box-shadow:0 0 0 3px rgba(250,204,21,0.9); }
+.pp-player.on-black .pp-circle { box-shadow:0 0 0 3px rgba(20,20,20,0.95); }
+.pp-player.on-red .pp-circle { box-shadow:0 0 0 3px rgba(220,38,38,0.95); }
+.pp-name { font-size:10px; color:rgba(255,255,255,0.9); text-transform:uppercase; max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.pp-player.empty { opacity:0.35; }
+.pp-player.small .pp-circle { width:38px; height:38px; font-size:14px; }
+.pp-bench-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; text-align:center; margin:12px 0 6px; }
+.pp-bench { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+.pp-opp-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+.pp-opp { padding:13px 3px; border-radius:9px; border:1px solid var(--border); background:rgba(226,232,240,0.08); color:#e2e8f0; font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; cursor:pointer; }
+.pp-opp:active { background:var(--red); border-color:var(--red); color:#fff; }
+.pp-opp.on-yellow { box-shadow:inset 0 0 0 2px rgba(250,204,21,0.9); }
+.pp-opp.on-red { box-shadow:inset 0 0 0 2px rgba(220,38,38,0.95); }
+.pp-opp-name { display:block; font-family:'Inter',sans-serif; font-size:8px; font-weight:400; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
 .poss-method-note { font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); margin:-6px 0 8px; line-height:1.4; }
@@ -2263,20 +2302,17 @@ input:not([type]), textarea, select {
       </div>
     </div>
 
-    <!-- Home / Away side toggle -->
-    <div class="record-side-tabs">
-      <button class="record-side-tab active" id="record-tab-home" onclick="switchRecordSide('home')">
-        <span id="record-home-label">My Team</span>
-      </button>
-      <button class="record-side-tab" id="record-tab-away" onclick="switchRecordSide('away')">
-        <span id="record-away-label">Opposition</span>
-      </button>
+    <!-- Event boxes: each split into My Team (left) and Opposition (right).
+         One tap sets both the team and the event, then outcome, then player. -->
+    <div class="rec-legend">
+      <span class="rec-legend-item"><span class="rl-swatch home"></span>My Team</span>
+      <span id="rec-active-squad" class="rec-squad-chip" style="display:none;"></span>
+      <span class="rec-legend-item"><span class="rl-swatch away"></span>Opposition</span>
     </div>
+    <div class="rec-event-grid" id="rec-event-grid"></div>
+    <button class="et-manage-btn" onclick="openEventTypeManager()">⚙️ Choose which events show here</button>
 
-    <div class="sec-label">Tap a Player to Record an Event <span id="rec-active-squad" class="rec-squad-chip" style="display:none;"></span></div>
-    <div class="record-pitch-wrap" id="record-pitch-wrap"></div>
-
-    <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
+<button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
 
     <div class="sec-label">Team Actions</div>
     <div class="team-actions-row">
@@ -2755,6 +2791,21 @@ input:not([type]), textarea, select {
       <button class="sheet-close" aria-label="Close" onclick="closeTsPlayerPicker()">✕</button>
     </div>
     <div class="ts-player-list" id="ts-player-list"></div>
+  </div>
+</div>
+
+<!-- PLAYER PICKER (final step of the record flow) -->
+<div class="modal-overlay" id="player-pick-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)cancelPlayerPick()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="pp-title">Who?</div>
+        <div class="sheet-sub" id="pp-sub"></div>
+      </div>
+      <button class="sheet-close" aria-label="Close" onclick="cancelPlayerPick()">✕</button>
+    </div>
+    <div id="pp-body"></div>
   </div>
 </div>
 
@@ -3405,7 +3456,7 @@ function showPage(name, btn) {
   btn.setAttribute('aria-current', 'page');
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
-  if (name === 'record') { renderRecordPitch(); try { refreshSquadPickerDisplay(); } catch(e) {} }
+  if (name === 'record') { renderRecordEventGrid(); try { refreshSquadPickerDisplay(); } catch(e) {} }
   if (name === 'match') { try { refreshTeamSheetLabel(); } catch(e) {} }
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
@@ -3492,21 +3543,35 @@ function closeShotModal() {
   document.querySelectorAll('.outcome-btn').forEach(function(b) { b.style.opacity = ''; });
 }
 
+// Outcome chosen — hand on to the player step rather than recording yet.
 function selectShotOutcome(outcome) {
   if(!shotModal.team||!shotModal.mode)return;
-  // Record against tagged player
-  if (selectedAttrPlayer !== null) {
-    var mode = shotModal.mode === 'play' ? 'shotsPlay' : 'shotsFree';
-    addStatToPlayer(selectedAttrPlayer, mode, outcome);
+  var team = shotModal.team, mode = shotModal.mode;
+  closeShotModal();
+  if (pendingEvent) {
+    pendingEvent.outcome = String(outcome).toUpperCase();
+    openPlayerPick();
+    return;
+  }
+  // Fallback (nothing pending): behave as before
+  commitShot(team, mode, outcome, selectedAttrPlayer);
+}
+
+// Actually write the shot, once we know who took it.
+function commitShot(team, mode, outcome, playerRef) {
+  if (playerRef !== null && playerRef !== undefined) {
+    var key = mode === 'play' ? 'shotsPlay' : 'shotsFree';
+    addStatToPlayer(playerRef, key, outcome);
     if (outcome === 'goal' || outcome === 'point' || outcome === 'twopointer') {
-      addStatToPlayer(selectedAttrPlayer, 'shots', outcome);
+      addStatToPlayer(playerRef, 'shots', outcome);
     }
   }
-  addShot(shotModal.team, shotModal.mode, outcome);
-  shotModal.pendingOutcome = outcome;
-  var shotTeam = shotModal.team;
-  closeShotModal();
-  openLocationPicker(shotTeam, 'shot');
+  selectedAttrPlayer = playerRef;
+  addShot(team, mode, outcome);
+  // Attach the player to the event addShot just created
+  var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
+  if (justAdded) justAdded.player = playerRef;
+  openLocationPicker(team, 'shot');
 }
 
 var locPicker = {team:null, kind:null}; // kind: 'shot' | 'fortyFive'
@@ -3682,61 +3747,61 @@ function openGenericModal(team,category) {
   document.getElementById('generic-modal').classList.add('open');
 }
 function closeGenericModal() { $('generic-modal').classList.remove('open'); gmodal.team=null; gmodal.category=null; }
+// Outcome chosen — Attack needs no player, everything else goes to the player step.
 function selectGenericOutcome(key) {
   if(!gmodal.team||!gmodal.category)return;
-  const cfg=GENERIC_CONFIG[gmodal.category];
-  const team = gmodal.team;
-  const category = gmodal.category;
+  var team = gmodal.team, category = gmodal.category;
+  var cfg = GENERIC_CONFIG[category];
+  var found = cfg.outcomes.find(function(o){ return o.key === key; });
+  var outcomeLabel = found ? found.label : key;
+  closeGenericModal();
+
+  // Attack is a team-level action — no player to tag
+  if (category === 'attacks') {
+    commitGeneric(team, category, key, null);
+    if (pendingEvent) pendingEvent = null;
+    refreshEventTallies();
+    return;
+  }
+  if (pendingEvent) {
+    pendingEvent.outcome = outcomeLabel;
+    openPlayerPick();
+    return;
+  }
+  commitGeneric(team, category, key, selectedAttrPlayer);
+}
+
+// Actually write the event, once we know who it belongs to.
+function commitGeneric(team, category, key, playerRef) {
+  var cfg = GENERIC_CONFIG[category];
+  var found = cfg.outcomes.find(function(o){ return o.key === key; });
+  var outcomeLabel = found ? found.label : key;
+
   state[category][team][key]++;
-  const foundOutcome = cfg.outcomes.find(function(o){return o.key===key;});
-  const outcomeLabel = foundOutcome ? foundOutcome.label : key;
-  // Record against tagged player
-  if (selectedAttrPlayer !== null) {
-    addStatToPlayer(selectedAttrPlayer, category, key);
+  if (playerRef !== null && playerRef !== undefined) {
+    addStatToPlayer(playerRef, category, key);
   }
-  // 45 scored = add 1 point to scoreboard
-  if (category === 'fortyFive' && key === 'scored') {
-    addScore(team, 'point');
-  }
+  if (category === 'fortyFive' && key === 'scored') addScore(team, 'point');
+
   var genEvId = Date.now();
-  state.events.unshift({id:genEvId,team:team,type:category,outcome:key,outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:selectedAttrPlayer});
+  state.events.unshift({id:genEvId,team:team,type:category,outcome:key,
+    outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:playerRef});
   lastEventId = genEvId;
   showUndoToast((cfg.title || category).replace(/^[^\w]+\s*/, '') + ' — ' + outcomeLabel);
-  renderTimeline(); bumpMin(); renderGenericTallies(); closeGenericModal();
-  if (category === 'cards') { try { renderRecordPitch(); } catch(e) {} }
-  // Pulse the tally count for feedback
-  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
+  renderTimeline(); bumpMin(); renderGenericTallies();
+  refreshEventTallies();
+  if (category === 'cards') { try { renderRecordEventGrid(); } catch(e) {} }
+
+  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',
+                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
   var pfx = catPfxMap[category];
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
-  // Location matters for these: where a 45 was struck, and where possession was conceded/won
-  if (['fortyFive','ballLost','turnover','kickout'].indexOf(category) !== -1) openLocationPicker(team, category);
-}
 
-function renderGenericTallies() {
-  [['ballLost','bl'],['ballWon','bw'],['kickout','ko'],['turnover','to'],['mark','mk'],['possession','ps'],['foul','fo'],['cards','cd']].forEach(([cat,pfx])=>{
-    const h=Object.values(state[cat].home).reduce((a,b)=>a+b,0);
-    const a=Object.values(state[cat].away).reduce((a,b)=>a+b,0);
-    const hEl=$(`${pfx}-home-tally`), aEl=$(`${pfx}-away-tally`);
-    if(hEl) hEl.textContent=h; if(aEl) aEl.textContent=a;
-    // poss trends
-    if(cat==='ballWon') { const phEl=$('tr-poss-home'), paEl=$('tr-poss-away'); if(phEl)phEl.textContent=h; if(paEl)paEl.textContent=a; }
-  });
-  // 45 tallies
-  if (state.fortyFive) {
-    const ffh = Object.values(state.fortyFive.home).reduce((a,b)=>a+b,0);
-    const ffa = Object.values(state.fortyFive.away).reduce((a,b)=>a+b,0);
-    const ffhEl = $('ff-home-tally'), ffaEl = $('ff-away-tally');
-    if(ffhEl) ffhEl.textContent = ffh;
-    if(ffaEl) ffaEl.textContent = ffa;
+  if (['fortyFive','ballLost','turnover','kickout'].indexOf(category) !== -1) {
+    openLocationPicker(team, category);
   }
-  snapPossession();
-  updateStats();
 }
 
-// ── TIMELINE ──────────────────────────────────────
-const shotIcons={point:'✦',goal:'🥅',blocked:'🛡️',wide:'↗️',saved:'🧤',short:'⬇️'};
-const catIcons={ballLost:'📤',ballWon:'📥',kickout:'🦶'};
-const catLabels={ballLost:'BALL LOST',ballWon:'BALL WON',kickout:'KICKOUT'};
 
 function renderTimeline() {
   const list=$('timeline-list');
@@ -3748,6 +3813,8 @@ function renderTimeline() {
       cls=e.outcome==='goal'?`goal-${e.team}`:e.outcome==='point'?`point-${e.team}`:'';
     } else if(catIcons[e.type]){
       icon=catIcons[e.type]; label=`${catLabels[e.type]} — ${e.outcomeLabel}`; cls='';
+    } else if(e.type==='sub'){
+      icon='🔄'; label=`SUB: ${e.off||'?'} → ${e.on||'?'}`; cls='';
     } else {
       icon=e.type==='goal'?'🥅':'✦'; label=e.type==='goal'?'GOAL':'POINT'; cls=`${e.type}-${e.team}`;
     }
@@ -3773,7 +3840,6 @@ function deleteEvent(id) {
     if (state.shots[t] && state.shots[t][ev.shotMode] && state.shots[t][ev.shotMode][ev.outcome] !== undefined) {
       state.shots[t][ev.shotMode][ev.outcome]=Math.max(0,state.shots[t][ev.shotMode][ev.outcome]-1);
     }
-    // Reverse the scoreboard too — a scoring shot added to the score when recorded
     if (ev.outcome==='goal') state[t].goals=Math.max(0,state[t].goals-1);
     else if (ev.outcome==='point') state[t].points=Math.max(0,state[t].points-1);
     else if (ev.outcome==='twopointer') state[t].points=Math.max(0,state[t].points-2);
@@ -3793,7 +3859,6 @@ function deleteEvent(id) {
     renderGenericTallies();
   }
 
-  // Reverse the player's stat line if this event was tagged to a squad player
   if (typeof ev.player === 'number' && squad[ev.player] && squad[ev.player].stats) {
     var st = squad[ev.player].stats;
     var key = ev.type==='shot' ? (ev.shotMode==='free' ? 'shotsFree' : 'shotsPlay') : ev.type;
@@ -3805,6 +3870,7 @@ function deleteEvent(id) {
   state.events.splice(idx,1);
   updateScoreboard(); renderTimeline();
   try { updateStats(); } catch(e) {}
+  try { refreshEventTallies(); } catch(e) {}
 }
 
 // ── UNDO TOAST ─────────────────────────────────────
@@ -3823,341 +3889,170 @@ function showUndoToast(label) {
 
 function undoLastEvent() {
   if (lastEventId === null) return;
-  // The location picker may be open over the toast — close it first so it
-  // can't attach a zone to the event we're about to remove.
   if (typeof locPicker !== 'undefined' && locPicker && locPicker.team) {
     try { closeLocationPicker(); } catch(e) {}
   }
   deleteEvent(lastEventId);
   lastEventId = null;
+  try { refreshEventTallies(); } catch(e) {}
   var toast = document.getElementById('undo-toast');
   if (toast) toast.classList.remove('show');
   if (undoToastTimer) clearTimeout(undoToastTimer);
 }
 
-// ── HALF ───────────────────────────────────────────
-function setHalf(h) {
-  state.half = h;
-  $('h1-btn').classList.toggle('active', h===1);
-  $('h2-btn').classList.toggle('active', h===2);
-  var etBtn = $('het-btn');
-  if (etBtn) etBtn.classList.toggle('active', h===3);
-  var rh1 = $('rec-h1-btn'), rh2 = $('rec-h2-btn'), ret = $('rec-het-btn');
-  if (rh1) rh1.classList.toggle('active', h===1);
-  if (rh2) rh2.classList.toggle('active', h===2);
-  if (ret) ret.classList.toggle('active', h===3);
-}
+// ── RECORD TAB: EVENT-FIRST FLOW ───────────────────
+// Order is event+team -> outcome -> player. Deciding *what* happened is
+// instant; identifying *who* takes a beat, so it comes last.
+// Each box is split: left half = My Team, right half = Opposition.
 
-// ── TEAM SHEET ─────────────────────────────────────
-function switchSquadTab(tab, btn) {
-  var tabs = ['squad','stats','training','trial','timeline','print'];
-  tabs.forEach(function(t) {
-    var view = document.getElementById('squad-view-' + t);
-    var tabBtn = document.getElementById('squad-tab-' + t);
-    if (view) view.style.display = t === tab ? '' : 'none';
-    if (tabBtn) tabBtn.classList.toggle('active', t === tab);
-  });
-  if (tab === 'stats') renderPlayerStats();
-  if (tab === 'training') initTrainingTab();
-  if (tab === 'trial') initTrialTab();
-  if (tab === 'print') renderTeamSheet();
-}
+var pendingEvent = null;   // { team, kind:'shot'|'generic', arg, outcome }
 
-function playerSlot(num) {
-  // num is 1-based shirt number
-  var p = squad[num - 1];
-  var filled = p && p.name;
-  return '<div class="ts-player">' +
-    '<div class="ts-player-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
-    '<div class="ts-player-name">' + (filled ? p.name : '') + '</div>' +
-    '<div class="ts-player-pos">' + (filled && p.pos ? p.pos : '') + '</div>' +
-    '</div>';
-}
-
-function subSlot(num) {
-  var p = squad[num - 1];
-  var filled = p && p.name;
-  return '<div class="ts-sub-item">' +
-    '<div class="ts-sub-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
-    '<div class="ts-sub-name">' + (filled ? p.name : '') + '</div>' +
-    '</div>';
-}
-
-function renderTeamSheet() {
-  var preview = document.getElementById('teamsheet-preview');
-  if (!preview) return;
-
-  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
-  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
-  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
-  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
-
-  var html =
-    '<div class="ts-header">' +
-      '<div class="ts-team-name">' + teamName + '</div>' +
-      (matchInfo ? '<div class="ts-match-info">' + matchInfo + '</div>' : '') +
-    '</div>' +
-    '<div class="ts-pitch">' +
-      // GK - 1
-      '<div class="ts-row">' + playerSlot(1) + '</div>' +
-      // Full backs - 2, 3, 4
-      '<div class="ts-row">' + playerSlot(2) + playerSlot(3) + playerSlot(4) + '</div>' +
-      // Half backs - 5, 6, 7
-      '<div class="ts-row">' + playerSlot(5) + playerSlot(6) + playerSlot(7) + '</div>' +
-      // Midfield - 8, 9
-      '<div class="ts-row">' + playerSlot(8) + playerSlot(9) + '</div>' +
-      // Half forwards - 10, 11, 12
-      '<div class="ts-row">' + playerSlot(10) + playerSlot(11) + playerSlot(12) + '</div>' +
-      // Full forwards - 13, 14, 15
-      '<div class="ts-row">' + playerSlot(13) + playerSlot(14) + playerSlot(15) + '</div>' +
-    '</div>' +
-    '<div class="ts-subs-label">Substitutes</div>' +
-    '<div class="ts-subs-grid">';
-
-  for (var i = 16; i <= 34; i++) {
-    html += subSlot(i);
-  }
-  html += '</div>';
-
-  preview.innerHTML = html;
-}
-
-function printTeamSheet() {
-  renderTeamSheet();
-  var preview = document.getElementById('teamsheet-preview');
-  if (!preview) return;
-
-  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
-  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
-  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
-  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
-
-  // Build printable page
-  var printWin = window.open('', '_blank');
-  if (!printWin) {
-    alert('Please allow popups to print the team sheet');
-    return;
-  }
-
-  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">');
-  printWin.document.write('<title>' + teamName + ' — Team Sheet</title>');
-  printWin.document.write('<style>');
-  printWin.document.write('* { margin:0; padding:0; box-sizing:border-box; }');
-  printWin.document.write('body { background:#1a6b2f; font-family:Arial,sans-serif; padding:12px; min-height:100vh; }');
-  printWin.document.write('.ts-header { text-align:center; margin-bottom:12px; padding-bottom:10px; border-bottom:2px solid rgba(255,255,255,0.3); }');
-  printWin.document.write('.ts-team-name { font-size:28px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:3px; }');
-  printWin.document.write('.ts-match-info { font-size:12px; color:rgba(255,255,255,0.65); margin-top:4px; font-style:italic; }');
-  printWin.document.write('.ts-pitch { border:2px solid rgba(255,255,255,0.4); border-radius:8px; padding:10px 6px; position:relative; margin-bottom:12px; }');
-  printWin.document.write('.ts-row { display:flex; justify-content:center; gap:8px; margin-bottom:10px; }');
-  printWin.document.write('.ts-player { display:flex; flex-direction:column; align-items:center; width:64px; }');
-  printWin.document.write('.ts-player-circle { width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:900; color:#fff; margin-bottom:3px; }');
-  printWin.document.write('.ts-player-circle.filled { background:rgba(255,255,255,0.28); border-color:#fff; }');
-  printWin.document.write('.ts-player-name { font-size:8px; color:#fff; text-align:center; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; line-height:1.2; }');
-  printWin.document.write('.ts-player-pos { font-size:7px; color:rgba(255,255,255,0.55); text-align:center; text-transform:uppercase; margin-top:1px; }');
-  printWin.document.write('.ts-subs-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.55); text-transform:uppercase; text-align:center; margin:8px 0; padding-top:8px; border-top:1px solid rgba(255,255,255,0.2); }');
-  printWin.document.write('.ts-subs-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:0 4px; }');
-  printWin.document.write('.ts-sub-item { display:flex; flex-direction:column; align-items:center; gap:3px; }');
-  printWin.document.write('.ts-sub-circle { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.75); }');
-  printWin.document.write('.ts-sub-circle.filled { background:rgba(255,255,255,0.22); border-color:rgba(255,255,255,0.7); color:#fff; }');
-  printWin.document.write('.ts-sub-name { font-size:7px; color:rgba(255,255,255,0.75); text-align:center; text-transform:uppercase; max-width:54px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }');
-  printWin.document.write('@media print { @page { margin:8mm; size:A4 portrait; } body { padding:0; } }');
-  printWin.document.write('</style></head><body>');
-
-  // Header
-  printWin.document.write('<div class="ts-header"><div class="ts-team-name">' + teamName + '</div>');
-  if (matchInfo) printWin.document.write('<div class="ts-match-info">' + matchInfo + '</div>');
-  printWin.document.write('</div>');
-
-  // Pitch
-  function pSlot(num) {
-    var p = squad[num-1]; var filled = p && p.name;
-    return '<div class="ts-player"><div class="ts-player-circle' + (filled?' filled':'') + '">' + num + '</div>' +
-      '<div class="ts-player-name">' + (filled?p.name:'') + '</div>' +
-      '<div class="ts-player-pos">' + (filled&&p.pos?p.pos:'') + '</div></div>';
-  }
-  function sSlot(num) {
-    var p = squad[num-1]; var filled = p && p.name;
-    return '<div class="ts-sub-item"><div class="ts-sub-circle' + (filled?' filled':'') + '">' + num + '</div>' +
-      '<div class="ts-sub-name">' + (filled?p.name:'') + '</div></div>';
-  }
-
-  printWin.document.write('<div class="ts-pitch">');
-  printWin.document.write('<div class="ts-row">' + pSlot(1) + '</div>');
-  printWin.document.write('<div class="ts-row">' + pSlot(2) + pSlot(3) + pSlot(4) + '</div>');
-  printWin.document.write('<div class="ts-row">' + pSlot(5) + pSlot(6) + pSlot(7) + '</div>');
-  printWin.document.write('<div class="ts-row">' + pSlot(8) + pSlot(9) + '</div>');
-  printWin.document.write('<div class="ts-row">' + pSlot(10) + pSlot(11) + pSlot(12) + '</div>');
-  printWin.document.write('<div class="ts-row">' + pSlot(13) + pSlot(14) + pSlot(15) + '</div>');
-  printWin.document.write('</div>');
-  printWin.document.write('<div class="ts-subs-label">Substitutes</div>');
-  printWin.document.write('<div class="ts-subs-grid">');
-  for (var i = 16; i <= 34; i++) { printWin.document.write(sSlot(i)); }
-  printWin.document.write('</div>');
-  printWin.document.write('</body></html>');
-  printWin.document.close();
-
-  setTimeout(function() { printWin.focus(); printWin.print(); }, 500);
-}
-
-function shareTeamSheet() {
-  renderTeamSheet();
-  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
-  var lines = [teamName + ' — Team Sheet', ''];
-  lines.push('STARTING 15:');
-  for (var i = 1; i <= 15; i++) {
-    var p = squad[i-1];
-    lines.push(i + '. ' + (p && p.name ? p.name + (p.pos ? ' (' + p.pos + ')' : '') : '—'));
-  }
-  lines.push('');
-  lines.push('SUBS:');
-  for (var j = 16; j <= 34; j++) {
-    var s = squad[j-1];
-    if (s && s.name) lines.push(j + '. ' + s.name);
-  }
-  var text = lines.join('\n');
-  if (navigator.share) {
-    navigator.share({ title: teamName + ' Team Sheet', text: text });
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function() {
-      alert('Team sheet copied to clipboard!');
-    });
-  } else {
-    alert(text);
-  }
-}
-const SQUAD_KEY = 'gaa_squad';
-const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
-
-var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
-var editingSlot = null;
-var selectedAttrPlayer = null; // currently selected player for attribution
-var pendingTagRef = null; // player chosen via pitch-first flow, applied when the outcome modal opens
-
-function applyPendingTag(labelId) {
-  var label = document.getElementById(labelId);
-  if (pendingTagRef === null || pendingTagRef === undefined) {
-    selectedAttrPlayer = null;
-    if (label) label.textContent = 'No player tagged';
-    return;
-  }
-  if (typeof pendingTagRef === 'number') {
-    selectedAttrPlayer = pendingTagRef;
-    var p = squad[pendingTagRef];
-    if (label) label.textContent = 'Tagged: #' + (pendingTagRef + 1) + (p && p.name ? ' ' + p.name : '');
-  } else {
-    selectedAttrPlayer = pendingTagRef;
-    var num = String(pendingTagRef).split('-')[1];
-    var oppNm = oppPlayerName(awayName(), num);
-    if (label) label.textContent = 'Tagged: Opposition ' + (oppNm ? ('#' + num + ' ' + oppNm) : ('#' + num));
-  }
-  pendingTagRef = null;
-}
-
-function loadSquad() {
-  try {
-    var saved = localStorage.getItem(SQUAD_KEY);
-    var s = saved ? JSON.parse(saved) : [];
-    // Ensure 34 slots
-    while (s.length < 34) s.push(null);
-    return s;
-  } catch(e) {
-    var s = [];
-    for (var i=0;i<34;i++) s.push(null);
-    return s;
-  }
-}
-
-function saveSquad() {
-  try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
-  syncSquad();
-  if (currentClubSquadId) syncClubSquad();
-}
-
-function renderSquadGrid() {
-  var grid = document.getElementById('squad-grid');
+function renderRecordEventGrid() {
+  var grid = document.getElementById('rec-event-grid');
   if (!grid) return;
-  var html = '';
-  for (var i = 0; i < 34; i++) {
-    var num = i + 1;
-    var p = squad[i];
-    if (p && p.name) {
-      var attStats = getPlayerAttStats(i);
-      var badgeClass = trainingSessions.length ? (attStats.pct >= 85 ? 'green' : attStats.pct >= 70 ? 'yellow' : 'red') : '';
-      var availIcon = p.availability ? (p.availability.status === 'available' ? ' ✅' : p.availability.status === 'unavailable' ? ' ❌' : p.availability.status === 'maybe' ? ' 🤔' : '') : '';
-      var injuredBadge = hasActiveInjury(i) ? '<div class="squad-injury-badge"></div>' : '';
-      html += '<div class="squad-slot filled" data-slot="' + i + '" onclick="openPlayerEdit(' + i + ')" style="position:relative;">' +
-        (badgeClass ? '<div class="squad-att-badge ' + badgeClass + '"></div>' : '') +
-        injuredBadge +
-        '<div class="squad-num">' + num + '</div>' +
-        '<div class="squad-name">' + p.name + availIcon + '</div>' +
-        '<div class="squad-pos">' + (p.pos || '') + '</div>' +
-        '</div>';
-    } else {
-      html += '<div class="squad-slot" onclick="openPlayerEdit(' + i + ')">' +
-        '<div class="squad-num" style="color:rgba(240,253,244,0.2)">' + num + '</div>' +
-        '<div class="squad-empty-name">+ Add player</div>' +
-        '</div>';
-    }
+  var types = visibleEtTypes();
+  if (!types.length) {
+    grid.innerHTML = '<div class="rec-grid-empty">All events hidden — tap below to re-enable some</div>';
+    return;
   }
-  grid.innerHTML = html;
+  grid.innerHTML = types.map(function(t) {
+    var esc = t.kind + "','" + t.arg;
+    return '<div class="rec-ev-box">' +
+      '<div class="rev-label"><span class="rev-icon">' + t.icon + '</span>' + t.label + '</div>' +
+      '<div class="rev-halves">' +
+        '<button class="rev-half home" aria-label="' + t.label + ' — My Team" ' +
+          'onclick="startEvent(\'home\',\'' + esc + '\')">' +
+          '<span class="rev-tally" id="rev-h-' + t.arg + '">' + eventTally('home', t) + '</span></button>' +
+        '<button class="rev-half away" aria-label="' + t.label + ' — Opposition" ' +
+          'onclick="startEvent(\'away\',\'' + esc + '\')">' +
+          '<span class="rev-tally" id="rev-a-' + t.arg + '">' + eventTally('away', t) + '</span></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
-function openPlayerEdit(slotIndex) {
-  editingSlot = slotIndex;
-  var num = slotIndex + 1;
-  var p = squad[slotIndex];
-  document.getElementById('player-edit-title').textContent = 'Player #' + num;
-  document.getElementById('player-edit-sub').textContent = p && p.name ? 'Edit player' : 'Add player to slot ' + num;
-  document.getElementById('edit-player-name').value = p && p.name ? p.name : '';
 
-  // Build position grid
-  var posGrid = document.getElementById('pos-grid');
-  var currentPos = p ? p.pos : '';
-  var posHtml = '';
-  POSITIONS.forEach(function(pos) {
-    posHtml += '<button class="pos-btn' + (currentPos === pos ? ' selected' : '') + '" onclick="selectPos(this,\'' + pos + '\')">' + pos + '</button>';
+// Running count for this event type, so the box doubles as a live tally
+function eventTally(team, t) {
+  if (!state.events) return 0;
+  return state.events.filter(function(e) {
+    if (e.team !== team) return false;
+    if (t.kind === 'shot') return e.type === 'shot' && e.shotMode === t.arg;
+    return e.type === t.arg;
+  }).length;
+}
+
+function refreshEventTallies() {
+  visibleEtTypes().forEach(function(t) {
+    var h = document.getElementById('rev-h-' + t.arg);
+    var a = document.getElementById('rev-a-' + t.arg);
+    if (h) h.textContent = eventTally('home', t);
+    if (a) a.textContent = eventTally('away', t);
   });
-  posGrid.innerHTML = posHtml;
-
-  var clearBtn = document.getElementById('btn-clear-player');
-  if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
-
-  document.getElementById('player-edit-modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
-function selectPos(btn, pos) {
-  var btns = document.querySelectorAll('.pos-btn');
-  for (var i=0;i<btns.length;i++) btns[i].classList.remove('selected');
-  btn.classList.add('selected');
+// Step 1 — event + team chosen in one tap
+function startEvent(team, kind, arg) {
+  bumpEtUsage(kind, arg);
+  pendingEvent = { team: team, kind: kind, arg: arg, outcome: null };
+
+  // Attack is a team action with no player, and Possession has no outcome —
+  // both short-circuit rather than walking the full three steps.
+  if (kind === 'generic' && arg === 'attacks') {
+    openGenericModal(team, arg);
+    return;
+  }
+  if (kind === 'generic' && arg === 'possession') {
+    openPlayerPick();
+    return;
+  }
+  if (kind === 'shot') openShotModal(team, arg);
+  else openGenericModal(team, arg);
 }
 
-function savePlayerEdit() {
-  if (editingSlot === null) return;
-  // Dismiss keyboard first (iOS fix)
-  document.activeElement && document.activeElement.blur();
-  var name = document.getElementById('edit-player-name').value.trim();
-  if (!name) { document.getElementById('edit-player-name').focus(); return; }
-  var selectedPosBtn = document.querySelector('.pos-btn.selected');
-  var pos = selectedPosBtn ? selectedPosBtn.textContent : '';
-  squad[editingSlot] = { name: name, pos: pos, stats: {} };
-  saveSquad();
-  closePlayerEdit();
-  renderSquadGrid();
+// Step 3 — who was it?
+function openPlayerPick() {
+  if (!pendingEvent) return;
+  var team = pendingEvent.team;
+  var body = document.getElementById('pp-body');
+  var title = document.getElementById('pp-title');
+  var sub = document.getElementById('pp-sub');
+  if (!body) return;
+
+  var label = pendingEvent.kind === 'shot'
+    ? (pendingEvent.arg === 'free' ? 'Shot from Free' : 'Shot from Play')
+    : ((GENERIC_CONFIG[pendingEvent.arg] || {}).title || pendingEvent.arg).replace(/^[^\w]+\s*/, '');
+  if (title) title.textContent = label + (pendingEvent.outcome ? ' — ' + pendingEvent.outcome : '');
+  if (sub) sub.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — tap the player';
+
+  if (team === 'home') {
+    var occ = state.pitchOccupant || [];
+    var cards = cardStatus('home');
+    var rows = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
+    var html = '<div class="pp-pitch">';
+    rows.forEach(function(row) {
+      html += '<div class="pp-row">' + row.map(function(pos) {
+        var idx = (occ[pos-1] !== undefined) ? occ[pos-1] : (pos-1);
+        var p = (typeof idx === 'number') ? squad[idx] : null;
+        if (!p || !p.name) {
+          return '<button class="pp-player empty" disabled><span class="pp-circle">' +
+            (GAA_POS_SHORT[pos-1] || pos) + '</span><span class="pp-name">—</span></button>';
+        }
+        var card = cards[idx];
+        return '<button class="pp-player' + (card ? ' on-' + card : '') + '" onclick="confirmPlayerPick(' + idx + ')">' +
+          '<span class="pp-circle">' + (idx+1) + '</span>' +
+          '<span class="pp-name">' + surnameOf(p.name) + '</span></button>';
+      }).join('') + '</div>';
+    });
+    html += '</div>';
+    // Bench, for anyone brought on
+    var bench = '';
+    for (var i = 15; i < 34; i++) {
+      if (squad[i] && squad[i].name && (occ.indexOf(i) === -1)) {
+        bench += '<button class="pp-player small" onclick="confirmPlayerPick(' + i + ')">' +
+          '<span class="pp-circle">' + (i+1) + '</span>' +
+          '<span class="pp-name">' + surnameOf(squad[i].name) + '</span></button>';
+      }
+    }
+    if (bench) html += '<div class="pp-bench-label">Bench</div><div class="pp-bench">' + bench + '</div>';
+    body.innerHTML = html;
+  } else {
+    // Opposition: jersey numbers, with any names we know
+    var oppCards = cardStatus('away');
+    var h = '<div class="pp-opp-grid">';
+    for (var n = 1; n <= 30; n++) {
+      var nm = oppPlayerName(awayName(), n);
+      var oc = oppCards['away-' + n];
+      h += '<button class="pp-opp' + (oc ? ' on-' + oc : '') + '" onclick="confirmPlayerPick(\'away-' + n + '\')">' +
+        n + (nm ? '<span class="pp-opp-name">' + surnameOf(nm) + '</span>' : '') + '</button>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  }
+  document.getElementById('player-pick-modal').classList.add('open');
 }
 
-function clearPlayerSlot() {
-  if (editingSlot === null) return;
-  if (!confirm('Remove this player from the squad?')) return;
-  squad[editingSlot] = null;
-  saveSquad();
-  closePlayerEdit();
-  renderSquadGrid();
+function cancelPlayerPick() {
+  document.getElementById('player-pick-modal').classList.remove('open');
+  pendingEvent = null;
 }
 
-function closePlayerEdit() {
-  document.getElementById('player-edit-modal').classList.remove('open');
-  document.body.style.overflow = '';
-  editingSlot = null;
+// Step 4 — commit the event now that we have a player
+function confirmPlayerPick(ref) {
+  if (!pendingEvent) return;
+  var ev = pendingEvent;
+  selectedAttrPlayer = ref;
+  document.getElementById('player-pick-modal').classList.remove('open');
+
+  if (ev.kind === 'generic' && ev.arg === 'possession') {
+    pendingEvent = null;
+    recordPossession(ev.team, ref);
+    renderRecordEventGrid();
+    return;
+  }
+  if (ev.kind === 'shot') commitShot(ev.team, ev.arg, ev.outcome, ref);
+  else commitGeneric(ev.team, ev.arg, ev.outcome, ref);
+  pendingEvent = null;
+  refreshEventTallies();
 }
 
 // ── RECORD TAB: PITCH-FIRST EVENT FLOW ─────────────
@@ -4456,7 +4351,10 @@ function loadTeamSheetSession() {
 
 var homeCards = {}, awayCards = {};
 
+// The Record tab is now an event-box grid rather than a pitch. This is kept as a
+// safe shim so existing call sites (subs, cards, squad change) still refresh the UI.
 function renderRecordPitch() {
+  try { renderRecordEventGrid(); } catch(e) {}
   var wrap = document.getElementById('record-pitch-wrap');
   if (!wrap) return;
   homeCards = cardStatus('home');
