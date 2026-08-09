@@ -26,21 +26,31 @@ async function navTo(page, tab) {
 }
 
 // ── LOGIN SCREEN ─────────────────────────────────────────────────────
-// Clear service worker cache before all tests
+// Clear service worker registrations and caches before the suite runs.
+//
+// This is wrapped in try/catch on purpose: unregistering a service worker can
+// trigger a controllerchange in the page, and if the app reloads at that moment
+// the execution context is destroyed mid-evaluate. That is cleanup, not a test
+// assertion, so a failure here must not take the whole suite down with it.
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage();
-  await page.goto(URL);
-  await page.evaluate(async () => {
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const reg of registrations) await reg.unregister();
-    }
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      for (const key of keys) await caches.delete(key);
-    }
-  });
-  await page.close();
+  try {
+    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) await reg.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) await caches.delete(key);
+      }
+    });
+  } catch (e) {
+    // Context destroyed by a reload, or no service worker present — either is fine
+  } finally {
+    await page.close().catch(() => {});
+  }
 });
 
 test.describe('Login Screen', () => {
@@ -972,6 +982,38 @@ test.describe('Turnover Territory', () => {
     await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
     await page.locator('#gmodal-outcomes .outcome-btn').first().click();
     await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+});
+
+test.describe('Shot Map Positioning', () => {
+  test.beforeEach(async ({ page }) => { await login(page); });
+
+  test('Shots plot at the tapped position, not the zone centre', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      // Two shots in the SAME zone but tapped far apart must not land together
+      state.events = [
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'d-line', x:30, y:60, min:5, half:1 },
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'d-line', x:70, y:60, min:9, half:1 }
+      ];
+      shotMapTeamFilter = 'both'; shotMapTypeFilter = 'both';
+      const d = getShotMapData();
+      return { n: d.length, x0: d[0].x, x1: d[1].x };
+    });
+    expect(r.n).toBe(2);
+    expect(r.x0).toBe(30);
+    expect(r.x1).toBe(70);
+    expect(r.x0).not.toBe(r.x1);
+  });
+
+  test('Legacy shots with only a zone still plot', async ({ page }) => {
+    const n = await page.evaluate(() => {
+      state.events = [
+        { type:'shot', team:'home', shotMode:'play', outcome:'point', zone:'midfield', min:5, half:1 }
+      ];
+      shotMapTeamFilter = 'both'; shotMapTypeFilter = 'both';
+      return getShotMapData().length;
+    });
+    expect(n).toBe(1);
   });
 });
 
