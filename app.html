@@ -3132,6 +3132,43 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
+// ── ERROR REPORTER ─────────────────────────────────
+// Surfaces JavaScript errors on screen. Without this a single thrown error
+// stops all initialisation silently, and the app just appears dead.
+(function () {
+  var shown = [];
+  function show(msg, src, line) {
+    if (shown.indexOf(msg) !== -1) return;   // don't repeat the same error
+    shown.push(msg);
+    var box = document.getElementById('js-error-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'js-error-box';
+      box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+        'background:#7f1d1d;color:#fff;font:12px/1.4 monospace;padding:10px 34px 10px 12px;' +
+        'max-height:45vh;overflow:auto;white-space:pre-wrap;border-bottom:2px solid #ef4444;';
+      var x = document.createElement('button');
+      x.textContent = '\u2715';
+      x.setAttribute('aria-label', 'Dismiss error');
+      x.style.cssText = 'position:absolute;top:6px;right:8px;background:none;border:none;' +
+        'color:#fff;font-size:16px;cursor:pointer;';
+      x.onclick = function () { box.remove(); };
+      box.appendChild(x);
+      (document.body || document.documentElement).appendChild(box);
+    }
+    var p = document.createElement('div');
+    p.textContent = 'JS ERROR: ' + msg + (line ? '  (line ' + line + ')' : '');
+    box.appendChild(p);
+  }
+  window.addEventListener('error', function (e) {
+    show(e.message || String(e.error), e.filename, e.lineno);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    show('Unhandled promise: ' + ((e.reason && e.reason.message) || e.reason));
+  });
+  window.__csShowError = show;
+})();
+
 // ── BILLING CONFIG ─────────────────────────────────
 // Replace these with your real Stripe Price IDs after setup
 var STRIPE_MONTHLY_PRICE_ID      = 'price_1TZbzKHimBSnUeOtOTyXwv40';
@@ -14520,18 +14557,24 @@ function syncClubSquad() {
 // Override saveSquad to also sync to club if active
 var _origSaveSquad = null;
 document.addEventListener('DOMContentLoaded', function() {
-  // Check for password recovery link
-  if (checkPasswordRecovery()) return;
-  // Check for player wellness self-report URL first
-  if (initWellnessCheck()) return;
-  // Check for trial grading URL
-  if (initTrialGradeCheck()) return;
+  // These early checks were unguarded: if any threw, every render below was
+  // skipped and the app came up dead (no clock, no working buttons).
+  function safe(label, fn) {
+    try { return fn(); }
+    catch (e) {
+      if (window.__csShowError) window.__csShowError(label + ': ' + e.message);
+      return false;
+    }
+  }
 
-  // Show install prompt if needed
-  checkInstallPrompt();
+  if (safe('checkPasswordRecovery', checkPasswordRecovery)) return;
+  if (safe('initWellnessCheck', initWellnessCheck)) return;
+  if (safe('initTrialGradeCheck', initTrialGradeCheck)) return;
 
-  initSupabase();
-  checkSession();
+  safe('checkInstallPrompt', checkInstallPrompt);
+  safe('initSupabase', initSupabase);
+  safe('checkSession', checkSession);
+
   try { updateNames(); } catch(e) {}
   try { updateScoreboard(); } catch(e) {}
   try { renderTimeline(); } catch(e) {}
@@ -14541,6 +14584,8 @@ document.addEventListener('DOMContentLoaded', function() {
   try { renderGenericTallies(); } catch(e) {}
   try { renderTrends(); } catch(e) {}
   try { renderClock(); } catch(e) {}
+  try { renderGameControls(); } catch(e) {}   // populates the clock buttons — was missing
+  try { renderRecordEventGrid(); } catch(e) {}
   try { renderHistory(); } catch(e) {}
   try { buildTeamSelects(); } catch(e) {}
 });
