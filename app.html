@@ -3803,6 +3803,13 @@ function commitGeneric(team, category, key, playerRef) {
 }
 
 
+const shotIcons={point:'✦',twopointer:'⭐',goal:'🥅',blocked:'🛡️',wide:'↗️',saved:'🧤',short:'⬇️'};
+const catIcons={ballLost:'📤',ballWon:'📥',kickout:'🦶',fortyFive:'🏐',turnover:'🔄',
+                mark:'📌',possession:'🏉',attacks:'⚔️',foul:'⚠️',cards:'🟨'};
+const catLabels={ballLost:'BALL LOST',ballWon:'BALL WON',kickout:'KICKOUT',fortyFive:'45m FREE',
+                 turnover:'TURNOVER',mark:'MARK',possession:'POSSESSION',attacks:'ATTACK',
+                 foul:'FOUL',cards:'CARD'};
+
 function renderTimeline() {
   const list=$('timeline-list');
   if(!state.events.length){list.innerHTML='<div class="empty-note">No events yet</div>';return;}
@@ -3899,6 +3906,347 @@ function undoLastEvent() {
   if (toast) toast.classList.remove('show');
   if (undoToastTimer) clearTimeout(undoToastTimer);
 }
+
+
+// Tallies shown on the old per-event trigger buttons. Those buttons are gone from
+// the Record tab, but this is still called from match load and refresh paths, so
+// every lookup is guarded rather than assuming the elements exist.
+function renderGenericTallies() {
+  var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',
+                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
+  Object.keys(catPfxMap).forEach(function(cat) {
+    var pfx = catPfxMap[cat];
+    ['home','away'].forEach(function(team) {
+      var el = document.getElementById(pfx + '-' + team + '-tally');
+      if (!el) return;
+      var bucket = state[cat] && state[cat][team] ? state[cat][team] : {};
+      var total = Object.keys(bucket).reduce(function(a,k){ return a + (bucket[k]||0); }, 0);
+      el.textContent = total;
+    });
+  });
+  // Keep the split event boxes in step
+  try { refreshEventTallies(); } catch(e) {}
+}
+
+// Legacy helper: the tag-confirmation line inside the outcome sheets. The
+// event-first flow picks the player afterwards, so this is now a no-op unless
+// those elements are present.
+function applyPendingTag(labelId) {
+  var label = document.getElementById(labelId);
+  if (!label) return;
+  if (pendingEvent) {
+    label.textContent = (pendingEvent.team === 'home' ? 'My Team' : 'Opposition') +
+      ' — you\'ll pick the player next';
+  } else {
+    label.textContent = '';
+  }
+}
+
+function setHalf(h) {
+  state.half = h;
+  $('h1-btn').classList.toggle('active', h===1);
+  $('h2-btn').classList.toggle('active', h===2);
+  var etBtn = $('het-btn');
+  if (etBtn) etBtn.classList.toggle('active', h===3);
+  var rh1 = $('rec-h1-btn'), rh2 = $('rec-h2-btn'), ret = $('rec-het-btn');
+  if (rh1) rh1.classList.toggle('active', h===1);
+  if (rh2) rh2.classList.toggle('active', h===2);
+  if (ret) ret.classList.toggle('active', h===3);
+}
+
+// ── TEAM SHEET ─────────────────────────────────────
+function switchSquadTab(tab, btn) {
+  var tabs = ['squad','stats','training','trial','timeline','print'];
+  tabs.forEach(function(t) {
+    var view = document.getElementById('squad-view-' + t);
+    var tabBtn = document.getElementById('squad-tab-' + t);
+    if (view) view.style.display = t === tab ? '' : 'none';
+    if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'stats') renderPlayerStats();
+  if (tab === 'training') initTrainingTab();
+  if (tab === 'trial') initTrialTab();
+  if (tab === 'print') renderTeamSheet();
+}
+
+function playerSlot(num) {
+  // num is 1-based shirt number
+  var p = squad[num - 1];
+  var filled = p && p.name;
+  return '<div class="ts-player">' +
+    '<div class="ts-player-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
+    '<div class="ts-player-name">' + (filled ? p.name : '') + '</div>' +
+    '<div class="ts-player-pos">' + (filled && p.pos ? p.pos : '') + '</div>' +
+    '</div>';
+}
+
+function subSlot(num) {
+  var p = squad[num - 1];
+  var filled = p && p.name;
+  return '<div class="ts-sub-item">' +
+    '<div class="ts-sub-circle' + (filled ? ' filled' : '') + '">' + num + '</div>' +
+    '<div class="ts-sub-name">' + (filled ? p.name : '') + '</div>' +
+    '</div>';
+}
+
+function renderTeamSheet() {
+  var preview = document.getElementById('teamsheet-preview');
+  if (!preview) return;
+
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
+  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
+  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
+
+  var html =
+    '<div class="ts-header">' +
+      '<div class="ts-team-name">' + teamName + '</div>' +
+      (matchInfo ? '<div class="ts-match-info">' + matchInfo + '</div>' : '') +
+    '</div>' +
+    '<div class="ts-pitch">' +
+      // GK - 1
+      '<div class="ts-row">' + playerSlot(1) + '</div>' +
+      // Full backs - 2, 3, 4
+      '<div class="ts-row">' + playerSlot(2) + playerSlot(3) + playerSlot(4) + '</div>' +
+      // Half backs - 5, 6, 7
+      '<div class="ts-row">' + playerSlot(5) + playerSlot(6) + playerSlot(7) + '</div>' +
+      // Midfield - 8, 9
+      '<div class="ts-row">' + playerSlot(8) + playerSlot(9) + '</div>' +
+      // Half forwards - 10, 11, 12
+      '<div class="ts-row">' + playerSlot(10) + playerSlot(11) + playerSlot(12) + '</div>' +
+      // Full forwards - 13, 14, 15
+      '<div class="ts-row">' + playerSlot(13) + playerSlot(14) + playerSlot(15) + '</div>' +
+    '</div>' +
+    '<div class="ts-subs-label">Substitutes</div>' +
+    '<div class="ts-subs-grid">';
+
+  for (var i = 16; i <= 34; i++) {
+    html += subSlot(i);
+  }
+  html += '</div>';
+
+  preview.innerHTML = html;
+}
+
+function printTeamSheet() {
+  renderTeamSheet();
+  var preview = document.getElementById('teamsheet-preview');
+  if (!preview) return;
+
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var comp = document.getElementById('competition') ? document.getElementById('competition').value : '';
+  var venue = document.getElementById('venue') ? document.getElementById('venue').value : '';
+  var matchInfo = [comp, venue].filter(Boolean).join(' · ');
+
+  // Build printable page
+  var printWin = window.open('', '_blank');
+  if (!printWin) {
+    alert('Please allow popups to print the team sheet');
+    return;
+  }
+
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">');
+  printWin.document.write('<title>' + teamName + ' — Team Sheet</title>');
+  printWin.document.write('<style>');
+  printWin.document.write('* { margin:0; padding:0; box-sizing:border-box; }');
+  printWin.document.write('body { background:#1a6b2f; font-family:Arial,sans-serif; padding:12px; min-height:100vh; }');
+  printWin.document.write('.ts-header { text-align:center; margin-bottom:12px; padding-bottom:10px; border-bottom:2px solid rgba(255,255,255,0.3); }');
+  printWin.document.write('.ts-team-name { font-size:28px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:3px; }');
+  printWin.document.write('.ts-match-info { font-size:12px; color:rgba(255,255,255,0.65); margin-top:4px; font-style:italic; }');
+  printWin.document.write('.ts-pitch { border:2px solid rgba(255,255,255,0.4); border-radius:8px; padding:10px 6px; position:relative; margin-bottom:12px; }');
+  printWin.document.write('.ts-row { display:flex; justify-content:center; gap:8px; margin-bottom:10px; }');
+  printWin.document.write('.ts-player { display:flex; flex-direction:column; align-items:center; width:64px; }');
+  printWin.document.write('.ts-player-circle { width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:900; color:#fff; margin-bottom:3px; }');
+  printWin.document.write('.ts-player-circle.filled { background:rgba(255,255,255,0.28); border-color:#fff; }');
+  printWin.document.write('.ts-player-name { font-size:8px; color:#fff; text-align:center; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; line-height:1.2; }');
+  printWin.document.write('.ts-player-pos { font-size:7px; color:rgba(255,255,255,0.55); text-align:center; text-transform:uppercase; margin-top:1px; }');
+  printWin.document.write('.ts-subs-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.55); text-transform:uppercase; text-align:center; margin:8px 0; padding-top:8px; border-top:1px solid rgba(255,255,255,0.2); }');
+  printWin.document.write('.ts-subs-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:0 4px; }');
+  printWin.document.write('.ts-sub-item { display:flex; flex-direction:column; align-items:center; gap:3px; }');
+  printWin.document.write('.ts-sub-circle { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.75); }');
+  printWin.document.write('.ts-sub-circle.filled { background:rgba(255,255,255,0.22); border-color:rgba(255,255,255,0.7); color:#fff; }');
+  printWin.document.write('.ts-sub-name { font-size:7px; color:rgba(255,255,255,0.75); text-align:center; text-transform:uppercase; max-width:54px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }');
+  printWin.document.write('@media print { @page { margin:8mm; size:A4 portrait; } body { padding:0; } }');
+  printWin.document.write('</style></head><body>');
+
+  // Header
+  printWin.document.write('<div class="ts-header"><div class="ts-team-name">' + teamName + '</div>');
+  if (matchInfo) printWin.document.write('<div class="ts-match-info">' + matchInfo + '</div>');
+  printWin.document.write('</div>');
+
+  // Pitch
+  function pSlot(num) {
+    var p = squad[num-1]; var filled = p && p.name;
+    return '<div class="ts-player"><div class="ts-player-circle' + (filled?' filled':'') + '">' + num + '</div>' +
+      '<div class="ts-player-name">' + (filled?p.name:'') + '</div>' +
+      '<div class="ts-player-pos">' + (filled&&p.pos?p.pos:'') + '</div></div>';
+  }
+  function sSlot(num) {
+    var p = squad[num-1]; var filled = p && p.name;
+    return '<div class="ts-sub-item"><div class="ts-sub-circle' + (filled?' filled':'') + '">' + num + '</div>' +
+      '<div class="ts-sub-name">' + (filled?p.name:'') + '</div></div>';
+  }
+
+  printWin.document.write('<div class="ts-pitch">');
+  printWin.document.write('<div class="ts-row">' + pSlot(1) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(2) + pSlot(3) + pSlot(4) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(5) + pSlot(6) + pSlot(7) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(8) + pSlot(9) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(10) + pSlot(11) + pSlot(12) + '</div>');
+  printWin.document.write('<div class="ts-row">' + pSlot(13) + pSlot(14) + pSlot(15) + '</div>');
+  printWin.document.write('</div>');
+  printWin.document.write('<div class="ts-subs-label">Substitutes</div>');
+  printWin.document.write('<div class="ts-subs-grid">');
+  for (var i = 16; i <= 34; i++) { printWin.document.write(sSlot(i)); }
+  printWin.document.write('</div>');
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+
+  setTimeout(function() { printWin.focus(); printWin.print(); }, 500);
+}
+
+function shareTeamSheet() {
+  renderTeamSheet();
+  var teamName = homeName() !== 'Home' ? homeName() : 'My Team';
+  var lines = [teamName + ' — Team Sheet', ''];
+  lines.push('STARTING 15:');
+  for (var i = 1; i <= 15; i++) {
+    var p = squad[i-1];
+    lines.push(i + '. ' + (p && p.name ? p.name + (p.pos ? ' (' + p.pos + ')' : '') : '—'));
+  }
+  lines.push('');
+  lines.push('SUBS:');
+  for (var j = 16; j <= 34; j++) {
+    var s = squad[j-1];
+    if (s && s.name) lines.push(j + '. ' + s.name);
+  }
+  var text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: teamName + ' Team Sheet', text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert('Team sheet copied to clipboard!');
+    });
+  } else {
+    alert(text);
+  }
+}
+const SQUAD_KEY = 'gaa_squad';
+const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
+
+var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
+var editingSlot = null;
+var selectedAttrPlayer = null; // currently selected player for attribution
+var pendingTagRef = null; // player chosen via pitch-first flow, applied when the outcome modal opens
+
+function loadSquad() {
+  try {
+    var saved = localStorage.getItem(SQUAD_KEY);
+    var s = saved ? JSON.parse(saved) : [];
+    // Ensure 34 slots
+    while (s.length < 34) s.push(null);
+    return s;
+  } catch(e) {
+    var s = [];
+    for (var i=0;i<34;i++) s.push(null);
+    return s;
+  }
+}
+
+function saveSquad() {
+  try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
+  syncSquad();
+  if (currentClubSquadId) syncClubSquad();
+}
+
+function renderSquadGrid() {
+  var grid = document.getElementById('squad-grid');
+  if (!grid) return;
+  var html = '';
+  for (var i = 0; i < 34; i++) {
+    var num = i + 1;
+    var p = squad[i];
+    if (p && p.name) {
+      var attStats = getPlayerAttStats(i);
+      var badgeClass = trainingSessions.length ? (attStats.pct >= 85 ? 'green' : attStats.pct >= 70 ? 'yellow' : 'red') : '';
+      var availIcon = p.availability ? (p.availability.status === 'available' ? ' ✅' : p.availability.status === 'unavailable' ? ' ❌' : p.availability.status === 'maybe' ? ' 🤔' : '') : '';
+      var injuredBadge = hasActiveInjury(i) ? '<div class="squad-injury-badge"></div>' : '';
+      html += '<div class="squad-slot filled" data-slot="' + i + '" onclick="openPlayerEdit(' + i + ')" style="position:relative;">' +
+        (badgeClass ? '<div class="squad-att-badge ' + badgeClass + '"></div>' : '') +
+        injuredBadge +
+        '<div class="squad-num">' + num + '</div>' +
+        '<div class="squad-name">' + p.name + availIcon + '</div>' +
+        '<div class="squad-pos">' + (p.pos || '') + '</div>' +
+        '</div>';
+    } else {
+      html += '<div class="squad-slot" onclick="openPlayerEdit(' + i + ')">' +
+        '<div class="squad-num" style="color:rgba(240,253,244,0.2)">' + num + '</div>' +
+        '<div class="squad-empty-name">+ Add player</div>' +
+        '</div>';
+    }
+  }
+  grid.innerHTML = html;
+}
+function openPlayerEdit(slotIndex) {
+  editingSlot = slotIndex;
+  var num = slotIndex + 1;
+  var p = squad[slotIndex];
+  document.getElementById('player-edit-title').textContent = 'Player #' + num;
+  document.getElementById('player-edit-sub').textContent = p && p.name ? 'Edit player' : 'Add player to slot ' + num;
+  document.getElementById('edit-player-name').value = p && p.name ? p.name : '';
+
+  // Build position grid
+  var posGrid = document.getElementById('pos-grid');
+  var currentPos = p ? p.pos : '';
+  var posHtml = '';
+  POSITIONS.forEach(function(pos) {
+    posHtml += '<button class="pos-btn' + (currentPos === pos ? ' selected' : '') + '" onclick="selectPos(this,\'' + pos + '\')">' + pos + '</button>';
+  });
+  posGrid.innerHTML = posHtml;
+
+  var clearBtn = document.getElementById('btn-clear-player');
+  if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
+
+  document.getElementById('player-edit-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function selectPos(btn, pos) {
+  var btns = document.querySelectorAll('.pos-btn');
+  for (var i=0;i<btns.length;i++) btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+}
+
+function savePlayerEdit() {
+  if (editingSlot === null) return;
+  // Dismiss keyboard first (iOS fix)
+  document.activeElement && document.activeElement.blur();
+  var name = document.getElementById('edit-player-name').value.trim();
+  if (!name) { document.getElementById('edit-player-name').focus(); return; }
+  var selectedPosBtn = document.querySelector('.pos-btn.selected');
+  var pos = selectedPosBtn ? selectedPosBtn.textContent : '';
+  squad[editingSlot] = { name: name, pos: pos, stats: {} };
+  saveSquad();
+  closePlayerEdit();
+  renderSquadGrid();
+}
+
+function clearPlayerSlot() {
+  if (editingSlot === null) return;
+  if (!confirm('Remove this player from the squad?')) return;
+  squad[editingSlot] = null;
+  saveSquad();
+  closePlayerEdit();
+  renderSquadGrid();
+}
+
+function closePlayerEdit() {
+  document.getElementById('player-edit-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingSlot = null;
+}
+
+// ── PLAYER ATTRIBUTION ─────────────────────────────
 
 // ── RECORD TAB: EVENT-FIRST FLOW ───────────────────
 // Order is event+team -> outcome -> player. Deciding *what* happened is
