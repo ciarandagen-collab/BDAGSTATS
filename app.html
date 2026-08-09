@@ -9985,12 +9985,15 @@ function getShotMapData() {
     if (ev.type !== 'shot') return;
     if (shotMapTeamFilter !== 'both' && ev.team !== shotMapTeamFilter) return;
     if (shotMapTypeFilter !== 'both' && ev.subtype !== shotMapTypeFilter && ev.shotMode !== shotMapTypeFilter) return;
-    if (!ev.zone) return;
+    // Keep anything with a tapped position or (older records) a zone
+    if (ev.x === undefined && !ev.zone) return;
     shots.push({
       team: ev.team,
       subtype: ev.subtype || ev.shotMode || 'play',
       outcome: ev.outcome,
       zone: ev.zone,
+      x: ev.x,            // exact tapped position, when present
+      y: ev.y,
       player: ev.player || null,
       minute: ev.min || null,
     });
@@ -10016,19 +10019,25 @@ function renderShotMap() {
 
   // Plot dots
   var dots = shots.map(function(s) {
-    var zoneKey = s.team + '_' + s.zone;
-    zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
-    var count = zoneCount[zoneKey];
+    var cx, cy;
 
-    var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
-    var base = coordMap[s.zone];
-    if (!base) return '';
-
-    // Jitter within zone
-    var jx = (Math.sin(count * 137.5) * 14);
-    var jy = (Math.cos(count * 137.5) * 10);
-    var cx = Math.max(15, Math.min(305, base.x + jx));
-    var cy = Math.max(15, Math.min(465, base.y + jy));
+    if (s.x !== undefined && s.y !== undefined) {
+      // Exactly where the coach tapped — x/y are percentages of this 320x480 pitch
+      cx = (s.x / 100) * 320;
+      cy = (s.y / 100) * 480;
+    } else {
+      // Legacy record with only a zone: use the zone centre and jitter overlaps
+      var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+      var base = coordMap[s.zone];
+      if (!base) return '';
+      var zoneKey = s.team + '_' + s.zone;
+      zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+      var count = zoneCount[zoneKey];
+      cx = base.x + (Math.sin(count * 137.5) * 14);
+      cy = base.y + (Math.cos(count * 137.5) * 10);
+    }
+    cx = Math.max(15, Math.min(305, cx));
+    cy = Math.max(15, Math.min(465, cy));
 
     var colour = OUTCOME_COLOURS[s.outcome] || '#94a3b8';
     var radius = s.outcome === 'goal' ? 8 : 6;
@@ -10179,7 +10188,9 @@ function generateShotMapSVGString(matchRecord) {
   var eventsArr = matchRecord.events || [];
 
   eventsArr.forEach(function(ev) {
-    if (ev.type !== 'shot' || !ev.zone) return;
+    // Plot anything with a real tapped position, or (for older records) a zone
+    if (ev.type !== 'shot') return;
+    if (ev.x === undefined && !ev.zone) return;
     shots.push(ev);
   });
 
@@ -10190,21 +10201,28 @@ function generateShotMapSVGString(matchRecord) {
   var goalW = 52, goalX = (W - goalW) / 2;
 
   var dots = shots.map(function(s) {
-    var zoneKey = s.team + '_' + s.zone;
-    zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
-    var count = zoneCount[zoneKey];
+    var cx, cy;
 
-    var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
-    var base = coordMap[s.zone];
-    if (!base) return '';
+    if (s.x !== undefined && s.y !== undefined) {
+      // Exact position the coach tapped. x/y are stored as percentages of the
+      // 320x480 picker, so they scale straight into this box with no zone lookup.
+      cx = Math.round((s.x / 100) * W);
+      cy = Math.round((s.y / 100) * H);
+    } else {
+      // Legacy record with only a zone — fall back to the zone centre and
+      // fan overlapping shots out so they stay countable.
+      var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+      var base = coordMap[s.zone];
+      if (!base) return '';
+      var zoneKey = s.team + '_' + s.zone;
+      zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+      var count = zoneCount[zoneKey];
+      cx = Math.round(base.x * (W/320)) + Math.round(Math.sin(count * 137.5) * 12);
+      cy = Math.round(base.y * (H/480)) + Math.round(Math.cos(count * 137.5) * 9);
+    }
 
-    // Scale 320×480 → 280×420
-    var cx = Math.round(base.x * (W/320));
-    var cy = Math.round(base.y * (H/480));
-    var jx = Math.round(Math.sin(count * 137.5) * 12);
-    var jy = Math.round(Math.cos(count * 137.5) * 9);
-    cx = Math.max(8, Math.min(W-8, cx + jx));
-    cy = Math.max(8, Math.min(H-8, cy + jy));
+    cx = Math.max(8, Math.min(W-8, cx));
+    cy = Math.max(8, Math.min(H-8, cy));
 
     var colour = OUTCOME_COLOURS[s.outcome] || '#94a3b8';
     var r = s.outcome === 'goal' ? 7 : 5;
@@ -14367,9 +14385,17 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
   });
 
-  // Once a new service worker takes control, reload so the fresh app.html actually loads
+  // Once a NEW service worker replaces an existing one, reload so the fresh
+  // app.html actually loads.
+  //
+  // The `hadController` check matters: controllerchange also fires on the very
+  // first install, when nothing was controlling the page yet. Reloading then is
+  // pointless for a first-time visitor, and it breaks automated tests by
+  // destroying the execution context mid-run.
+  var hadController = !!navigator.serviceWorker.controller;
   var swRefreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) { hadController = true; return; }   // first install, nothing to refresh
     if (swRefreshing) return;
     swRefreshing = true;
     window.location.reload();
