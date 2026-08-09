@@ -221,7 +221,15 @@ test.describe('Match Tab', () => {
   });
 
   test('Start Game button visible', async ({ page }) => {
-    await expect(page.locator('button:has-text("Start Game")')).toBeVisible();
+    // The clock is deliberately mirrored on the Record tab, so this button
+    // exists twice. Scope to the Match page or the selector is ambiguous.
+    await expect(page.locator('#page-match button:has-text("Start Game")')).toBeVisible();
+  });
+
+  test('Game clock is mirrored on the Record tab', async ({ page }) => {
+    // Both copies drive the same clock — that mirroring is intentional
+    const count = await page.locator('button:has-text("Start Game")').count();
+    expect(count).toBe(2);
   });
 });
 
