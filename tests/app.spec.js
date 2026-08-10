@@ -25,6 +25,21 @@ async function navTo(page, tab) {
   await page.waitForTimeout(200);
 }
 
+
+// ── EVENT-FIRST FLOW HELPERS ─────────────────────────────────────────
+// The Record tab is a grid of split boxes: tap the My Team or Opposition half
+// of an event box, pick the outcome, then pick the player.
+async function tapEvent(page, label, side) {
+  await page.locator('.rec-ev-box', { hasText: label })
+    .locator('.rev-half.' + side).first().click();
+}
+async function pickFirstOutcome(page, modal) {
+  await page.locator((modal || '#generic-modal') + ' .outcome-btn').first().click();
+}
+async function pickOppPlayer(page, n) {
+  await page.locator('#player-pick-modal .pp-opp').nth((n || 1) - 1).click();
+}
+
 // ── LOGIN SCREEN ─────────────────────────────────────────────────────
 // Clear service worker registrations and caches before the suite runs.
 //
@@ -127,12 +142,13 @@ test.describe('Navigation', () => {
     await expect(page.locator('#page-record')).toBeVisible();
   });
 
-  test('Record tab shows side tabs and pitch', async ({ page }) => {
+  test('Record tab shows the split event grid', async ({ page }) => {
     await navTo(page, 'record');
-    await expect(page.locator('.record-side-tabs')).toBeVisible();
-    await expect(page.locator('#record-tab-home')).toBeVisible();
-    await expect(page.locator('#record-tab-away')).toBeVisible();
-    await expect(page.locator('#record-pitch-wrap')).toBeVisible();
+    await expect(page.locator('#rec-event-grid')).toBeVisible();
+    await expect(page.locator('.rec-ev-box').first()).toBeVisible();
+    // Each box is split into a My Team half and an Opposition half
+    await expect(page.locator('.rev-half.home').first()).toBeVisible();
+    await expect(page.locator('.rev-half.away').first()).toBeVisible();
   });
 
   test('Trends tab loads', async ({ page }) => {
@@ -250,106 +266,119 @@ test.describe('Record Tab', () => {
     await expect(page.locator('#rec-h1-btn')).toBeVisible();
   });
 
-  test('Side tabs read My Team / Opposition', async ({ page }) => {
-    await expect(page.locator('#record-home-label')).toHaveText('My Team');
-    await expect(page.locator('#record-away-label')).toHaveText('Opposition');
+  test('Legend labels both halves as My Team and Opposition', async ({ page }) => {
+    await expect(page.locator('.rec-legend')).toContainText('My Team');
+    await expect(page.locator('.rec-legend')).toContainText('Opposition');
   });
 
-  test('Switching side updates active tab styling', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await expect(page.locator('#record-tab-away')).toHaveClass(/active/);
-    await expect(page.locator('#record-tab-home')).not.toHaveClass(/active/);
+  test('Event grid renders a box per visible event type', async ({ page }) => {
+    const boxes = await page.locator('.rec-ev-box').count();
+    expect(boxes).toBeGreaterThan(5);
+    // Every box carries both halves
+    const halves = await page.locator('.rec-ev-box .rev-half').count();
+    expect(halves).toBe(boxes * 2);
   });
 
-  test('Opposition pitch shows 15 tappable player markers', async ({ page }) => {
-    // Opposition pitch always renders 15 anonymous numbers, regardless of squad setup
-    await page.click('#record-tab-away');
-    const markers = await page.locator('.record-pitch-player').count();
-    expect(markers).toBe(15);
+  test('Each box shows a running tally for both sides', async ({ page }) => {
+    const tallies = await page.locator('.rec-ev-box .rev-tally').count();
+    const boxes = await page.locator('.rec-ev-box').count();
+    expect(tallies).toBe(boxes * 2);
   });
 
-  test('Tapping a pitch player opens the event type picker', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await expect(page.locator('#event-type-modal')).toHaveClass(/open/, { timeout: 3000 });
-    await expect(page.locator('.et-picker-btn:has-text("Shot from Play")')).toBeVisible();
+  test('Tapping an event half opens the outcome sheet', async ({ page }) => {
+    await tapEvent(page, 'Ball Won', 'away');
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await expect(page.locator('#gmodal-outcomes .outcome-btn').first()).toBeVisible();
   });
 
-  test('Shot modal opens via pitch tap flow', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
+  test('Shot from Play opens the shot outcome sheet', async ({ page }) => {
+    await tapEvent(page, 'Shot from Play', 'away');
     await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
   });
 
-  test('45 shot triggers the location picker pitch', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("45m Free")').click();
-    await expect(page.locator('#shot-modal')).toHaveClass(/open/, { timeout: 3000 });
-    await page.locator('.outcome-btn').first().click();
+  test('Outcome is followed by the player picker', async ({ page }) => {
+    await tapEvent(page, 'Ball Won', 'away');
+    await pickFirstOutcome(page);
+    await expect(page.locator('#player-pick-modal')).toHaveClass(/open/, { timeout: 3000 });
+  });
+
+  test('Opposition player picker shows numbered jerseys', async ({ page }) => {
+    await tapEvent(page, 'Ball Won', 'away');
+    await pickFirstOutcome(page);
+    await expect(page.locator('#player-pick-modal')).toHaveClass(/open/, { timeout: 3000 });
+    const opts = await page.locator('#player-pick-modal .pp-opp').count();
+    expect(opts).toBeGreaterThan(10);
+  });
+
+  test('Nothing is recorded until a player is chosen', async ({ page }) => {
+    const before = await page.locator('#timeline-list .event-item').count();
+    await tapEvent(page, 'Ball Won', 'away');
+    await pickFirstOutcome(page);
+    await expect(page.locator('#player-pick-modal')).toHaveClass(/open/, { timeout: 3000 });
+    // Still nothing logged at this point
+    expect(await page.locator('#timeline-list .event-item').count()).toBe(before);
+    await pickOppPlayer(page, 1);
+    await expect(page.locator('#timeline-list .event-item')).toHaveCount(before + 1, { timeout: 3000 });
+  });
+
+  test('Abandoning the player step records nothing', async ({ page }) => {
+    const before = await page.locator('#timeline-list .event-item').count();
+    await tapEvent(page, 'Ball Won', 'away');
+    await pickFirstOutcome(page);
+    await page.locator('#player-pick-modal .sheet-close').click();
+    await page.waitForTimeout(300);
+    expect(await page.locator('#timeline-list .event-item').count()).toBe(before);
+  });
+
+  test('45 records then asks for the pitch location', async ({ page }) => {
+    await tapEvent(page, '45m Free', 'away');
+    await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
+    await pickFirstOutcome(page);
+    await pickOppPlayer(page, 3);
     await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
   });
 
-  test('Possession records immediately with no outcome screen', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Possession")').click();
-    // Should NOT open the generic outcome modal — it's a single-tap log
-    await page.waitForTimeout(300);
+  test('Possession skips the outcome step', async ({ page }) => {
+    await tapEvent(page, 'Possession', 'away');
+    // Straight to the player picker — possession has no outcome
+    await expect(page.locator('#player-pick-modal')).toHaveClass(/open/, { timeout: 3000 });
     await expect(page.locator('#generic-modal')).not.toHaveClass(/open/);
-    await expect(page.locator('#event-type-modal')).not.toHaveClass(/open/);
-  });
-
-  test('Team Actions section shows Attack for both sides', async ({ page }) => {
-    await expect(page.locator('.team-actions-row')).toBeVisible();
-    await expect(page.locator('.team-action-btn:has-text("Attack")')).toHaveCount(2);
   });
 
   test('Undo toast appears after recording an event', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await tapEvent(page, 'Possession', 'away');
+    await pickOppPlayer(page, 1);
     await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
     await expect(page.locator('#undo-toast-text')).toContainText('Possession');
   });
 
   test('Undo toast removes the recorded event', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await tapEvent(page, 'Possession', 'away');
+    await pickOppPlayer(page, 1);
     await expect(page.locator('#undo-toast')).toHaveClass(/show/, { timeout: 3000 });
     const before = await page.locator('#timeline-list .event-item').count();
     await page.locator('#undo-toast button').click();
     await expect(page.locator('#undo-toast')).not.toHaveClass(/show/);
-    const after = await page.locator('#timeline-list .event-item').count();
-    expect(after).toBe(before - 1);
+    await expect(page.locator('#timeline-list .event-item')).toHaveCount(before - 1, { timeout: 3000 });
   });
 
-  test('Event picker has a manage-events button', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
+  test('Record tab has a manage-events button', async ({ page }) => {
     await expect(page.locator('.et-manage-btn')).toBeVisible();
   });
 
   test('Event type manager opens and lists event types', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
     await page.locator('.et-manage-btn').click();
     await expect(page.locator('#et-manager-modal')).toHaveClass(/open/, { timeout: 3000 });
     const rows = await page.locator('.et-mgr-row').count();
     expect(rows).toBeGreaterThan(5);
   });
 
-  test('Hiding an event type removes it from the picker', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    const before = await page.locator('.et-picker-btn').count();
+  test('Hiding an event type removes its box from the grid', async ({ page }) => {
+    const before = await page.locator('.rec-ev-box').count();
     await page.locator('.et-manage-btn').click();
-    await page.locator('.et-mgr-row:has-text("Card")').first().click();
+    await page.locator('.et-mgr-row', { hasText: 'Card' }).first().click();
     await page.locator('#et-manager-modal .sheet-close').click();
-    const after = await page.locator('.et-picker-btn').count();
-    expect(after).toBe(before - 1);
+    await expect(page.locator('.rec-ev-box')).toHaveCount(before - 1, { timeout: 3000 });
   });
 
   test('Attack opens outcome modal with Score / Ball Lost / Turned Back', async ({ page }) => {
@@ -617,10 +646,9 @@ test.describe('UI Fixes (Phase A)', () => {
 
   test('Undo remains tappable while the location picker is open', async ({ page }) => {
     await navTo(page, 'record');
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Shot from Play")').click();
-    await page.locator('#shot-modal .outcome-btn').first().click();
+    await tapEvent(page, 'Shot from Play', 'away');
+    await pickFirstOutcome(page, '#shot-modal');
+    await pickOppPlayer(page, 1);
     // Location picker opens over the toast — the Undo button must still be hittable
     await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
     await expect(page.locator('#undo-toast')).toHaveClass(/show/);
@@ -663,9 +691,8 @@ test.describe('UI Fixes (Phase B)', () => {
 
   test('Timeline delete button meets the 44px touch target', async ({ page }) => {
     await navTo(page, 'record');
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Possession")').click();
+    await tapEvent(page, 'Possession', 'away');
+    await pickOppPlayer(page, 1);
     const box = await page.locator('#timeline-list .del-btn').first().boundingBox();
     if (box) {
       expect(box.width).toBeGreaterThanOrEqual(44);
@@ -939,11 +966,10 @@ test.describe('Possession Method (Trends tab)', () => {
   test('One-sided possession tagging does not produce a 100/0 split', async ({ page }) => {
     // Tag possessions for the opposition only, then check we fall back to the estimate
     await navTo(page, 'record');
-    await page.click('#record-tab-away');
     for (let i = 0; i < 3; i++) {
-      await page.locator('.record-pitch-player').first().click();
-      await page.locator('.et-picker-btn:has-text("Possession")').click();
-      await page.waitForTimeout(150);
+      await tapEvent(page, 'Possession', 'away');
+      await pickOppPlayer(page, i + 1);
+      await page.waitForTimeout(200);
     }
     await navTo(page, 'trends');
     await expect(page.locator('#poss-section-title')).toHaveText('Dominance Index');
@@ -974,21 +1000,19 @@ test.describe('Turnover Territory', () => {
   });
 
   test('Ball Lost prompts for pitch location', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Ball Lost")').click();
+    await tapEvent(page, 'Ball Lost', 'away');
     await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
-    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await pickFirstOutcome(page);
+    await pickOppPlayer(page, 1);
     await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
     await expect(page.locator('#location-modal .sheet-title')).toContainText('lost');
   });
 
   test('Turnover Forced prompts for pitch location', async ({ page }) => {
-    await page.click('#record-tab-away');
-    await page.locator('.record-pitch-player').first().click();
-    await page.locator('.et-picker-btn:has-text("Turnover Forced")').click();
+    await tapEvent(page, 'Turnover Forced', 'away');
     await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
-    await page.locator('#gmodal-outcomes .outcome-btn').first().click();
+    await pickFirstOutcome(page);
+    await pickOppPlayer(page, 1);
     await expect(page.locator('#location-modal')).toHaveClass(/open/, { timeout: 3000 });
   });
 });
