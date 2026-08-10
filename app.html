@@ -1138,12 +1138,14 @@ input:not([type]), textarea, select {
 .rl-swatch { width:12px; height:12px; border-radius:3px; }
 .rl-swatch.home { background:rgba(22,163,74,0.55); border:1px solid rgba(22,163,74,0.8); }
 .rl-swatch.away { background:rgba(226,232,240,0.35); border:1px solid rgba(226,232,240,0.6); }
-.rec-event-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:12px; }
+/* One row per event, full width: the two halves are the only two record
+   buttons for that event — one per team. */
+.rec-event-grid { display:flex; flex-direction:column; gap:9px; margin-bottom:12px; }
 .rec-ev-box { border:1px solid var(--border); border-radius:11px; overflow:hidden; background:rgba(255,255,255,0.03); }
 .rev-label { padding:7px 8px 5px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; color:var(--cream); text-align:center; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rev-icon { margin-right:4px; }
 .rev-halves { display:flex; border-top:1px solid rgba(255,255,255,0.07); }
-.rev-half { flex:1; border:none; padding:14px 4px; cursor:pointer; font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; transition:filter 0.1s; }
+.rev-half { flex:1; border:none; padding:17px 4px; cursor:pointer; font-family:'Oswald',sans-serif; font-size:19px; font-weight:700; transition:filter 0.1s; }
 .rev-half.home { background:rgba(22,163,74,0.16); color:#86efac; border-right:1px solid rgba(255,255,255,0.09); }
 .rev-half.away { background:rgba(226,232,240,0.09); color:#e2e8f0; }
 .rev-half:active { filter:brightness(1.9); }
@@ -1244,21 +1246,8 @@ input:not([type]), textarea, select {
 .record-stats-btn:active { background:var(--red); border-color:var(--red); color:#fff; }
 .rec-min-display { font-family:'Oswald',sans-serif; font-size:12px; color:var(--muted); letter-spacing:0.5px; }
 .rec-min-display b { color:var(--cream); font-size:14px; }
-.team-actions-row { display:flex; gap:8px; margin-bottom:16px; }
-.team-action-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--cream); font-family:'Oswald',sans-serif; cursor:pointer; }
-.team-action-btn .ta-icon { font-size:18px; }
-.team-action-btn .ta-label { font-size:12px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
-.team-action-btn .ta-team { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
-.team-action-btn:active { background:var(--red); border-color:var(--red); }
-.team-action-btn:active .ta-team { color:rgba(255,255,255,0.8); }
 /* Distinguish the two sides the same way the rest of the app does:
    green for My Team, silver for the Opposition. */
-.team-action-btn.ta-home { background:rgba(22,163,74,0.14); border-color:rgba(22,163,74,0.45); }
-.team-action-btn.ta-home .ta-label { color:#86efac; }
-.team-action-btn.ta-home .ta-team { color:rgba(134,239,172,0.75); }
-.team-action-btn.ta-away { background:rgba(226,232,240,0.09); border-color:rgba(226,232,240,0.35); }
-.team-action-btn.ta-away .ta-label { color:#e2e8f0; }
-.team-action-btn.ta-away .ta-team { color:rgba(226,232,240,0.65); }
 .loc-pitch-wrap { border-radius:10px; overflow:hidden; }
 #location-pitch-svg { width:100%; height:auto; display:block; cursor:crosshair; touch-action:manipulation; }
 
@@ -2315,17 +2304,7 @@ input:not([type]), textarea, select {
 
 <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
 
-    <div class="sec-label">Team Actions</div>
-    <div class="team-actions-row">
-      <button class="team-action-btn ta-home" onclick="openGenericModal('home','attacks')">
-        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">My Team</span>
-      </button>
-      <button class="team-action-btn ta-away" onclick="openGenericModal('away','attacks')">
-        <span class="ta-icon">⚔️</span><span class="ta-label">Attack</span><span class="ta-team">Opposition</span>
-      </button>
-    </div>
-
-    <!-- Substitutions section (collapsed) -->
+<!-- Substitutions section (collapsed) -->
     <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
       Substitutions <span id="subs-count-badge" style="display:none;font-size:10px;color:var(--red-light);margin-left:6px;"></span>
       <span id="subs-chevron" style="font-size:10px;margin-left:4px;color:var(--muted);">▼</span>
