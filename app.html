@@ -117,6 +117,9 @@ body {
   padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
 }
 .scroll-area::-webkit-scrollbar { display: none; }
+/* The undo toast floats above the nav bar. Without this it covers whatever is
+   at the bottom of the page while it's showing. */
+.scroll-area.toast-open { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 74px); }
 
 /* ── BOTTOM NAV ── */
 .bottom-nav {
@@ -1188,6 +1191,7 @@ input:not([type]), textarea, select {
 .ts-slot.filled { border-style:solid; border-color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.14); }
 .ts-slot-pos { font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:0.5px; color:rgba(255,255,255,0.65); text-transform:uppercase; }
 .ts-slot-num { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; color:#fff; line-height:1.1; }
+.ts-slot-squadno { font-size:7px; color:rgba(255,255,255,0.5); letter-spacing:0.3px; }
 .ts-slot-name { font-size:8px; color:rgba(255,255,255,0.85); max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-transform:uppercase; }
 .ts-slot:not(.filled) .ts-slot-name { color:rgba(255,255,255,0.4); font-style:italic; }
 .ts-confirm-btn { width:100%; margin-top:14px; padding:13px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; }
@@ -2051,7 +2055,9 @@ input:not([type]), textarea, select {
 
     <!-- Reports view -->
     <div id="dash-view-reports" style="display:none;">
-      <div style="font-size:9px;letter-spacing:3px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin-bottom:12px;">Match Reports by Squad</div>
+      <div style="font-size:9px;letter-spacing:3px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin-bottom:12px;">Top Players by Squad</div>
+      <div id="club-top-players"></div>
+      <div style="font-size:9px;letter-spacing:3px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin:22px 0 12px;">Match Reports by Squad</div>
       <div id="club-reports-list"></div>
     </div>
 
@@ -2303,6 +2309,9 @@ input:not([type]), textarea, select {
     <button class="et-manage-btn" onclick="openEventTypeManager()">⚙️ Choose which events show here</button>
 
 <button class="record-stats-btn" onclick="goToMatchStats()">📊 View Match Stats</button>
+
+    <div class="sec-label">Live Share</div>
+    <div id="live-share-box"></div>
 
 <!-- Substitutions section (collapsed) -->
     <div class="sec-label discipline-toggle" onclick="toggleSubs()" style="cursor:pointer;">
@@ -2774,6 +2783,17 @@ input:not([type]), textarea, select {
   </div>
 </div>
 
+<!-- LIVE VIEWER (read-only, opened via ?live=CODE) -->
+<div id="live-view-screen" style="display:none;">
+  <div class="lv-head">
+    <div class="lv-brand">COACH STATS</div>
+    <div class="lv-live"><span class="live-dot"></span>LIVE</div>
+  </div>
+  <div id="lv-body"></div>
+  <div id="lv-freshness" class="lv-freshness"></div>
+  <div class="lv-foot">Read-only view. Stats update automatically.</div>
+</div>
+
 <!-- PLAYER PICKER (final step of the record flow) -->
 <div class="modal-overlay" id="player-pick-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)cancelPlayerPick()">
   <div class="modal-sheet">
@@ -2856,23 +2876,32 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Start game</span><span class="help-val">▶ Start Game — clock starts, Match Info collapses</span></div>
       <div class="help-row"><span class="help-key">Half time</span><span class="help-val">⏸ Half Time → half time report appears → ▶ Start 2nd Half</span></div>
       <div class="help-row"><span class="help-key">Half time report</span><span class="help-val">Auto shows shooting %, kickouts, possession, discipline + key observations</span></div>
+      <div class="help-row"><span class="help-key">Starting 15</span><span class="help-val">📋 Select Starting 15 — tap a position, pick a player. Numbers shown are match jerseys.</span></div>
+      <div class="help-row"><span class="help-key">Squad</span><span class="help-val">Club accounts: pick which squad the match is for</span></div>
       <div class="help-row"><span class="help-key">Undo score</span><span class="help-val">Scoreboard → ↩ Undo</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">✍️ Record Tab</div>
-      <div class="help-row"><span class="help-key">My Team / Opp</span><span class="help-val">Green column = My Team · White column = Opposition</span></div>
-      <div class="help-row"><span class="help-key">Record shot</span><span class="help-val">Tap team button → select outcome → tap zone or Skip Zone</span></div>
-      <div class="help-row"><span class="help-key">Tag player</span><span class="help-val">Tap player name in outcome panel BEFORE selecting outcome</span></div>
-      <div class="help-row"><span class="help-key">Foul / card</span><span class="help-val">Tap Discipline heading to expand</span></div>
-      <div class="help-row"><span class="help-key">Substitution</span><span class="help-val">Tap Substitutions heading → + Record Substitution</span></div>
+      <div class="help-row"><span class="help-key">How it works</span><span class="help-val">Tap event half → pick outcome → pick player. Three taps.</span></div>
+      <div class="help-row"><span class="help-key">The halves</span><span class="help-val">Green half = My Team · Silver half = Opposition. One button per team, per event.</span></div>
+      <div class="help-row"><span class="help-key">Running tally</span><span class="help-val">Each half shows a live count for that team</span></div>
+      <div class="help-row"><span class="help-key">Nothing saves early</span><span class="help-val">The event is only recorded once you pick the player — back out and nothing is logged</span></div>
+      <div class="help-row"><span class="help-key">Shortcuts</span><span class="help-val">Attack needs no player · Possession has no outcome</span></div>
+      <div class="help-row"><span class="help-key">Card warning</span><span class="help-val">A carded player is ringed amber/dark/red, and warns before you record</span></div>
+      <div class="help-row"><span class="help-key">Location</span><span class="help-val">Shots, 45s, ball lost, turnovers and kickouts ask where on the pitch — or Skip</span></div>
+      <div class="help-row"><span class="help-key">Undo</span><span class="help-val">Bar at the bottom after each event — one tap puts everything back</span></div>
+      <div class="help-row"><span class="help-key">Hide events</span><span class="help-val">⚙️ Choose which events show here — untick what you never use</span></div>
+      <div class="help-row"><span class="help-key">Substitution</span><span class="help-val">Tap Substitutions heading → + Record Substitution. Suggests who is fading after 20 mins.</span></div>
+      <div class="help-row"><span class="help-key">Share live</span><span class="help-val">📡 Share Live — gives a code so someone else can follow on their phone</span></div>
     </div>
 
     <div class="help-section">
       <div class="help-section-title">👥 Squad Tab</div>
       <div class="help-row"><span class="help-key">Add player</span><span class="help-val">Squad sub-tab → tap empty slot → name → Save Player</span></div>
       <div class="help-row"><span class="help-key">Injury badge</span><span class="help-val">Red dot on squad slot = active injury logged</span></div>
-      <div class="help-row"><span class="help-key">Performance</span><span class="help-val">Stats sub-tab — score per player from tagged events</span></div>
+      <div class="help-row"><span class="help-key">Performance</span><span class="help-val">Stats sub-tab — this match plus a season block per player</span></div>
+      <div class="help-row"><span class="help-key">Season figures</span><span class="help-val">Built from saved matches only — save every match to keep them accurate</span></div>
       <div class="help-row"><span class="help-key">Team sheet</span><span class="help-val">Sheet sub-tab → 🖨️ Print / Save PDF</span></div>
     </div>
 
@@ -2898,12 +2927,35 @@ input:not([type]), textarea, select {
       <div class="help-section-title">📊 Stats &amp; History</div>
       <div class="help-row"><span class="help-key">Save match</span><span class="help-val">Stats tab → Save Match — banner turns green</span></div>
       <div class="help-row"><span class="help-key">Match notes</span><span class="help-val">Stats tab → 📝 Match Notes — auto-saves as you type</span></div>
-      <div class="help-row"><span class="help-key">Shot map</span><span class="help-val">Stats tab → 🎯 Shot Map — pitch diagram with zone dots</span></div>
+      <div class="help-row"><span class="help-key">Half filter</span><span class="help-val">Stats tab → Full Match / 1st Half / 2nd Half toggle</span></div>
+      <div class="help-row"><span class="help-key">Shooting</span><span class="help-val">Conversion % overall, from play and from frees, plus kickout retention</span></div>
+      <div class="help-row"><span class="help-key">Kickout detail</span><span class="help-val">Retention by short/middle/long and left/centre/right channel</span></div>
+      <div class="help-row"><span class="help-key">Possession</span><span class="help-val">Real split when tagged both sides · otherwise labelled "Dominance Index"</span></div>
+      <div class="help-row"><span class="help-key">Shot map</span><span class="help-val">Stats tab → 🎯 Shot Map — shots plot exactly where you tapped</span></div>
+      <div class="help-row"><span class="help-key">Match report</span><span class="help-val">History → report includes written Coach\u2019s Analysis and full event log</span></div>
       <div class="help-row"><span class="help-key">Share report</span><span class="help-val">History → 📤 Share on match card → WhatsApp / email</span></div>
       <div class="help-row"><span class="help-key">Season summary</span><span class="help-val">History → 📊 Season Summary → PDF</span></div>
       <div class="help-row"><span class="help-key">Scout report</span><span class="help-val">History → 🔍 Scout on match card</span></div>
       <div class="help-row"><span class="help-key">Fixtures</span><span class="help-val">History → 📅 Fixtures → + Add Fixture</span></div>
       <div class="help-row"><span class="help-key">Opposition DB</span><span class="help-val">History → 🏟 Opposition DB — club profiles + notes</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">📡 Live Share</div>
+      <div class="help-row"><span class="help-key">Start</span><span class="help-val">Record tab → 📡 Share Live — generates a 6-character code</span></div>
+      <div class="help-row"><span class="help-key">To follow</span><span class="help-val">Open the share link, or add ?live=CODE to the app address</span></div>
+      <div class="help-row"><span class="help-key">What they see</span><span class="help-val">Score, clock, possession, shooting, kickouts, scorers, last events</span></div>
+      <div class="help-row"><span class="help-key">Updates</span><span class="help-val">Every 10 seconds. Says plainly if the connection drops.</span></div>
+      <div class="help-row"><span class="help-key">Read-only</span><span class="help-val">Viewers cannot record. One recorder, any number of viewers.</span></div>
+      <div class="help-row"><span class="help-key">Ends</span><span class="help-val">Automatically at Full Time, or tap Stop</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🏟 Club Reports</div>
+      <div class="help-row"><span class="help-key">Open</span><span class="help-val">🏟 button in the top bar → Reports tab</span></div>
+      <div class="help-row"><span class="help-key">Top players</span><span class="help-val">Per squad: top scorers, scoring per match, most accurate, free-taking, most ball won</span></div>
+      <div class="help-row"><span class="help-key">Thresholds</span><span class="help-val">Accuracy needs 5+ shots, free-taking 3+ frees — stops one good game topping the list</span></div>
+      <div class="help-row"><span class="help-key">Grouping</span><span class="help-val">By the squad the match was recorded for. Older matches show as Unassigned.</span></div>
     </div>
 
     <div class="help-section">
@@ -3111,7 +3163,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v54-2026-08-10';
+var CS_BUILD = 'v57-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -3505,6 +3557,7 @@ function updateNames() {
 
 // ── SCOREBOARD ─────────────────────────────────────
 function updateScoreboard() {
+  try { if (liveShare.id) pushLiveSnapshot(false); } catch(e) {}
   const hT=total('home'), aT=total('away');
   // main board
   $('home-goals').textContent=state.home.goals;
@@ -3828,6 +3881,7 @@ function commitGeneric(team, category, key, playerRef) {
   showUndoToast((cfg.title || category).replace(/^[^\w]+\s*/, '') + ' — ' + outcomeLabel);
   renderTimeline(); bumpMin(); renderGenericTallies();
   refreshEventTallies();
+  try { pushLiveSnapshot(false); } catch(e) {}
   if (category === 'cards') { try { renderRecordEventGrid(); } catch(e) {} }
 
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',
@@ -3928,8 +3982,13 @@ function showUndoToast(label) {
   if (!toast || !txt) return;
   txt.textContent = label;
   toast.classList.add('show');
+  var scroller = document.getElementById('scroll-area');
+  if (scroller) scroller.classList.add('toast-open');
   if (undoToastTimer) clearTimeout(undoToastTimer);
-  undoToastTimer = setTimeout(function() { toast.classList.remove('show'); }, 4000);
+  undoToastTimer = setTimeout(function() {
+    toast.classList.remove('show');
+    if (scroller) scroller.classList.remove('toast-open');
+  }, 4000);
 }
 
 function undoLastEvent() {
@@ -3942,6 +4001,8 @@ function undoLastEvent() {
   try { refreshEventTallies(); } catch(e) {}
   var toast = document.getElementById('undo-toast');
   if (toast) toast.classList.remove('show');
+  var scroller = document.getElementById('scroll-area');
+  if (scroller) scroller.classList.remove('toast-open');
   if (undoToastTimer) clearTimeout(undoToastTimer);
 }
 
@@ -4384,8 +4445,10 @@ function openPlayerPick() {
             (GAA_POS_SHORT[pos-1] || pos) + '</span><span class="pp-name">—</span></button>';
         }
         var card = cards[idx];
+        // Show the match jersey (position), not the squad slot — that's what a
+        // coach sees on the pitch.
         return '<button class="pp-player' + (card ? ' on-' + card : '') + '" onclick="confirmPlayerPick(' + idx + ')">' +
-          '<span class="pp-circle">' + (idx+1) + '</span>' +
+          '<span class="pp-circle">' + pos + '</span>' +
           '<span class="pp-name">' + surnameOf(p.name) + '</span></button>';
       }).join('') + '</div>';
     });
@@ -4634,10 +4697,14 @@ function renderTeamSelector() {
       var idx = tsDraft[pos-1];
       var p = (typeof idx === 'number') ? squad[idx] : null;
       var has = !!(p && p.name);
+      // The number shown is the MATCH jersey (the position), which is what they
+      // wear on the day. Their squad number is shown underneath when it differs.
+      var squadNo = has ? (idx + 1) : null;
       return '<button class="ts-slot' + (has ? ' filled' : '') + '" onclick="openTsPlayerPicker(' + pos + ')">' +
         '<span class="ts-slot-pos">' + GAA_POS_SHORT[pos-1] + '</span>' +
-        '<span class="ts-slot-num">' + (has ? (idx+1) : '–') + '</span>' +
+        '<span class="ts-slot-num">' + pos + '</span>' +
         '<span class="ts-slot-name">' + (has ? surnameOf(p.name) : 'Empty') + '</span>' +
+        (has && squadNo !== pos ? '<span class="ts-slot-squadno">sq ' + squadNo + '</span>' : '') +
         '</button>';
     }).join('') + '</div>';
   }).join('');
@@ -11034,6 +11101,8 @@ function startExtraTime() {
 }
 
 function endGame() {
+  // The live match is working state, not the record — History holds that.
+  try { if (liveShare.id) stopLiveShare(true); } catch(e) {}
   clockPause();
   gamePhase = 'finished';
   renderClock();
@@ -11926,6 +11995,7 @@ function saveMatchToHistory() {
     }),
     subs: (state.subs || []).slice(),
     pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
+    squadId: currentClubSquadId || null,   // lets club reports group by squad
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
     turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
     playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
@@ -14220,6 +14290,106 @@ function closeClubDashboard() {
   document.getElementById('club-dashboard').style.display = 'none';
 }
 
+// ── CLUB REPORT: TOP PLAYERS BY SQUAD ──────────────
+// Built from saved matches. Each match record stores the squad it belonged to,
+// so this groups players by squad rather than lumping the whole club together.
+function clubTopPlayers() {
+  var bySquad = {};
+  loadHistory().forEach(function(m) {
+    var sqId = m.squadId || m.squad_id || null;
+    var sqName = null;
+    if (sqId && typeof clubSquads !== 'undefined') {
+      var found = clubSquads.find(function(s){ return String(s.id) === String(sqId); });
+      if (found) sqName = found.name;
+    }
+    sqName = sqName || 'Unassigned';
+    var bucket = bySquad[sqName] || (bySquad[sqName] = { players:{}, matches:0 });
+    bucket.matches++;
+    (m.players || []).forEach(function(p) {
+      if (!p || !p.name) return;
+      var s = p.stats || {};
+      var sp = s.shotsPlay || {}, sf = s.shotsFree || {};
+      var e = bucket.players[p.name] || (bucket.players[p.name] = {
+        name:p.name, matches:0, mins:0, goals:0, points:0, shots:0,
+        ballWon:0, ballLost:0, frees:0, freeScores:0
+      });
+      var played = Object.keys(s).length > 0 || (p.mins || 0) > 0;
+      if (played) e.matches++;
+      e.mins += p.mins || 0;
+      e.goals  += (sp.goal||0) + (sf.goal||0);
+      e.points += (sp.point||0) + (sf.point||0) + 2*((sp.twopointer||0)+(sf.twopointer||0));
+      e.shots  += Object.keys(sp).reduce(function(a,k){return a+(sp[k]||0);},0)
+                + Object.keys(sf).reduce(function(a,k){return a+(sf[k]||0);},0);
+      e.frees  += Object.keys(sf).reduce(function(a,k){return a+(sf[k]||0);},0);
+      e.freeScores += (sf.point||0)+(sf.goal||0)+(sf.twopointer||0);
+      e.ballWon  += Object.keys(s.ballWon||{}).reduce(function(a,k){return a+(s.ballWon[k]||0);},0);
+      e.ballLost += Object.keys(s.ballLost||{}).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
+    });
+  });
+
+  Object.keys(bySquad).forEach(function(sq) {
+    var list = Object.keys(bySquad[sq].players).map(function(n) {
+      var e = bySquad[sq].players[n];
+      e.scoreTotal = e.goals*3 + e.points;
+      e.perMatch = e.matches ? Math.round((e.scoreTotal / e.matches) * 10) / 10 : 0;
+      e.conv = e.shots ? Math.round(((e.goals + e.points) / e.shots) * 100) : null;
+      e.freeConv = e.frees ? Math.round((e.freeScores / e.frees) * 100) : null;
+      return e;
+    }).filter(function(e){ return e.matches > 0; });
+    bySquad[sq].list = list;
+  });
+  return bySquad;
+}
+
+function renderClubTopPlayers() {
+  var el = document.getElementById('club-top-players');
+  if (!el) return;
+  var data = clubTopPlayers();
+  var squads = Object.keys(data).sort();
+  if (!squads.length) {
+    el.innerHTML = '<div class="ctp-empty">No saved matches yet. Save a match and the leaders appear here.</div>';
+    return;
+  }
+
+  function leaderRow(title, list, valueFn, suffix) {
+    if (!list.length) return '';
+    return '<div class="ctp-cat">' + title + '</div>' +
+      list.slice(0,3).map(function(e, i) {
+        return '<div class="ctp-row">' +
+          '<span class="ctp-rank">' + (i+1) + '</span>' +
+          '<span class="ctp-name">' + e.name +
+            '<span class="ctp-sub">' + e.matches + ' match' + (e.matches!==1?'es':'') + '</span></span>' +
+          '<span class="ctp-val">' + valueFn(e) + (suffix||'') + '</span>' +
+        '</div>';
+      }).join('');
+  }
+
+  el.innerHTML = squads.map(function(sq) {
+    var list = data[sq].list;
+    var scorers = list.slice().sort(function(a,b){ return b.scoreTotal - a.scoreTotal; })
+                      .filter(function(e){ return e.scoreTotal > 0; });
+    var perMatch = list.slice().filter(function(e){ return e.matches >= 2 && e.scoreTotal > 0; })
+                      .sort(function(a,b){ return b.perMatch - a.perMatch; });
+    var accurate = list.slice().filter(function(e){ return e.shots >= 5; })
+                      .sort(function(a,b){ return b.conv - a.conv; });
+    var workers = list.slice().filter(function(e){ return e.ballWon > 0; })
+                      .sort(function(a,b){ return b.ballWon - a.ballWon; });
+    var takers = list.slice().filter(function(e){ return e.frees >= 3; })
+                      .sort(function(a,b){ return b.freeConv - a.freeConv; });
+
+    return '<div class="ctp-squad">' +
+      '<div class="ctp-squad-head">' + sq +
+        '<span class="ctp-squad-sub">' + data[sq].matches + ' match' + (data[sq].matches!==1?'es':'') + '</span></div>' +
+      leaderRow('Top scorers', scorers, function(e){ return e.goals + '-' + String(e.points).padStart(2,'0'); }) +
+      leaderRow('Scoring per match', perMatch, function(e){ return e.perMatch; }) +
+      leaderRow('Most accurate (5+ shots)', accurate, function(e){ return e.conv; }, '%') +
+      leaderRow('Free-taking (3+ frees)', takers, function(e){ return e.freeConv; }, '%') +
+      leaderRow('Most ball won', workers, function(e){ return e.ballWon; }) +
+      (scorers.length ? '' : '<div class="ctp-empty">No player data recorded for this squad yet.</div>') +
+    '</div>';
+  }).join('');
+}
+
 function renderClubDashboard() {
   if (!currentClub) {
     // No club loaded — fall back to the setup screen instead of crashing
@@ -14530,6 +14700,7 @@ function saveClubSettings() {
 
 // ── DASH TAB SWITCHER ──────────────────────────────
 function switchDashTab(tab, btn) {
+  if (tab === 'reports') { try { renderClubTopPlayers(); } catch(e) {} }
   var tabs = ['squads','members','reports','settings'];
   tabs.forEach(function(t) {
     var el = document.getElementById('dash-view-' + t);
@@ -14571,6 +14742,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (safe('checkPasswordRecovery', checkPasswordRecovery)) return;
   if (safe('initWellnessCheck', initWellnessCheck)) return;
   if (safe('initTrialGradeCheck', initTrialGradeCheck)) return;
+  if (safe('checkLiveParam', checkLiveParam)) return;   // read-only live viewer
 
   safe('checkInstallPrompt', checkInstallPrompt);
   safe('initSupabase', initSupabase);
@@ -14588,6 +14760,7 @@ document.addEventListener('DOMContentLoaded', function() {
   try { renderClock(); } catch(e) {}
   try { renderGameControls(); } catch(e) {}   // populates the clock buttons — was missing
   try { renderRecordEventGrid(); } catch(e) {}
+  try { loadLiveSession(); renderLiveShareUI(); if (liveShare.id) startLivePolling(); } catch(e) {}
   try { renderHistory(); } catch(e) {}
   try { buildTeamSelects(); } catch(e) {}
 });
@@ -14667,6 +14840,311 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 })();
+
+// ── LIVE VIEWER (read-only, ?live=CODE) ────────────────────────────
+var liveView = { code:null, timer:null, lastAt:null, lastSeen:0 };
+
+function checkLiveParam() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('live');
+  if (!code) return false;
+
+  var appRoot = document.getElementById('app-root') || document.querySelector('.app-wrap') || document.getElementById('scroll-area');
+  var topbar = document.querySelector('.topbar');
+  var nav = document.querySelector('.bottom-nav');
+  var userBadge = document.getElementById('user-badge');
+  [appRoot, topbar, nav, userBadge].forEach(function(el){ if (el) el.style.display = 'none'; });
+  document.querySelectorAll('.page').forEach(function(p){ p.style.display = 'none'; });
+
+  var screen = document.getElementById('live-view-screen');
+  if (screen) screen.style.display = 'block';
+  liveView.code = code.toUpperCase();
+  fetchLiveSnapshot();
+  liveView.timer = setInterval(fetchLiveSnapshot, 10000);
+  setInterval(renderLiveFreshness, 1000);
+  return true;
+}
+
+function fetchLiveSnapshot() {
+  if (!liveView.code) return;
+  supaDB('live_matches?share_code=eq.' + encodeURIComponent(liveView.code) +
+         '&ended_at=is.null&select=*', 'GET', null, null)
+    .then(function(rows) {
+      if (!rows || !rows.length) { renderLiveView(null); return; }
+      liveView.lastSeen = Date.now();
+      renderLiveView(rows[0]);
+    })
+    .catch(function() { /* keep showing the last known state */ });
+}
+
+function renderLiveFreshness() {
+  var el = document.getElementById('lv-freshness');
+  if (!el || !liveView.lastSeen) return;
+  var secs = Math.round((Date.now() - liveView.lastSeen) / 1000);
+  if (secs > 60) {
+    el.textContent = 'Connection lost — showing last known';
+    el.className = 'lv-freshness stale';
+  } else {
+    el.textContent = 'Updated ' + (secs < 5 ? 'just now' : secs + 's ago');
+    el.className = 'lv-freshness';
+  }
+}
+
+function renderLiveView(row) {
+  var body = document.getElementById('lv-body');
+  if (!body) return;
+  if (!row) {
+    body.innerHTML = '<div class="lv-empty">No live match found for that code.<br>' +
+      'It may have finished, or the code may be wrong.</div>';
+    return;
+  }
+  var s = row.snapshot || {};
+  var h = s.home || {goals:0,points:0}, a = s.away || {goals:0,points:0};
+  function sc(x){ return x.goals + '-' + String(x.points).padStart(2,'0'); }
+  function tot(x){ return x.goals*3 + x.points; }
+
+  function sumShots(side) {
+    var o = (s.shots && s.shots[side]) || {play:{},free:{}};
+    var t = 0, scored = 0;
+    ['play','free'].forEach(function(m) {
+      var b = o[m] || {};
+      Object.keys(b).forEach(function(k){ t += b[k]||0; });
+      scored += (b.goal||0)+(b.point||0)+(b.twopointer||0);
+    });
+    return { total:t, scored:scored, pct: t ? Math.round((scored/t)*100) : null };
+  }
+  function koPct(side) {
+    var k = (s.kickout && s.kickout[side]) || {};
+    var won = (k.wonClean||0)+(k.breakWon||0)+(k.shortWon||0);
+    var lost = (k.lossClean||0)+(k.breakLoss||0)+(k.shortLoss||0);
+    var t = won+lost;
+    return t ? Math.round((won/t)*100) + '%' : '—';
+  }
+  var hs = sumShots('home'), as = sumShots('away');
+  var poss = s.possession || {h:50,a:50,method:'derived'};
+  var possLabel = poss.method === 'counted' ? 'Possession' : 'Dominance';
+
+  var phaseText = s.phase === 'pregame' ? 'Not started'
+    : s.half === 1 ? '1st Half' : s.half === 2 ? '2nd Half' : 'Extra Time';
+
+  function row2(label, hv, av) {
+    return '<div class="lv-stat"><span class="lv-h">' + hv + '</span>' +
+           '<span class="lv-label">' + label + '</span>' +
+           '<span class="lv-a">' + av + '</span></div>';
+  }
+
+  body.innerHTML =
+    '<div class="lv-score">' +
+      '<div class="lv-team"><div class="lv-name">' + (row.home_name||'Home') + '</div>' +
+        '<div class="lv-val">' + sc(h) + '</div></div>' +
+      '<div class="lv-mid"><div class="lv-min">' + (s.min||0) + "'</div>" +
+        '<div class="lv-phase">' + phaseText + '</div></div>' +
+      '<div class="lv-team"><div class="lv-name">' + (row.away_name||'Away') + '</div>' +
+        '<div class="lv-val">' + sc(a) + '</div></div>' +
+    '</div>' +
+    '<div class="lv-margin">' + (tot(h) === tot(a) ? 'Level' :
+      (tot(h) > tot(a) ? (row.home_name||'Home') : (row.away_name||'Away')) +
+      ' by ' + Math.abs(tot(h)-tot(a))) + '</div>' +
+    '<div class="lv-stats">' +
+      row2(possLabel, poss.h + '%', poss.a + '%') +
+      row2('Shots', hs.total, as.total) +
+      row2('Conversion', hs.pct !== null ? hs.pct+'%' : '—', as.pct !== null ? as.pct+'%' : '—') +
+      row2('Kickouts kept', koPct('home'), koPct('away')) +
+      row2('Ball won', (s.ballWon&&s.ballWon.home)||0, (s.ballWon&&s.ballWon.away)||0) +
+      row2('Ball lost', (s.ballLost&&s.ballLost.home)||0, (s.ballLost&&s.ballLost.away)||0) +
+    '</div>' +
+    ((s.scorers && s.scorers.length) ?
+      '<div class="lv-sec">Scorers</div><div class="lv-scorers">' +
+      s.scorers.map(function(p){
+        return '<div class="lv-scorer"><span>#' + p.n + ' ' + p.name + '</span>' +
+               '<b>' + p.g + '-' + String(p.p).padStart(2,'0') + '</b></div>';
+      }).join('') + '</div>' : '') +
+    ((s.events && s.events.length) ?
+      '<div class="lv-sec">Last events</div><div class="lv-events">' +
+      s.events.map(function(e){
+        return '<div class="lv-ev"><span class="lv-ev-min">' + (e.m||'') + "'</span>" +
+               '<span>' + (e.t||'') + (e.o ? ' — ' + e.o : '') + '</span>' +
+               '<span class="lv-ev-tm">' + (e.tm === 'home' ? (row.home_name||'H') : (row.away_name||'A')) + '</span></div>';
+      }).join('') + '</div>' : '');
+
+  renderLiveFreshness();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LIVE SHARE
+// One recorder publishes a snapshot; any number of viewers poll it.
+//
+// Deliberately polling rather than websockets: the app talks to Supabase
+// over plain REST with no client library, and a manager glancing at stats
+// does not need sub-second latency. Nothing here may ever block or slow
+// recording — every failure is silent and simply retried on the next tick.
+// ══════════════════════════════════════════════════════════════════
+
+var liveShare = { id:null, code:null, timer:null, lastSent:0, lastSig:'' };
+
+function loadLiveSession() {
+  try {
+    var v = JSON.parse(localStorage.getItem('cs_live') || 'null');
+    if (v && v.id && v.code) liveShare.id = v.id, liveShare.code = v.code;
+  } catch(e) {}
+}
+function saveLiveSession() {
+  try {
+    if (liveShare.id) localStorage.setItem('cs_live', JSON.stringify({ id: liveShare.id, code: liveShare.code }));
+    else localStorage.removeItem('cs_live');
+  } catch(e) {}
+}
+
+function makeShareCode() {
+  // No 0/O/1/I — these get misread when someone reads a code aloud
+  var alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  var out = '';
+  for (var i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return out;
+}
+
+// Derived totals only — the viewer needs no recording logic, and this keeps
+// each update to a few KB rather than shipping the whole event log.
+function buildLiveSnapshot() {
+  function sum(o) { return o ? Object.keys(o).reduce(function(a,k){ return a+(o[k]||0); },0) : 0; }
+  var poss = { h:50, a:50, method:'derived' };
+  try { poss = calcPossession(); } catch(e) {}
+  var shots = { home:{play:{},free:{}}, away:{play:{},free:{}} };
+  try { shots = JSON.parse(JSON.stringify(state.shots)); } catch(e) {}
+
+  var scorers = [];
+  try {
+    squad.forEach(function(p, i) {
+      if (!p || !p.name || !p.stats) return;
+      var sp = p.stats.shotsPlay || {}, sf = p.stats.shotsFree || {};
+      var g = (sp.goal||0)+(sf.goal||0);
+      var pts = (sp.point||0)+(sf.point||0)+2*((sp.twopointer||0)+(sf.twopointer||0));
+      if (g || pts) scorers.push({ n:i+1, name:p.name, g:g, p:pts });
+    });
+    scorers.sort(function(a,b){ return (b.g*3+b.p)-(a.g*3+a.p); });
+  } catch(e) {}
+
+  return {
+    v: 1,
+    min: (function(){ try { return getMin(); } catch(e) { return 0; } }()),
+    half: state.half,
+    running: !!(typeof clock !== 'undefined' && clock.running),
+    phase: (typeof gamePhase !== 'undefined' ? gamePhase : 'pregame'),
+    home: { goals: state.home.goals, points: state.home.points },
+    away: { goals: state.away.goals, points: state.away.points },
+    possession: poss,
+    shots: shots,
+    kickout: { home: state.kickout.home, away: state.kickout.away },
+    ballWon:  { home: sum(state.ballWon.home),  away: sum(state.ballWon.away) },
+    ballLost: { home: sum(state.ballLost.home), away: sum(state.ballLost.away) },
+    scorers: scorers.slice(0, 6),
+    events: (state.events || []).slice(0, 15).map(function(e) {
+      return { t:e.type, o:e.outcomeLabel || e.outcome, m:e.min, h:e.half, tm:e.team };
+    }),
+    at: new Date().toISOString()
+  };
+}
+
+function startLiveShare() {
+  if (!currentUser || !currentToken) {
+    showSync('Sign in to share live', 2500);
+    return;
+  }
+  var code = makeShareCode();
+  supaDB('live_matches', 'POST', {
+    share_code: code,
+    recorder_id: currentUser.id,
+    home_name: homeName(),
+    away_name: awayName(),
+    competition: (document.getElementById('competition') || {}).value || '',
+    snapshot: buildLiveSnapshot()
+  }, currentToken).then(function(data) {
+    if (!data || data.error || !data[0]) {
+      var msg = (data && (data.message || data.error)) || 'Could not start live share.';
+      showSync('Live share failed: ' + msg, 4000);
+      return;
+    }
+    liveShare.id = data[0].id;
+    liveShare.code = data[0].share_code;
+    saveLiveSession();
+    renderLiveShareUI();
+    pushLiveSnapshot(true);
+    startLivePolling();
+    showSync('Live share on — code ' + liveShare.code, 4000);
+  }).catch(function(e) {
+    showSync('Live share failed: ' + (e && e.message ? e.message : 'network'), 4000);
+  });
+}
+
+function startLivePolling() {
+  if (liveShare.timer) clearInterval(liveShare.timer);
+  liveShare.timer = setInterval(function() { pushLiveSnapshot(false); }, 10000);
+}
+
+function pushLiveSnapshot(force) {
+  if (!liveShare.id || !currentToken) return;
+  var snap = buildLiveSnapshot();
+  // Only send when something actually changed — an idle match costs nothing
+  var sig = snap.min + '|' + snap.half + '|' + snap.home.goals + '-' + snap.home.points +
+            '|' + snap.away.goals + '-' + snap.away.points + '|' + (state.events || []).length;
+  if (!force && sig === liveShare.lastSig) return;
+  liveShare.lastSig = sig;
+
+  supaDB('live_matches?id=eq.' + liveShare.id, 'PATCH', {
+    snapshot: snap,
+    home_name: homeName(),
+    away_name: awayName(),
+    updated_at: new Date().toISOString()
+  }, currentToken).catch(function() { /* retried on the next tick */ });
+}
+
+function stopLiveShare(silent) {
+  if (liveShare.timer) { clearInterval(liveShare.timer); liveShare.timer = null; }
+  if (liveShare.id && currentToken) {
+    supaDB('live_matches?id=eq.' + liveShare.id, 'PATCH',
+      { ended_at: new Date().toISOString(), snapshot: buildLiveSnapshot() },
+      currentToken).catch(function() {});
+  }
+  liveShare.id = null; liveShare.code = null; liveShare.lastSig = '';
+  saveLiveSession();
+  renderLiveShareUI();
+  if (!silent) showSync('Live share ended', 2500);
+}
+
+function liveShareLink() {
+  if (!liveShare.code) return '';
+  return window.location.origin + window.location.pathname + '?live=' + liveShare.code;
+}
+
+function copyLiveShareLink() {
+  var link = liveShareLink();
+  if (!link) return;
+  if (navigator.share) {
+    navigator.share({ title:'Coach Stats — live', text:'Follow the match live', url: link }).catch(function(){});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(function(){ showSync('Link copied', 2000); }).catch(function(){});
+  }
+}
+
+function renderLiveShareUI() {
+  var box = document.getElementById('live-share-box');
+  if (!box) return;
+  if (!liveShare.code) {
+    box.innerHTML = '<button class="live-start-btn" onclick="startLiveShare()">\uD83D\uDCE1 Share Live</button>' +
+      '<div class="live-hint">Lets someone else follow the match on their own phone</div>';
+    return;
+  }
+  box.innerHTML =
+    '<div class="live-active">' +
+      '<div class="live-on-row"><span class="live-dot"></span>LIVE</div>' +
+      '<div class="live-code">' + liveShare.code + '</div>' +
+      '<div class="live-hint">Open the app and enter this code, or share the link</div>' +
+      '<div class="live-btn-row">' +
+        '<button class="live-copy-btn" onclick="copyLiveShareLink()">Share link</button>' +
+        '<button class="live-stop-btn" onclick="stopLiveShare()">Stop</button>' +
+      '</div>' +
+    '</div>';
+}
 
 // ── PWA: SERVICE WORKER ────────────────────────────
 if ('serviceWorker' in navigator) {
