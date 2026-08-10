@@ -3163,7 +3163,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v57-2026-08-10';
+var CS_BUILD = 'v58-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -3201,6 +3201,71 @@ var CS_BUILD = 'v57-2026-08-10';
   });
   window.__csShowError = show;
 })();
+
+// ── SAFE STORAGE ───────────────────────────────────
+// Every setItem used to be wrapped in an empty catch, so a full quota failed
+// silently and the coach only found out the match was missing afterwards.
+var __csQuotaWarned = false;
+
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    var quota = e && (e.name === 'QuotaExceededError' ||
+                      e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22);
+    if (quota) {
+      if (!__csQuotaWarned) {
+        __csQuotaWarned = true;
+        if (window.__csShowError) {
+          window.__csShowError('Device storage is full — your data was NOT saved. ' +
+            'Delete some old matches in History, then try again.');
+        }
+        try { showSync('\u26A0\uFE0F Storage full — data not saved', 6000); } catch(_) {}
+      }
+    } else if (window.__csShowError) {
+      window.__csShowError('Could not save "' + key + '": ' + (e && e.message ? e.message : e));
+    }
+    return false;
+  }
+}
+
+// Roughly how much of the storage budget is used, so we can warn before it bites
+function storageUsageBytes() {
+  var total = 0;
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      total += (k || '').length + (localStorage.getItem(k) || '').length;
+    }
+  } catch (e) {}
+  return total;
+}
+
+function checkStorageHeadroom() {
+  var used = storageUsageBytes();
+  var limit = 5 * 1024 * 1024;          // Safari's typical per-origin budget
+  if (used > limit * 0.8 && !__csQuotaWarned) {
+    __csQuotaWarned = true;
+    try {
+      showSync('Storage ' + Math.round((used/limit)*100) + '% full — consider deleting old matches', 6000);
+    } catch(e) {}
+  }
+  return { used: used, limit: limit, pct: Math.round((used/limit)*100) };
+}
+
+// ── SAFE HTML ──────────────────────────────────────
+// Player names, notes and team names go into innerHTML in ~24 places. A name
+// with an apostrophe or angle bracket could otherwise break the panel it sits in.
+function escapeHtml(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ── BILLING CONFIG ─────────────────────────────────
 // Replace these with your real Stripe Price IDs after setup
@@ -3384,7 +3449,7 @@ function createTrialRecord() {
 }
 
 function handleSubStatus(sub) {
-  try { localStorage.setItem('cs_sub_status', sub.status); } catch(e) {}
+  safeSetItem('cs_sub_status', sub.status);
 
   if (sub.status === 'active') {
     // Full access — hide paywall, hide trial banner
@@ -3403,7 +3468,7 @@ function handleSubStatus(sub) {
       supaDB('subscriptions?user_id=eq.' + currentUser.id, 'PATCH',
         { status: 'expired' }, currentToken).catch(function(){});
       subStatus = 'expired';
-      try { localStorage.setItem('cs_sub_status', 'expired'); } catch(e) {}
+      safeSetItem('cs_sub_status', 'expired');
       showPaywall('expired');
       return;
     }
@@ -3442,7 +3507,7 @@ function handleCheckoutReturn() {
       supaDB('subscriptions?user_id=eq.' + currentUser.id, 'PATCH',
         { status: 'active' }, currentToken).catch(function(){});
       subStatus = 'active';
-      try { localStorage.setItem('cs_sub_status', 'active'); } catch(e) {}
+      safeSetItem('cs_sub_status', 'active');
     }
   } else if (params.get('checkout') === 'cancelled') {
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -4253,7 +4318,7 @@ function loadSquad() {
 }
 
 function saveSquad() {
-  try { localStorage.setItem(SQUAD_KEY, JSON.stringify(squad)); } catch(e) {}
+  safeSetItem(SQUAD_KEY, JSON.stringify(squad));
   syncSquad();
   if (currentClubSquadId) syncClubSquad();
 }
@@ -4449,7 +4514,7 @@ function openPlayerPick() {
         // coach sees on the pitch.
         return '<button class="pp-player' + (card ? ' on-' + card : '') + '" onclick="confirmPlayerPick(' + idx + ')">' +
           '<span class="pp-circle">' + pos + '</span>' +
-          '<span class="pp-name">' + surnameOf(p.name) + '</span></button>';
+          '<span class="pp-name">' + escapeHtml(surnameOf(p.name)) + '</span></button>';
       }).join('') + '</div>';
     });
     html += '</div>';
@@ -4703,7 +4768,7 @@ function renderTeamSelector() {
       return '<button class="ts-slot' + (has ? ' filled' : '') + '" onclick="openTsPlayerPicker(' + pos + ')">' +
         '<span class="ts-slot-pos">' + GAA_POS_SHORT[pos-1] + '</span>' +
         '<span class="ts-slot-num">' + pos + '</span>' +
-        '<span class="ts-slot-name">' + (has ? surnameOf(p.name) : 'Empty') + '</span>' +
+        '<span class="ts-slot-name">' + (has ? escapeHtml(surnameOf(p.name)) : 'Empty') + '</span>' +
         (has && squadNo !== pos ? '<span class="ts-slot-squadno">sq ' + squadNo + '</span>' : '') +
         '</button>';
     }).join('') + '</div>';
@@ -4793,7 +4858,7 @@ function refreshTeamSheetLabel() {
 }
 
 function saveTeamSheetSession() {
-  try { localStorage.setItem('cs_team_sheet', JSON.stringify(state.pitchOccupant || [])); } catch(e) {}
+  safeSetItem('cs_team_sheet', JSON.stringify(state.pitchOccupant || []));
 }
 function loadTeamSheetSession() {
   try {
@@ -4850,14 +4915,14 @@ function bumpEtUsage(kind, arg) {
     var u = loadEtUsage();
     var k = kind + ':' + arg;
     u[k] = (u[k] || 0) + 1;
-    localStorage.setItem('cs_et_usage', JSON.stringify(u));
+    safeSetItem('cs_et_usage', JSON.stringify(u));
   } catch(e) {}
 }
 function loadEtHidden() {
   try { return JSON.parse(localStorage.getItem('cs_et_hidden') || '[]'); } catch(e) { return []; }
 }
 function saveEtHidden(arr) {
-  try { localStorage.setItem('cs_et_hidden', JSON.stringify(arr)); } catch(e) {}
+  safeSetItem('cs_et_hidden', JSON.stringify(arr));
 }
 
 function visibleEtTypes() {
@@ -5985,7 +6050,7 @@ function startNewVideoAnalysis() {
     syncMatchToSupabase(stub);
 
     // Save the video URL
-    if (videoUrl) localStorage.setItem('cs_vurl_' + stubId, videoUrl);
+    if (videoUrl) safeSetItem('cs_vurl_' + stubId, videoUrl);
 
     closeNewVideoAnalysis();
     openVideoAnalysis(stubId);
@@ -6081,7 +6146,7 @@ function loadEventConfig() {
 }
 
 function saveEventConfig() {
-  try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+  safeSetItem('cs_event_config', JSON.stringify(eventConfig));
   syncEventConfigToSupabase();
 }
 
@@ -6112,7 +6177,7 @@ function loadEventConfigFromSupabase() {
       .then(function(data) {
         if (data && data.length && data[0].config) {
           eventConfig = data[0].config;
-          try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+          safeSetItem('cs_event_config', JSON.stringify(eventConfig));
         } else {
           loadPersonalEventConfig();
         }
@@ -6127,7 +6192,7 @@ function loadPersonalEventConfig() {
     .then(function(data) {
       if (data && data.length && data[0].config) {
         eventConfig = data[0].config;
-        try { localStorage.setItem('cs_event_config', JSON.stringify(eventConfig)); } catch(e) {}
+        safeSetItem('cs_event_config', JSON.stringify(eventConfig));
       }
     }).catch(function() {});
 }
@@ -6182,7 +6247,7 @@ function loadTrials() {
 }
 
 function saveTrials() {
-  try { localStorage.setItem(TRIAL_KEY, JSON.stringify(trials)); } catch(e) {}
+  safeSetItem(TRIAL_KEY, JSON.stringify(trials));
   syncTrialsToSupabase();
 }
 
@@ -6202,7 +6267,7 @@ function loadTrialsFromSupabase() {
     .then(function(data) {
       if (data && data.length && data[0].trials) {
         trials = data[0].trials;
-        try { localStorage.setItem(TRIAL_KEY, JSON.stringify(trials)); } catch(e) {}
+        safeSetItem(TRIAL_KEY, JSON.stringify(trials));
       }
     }).catch(function() {});
 }
@@ -6900,7 +6965,7 @@ function loadTraining() {
 }
 
 function saveTraining() {
-  try { localStorage.setItem(TRAINING_KEY, JSON.stringify(trainingSessions)); } catch(e) {}
+  safeSetItem(TRAINING_KEY, JSON.stringify(trainingSessions));
   syncTrainingToSupabase();
 }
 
@@ -6920,7 +6985,7 @@ function loadTrainingFromSupabase() {
     .then(function(data) {
       if (data && data.length && data[0].sessions) {
         trainingSessions = data[0].sessions;
-        try { localStorage.setItem(TRAINING_KEY, JSON.stringify(trainingSessions)); } catch(e) {}
+        safeSetItem(TRAINING_KEY, JSON.stringify(trainingSessions));
       }
     }).catch(function() {});
 }
@@ -7491,7 +7556,7 @@ function vaLoadClips(matchId) {
 }
 
 function vaSaveClips(matchId, clips) {
-  try { localStorage.setItem(CLIPS_PREFIX + matchId, JSON.stringify(clips)); } catch(e) {}
+  safeSetItem(CLIPS_PREFIX + matchId, JSON.stringify(clips));
 }
 
 function vaSwitchTab(tab) {
@@ -7805,7 +7870,7 @@ function loadFixtures() {
 }
 
 function saveFixtures() {
-  try { localStorage.setItem(FIXTURES_KEY, JSON.stringify(fixtures)); } catch(e) {}
+  safeSetItem(FIXTURES_KEY, JSON.stringify(fixtures));
 }
 
 function openFixtures() {
@@ -7963,7 +8028,7 @@ function loadOppNotes() {
 }
 
 function saveOppNotes() {
-  try { localStorage.setItem(OPP_KEY, JSON.stringify(oppNotes)); } catch(e) {}
+  safeSetItem(OPP_KEY, JSON.stringify(oppNotes));
 }
 
 function openOpposition() {
@@ -8036,7 +8101,7 @@ function loadOppPlayers() {
   catch(e) { oppPlayers = {}; }
 }
 function saveOppPlayers() {
-  try { localStorage.setItem(OPP_PLAYERS_KEY, JSON.stringify(oppPlayers)); } catch(e) {}
+  safeSetItem(OPP_PLAYERS_KEY, JSON.stringify(oppPlayers));
 }
 function oppPlayerName(club, num) {
   if (!club || !oppPlayers[club]) return null;
@@ -8180,7 +8245,7 @@ function renderOppPlayers(club) {
     return '<div class="opp-player-row">' +
       '<div class="opp-player-num' + (isDanger ? ' danger' : '') + '">' + n + '</div>' +
       '<div class="opp-player-main">' +
-        '<input class="opp-player-name-input" placeholder="Add name…" value="' + nm.replace(/"/g,'&quot;') + '" ' +
+        '<input class="opp-player-name-input" placeholder="Add name…" value="' + escapeHtml(nm) + '" ' +
           'onchange="setOppPlayerName(\'' + club.replace(/'/g,"\\'") + '\',\'' + n + '\',this.value)">' +
         '<div class="opp-player-meta">' + scoreStr + ' from ' + s.shots + ' shot' + (s.shots!==1?'s':'') +
           ' · ' + s.ballWon + ' ball won · ' + s.matches + ' match' + (s.matches!==1?'es':'') + '</div>' +
@@ -8853,7 +8918,7 @@ function onboardingNext() {
 
 function dismissOnboarding() {
   document.getElementById('onboarding-overlay').style.display = 'none';
-  localStorage.setItem('cs_onboarding_done', '1');
+  safeSetItem('cs_onboarding_done', '1');
 }
 
 // ── MATCH DATA EXPORT ─────────────────────────────────────────────────
@@ -9053,7 +9118,7 @@ function togglePushNotifications() {
 
   if (Notification.permission === 'granted' && localStorage.getItem(NOTIF_KEY) === '1') {
     // Disable
-    localStorage.setItem(NOTIF_KEY, '0');
+    safeSetItem(NOTIF_KEY, '0');
     updateNotifButton();
     showSync('Fixture reminders disabled', 2000);
     return;
@@ -9062,7 +9127,7 @@ function togglePushNotifications() {
   // Request permission
   Notification.requestPermission().then(function(result) {
     if (result === 'granted') {
-      localStorage.setItem(NOTIF_KEY, '1');
+      safeSetItem(NOTIF_KEY, '1');
       updateNotifButton();
       showSuccess('Fixture reminders enabled!');
       scheduleFixtureNotifications();
@@ -9350,7 +9415,7 @@ function loadScoutReports() {
 }
 
 function saveScoutReports() {
-  try { localStorage.setItem(SCOUT_KEY, JSON.stringify(scoutReports)); } catch(e) {}
+  safeSetItem(SCOUT_KEY, JSON.stringify(scoutReports));
   syncScoutToSupabase();
 }
 
@@ -9370,7 +9435,7 @@ function loadScoutFromSupabase() {
     .then(function(data) {
       if (data && data.length && data[0].reports) {
         scoutReports = data[0].reports;
-        try { localStorage.setItem(SCOUT_KEY, JSON.stringify(scoutReports)); } catch(e) {}
+        safeSetItem(SCOUT_KEY, JSON.stringify(scoutReports));
       }
     }).catch(function() {});
 }
@@ -9495,7 +9560,7 @@ function loadWellness() {
 }
 
 function saveWellness() {
-  try { localStorage.setItem(WELLNESS_KEY, JSON.stringify(wellnessData)); } catch(e) {}
+  safeSetItem(WELLNESS_KEY, JSON.stringify(wellnessData));
   syncWellnessToSupabase();
 }
 
@@ -9515,7 +9580,7 @@ function loadWellnessFromSupabase() {
     .then(function(data) {
       if (data && data.length && data[0].data) {
         wellnessData = data[0].data;
-        try { localStorage.setItem(WELLNESS_KEY, JSON.stringify(wellnessData)); } catch(e) {}
+        safeSetItem(WELLNESS_KEY, JSON.stringify(wellnessData));
       }
     }).catch(function() {});
 }
@@ -10904,7 +10969,7 @@ function getRecentComps() {
 function addRecentComp(comp) {
   var recents = getRecentComps().filter(function(c) { return c !== comp; });
   recents.unshift(comp);
-  try { localStorage.setItem('cs_recent_comps', JSON.stringify(recents.slice(0,3))); } catch(e) {}
+  safeSetItem('cs_recent_comps', JSON.stringify(recents.slice(0,3)));
 }
 
 function filterComps(query) {
@@ -11939,7 +12004,8 @@ function loadHistory() {
 }
 
 function saveHistory(list) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch(e){}
+  try { checkStorageHeadroom(); } catch(e) {}
+  safeSetItem(HISTORY_KEY, JSON.stringify(list));
 }
 
 function saveMatchToHistory() {
@@ -13555,7 +13621,7 @@ function loadCustomTeams() {
   try { return JSON.parse(localStorage.getItem(CUSTOM_TEAMS_KEY) || '[]'); } catch(e) { return []; }
 }
 function saveCustomTeams(teams) {
-  try { localStorage.setItem(CUSTOM_TEAMS_KEY, JSON.stringify(teams)); } catch(e) {}
+  safeSetItem(CUSTOM_TEAMS_KEY, JSON.stringify(teams));
 }
 
 function getAllClubs() {
@@ -13812,8 +13878,8 @@ function supaDB(path, method, body, token, extraHeaders) {
 // ── SESSION STORAGE ────────────────────────────────
 function saveSession(token, user) {
   try {
-    localStorage.setItem('cs_token', token);
-    localStorage.setItem('cs_user', JSON.stringify(user));
+    safeSetItem('cs_token', token);
+    safeSetItem('cs_user', JSON.stringify(user));
   } catch(e) {}
 }
 
@@ -14064,7 +14130,7 @@ function loadUserData() {
         localOnly.forEach(function(m) { syncMatchToSupabase(m); });
         var merged = remoteMatches.concat(localOnly);
         merged.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
-        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(merged)); } catch(e) {}
+        safeSetItem(HISTORY_KEY, JSON.stringify(merged));
         renderHistory();
         showSync('✓ ' + merged.length + ' match' + (merged.length !== 1 ? 'es' : '') + ' loaded', 2000);
       } else {
@@ -14249,8 +14315,8 @@ function skipClubSetup() {
 // ── SESSION SAVE/RESTORE ───────────────────────────
 function saveClubSession() {
   try {
-    localStorage.setItem('cs_club', JSON.stringify(currentClub));
-    localStorage.setItem('cs_club_role', currentClubRole);
+    safeSetItem('cs_club', JSON.stringify(currentClub));
+    safeSetItem('cs_club_role', currentClubRole);
   } catch(e) {}
 }
 
@@ -14357,7 +14423,7 @@ function renderClubTopPlayers() {
       list.slice(0,3).map(function(e, i) {
         return '<div class="ctp-row">' +
           '<span class="ctp-rank">' + (i+1) + '</span>' +
-          '<span class="ctp-name">' + e.name +
+          '<span class="ctp-name">' + escapeHtml(e.name) +
             '<span class="ctp-sub">' + e.matches + ' match' + (e.matches!==1?'es':'') + '</span></span>' +
           '<span class="ctp-val">' + valueFn(e) + (suffix||'') + '</span>' +
         '</div>';
@@ -14430,7 +14496,7 @@ function loadClubSquads() {
 // ── MATCH TAB SQUAD PICKER ─────────────────────────
 function saveActiveSquadSession() {
   try {
-    if (currentClubSquadId) localStorage.setItem('cs_active_squad', currentClubSquadId);
+    if (currentClubSquadId) safeSetItem('cs_active_squad', currentClubSquadId);
     else localStorage.removeItem('cs_active_squad');
   } catch(e) {}
 }
@@ -14935,11 +15001,11 @@ function renderLiveView(row) {
 
   body.innerHTML =
     '<div class="lv-score">' +
-      '<div class="lv-team"><div class="lv-name">' + (row.home_name||'Home') + '</div>' +
+      '<div class="lv-team"><div class="lv-name">' + escapeHtml(row.home_name||'Home') + '</div>' +
         '<div class="lv-val">' + sc(h) + '</div></div>' +
       '<div class="lv-mid"><div class="lv-min">' + (s.min||0) + "'</div>" +
         '<div class="lv-phase">' + phaseText + '</div></div>' +
-      '<div class="lv-team"><div class="lv-name">' + (row.away_name||'Away') + '</div>' +
+      '<div class="lv-team"><div class="lv-name">' + escapeHtml(row.away_name||'Away') + '</div>' +
         '<div class="lv-val">' + sc(a) + '</div></div>' +
     '</div>' +
     '<div class="lv-margin">' + (tot(h) === tot(a) ? 'Level' :
@@ -14956,7 +15022,7 @@ function renderLiveView(row) {
     ((s.scorers && s.scorers.length) ?
       '<div class="lv-sec">Scorers</div><div class="lv-scorers">' +
       s.scorers.map(function(p){
-        return '<div class="lv-scorer"><span>#' + p.n + ' ' + p.name + '</span>' +
+        return '<div class="lv-scorer"><span>#' + p.n + ' ' + escapeHtml(p.name) + '</span>' +
                '<b>' + p.g + '-' + String(p.p).padStart(2,'0') + '</b></div>';
       }).join('') + '</div>' : '') +
     ((s.events && s.events.length) ?
@@ -14990,7 +15056,7 @@ function loadLiveSession() {
 }
 function saveLiveSession() {
   try {
-    if (liveShare.id) localStorage.setItem('cs_live', JSON.stringify({ id: liveShare.id, code: liveShare.code }));
+    if (liveShare.id) safeSetItem('cs_live', JSON.stringify({ id: liveShare.id, code: liveShare.code }));
     else localStorage.removeItem('cs_live');
   } catch(e) {}
 }
@@ -15377,7 +15443,7 @@ function vaLoadTags(matchId) {
   catch(e) { return []; }
 }
 function vaSaveTags(matchId, tags) {
-  try { localStorage.setItem('cs_vtags_' + matchId, JSON.stringify(tags)); } catch(e) {}
+  safeSetItem('cs_vtags_' + matchId, JSON.stringify(tags));
 }
 
 function openVideoAnalysis(matchId) {
@@ -15475,7 +15541,7 @@ function loadVideoUrl() {
   if (ytId) {
     vaVideoType = 'youtube';
     vaLoadYouTube(ytId);
-    localStorage.setItem('cs_vurl_' + vaMatchId, url);
+    safeSetItem('cs_vurl_' + vaMatchId, url);
     return;
   }
 
@@ -15488,7 +15554,7 @@ function loadVideoUrl() {
     document.getElementById('va-youtube-player').style.display = 'none';
     vaShowControls();
     vaPollTime();
-    localStorage.setItem('cs_vurl_' + vaMatchId, url);
+    safeSetItem('cs_vurl_' + vaMatchId, url);
     return;
   }
 
