@@ -382,7 +382,7 @@ test.describe('Record Tab', () => {
   });
 
   test('Attack opens outcome modal with Score / Ball Lost / Turned Back', async ({ page }) => {
-    await page.locator('.team-action-btn.ta-home').click();
+    await tapEvent(page, 'Attack', 'home');
     await expect(page.locator('#generic-modal')).toHaveClass(/open/, { timeout: 3000 });
     await expect(page.locator('#gmodal-outcomes')).toContainText('Score');
     await expect(page.locator('#gmodal-outcomes')).toContainText('Ball Lost');
@@ -655,11 +655,11 @@ test.describe('UI Fixes (Phase A)', () => {
     await expect(page.locator('#undo-toast button')).toBeVisible();
   });
 
-  test('Attack buttons are visually distinct for each side', async ({ page }) => {
+  test('The two halves of an event box are visually distinct', async ({ page }) => {
     await navTo(page, 'record');
-    const home = await page.locator('.team-action-btn.ta-home')
+    const home = await page.locator('.rec-ev-box .rev-half.home').first()
       .evaluate(el => getComputedStyle(el).backgroundColor);
-    const away = await page.locator('.team-action-btn.ta-away')
+    const away = await page.locator('.rec-ev-box .rev-half.away').first()
       .evaluate(el => getComputedStyle(el).backgroundColor);
     expect(home).not.toBe(away);
   });
