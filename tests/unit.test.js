@@ -262,6 +262,90 @@ check('event log sorts by half then minute',
     .map(function(e){ return e.half+':'+e.min; }).join(','),
   '1:5,1:20,2:12,2:40');
 
+// ══ 8b. PHASE A: TURNOVERS, RUNS, PERIODS, LINES ══
+group('Turnover cost');
+resetMatch();
+state.events = [
+  { id:1, team:'home', type:'ballLost', outcome:'handPass', min:10, half:1 },
+  { id:2, team:'away', type:'shot',     outcome:'point',    min:11, half:1 },  // within 2 min -> counts
+  { id:3, team:'home', type:'ballLost', outcome:'kickPass', min:20, half:1 },
+  { id:4, team:'away', type:'shot',     outcome:'goal',     min:21, half:1 },  // counts, worth 3
+  { id:5, team:'home', type:'ballLost', outcome:'handPass', min:30, half:1 },
+  { id:6, team:'away', type:'shot',     outcome:'point',    min:38, half:1 },  // too late -> ignored
+  { id:7, team:'home', type:'ballLost', outcome:'handPass', min:5,  half:2 },
+  { id:8, team:'away', type:'shot',     outcome:'point',    min:6,  half:1 }   // wrong half -> ignored
+];
+var tc = turnoverCost('home', 0, 2);
+check('turnovers counted', tc.turnovers, 4);
+check('chains that led to a score', tc.chains, 2);
+check('goals conceded from them', tc.goals, 1);
+check('points conceded from them', tc.points, 1);
+check('total cost in points', tc.cost, 4);
+check('a score is not double-counted', turnoverCost('home',0,2).chains, 2);
+
+group('Scoring runs');
+resetMatch();
+state.events = [
+  { id:1, team:'home', type:'shot', outcome:'point', min:2,  half:1 },
+  { id:2, team:'away', type:'shot', outcome:'point', min:5,  half:1 },
+  { id:3, team:'away', type:'shot', outcome:'point', min:8,  half:1 },
+  { id:4, team:'away', type:'shot', outcome:'goal',  min:11, half:1 },
+  { id:5, team:'away', type:'shot', outcome:'point', min:14, half:1 },
+  { id:6, team:'home', type:'shot', outcome:'point', min:20, half:1 }
+];
+var runs = scoringRuns(3);
+check('a run of 4 is found', runs.length, 1);
+check('run belongs to the away team', runs[0].team, 'away');
+check('run length', runs[0].n, 4);
+check('run value (1 goal + 3 points)', runs[0].total, 6);
+check('run start minute', runs[0].from, 5);
+check('run end minute', runs[0].to, 14);
+
+group('Period splits');
+resetMatch();
+state.events = [
+  { id:1, team:'home', type:'shot', outcome:'point', min:3,  half:1 },
+  { id:2, team:'home', type:'shot', outcome:'goal',  min:12, half:1 },
+  { id:3, team:'home', type:'shot', outcome:'point', min:25, half:1 },
+  { id:4, team:'home', type:'shot', outcome:'point', min:33, half:2 }
+];
+check('opening 15 of the first half', periodScore('home',1,1,15).total, 4);
+check('closing period of the first half', periodScore('home',1,21,40).total, 1);
+check('second half is separate', periodScore('home',2,21,40).total, 1);
+
+group('Line analysis');
+resetMatch();
+for (var i=0;i<15;i++) squad[i] = { name:'P'+(i+1), pos:'', stats:{} };
+state.startingFifteen = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+state.events = [
+  { id:1, team:'home', type:'shot',     outcome:'point',  min:5,  half:1, player:13 }, // pos 14 FF line
+  { id:2, team:'home', type:'shot',     outcome:'goal',   min:9,  half:1, player:12 }, // pos 13 FF line
+  { id:3, team:'home', type:'ballWon',  outcome:'tackle', min:11, half:1, player:5 },  // pos 6 HB line
+  { id:4, team:'home', type:'ballLost', outcome:'handPass', min:15, half:1, player:7 } // pos 8 midfield
+];
+var ls = lineStats(0);
+check('full-forward line scored 1-01', ls['Full-forward line'].goals + '-' +
+      String(ls['Full-forward line'].points).padStart(2,'0'), '1-01');
+check('half-back line ball won', ls['Half-back line'].ballWon, 1);
+check('midfield ball lost', ls['Midfield'].ballLost, 1);
+check('full-back line uninvolved', ls['Full-back line'].shots, 0);
+
+group('Report-level derivations');
+ok('turnoverCostFromRecord matches a saved record', function(){
+  var r = turnoverCostFromRecord({ events:[
+    { id:1, team:'home', type:'ballLost', min:10, half:1 },
+    { id:2, team:'away', type:'shot', outcome:'goal', min:11, half:1 }
+  ]}, 'home');
+  if (r.chains !== 1 || r.cost !== 3) throw new Error('got ' + JSON.stringify(r));
+});
+ok('bestRunFromRecord needs 3+ to count', function(){
+  var r = bestRunFromRecord({ events:[
+    { id:1, team:'away', type:'shot', outcome:'point', min:1, half:1 },
+    { id:2, team:'away', type:'shot', outcome:'point', min:3, half:1 }
+  ]});
+  if (r !== null) throw new Error('a run of 2 should not count');
+});
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
