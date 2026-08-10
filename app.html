@@ -3163,7 +3163,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v58-2026-08-10';
+var CS_BUILD = 'v59-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -5327,6 +5327,152 @@ function turnoverZoneStats(team, half) {
   return zones;
 }
 
+// ── TURNOVER \u2192 SCORE LINK ──────────────────────────
+// A turnover followed shortly by an opposition score is the most persuasive
+// number you can show players: it turns a scrappy hand pass into a score
+// conceded. Events carry a minute, so proximity in time is the link.
+// windowMins is deliberately generous \u2014 the minute counter is coarse.
+function turnoverCost(team, half, windowMins) {
+  var w = (windowMins === undefined) ? 2 : windowMins;
+  var opp = team === 'home' ? 'away' : 'home';
+
+  var losses = state.events.filter(function(e) {
+    if (e.team !== team) return false;
+    if (half && e.half !== half) return false;
+    return e.type === 'ballLost' || (e.type === 'turnover' && e.team === opp);
+  });
+
+  var oppScores = state.events.filter(function(e) {
+    if (e.team !== opp) return false;
+    if (half && e.half !== half) return false;
+    return (e.type === 'shot' && SCORING_OUTCOMES.indexOf(e.outcome) !== -1) ||
+           e.type === 'goal' || e.type === 'point' ||
+           (e.type === 'fortyFive' && e.outcome === 'scored');
+  });
+
+  var counted = {}, goals = 0, points = 0, chains = 0;
+  losses.forEach(function(l) {
+    var lm = l.min || 0;
+    for (var i = 0; i < oppScores.length; i++) {
+      var s = oppScores[i];
+      if (counted[s.id]) continue;
+      var sm = s.min || 0;
+      if (s.half === l.half && sm >= lm && sm - lm <= w) {
+        counted[s.id] = true;
+        chains++;
+        if (s.outcome === 'goal') goals++;
+        else if (s.outcome === 'twopointer') points += 2;
+        else points += 1;
+        break;
+      }
+    }
+  });
+  return { turnovers: losses.length, chains: chains, goals: goals, points: points,
+           cost: goals * 3 + points,
+           pct: losses.length ? Math.round((chains / losses.length) * 100) : 0 };
+}
+
+// ── SCORING RUNS ───────────────────────────────────
+// The passage that decided the game: an unanswered sequence.
+function scoringRuns(minLen) {
+  var min = minLen || 3;
+  var scores = state.events.filter(function(e) {
+    return (e.type === 'shot' && SCORING_OUTCOMES.indexOf(e.outcome) !== -1) ||
+           e.type === 'goal' || e.type === 'point' ||
+           (e.type === 'fortyFive' && e.outcome === 'scored');
+  }).slice().sort(function(a,b) {
+    return ((a.half||1) - (b.half||1)) || ((a.min||0) - (b.min||0));
+  });
+
+  var runs = [], cur = null;
+  scores.forEach(function(s) {
+    var val = s.outcome === 'goal' ? 3 : s.outcome === 'twopointer' ? 2 : 1;
+    var g = s.outcome === 'goal' ? 1 : 0;
+    var p = s.outcome === 'goal' ? 0 : val;
+    if (cur && cur.team === s.team) {
+      cur.n++; cur.goals += g; cur.points += p; cur.total += val; cur.to = s.min;
+    } else {
+      if (cur && cur.n >= min) runs.push(cur);
+      cur = { team:s.team, n:1, goals:g, points:p, total:val, from:s.min, to:s.min, half:s.half };
+    }
+  });
+  if (cur && cur.n >= min) runs.push(cur);
+  return runs.sort(function(a,b){ return b.total - a.total; });
+}
+
+// ── PERIOD SPLITS ──────────────────────────────────
+// Starts and finishes are distinct coaching problems; the half filter is too
+// coarse to see either.
+function periodScore(team, half, fromMin, toMin) {
+  var g = 0, p = 0;
+  state.events.forEach(function(e) {
+    if (e.team !== team) return;
+    if (half && e.half !== half) return;
+    var m = e.min || 0;
+    if (m < fromMin || m > toMin) return;
+    if (e.type === 'goal') g++;
+    else if (e.type === 'point') p++;
+    else if (e.type === 'fortyFive' && e.outcome === 'scored') p++;
+    else if (e.type === 'shot') {
+      if (e.outcome === 'goal') g++;
+      else if (e.outcome === 'point') p++;
+      else if (e.outcome === 'twopointer') p += 2;
+    }
+  });
+  return { goals:g, points:p, total:g*3+p };
+}
+
+// ── LINES / UNITS ──────────────────────────────────
+// GAA is played in lines, and that's how problems get diagnosed.
+var GAA_LINES = [
+  { name:'Full-back line',    positions:[2,3,4] },
+  { name:'Half-back line',    positions:[5,6,7] },
+  { name:'Midfield',          positions:[8,9] },
+  { name:'Half-forward line', positions:[10,11,12] },
+  { name:'Full-forward line', positions:[13,14,15] }
+];
+
+function lineStats(half) {
+  // Map each squad index to the line they started in
+  var occ = state.startingFifteen || state.pitchOccupant || [];
+  var lineOf = {};
+  GAA_LINES.forEach(function(L) {
+    L.positions.forEach(function(pos) {
+      var idx = occ[pos-1];
+      if (typeof idx === 'number') lineOf[idx] = L.name;
+    });
+  });
+
+  var out = {};
+  GAA_LINES.forEach(function(L) {
+    out[L.name] = { scores:0, goals:0, points:0, shots:0, ballWon:0, ballLost:0, possessions:0 };
+  });
+
+  state.events.forEach(function(e) {
+    if (e.team !== 'home' || typeof e.player !== 'number') return;
+    if (half && e.half !== half) return;
+    var ln = lineOf[e.player];
+    if (!ln || !out[ln]) return;
+    var b = out[ln];
+    if (e.type === 'shot') {
+      b.shots++;
+      if (e.outcome === 'goal') { b.goals++; b.scores++; }
+      else if (e.outcome === 'point') { b.points++; b.scores++; }
+      else if (e.outcome === 'twopointer') { b.points += 2; b.scores++; }
+    }
+    else if (e.type === 'ballWon') b.ballWon++;
+    else if (e.type === 'ballLost') b.ballLost++;
+    else if (e.type === 'possession') b.possessions++;
+  });
+
+  Object.keys(out).forEach(function(k) {
+    var b = out[k];
+    b.scoreTotal = b.goals*3 + b.points;
+    b.conv = b.shots ? Math.round((b.scores / b.shots) * 100) : null;
+  });
+  return out;
+}
+
 // Generic per-category event counts, half-filterable
 function eventStats(team, type, half) {
   var evs = state.events.filter(function(e) {
@@ -5487,6 +5633,62 @@ function updateStats() {
     statsRows.push(sec('🦶 Kickout Destination' + (hf ? ' — ' + halfLabel(hf) : '')));
     statsRows.push(row(['', 'Retained', 'Retained']));
     koRows.forEach(function(r){ statsRows.push(r); });
+  }
+
+  // ── COST OF TURNOVERS ──
+  var hTC = turnoverCost('home', hf), aTC = turnoverCost('away', hf);
+  if (hTC.turnovers || aTC.turnovers) {
+    statsRows.push(sec('💸 Cost of Turnovers' + (hf ? ' — ' + halfLabel(hf) : '')));
+    [['Possessions lost', hTC.turnovers, aTC.turnovers],
+     ['Led to a score against', hTC.chains, aTC.chains],
+     ['Scores conceded from them',
+       hTC.goals + '-' + String(hTC.points).padStart(2,'0'),
+       aTC.goals + '-' + String(aTC.points).padStart(2,'0')],
+     ['Punished rate', hTC.pct + '%', aTC.pct + '%']
+    ].forEach(function(r){ statsRows.push(row(r)); });
+  }
+
+  // ── PERIOD SPLITS ──
+  var periods = [['Opening 15', 1, 1, 15], ['Closing 15 (1st half)', 1, 21, 40],
+                 ['Opening 15 (2nd half)', 2, 1, 15], ['Final 15', 2, 21, 40]];
+  var perRows = periods.map(function(p) {
+    var h = periodScore('home', p[1], p[2], p[3]), a = periodScore('away', p[1], p[2], p[3]);
+    if (!h.total && !a.total) return null;
+    return row([p[0], h.goals + '-' + String(h.points).padStart(2,'0'),
+                      a.goals + '-' + String(a.points).padStart(2,'0')]);
+  }).filter(Boolean);
+  if (perRows.length && !hf) {
+    statsRows.push(sec('⏱ Starts and Finishes'));
+    perRows.forEach(function(r){ statsRows.push(r); });
+  }
+
+  // ── SCORING RUNS ──
+  var runs = scoringRuns(3);
+  if (runs.length) {
+    statsRows.push(sec('🔥 Scoring Runs (3+ unanswered)'));
+    runs.slice(0, 4).forEach(function(r) {
+      var who = r.team === 'home' ? homeName() : awayName();
+      var span = r.from === r.to ? ("min " + r.from) : (r.from + "'–" + r.to + "'");
+      statsRows.push(row([who + ' · H' + (r.half||1),
+        r.team === 'home' ? (r.goals + '-' + String(r.points).padStart(2,'0')) : '',
+        r.team === 'away' ? (r.goals + '-' + String(r.points).padStart(2,'0')) : '']));
+      statsRows.push(row(['  ' + r.n + ' unanswered, ' + span, '', '']));
+    });
+  }
+
+  // ── LINES ──
+  var ls = lineStats(hf);
+  var lineRows = GAA_LINES.map(function(L) {
+    var b = ls[L.name];
+    if (!b || (!b.shots && !b.ballWon && !b.ballLost && !b.possessions)) return null;
+    return row([L.name,
+      b.scoreTotal ? (b.goals + '-' + String(b.points).padStart(2,'0')) : '—',
+      (b.ballWon || 0) + ' won / ' + (b.ballLost || 0) + ' lost']);
+  }).filter(Boolean);
+  if (lineRows.length) {
+    statsRows.push(sec('🧱 By Line' + (hf ? ' — ' + halfLabel(hf) : '')));
+    statsRows.push(row(['', 'Scored', 'Ball won/lost']));
+    lineRows.forEach(function(r){ statsRows.push(r); });
   }
 
   statsRows.push(sec('📤 Ball Lost'));
@@ -11248,6 +11450,54 @@ function resetMatch(){
 // Returns { verdict, sections:[{title, points:[{text, tone}]}], dataNote }
 // tone: 'good' | 'bad' | 'neutral'
 
+// Turnover cost computed from a SAVED match record (analyseMatch works on
+// history, not live state, so it can't reuse turnoverCost()).
+function turnoverCostFromRecord(m, team, windowMins) {
+  var w = (windowMins === undefined) ? 2 : windowMins;
+  var opp = team === 'home' ? 'away' : 'home';
+  var evs = m.events || [];
+  var losses = evs.filter(function(e){ return e.team === team && e.type === 'ballLost'; });
+  var oppScores = evs.filter(function(e) {
+    if (e.team !== opp) return false;
+    return (e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1) ||
+           e.type === 'goal' || e.type === 'point' ||
+           (e.type === 'fortyFive' && e.outcome === 'scored');
+  });
+  var used = {}, goals = 0, points = 0, chains = 0;
+  losses.forEach(function(l) {
+    for (var i = 0; i < oppScores.length; i++) {
+      var s = oppScores[i];
+      if (used[s.id]) continue;
+      if (s.half === l.half && (s.min||0) >= (l.min||0) && (s.min||0) - (l.min||0) <= w) {
+        used[s.id] = true; chains++;
+        if (s.outcome === 'goal') goals++;
+        else if (s.outcome === 'twopointer') points += 2;
+        else points += 1;
+        break;
+      }
+    }
+  });
+  return { turnovers: losses.length, chains: chains, goals: goals, points: points,
+           cost: goals*3 + points };
+}
+
+function bestRunFromRecord(m) {
+  var evs = (m.events || []).filter(function(e) {
+    return (e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1) ||
+           e.type === 'goal' || e.type === 'point' ||
+           (e.type === 'fortyFive' && e.outcome === 'scored');
+  }).slice().sort(function(a,b){ return ((a.half||1)-(b.half||1)) || ((a.min||0)-(b.min||0)); });
+  var runs = [], cur = null;
+  evs.forEach(function(s) {
+    var val = s.outcome === 'goal' ? 3 : s.outcome === 'twopointer' ? 2 : 1;
+    if (cur && cur.team === s.team) { cur.n++; cur.total += val; cur.to = s.min; }
+    else { if (cur) runs.push(cur); cur = { team:s.team, n:1, total:val, from:s.min, to:s.min, half:s.half }; }
+  });
+  if (cur) runs.push(cur);
+  runs.sort(function(a,b){ return b.total - a.total; });
+  return runs.length && runs[0].n >= 3 ? runs[0] : null;
+}
+
 function analyseMatch(m) {
   var out = { verdict: '', sections: [], dataNote: '' };
   if (!m) return out;
@@ -11450,7 +11700,40 @@ function analyseMatch(m) {
 
   if (hBW >= 12) poss.points.push(pt('Won ' + hBW + ' turnovers. The work rate off the ball was there.', 'good'));
 
+  // What the turnovers actually cost
+  if (hasEvents) {
+    var tc = turnoverCostFromRecord(m, 'home');
+    if (tc.chains > 0) {
+      poss.points.push(pt('Conceded ' + tc.goals + '-' + String(tc.points).padStart(2,'0') +
+        ' directly from turnovers (' + tc.chains + ' of ' + tc.turnovers +
+        ' led to a score within two minutes). That is ' + tc.cost +
+        ' point' + (tc.cost !== 1 ? 's' : '') + ' handed over.',
+        tc.cost >= 6 ? 'bad' : 'neutral'));
+    }
+    var tcThem = turnoverCostFromRecord(m, 'away');
+    if (tcThem.chains > 0) {
+      poss.points.push(pt('Punished ' + them + '\u2019s mistakes for ' +
+        tcThem.goals + '-' + String(tcThem.points).padStart(2,'0') + '.', 'good'));
+    }
+  }
+
   if (poss.points.length) out.sections.push(poss);
+
+  // The passage that swung it
+  if (hasEvents) {
+    var run = bestRunFromRecord(m);
+    if (run) {
+      var runSec = { title: 'Key passage', points: [] };
+      var who = run.team === 'home' ? us : them;
+      var span = run.from === run.to ? ('minute ' + run.from) : (run.from + '\u2013' + run.to);
+      runSec.points.push(pt(who + ' scored ' + run.n + ' without reply around ' + span +
+        ' of the ' + (run.half === 2 ? 'second' : 'first') + ' half' +
+        (run.team === 'home' ? ' \u2014 the spell that gave you control.'
+                             : ' \u2014 the spell that decided it against you.'),
+        run.team === 'home' ? 'good' : 'bad'));
+      out.sections.push(runSec);
+    }
+  }
 
   // ════════════ ATTACKS ════════════
   if (hasEvents) {
