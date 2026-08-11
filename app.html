@@ -1422,6 +1422,14 @@ input:not([type]), textarea, select {
 .comp-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:24px; }
 .comp-group-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--red-light); text-transform:uppercase; padding:10px 4px 4px; }
 .comp-item { padding:11px 8px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--cream); border-bottom:1px solid rgba(255,255,255,0.03); }
+/* Your own competitions get a delete control, so the row becomes a flex pair */
+.comp-item.custom { display:flex; align-items:center; gap:8px; padding-right:4px; }
+.comp-item-name { flex:1; min-width:0; }
+.comp-del { background:none; border:none; color:rgba(255,80,80,0.5); font-size:13px; cursor:pointer; min-width:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; flex-shrink:0; }
+.comp-del:hover { color:#ff6060; background:rgba(255,0,0,0.1); }
+.comp-add { display:flex; align-items:center; gap:10px; padding:13px 8px; margin-top:6px; border-radius:8px; cursor:pointer; font-size:13px; color:#86efac; background:rgba(22,163,74,0.1); border:1px dashed rgba(22,163,74,0.45); }
+.comp-add:active { background:rgba(22,163,74,0.2); }
+.comp-add-plus { font-family:'Oswald',sans-serif; font-size:17px; line-height:1; }
 .comp-item:active, .comp-item.selected { background:rgba(224,48,48,0.12); color:var(--cream); }
 
 /* Nav SVG icons */
@@ -2824,7 +2832,8 @@ input:not([type]), textarea, select {
       <button class="sheet-close" aria-label="Close" onclick="closeCompPicker()">✕</button>
     </div>
     <input class="comp-search-input" id="comp-search-input" type="text"
-      placeholder="Search competitions..." oninput="filterComps(this.value)"
+      placeholder="Search, or type your own and press Enter" oninput="filterComps(this.value)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();addTypedComp();}"
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="comp-list" id="comp-list"></div>
   </div>
@@ -3245,7 +3254,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v64-2026-08-11';
+var CS_BUILD = 'v65-2026-08-11';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -11396,6 +11405,47 @@ var COMPETITIONS = [
   {g:'Other', items:['Tournament','Blitz','Challenge Match','Friendly','Training Game']},
 ];
 
+// ── CUSTOM COMPETITIONS ────────────────────────────
+// The built-in list covers GAA and LGFA structures, but clubs run their own
+// leagues, cups and tournaments that no fixed list will ever contain.
+var CUSTOM_COMPS_KEY = 'cs_custom_comps';
+
+function loadCustomComps() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_COMPS_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveCustomComps(list) {
+  safeSetItem(CUSTOM_COMPS_KEY, JSON.stringify(list));
+}
+function addCustomComp(name) {
+  var v = (name || '').trim();
+  if (!v) return null;
+  var list = loadCustomComps();
+  // Don't duplicate something already in the built-in list or already added
+  var exists = list.some(function(x){ return x.toLowerCase() === v.toLowerCase(); });
+  if (!exists) {
+    var builtIn = COMPETITIONS.some(function(g) {
+      return g.items.some(function(i){ return i.toLowerCase() === v.toLowerCase(); });
+    });
+    if (!builtIn) { list.unshift(v); saveCustomComps(list); }
+  }
+  return v;
+}
+function removeCustomComp(name) {
+  var list = loadCustomComps().filter(function(x){ return x !== name; });
+  saveCustomComps(list);
+  filterComps(document.getElementById('comp-search-input').value || '');
+}
+
+// Add whatever is typed in the search box as a new competition
+function addTypedComp() {
+  var input = document.getElementById('comp-search-input');
+  var v = (input.value || '').trim();
+  if (!v) return;
+  addCustomComp(v);
+  selectComp(v);
+}
+
 function openCompPicker() {
   filterComps('');
   document.getElementById('comp-search-input').value = '';
@@ -11434,6 +11484,21 @@ function filterComps(query) {
     }
   }
 
+  // Your own competitions come first — they're the ones you actually play in
+  var custom = loadCustomComps();
+  var customMatches = q ? custom.filter(function(i){ return i.toLowerCase().includes(q); }) : custom;
+  if (customMatches.length) {
+    html += '<div class="comp-group-label">\u2713 My Competitions</div>';
+    customMatches.forEach(function(item) {
+      var esc = item.replace(/'/g,"\\'");
+      html += '<div class="comp-item custom' + (item === current ? ' selected' : '') + '">' +
+                '<span class="comp-item-name" onclick="selectComp(\'' + esc + '\')">' + escapeHtml(item) + '</span>' +
+                '<button class="comp-del" aria-label="Remove ' + escapeHtml(item) + '" ' +
+                  'onclick="event.stopPropagation();removeCustomComp(\'' + esc + '\')">\u2715</button>' +
+              '</div>';
+    });
+  }
+
   COMPETITIONS.forEach(function(group) {
     var items = q ? group.items.filter(function(i) { return i.toLowerCase().includes(q); }) : group.items;
     if (!items.length) return;
@@ -11443,7 +11508,25 @@ function filterComps(query) {
     });
   });
 
-  if (!html) html = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No results for "' + query + '"</div>';
+  // Offer to add whatever was typed, whether or not there are other matches —
+  // a club competition may partially match a built-in name.
+  if (q) {
+    var already = customMatches.some(function(i){ return i.toLowerCase() === q; }) ||
+                  COMPETITIONS.some(function(g) {
+                    return g.items.some(function(i){ return i.toLowerCase() === q; });
+                  });
+    if (!already) {
+      html += '<div class="comp-add" onclick="addTypedComp()">' +
+                '<span class="comp-add-plus">+</span>' +
+                '<span>Add \u201C' + escapeHtml(query.trim()) + '\u201D as your own competition</span>' +
+              '</div>';
+    }
+  }
+
+  if (!html) {
+    html = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">' +
+           'Type a name above to add your own competition</div>';
+  }
   list.innerHTML = html;
 }
 function selectComp(comp) {
