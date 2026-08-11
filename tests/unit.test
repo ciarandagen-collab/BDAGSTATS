@@ -606,6 +606,33 @@ ok('custom competitions survive a reload', function(){
 });
 localStorage.removeItem('cs_custom_comps');
 
+// ══ 8g. SAVED PLAYER RECORDS ══
+// Regression: the save format writes null for empty squad slots, which crashed
+// the report and the match detail view with "null is not an object".
+group('Player score lines');
+check('null slot returns null, not a crash', playerScoreLine(null, 0), null);
+check('a nameless slot is skipped', playerScoreLine({ stats:{} }, 0), null);
+ok('current format reads stats correctly', function(){
+  var l = playerScoreLine({ name:'A', num:7, stats:{ shotsPlay:{goal:1,point:2}, shotsFree:{point:1} } }, 6);
+  if (l.goals !== 1) throw new Error('goals ' + l.goals);
+  if (l.points !== 3) throw new Error('points ' + l.points);
+  if (l.total !== 6) throw new Error('total ' + l.total);
+  if (l.num !== 7) throw new Error('num ' + l.num);
+});
+ok('two-pointers count double', function(){
+  var l = playerScoreLine({ name:'B', stats:{ shotsPlay:{twopointer:2} } }, 0);
+  if (l.points !== 4) throw new Error('expected 4, got ' + l.points);
+});
+ok('older flat records still work', function(){
+  var l = playerScoreLine({ name:'C', num:3, goals:2, points:5 }, 2);
+  if (l.goals !== 2 || l.points !== 5 || l.total !== 11) throw new Error(JSON.stringify(l));
+});
+ok('a full squad array with nulls does not crash', function(){
+  var squadArr = [null, {name:'X', stats:{shotsPlay:{point:3}}}, null, {name:'Y', stats:{}}];
+  var out = squadArr.map(function(p,i){ return playerScoreLine(p,i); }).filter(Boolean);
+  if (out.length !== 2) throw new Error('expected 2 real players, got ' + out.length);
+});
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
