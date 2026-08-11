@@ -1,63 +1,87 @@
 name: Coach Stats Tests
 
 on:
- push:
-   branches: [ main, master ]
- pull_request:
-   branches: [ main, master ]
- workflow_dispatch:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
 
- unit-tests:
-   name: Unit Tests (Logic)
-   runs-on: ubuntu-latest
-   steps:
-     - name: Checkout repo
-       uses: actions/checkout@v4
+  # ── Logic tests: run against app.html directly, no browser, no deployment ──
+  # These are the fast gate. If the scoring maths or an analysis helper breaks,
+  # this fails in seconds rather than after a deploy.
+  unit-tests:
+    name: Unit Tests (Logic)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-     - name: Setup Node.js
-       uses: actions/setup-node@v4
-       with:
-         node-version: '24'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-     - name: Run unit tests
-       run: node tests/unit.test.js
+      # Prints the tree if something is in the wrong place, so a path problem
+      # is obvious from the log instead of showing up as a bare "not found".
+      - name: Show repo layout
+        run: |
+          echo "--- repo root ---"
+          ls -la
+          echo "--- tests/ ---"
+          ls -la tests/ || echo "NO tests/ DIRECTORY"
+          echo "--- app.html present? ---"
+          test -f app.html && echo "yes" || echo "NO app.html AT ROOT"
 
- browser-tests:
-   name: Browser Tests (Playwright)
-   runs-on: ubuntu-latest
-   needs: unit-tests
-   steps:
-     - name: Checkout repo
-       uses: actions/checkout@v4
+      - name: Run unit tests
+        run: node tests/unit.test.cjs
 
-     - name: Setup Node.js
-       uses: actions/setup-node@v4
-       with:
-         node-version: '24'
+  # ── Browser tests: run against the DEPLOYED site, so they need Netlify done ──
+  browser-tests:
+    name: Browser Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-     - name: Install dependencies
-       run: npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-     - name: Install Playwright browsers
-       run: npx playwright install --with-deps chromium
+      # Fails clearly if package.json or the Playwright config is missing or
+      # named differently, which is easy to get wrong when they live in tests/.
+      - name: Check required files
+        run: |
+          test -f package.json || { echo "MISSING package.json at repo root"; exit 1; }
+          if   [ -f playwright.config.js ];       then echo "config: playwright.config.js";
+          elif [ -f tests/playwright.config.js ]; then echo "config: tests/playwright.config.js";
+          else echo "MISSING playwright config — expected playwright.config.js at root"; exit 1; fi
+          ls -la tests/
 
-     - name: List test files
-       run: ls -la tests/
+      - name: Install dependencies
+        run: npm ci || npm install
 
-     - name: Wait for Netlify deployment
-       run: sleep 30
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
-     - name: Run browser tests
-       run: npx playwright test --config=playwright.config.js
-       env:
-         TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      # The browser tests hit the live site, so give Netlify time to publish
+      # the commit that triggered this run.
+      - name: Wait for Netlify deployment
+        run: sleep 45
 
-     - name: Upload test report on failure
-       uses: actions/upload-artifact@v4
-       if: failure()
-       with:
-         name: playwright-report
-         path: playwright-report/
-         retention-days: 7
+      - name: Run browser tests
+        run: npx playwright test
+        env:
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+
+      - name: Upload test report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
