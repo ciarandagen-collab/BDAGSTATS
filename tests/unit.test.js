@@ -346,6 +346,78 @@ ok('bestRunFromRecord needs 3+ to count', function(){
   if (r !== null) throw new Error('a run of 2 should not count');
 });
 
+// ══ 8c. PHASE B: CONSISTENCY AND SUBSTITUTION IMPACT ══
+group('Player consistency');
+var _lh2 = loadHistory;
+loadHistory = function(){ return [
+  // Steady: 3,3,2,4 -> reliable
+  // Streaky: 0,0,12,0 -> streaky
+  { id:1, savedAt:'2026-01-01', away:'A', players:[
+      {name:'Steady', mins:60, stats:{shotsPlay:{point:3}}},
+      {name:'Streaky', mins:60, stats:{shotsPlay:{point:0}}} ]},
+  { id:2, savedAt:'2026-01-08', away:'B', players:[
+      {name:'Steady', mins:60, stats:{shotsPlay:{point:3}}},
+      {name:'Streaky', mins:60, stats:{}} ]},
+  { id:3, savedAt:'2026-01-15', away:'C', players:[
+      {name:'Steady', mins:60, stats:{shotsPlay:{point:2}}},
+      {name:'Streaky', mins:60, stats:{shotsPlay:{point:12}}} ]},
+  { id:4, savedAt:'2026-01-22', away:'D', players:[
+      {name:'Steady', mins:60, stats:{shotsPlay:{point:4}}},
+      {name:'Streaky', mins:60, stats:{shotsPlay:{point:0}}} ]}
+];};
+var cons = playerConsistency();
+check('steady player matches', cons['Steady'].matches, 4);
+check('steady player total', cons['Steady'].sum, 12);
+check('steady average', cons['Steady'].avg, 3);
+check('steady best', cons['Steady'].best, 4);
+check('steady worst', cons['Steady'].worst, 2);
+check('steady scored in every match', cons['Steady'].scoredIn, 4);
+check('steady is judged reliable', cons['Steady'].verdict, 'Reliable');
+check('streaky best', cons['Streaky'].best, 12);
+check('streaky blanks', cons['Streaky'].blanks, 3);
+check('streaky is judged streaky', cons['Streaky'].verdict, 'Streaky');
+ok('a player with under 3 matches is not judged', function(){
+  loadHistory = function(){ return [
+    { id:1, savedAt:'2026-01-01', players:[{name:'New', mins:60, stats:{shotsPlay:{point:5}}}] }
+  ];};
+  var r = playerConsistency();
+  if (r['New'].verdict !== 'Too few matches to judge') throw new Error(r['New'].verdict);
+});
+
+group('Substitution impact');
+loadHistory = function(){ return [
+  { id:1, away:'A',
+    subs:[{team:'home', off:'X', on:'Sub One', min:20, half:2}],
+    players:[{name:'Sub One', mins:20, stats:{shotsPlay:{point:2}}},
+             {name:'Starter', mins:60, stats:{shotsPlay:{point:1}}}],
+    events:[
+      // 10 minutes before the sub (min 10-20): 1 point
+      {team:'home', type:'shot', outcome:'point', min:15, half:2},
+      // 10 minutes after (min 20-30): 3 points
+      {team:'home', type:'shot', outcome:'point', min:22, half:2},
+      {team:'home', type:'shot', outcome:'point', min:25, half:2},
+      {team:'home', type:'shot', outcome:'point', min:29, half:2},
+      // outside the window - ignored
+      {team:'home', type:'shot', outcome:'point', min:38, half:2}
+    ]},
+  { id:2, away:'B',
+    subs:[{team:'home', off:'Y', on:'Sub Two', min:30, half:2},
+          {team:'away', off:'Z', on:'Their Sub', min:30, half:2}],  // away sub ignored
+    players:[{name:'Sub Two', mins:10, stats:{shotsPlay:{goal:1}}}],
+    events:[] }
+];};
+var si = substitutionImpact(10);
+check('only home subs counted', si.count, 2);
+check('matches with subs', si.matches, 2);
+check('scored before the first change', si.subs[0].before, 1);
+check('scored after the first change', si.subs[0].after, 3);
+check('change looks positive', si.subs[0].delta, 2);
+check('bench scoring aggregated', si.benchGoals + '-' + si.benchPoints, '1-2');
+ok('bench total counts a goal as 3', function(){
+  if (si.benchScores !== 5) throw new Error('expected 5, got ' + si.benchScores);
+});
+loadHistory = _lh2;
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
