@@ -1194,6 +1194,11 @@ input:not([type]), textarea, select {
 .ctp-val { font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; color:#86efac; flex-shrink:0; }
 .ctp-empty { text-align:center; padding:22px 12px; color:var(--muted); font-size:12px; font-style:italic; line-height:1.5; }
 .ctp-note { font-size:10px; color:var(--muted); font-style:italic; margin-top:9px; line-height:1.4; }
+.opp-tier { display:inline-block; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:10px; }
+.opp-tier.strong { background:rgba(224,48,48,0.18); color:#fca5a5; }
+.opp-tier.mid { background:rgba(234,179,8,0.16); color:#fde68a; }
+.opp-tier.weaker { background:rgba(22,163,74,0.18); color:#86efac; }
+.opp-tier-sub { font-size:11px; color:var(--muted); margin-top:5px; }
 /* ── LIVE SHARE ── */
 .live-start-btn { width:100%; padding:13px; border-radius:10px; border:1px solid rgba(22,163,74,0.45); background:rgba(22,163,74,0.14); color:#86efac; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .live-start-btn:active { background:rgba(22,163,74,0.3); }
@@ -2254,6 +2259,15 @@ input:not([type]), textarea, select {
         </div>
         <div class="meta-row">
           <input type="text" id="venue" placeholder="Venue">
+          <select id="conditions">
+            <option value="">Conditions (optional)</option>
+            <option value="Good">Good — dry, little wind</option>
+            <option value="Windy">Windy</option>
+            <option value="Wet">Wet</option>
+            <option value="Wet and windy">Wet and windy</option>
+            <option value="Heavy underfoot">Heavy underfoot</option>
+            <option value="Very warm">Very warm</option>
+          </select>
           <button class="comp-picker-btn" id="comp-picker-btn" onclick="openCompPicker()" type="button">
             <span id="comp-display-text">Select Competition</span>
             <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
@@ -3226,7 +3240,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v60-2026-08-10';
+var CS_BUILD = 'v61-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -8597,6 +8611,22 @@ function openOppositionProfile(name) {
       }).join('')
     : '<div class="ptr-no-notes">No scout reports yet — tap 🔍 Scout on any match card</div>';
 
+  // Where this club sits among the sides you play
+  try {
+    var st = oppositionStrength()[name];
+    var el = document.getElementById('opp-strength');
+    if (el) {
+      if (st && st.matches >= 2 && st.tier) {
+        var word = st.tier === 'strong' ? 'Stronger opposition'
+                 : st.tier === 'weaker' ? 'Weaker opposition' : 'Typical opposition';
+        el.innerHTML = '<span class="opp-tier ' + st.tier + '">' + word + '</span>' +
+          '<div class="opp-tier-sub">' + st.avgAgainst + ' pts/game against you \u00B7 ' +
+          st.avgFor + ' pts/game for you \u00B7 ' + st.w + 'W ' + st.d + 'D ' + st.l + 'L</div>';
+        el.style.display = '';
+      } else { el.style.display = 'none'; }
+    }
+  } catch(e) {}
+
   // Opposition players (roster + what they've done against us)
   renderOppPlayers(name);
 
@@ -11691,6 +11721,41 @@ function bestRunFromRecord(m) {
   return runs.length && runs[0].n >= 3 ? runs[0] : null;
 }
 
+// ── OPPOSITION STRENGTH ────────────────────────────
+// A 60% conversion against a weak side is not the same as 45% against the
+// champions. There is never enough data to "adjust" numbers honestly, so this
+// contextualises instead: how this opponent compares to the others you play.
+function oppositionStrength() {
+  var byClub = {};
+  loadHistory().forEach(function(m) {
+    if (!m.away) return;
+    var e = byClub[m.away] || (byClub[m.away] = { name:m.away, matches:0, for:0, against:0, w:0, d:0, l:0 });
+    var us = (m.homeGoals||0)*3 + (m.homePoints||0);
+    var them = (m.awayGoals||0)*3 + (m.awayPoints||0);
+    e.matches++; e.for += us; e.against += them;
+    if (us > them) e.w++; else if (us < them) e.l++; else e.d++;
+  });
+
+  var clubs = Object.keys(byClub);
+  clubs.forEach(function(n) {
+    var e = byClub[n];
+    e.avgFor = Math.round((e.for / e.matches) * 10) / 10;
+    e.avgAgainst = Math.round((e.against / e.matches) * 10) / 10;
+    e.diff = Math.round(((e.for - e.against) / e.matches) * 10) / 10;
+  });
+
+  // Rank by how much they score against you, which is the only signal you
+  // actually hold about them. Needs a few opponents before it means anything.
+  var scored = clubs.map(function(n){ return byClub[n].avgAgainst; }).sort(function(a,b){ return a-b; });
+  clubs.forEach(function(n) {
+    var e = byClub[n];
+    if (clubs.length < 3) { e.tier = null; return; }
+    var rank = scored.indexOf(e.avgAgainst) / (scored.length - 1);
+    e.tier = rank >= 0.75 ? 'strong' : rank <= 0.25 ? 'weaker' : 'mid';
+  });
+  return byClub;
+}
+
 function analyseMatch(m) {
   var out = { verdict: '', sections: [], dataNote: '' };
   if (!m) return out;
@@ -11752,6 +11817,37 @@ function analyseMatch(m) {
                   absM <= 12 ? 'comfortable' : 'emphatic';
   out.verdict = scoreStr(m.homeGoals, m.homePoints) + ' to ' + scoreStr(m.awayGoals, m.awayPoints) +
     ' — ' + resultWord + (absM ? ', ' + closeness : '') + '.';
+  // Opposition strength is set below, so the qualifier is appended afterwards.
+
+  // ════════════ CONTEXT ════════════
+  // Conditions and opposition strength change how the rest should be read,
+  // so they come first rather than being buried at the end.
+  var context = { title: 'Context', points: [] };
+  var poorConditions = ['Windy','Wet','Wet and windy','Heavy underfoot'].indexOf(m.conditions) !== -1;
+  if (m.conditions) {
+    context.points.push(pt('Conditions: ' + m.conditions + '.' +
+      (poorConditions ? ' Shooting and kickout numbers should be read with that in mind.' : ''),
+      'neutral'));
+  }
+  var oppTier = null;
+  try {
+    var strengths = oppositionStrength();
+    var os = strengths[m.away];
+    if (os && os.tier && os.matches >= 2) {
+      oppTier = os.tier;
+      var word = os.tier === 'strong' ? 'among the stronger sides you have played'
+               : os.tier === 'weaker' ? 'among the weaker sides you have played'
+               : 'about typical for the sides you play';
+      context.points.push(pt(them + ' are ' + word + ' (' + os.avgAgainst +
+        ' points a game against you across ' + os.matches + ' meetings).', 'neutral'));
+    }
+  } catch(e) {}
+  if (oppTier === 'strong' && margin > 0) {
+    out.verdict += ' A win over one of the stronger sides you meet.';
+  } else if (oppTier === 'weaker' && margin < 0) {
+    out.verdict += ' A defeat to one of the weaker sides you meet.';
+  }
+  if (context.points.length) out.sections.push(context);
 
   // ════════════ SCORING ════════════
   var scoring = { title: 'Scoring', points: [] };
@@ -11759,7 +11855,8 @@ function analyseMatch(m) {
   if (hShots > 0) {
     var convWord = hConv >= 60 ? 'excellent' : hConv >= 50 ? 'solid' : hConv >= 40 ? 'workable' : 'poor';
     scoring.points.push(pt(
-      'Converted ' + hScores + ' of ' + hShots + ' shots (' + hConv + '%) — ' + convWord + '.',
+      'Converted ' + hScores + ' of ' + hShots + ' shots (' + hConv + '%) — ' + convWord +
+      (poorConditions && hConv < 50 ? ', though the conditions were against you' : '') + '.',
       hConv >= 50 ? 'good' : hConv >= 40 ? 'neutral' : 'bad'));
 
     if (aConv !== null && Math.abs(hConv - aConv) >= 12) {
@@ -12435,7 +12532,8 @@ function generateMatchReport(id) {
 
   // Footer
   html += '<p style="font-size:11px;color:#aaa;margin-top:32px;padding-top:12px;border-top:1px solid #eee;text-align:center;">';
-  html += 'Report generated by Coach Stats &nbsp;|&nbsp; ' + m.home + ' v ' + m.away + ' &nbsp;|&nbsp; ' + (m.competition||'') + ' &nbsp;|&nbsp; ' + dateStr;
+  html += 'Report generated by Coach Stats &nbsp;|&nbsp; ' + m.home + ' v ' + m.away + ' &nbsp;|&nbsp; ' + (m.competition||'') + ' &nbsp;|&nbsp; ' + dateStr +
+          (m.conditions ? ' &nbsp;|&nbsp; ' + m.conditions : '');
   html += '</p>';
   html += '</div></body></html>';
 
@@ -12537,6 +12635,7 @@ function saveMatchToHistory() {
     }),
     subs: (state.subs || []).slice(),
     pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
+    conditions: (document.getElementById('conditions') || {}).value || '',
     squadId: currentClubSquadId || null,   // lets club reports group by squad
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
     turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
@@ -16488,6 +16587,8 @@ window.addEventListener('resize', function() {
         <div class="ptr-section-title">Match History</div>
         <div id="opp-match-history"></div>
       </div>
+      <!-- Strength context -->
+      <div id="opp-strength" style="display:none;margin-bottom:14px;"></div>
       <!-- Opposition players -->
       <div class="ptr-section">
         <div class="ptr-section-title">Their Players</div>
