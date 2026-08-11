@@ -3254,7 +3254,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v65-2026-08-11';
+var CS_BUILD = 'v66-2026-08-11';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -11766,6 +11766,32 @@ function resetMatch(){
 }
 
 // ── MATCH REPORT GENERATOR ─────────────────────────
+// Scoring line for one saved player record.
+// Handles both shapes: the current format nests figures under .stats, older
+// records stored goals/points flat. Returns null for empty squad slots, which
+// are saved as null and must be skipped rather than read from.
+function playerScoreLine(p, index) {
+  if (!p || !p.name) return null;
+  var s = p.stats || {};
+  var sp = s.shotsPlay || {}, sf = s.shotsFree || {};
+  var goals  = (sp.goal || 0) + (sf.goal || 0);
+  var points = (sp.point || 0) + (sf.point || 0) +
+               2 * ((sp.twopointer || 0) + (sf.twopointer || 0));
+  // Fall back to the flat fields if this is an older record
+  if (!goals && !points) {
+    goals = p.goals || 0;
+    points = p.points || 0;
+  }
+  return {
+    num: p.num || (typeof index === 'number' ? index + 1 : ''),
+    name: p.name,
+    team: p.team || 'home',      // saved player records are always our own squad
+    goals: goals,
+    points: points,
+    total: goals * 3 + points
+  };
+}
+
 // ── MATCH ANALYSIS ENGINE ──────────────────────────
 // Produces written observations from a saved match record.
 //
@@ -12665,17 +12691,16 @@ function generateMatchReport(id) {
   if (m.players && m.players.length) {
     html += section(playerSectionNum + '. Player Contributions');
     html += '<table><thead><tr>' + th('#') + th('Player') + th('Team') + th('Goals') + th('Points') + th('Total') + '</tr></thead><tbody>';
-    m.players.forEach(function(p) {
-      var total = (p.goals||0)*3 + (p.points||0);
-      if (total > 0) {
-        html += '<tr>' +
-          td(p.num) + td(p.name, true) +
-          td(p.team === 'home' ? m.home : m.away) +
-          td(p.goals||0, false, true) +
-          td(p.points||0, false, true) +
-          td(total, true, true) +
-          '</tr>';
-      }
+    m.players.forEach(function(p, i) {
+      var line = playerScoreLine(p, i);
+      if (!line || line.total <= 0) return;
+      html += '<tr>' +
+        td(line.num) + td(line.name, true) +
+        td(line.team === 'home' ? m.home : m.away) +
+        td(line.goals, false, true) +
+        td(line.points, false, true) +
+        td(line.total, true, true) +
+        '</tr>';
     });
     html += '</tbody></table>';
   }
@@ -13122,14 +13147,16 @@ function openDetailModal(id) {
   }
   if (m.players && m.players.length) {
     html += sec('👥 Players');
-    m.players.forEach(p => {
-      const teamName = p.team === 'home' ? m.home : m.away;
+    m.players.forEach((p, i) => {
+      const line = playerScoreLine(p, i);
+      if (!line || line.total <= 0) return;
+      const teamName = line.team === 'home' ? m.home : m.away;
       html += `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-        <span style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--muted);min-width:24px">#${p.num}</span>
-        <span style="font-size:13px;flex:1">${p.name}</span>
-        <span style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted)">${teamName}</span>
-        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--gold)">${p.goals}G</span>
-        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--red-light)">${p.points}P</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--muted);min-width:24px">#${line.num}</span>
+        <span style="font-size:13px;flex:1">${escapeHtml(line.name)}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted)">${escapeHtml(teamName)}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--gold)">${line.goals}G</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--red-light)">${line.points}P</span>
       </div>`;
     });
   }
