@@ -574,6 +574,38 @@ ok('players below the shot threshold are excluded', function(){
 loadHistory = _lh4;
 shotRateModel(true);
 
+// ══ 8f. CUSTOM COMPETITIONS ══
+group('Custom competitions');
+localStorage.removeItem('cs_custom_comps');
+check('starts empty', loadCustomComps().length, 0);
+addCustomComp('Dagen Cup');
+check('one added', loadCustomComps().length, 1);
+check('name stored', loadCustomComps()[0], 'Dagen Cup');
+addCustomComp('Dagen Cup');
+check('exact duplicate ignored', loadCustomComps().length, 1);
+addCustomComp('dagen cup');
+check('case-insensitive duplicate ignored', loadCustomComps().length, 1);
+addCustomComp('GAA County SFC');
+check('built-in competition not duplicated', loadCustomComps().length, 1);
+addCustomComp('   ');
+check('blank name ignored', loadCustomComps().length, 1);
+addCustomComp('  Parish League  ');
+check('name is trimmed', loadCustomComps()[0], 'Parish League');
+check('newest first', loadCustomComps().length, 2);
+ok('removal works', function(){
+  var before = loadCustomComps().length;
+  loadCustomComps();
+  var list = loadCustomComps().filter(function(x){ return x !== 'Dagen Cup'; });
+  saveCustomComps(list);
+  if (loadCustomComps().length !== before - 1) throw new Error('not removed');
+});
+ok('custom competitions survive a reload', function(){
+  var saved = loadCustomComps();
+  var reread = JSON.parse(localStorage.getItem('cs_custom_comps'));
+  if (JSON.stringify(saved) !== JSON.stringify(reread)) throw new Error('not persisted');
+});
+localStorage.removeItem('cs_custom_comps');
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
