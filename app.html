@@ -1113,6 +1113,11 @@ input:not([type]), textarea, select {
 .psc-season-title { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:5px; }
 .psc-season-row { display:flex; flex-wrap:wrap; gap:12px; font-family:'Inter',sans-serif; font-size:11px; color:var(--muted); }
 .psc-season-row b { color:var(--cream); font-family:'Oswald',sans-serif; font-size:13px; }
+.psc-cons { float:right; font-family:'Inter',sans-serif; font-size:9px; font-weight:600; padding:2px 7px; border-radius:8px; letter-spacing:0; text-transform:none; }
+.psc-cons.good { background:rgba(22,163,74,0.2); color:#86efac; }
+.psc-cons.mid { background:rgba(234,179,8,0.18); color:#fde68a; }
+.psc-cons.bad { background:rgba(224,48,48,0.18); color:#fca5a5; }
+.psc-spread { font-size:10px; color:var(--muted); margin-top:5px; font-family:'Inter',sans-serif; }
 
 /* Squad player attribution in outcome modal */
 .player-attr-section { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
@@ -1176,6 +1181,64 @@ input:not([type]), textarea, select {
 .pp-opp.on-yellow { box-shadow:inset 0 0 0 2px rgba(250,204,21,0.9); }
 .pp-opp.on-red { box-shadow:inset 0 0 0 2px rgba(220,38,38,0.95); }
 .pp-opp-name { display:block; font-family:'Inter',sans-serif; font-size:8px; font-weight:400; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* ── CLUB REPORT: TOP PLAYERS ── */
+.ctp-squad { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; }
+.ctp-squad-head { font-family:'Oswald',sans-serif; font-size:14px; font-weight:600; color:var(--cream); letter-spacing:0.5px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.ctp-squad-sub { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; white-space:nowrap; }
+.ctp-cat { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:#86efac; text-transform:uppercase; margin:12px 0 5px; }
+.ctp-row { display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.ctp-row:last-child { border-bottom:none; }
+.ctp-rank { width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); flex-shrink:0; }
+.ctp-name { flex:1; font-size:13px; color:var(--cream); min-width:0; }
+.ctp-sub { display:block; font-size:10px; color:var(--muted); margin-top:1px; }
+.ctp-val { font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; color:#86efac; flex-shrink:0; }
+.ctp-empty { text-align:center; padding:22px 12px; color:var(--muted); font-size:12px; font-style:italic; line-height:1.5; }
+.ctp-note { font-size:10px; color:var(--muted); font-style:italic; margin-top:9px; line-height:1.4; }
+/* ── LIVE SHARE ── */
+.live-start-btn { width:100%; padding:13px; border-radius:10px; border:1px solid rgba(22,163,74,0.45); background:rgba(22,163,74,0.14); color:#86efac; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.live-start-btn:active { background:rgba(22,163,74,0.3); }
+.live-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:6px; line-height:1.4; }
+.live-active { border:1px solid rgba(22,163,74,0.45); border-radius:12px; padding:14px; text-align:center; background:rgba(22,163,74,0.08); }
+.live-on-row { display:flex; align-items:center; justify-content:center; gap:6px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:#86efac; }
+.live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:livePulse 1.6s infinite; }
+@keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+.live-code { font-family:'Oswald',sans-serif; font-size:34px; font-weight:700; letter-spacing:6px; color:var(--cream); margin:6px 0 2px; }
+.live-btn-row { display:flex; gap:8px; margin-top:10px; }
+.live-copy-btn, .live-stop-btn { flex:1; padding:10px; border-radius:8px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.live-copy-btn { border:1px solid rgba(22,163,74,0.5); background:rgba(22,163,74,0.16); color:#86efac; }
+.live-stop-btn { border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); }
+/* ── LIVE VIEWER ── */
+#live-view-screen { padding:16px 14px calc(24px + var(--safe-bottom)); max-width:520px; margin:0 auto; }
+.lv-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.lv-brand { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; letter-spacing:3px; color:#22c55e; }
+.lv-live { display:flex; align-items:center; gap:6px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:#86efac; }
+.lv-score { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 12px; }
+.lv-team { flex:1; text-align:center; min-width:0; }
+.lv-name { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lv-val { font-family:'Oswald',sans-serif; font-size:30px; font-weight:700; color:var(--cream); margin-top:4px; }
+.lv-mid { text-align:center; flex-shrink:0; padding:0 6px; }
+.lv-min { font-family:'Oswald',sans-serif; font-size:19px; font-weight:700; color:#86efac; }
+.lv-phase { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.lv-margin { text-align:center; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin:10px 0 14px; }
+.lv-stats { background:var(--panel); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.lv-stat { display:flex; align-items:center; padding:11px 12px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.lv-stat:last-child { border-bottom:none; }
+.lv-h, .lv-a { font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; color:var(--cream); width:70px; }
+.lv-a { text-align:right; }
+.lv-label { flex:1; text-align:center; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+.lv-sec { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin:18px 0 8px; }
+.lv-scorers, .lv-events { background:var(--panel); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.lv-scorer { display:flex; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px; color:var(--cream); }
+.lv-scorer:last-child { border-bottom:none; }
+.lv-scorer b { font-family:'Oswald',sans-serif; color:#86efac; }
+.lv-ev { display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; color:var(--cream); }
+.lv-ev:last-child { border-bottom:none; }
+.lv-ev-min { font-family:'Oswald',sans-serif; color:var(--muted); width:32px; flex-shrink:0; }
+.lv-ev-tm { margin-left:auto; font-size:10px; color:var(--muted); }
+.lv-freshness { text-align:center; font-size:11px; color:var(--muted); margin-top:14px; }
+.lv-freshness.stale { color:#fca5a5; }
+.lv-foot { text-align:center; font-size:10px; color:var(--muted); margin-top:6px; font-style:italic; }
+.lv-empty { text-align:center; padding:40px 16px; color:var(--muted); font-size:13px; line-height:1.6; }
 .et-manage-btn { width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .rec-squad-chip { display:inline-block; margin-left:8px; padding:3px 9px; border-radius:10px; background:rgba(22,163,74,0.18); border:1px solid rgba(22,163,74,0.4); color:#86efac; font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:none; vertical-align:middle; }
 .poss-method-note { font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); margin:-6px 0 8px; line-height:1.4; }
@@ -3163,7 +3226,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v59-2026-08-10';
+var CS_BUILD = 'v60-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -5154,6 +5217,124 @@ function seasonPlayerStats(force) {
   return out;
 }
 
+// ── PLAYER CONSISTENCY ─────────────────────────────
+// A season average hides the difference between 0-02 every week and 0-08 once.
+// For selection those are different players, so report the spread, not the mean.
+function playerConsistency() {
+  var byPlayer = {};
+  loadHistory().forEach(function(m) {
+    (m.players || []).forEach(function(p) {
+      if (!p || !p.name) return;
+      var s = p.stats || {};
+      var played = Object.keys(s).length > 0 || (p.mins || 0) > 0;
+      if (!played) return;
+      var sp = s.shotsPlay || {}, sf = s.shotsFree || {};
+      var g = (sp.goal||0) + (sf.goal||0);
+      var pts = (sp.point||0) + (sf.point||0) + 2*((sp.twopointer||0)+(sf.twopointer||0));
+      var e = byPlayer[p.name] || (byPlayer[p.name] = { name:p.name, games:[] });
+      e.games.push({ matchId:m.id, date:m.savedAt, opp:m.away,
+                     goals:g, points:pts, total:g*3+pts, mins:p.mins||0 });
+    });
+  });
+
+  Object.keys(byPlayer).forEach(function(n) {
+    var e = byPlayer[n];
+    var totals = e.games.map(function(g){ return g.total; });
+    e.matches = totals.length;
+    e.sum = totals.reduce(function(a,b){ return a+b; }, 0);
+    e.avg = e.matches ? Math.round((e.sum / e.matches) * 10) / 10 : 0;
+    e.best = Math.max.apply(null, totals);
+    e.worst = Math.min.apply(null, totals);
+    e.blanks = totals.filter(function(t){ return t === 0; }).length;
+    e.scoredIn = e.matches - e.blanks;
+
+    // Standard deviation, and the coefficient of variation — the honest way to
+    // compare spread between a 6-point scorer and a 1-point scorer.
+    var mean = e.matches ? e.sum / e.matches : 0;
+    var varc = e.matches ? totals.reduce(function(a,t){ return a + Math.pow(t-mean,2); },0) / e.matches : 0;
+    e.sd = Math.round(Math.sqrt(varc) * 10) / 10;
+    e.cv = mean > 0 ? Math.round((Math.sqrt(varc) / mean) * 100) : null;
+
+    // A plain-language read. Needs 3+ matches before it says anything.
+    if (e.matches < 3) e.verdict = 'Too few matches to judge';
+    else if (e.cv !== null && e.cv <= 45) e.verdict = 'Reliable';
+    else if (e.cv !== null && e.cv <= 80) e.verdict = 'Variable';
+    else e.verdict = 'Streaky';
+
+    e.games.sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); });
+    // Simple direction: last three versus the ones before
+    if (e.matches >= 4) {
+      var recent = e.games.slice(-3).map(function(g){return g.total;});
+      var earlier = e.games.slice(0, -3).map(function(g){return g.total;});
+      var rAvg = recent.reduce(function(a,b){return a+b;},0)/recent.length;
+      var eAvg = earlier.reduce(function(a,b){return a+b;},0)/earlier.length;
+      e.trend = rAvg > eAvg * 1.25 ? 'up' : rAvg < eAvg * 0.75 ? 'down' : 'steady';
+    } else e.trend = null;
+  });
+  return byPlayer;
+}
+
+// ── SUBSTITUTION IMPACT ────────────────────────────
+// You now get told who to bring off. This asks whether it worked.
+// Samples are small, so it reports counts alongside every rate.
+function substitutionImpact(windowMins) {
+  var w = windowMins || 10;
+  var out = { subs: [], benchScores: 0, benchGoals: 0, benchPoints: 0,
+              beforeRate: null, afterRate: null, matches: 0 };
+  var beforeTot = 0, beforeMins = 0, afterTot = 0, afterMins = 0;
+
+  loadHistory().forEach(function(m) {
+    var subs = (m.subs || []).filter(function(s){ return s.team === 'home'; });
+    if (!subs.length) return;
+    out.matches++;
+
+    // Anyone brought on, and what they scored in that match
+    var onNames = {};
+    subs.forEach(function(s){ if (s.on) onNames[s.on] = s.min || 0; });
+    (m.players || []).forEach(function(p) {
+      if (!p || !p.name || !(p.name in onNames)) return;
+      var s = p.stats || {}, sp = s.shotsPlay || {}, sf = s.shotsFree || {};
+      var g = (sp.goal||0)+(sf.goal||0);
+      var pts = (sp.point||0)+(sf.point||0)+2*((sp.twopointer||0)+(sf.twopointer||0));
+      out.benchGoals += g; out.benchPoints += pts; out.benchScores += g*3+pts;
+    });
+
+    // Team scoring either side of each substitution
+    function scoredBetween(team, half, from, to) {
+      var t = 0;
+      (m.events || []).forEach(function(e) {
+        if (e.team !== team || e.half !== half) return;
+        var mn = e.min || 0;
+        if (mn < from || mn > to) return;
+        if (e.type === 'goal') t += 3;
+        else if (e.type === 'point') t += 1;
+        else if (e.type === 'fortyFive' && e.outcome === 'scored') t += 1;
+        else if (e.type === 'shot') {
+          if (e.outcome === 'goal') t += 3;
+          else if (e.outcome === 'point') t += 1;
+          else if (e.outcome === 'twopointer') t += 2;
+        }
+      });
+      return t;
+    }
+
+    subs.forEach(function(s) {
+      var mn = s.min || 0, hf = s.half || 2;
+      var b = scoredBetween('home', hf, Math.max(0, mn - w), mn);
+      var a = scoredBetween('home', hf, mn, mn + w);
+      beforeTot += b; beforeMins += Math.min(w, mn);
+      afterTot += a;  afterMins += w;
+      out.subs.push({ off:s.off, on:s.on, min:mn, half:hf, before:b, after:a,
+                      delta:a - b, opp:m.away });
+    });
+  });
+
+  out.beforeRate = beforeMins ? Math.round((beforeTot / beforeMins) * 10 * 10) / 10 : null;
+  out.afterRate  = afterMins  ? Math.round((afterTot  / afterMins)  * 10 * 10) / 10 : null;
+  out.count = out.subs.length;
+  return out;
+}
+
 function renderPlayerStats() {
   var container = document.getElementById('player-stats-list');
   if (!container) return;
@@ -5167,6 +5348,8 @@ function renderPlayerStats() {
   try { mins = playerMinutes(); } catch(e) { mins = {}; }
   var seasonAll = {};
   try { seasonAll = seasonPlayerStats(); } catch(e) { seasonAll = {}; }
+  var consistencyAll = {};
+  try { consistencyAll = playerConsistency(); } catch(e) { consistencyAll = {}; }
 
   var html = '';
   activePlayers.forEach(function(x) {
@@ -5196,15 +5379,25 @@ function renderPlayerStats() {
     var seasonBlock = '';
     if (sn && sn.matches > 0) {
       var perMatch = sn.matches > 0 ? Math.round((sn.scoreTotal / sn.matches) * 10) / 10 : 0;
+      var cons = (consistencyAll[p.name] || null);
+      var consChip = '';
+      if (cons && cons.matches >= 3) {
+        var tone = cons.verdict === 'Reliable' ? 'good' : cons.verdict === 'Streaky' ? 'bad' : 'mid';
+        var arrow = cons.trend === 'up' ? ' \u2191' : cons.trend === 'down' ? ' \u2193' : '';
+        consChip = '<span class="psc-cons ' + tone + '">' + cons.verdict + arrow + '</span>';
+      }
       seasonBlock =
         '<div class="psc-season">' +
-          '<div class="psc-season-title">Season \u2014 ' + sn.matches + ' match' + (sn.matches !== 1 ? 'es' : '') + '</div>' +
+          '<div class="psc-season-title">Season \u2014 ' + sn.matches + ' match' + (sn.matches !== 1 ? 'es' : '') + consChip + '</div>' +
           '<div class="psc-season-row">' +
             '<span><b>' + sn.goals + '-' + String(sn.points + sn.twoPointers*2).padStart(2,'0') + '</b> scored</span>' +
             '<span><b>' + perMatch + '</b> pts/match</span>' +
             (sn.conv !== null ? '<span><b>' + sn.conv + '%</b> conv</span>' : '') +
             (sn.freeConv !== null && sn.freeShots >= 3 ? '<span><b>' + sn.freeConv + '%</b> frees</span>' : '') +
           '</div>' +
+          (cons && cons.matches >= 3 ?
+            '<div class="psc-spread">Best ' + cons.best + ' \u00B7 worst ' + cons.worst +
+            ' \u00B7 scored in ' + cons.scoredIn + ' of ' + cons.matches + '</div>' : '') +
         '</div>';
     }
 
@@ -14713,7 +14906,7 @@ function renderClubTopPlayers() {
       }).join('');
   }
 
-  el.innerHTML = squads.map(function(sq) {
+  var html = squads.map(function(sq) {
     var list = data[sq].list;
     var scorers = list.slice().sort(function(a,b){ return b.scoreTotal - a.scoreTotal; })
                       .filter(function(e){ return e.scoreTotal > 0; });
@@ -14737,6 +14930,35 @@ function renderClubTopPlayers() {
       (scorers.length ? '' : '<div class="ctp-empty">No player data recorded for this squad yet.</div>') +
     '</div>';
   }).join('');
+
+  // ── Substitution impact ──
+  // Samples are small, so counts sit beside every rate and nothing is claimed
+  // until there have been enough substitutions to mean anything.
+  var si = { count: 0 };
+  try { si = substitutionImpact(10); } catch(e) {}
+  if (si.count >= 3) {
+    var better = si.subs.filter(function(s){ return s.delta > 0; }).length;
+    var worse  = si.subs.filter(function(s){ return s.delta < 0; }).length;
+    html += '<div class="ctp-squad">' +
+      '<div class="ctp-squad-head">Substitution impact' +
+        '<span class="ctp-squad-sub">' + si.count + ' subs \u00B7 ' + si.matches +
+        ' match' + (si.matches !== 1 ? 'es' : '') + '</span></div>' +
+      '<div class="ctp-cat">Scoring rate, 10 minutes either side</div>' +
+      '<div class="ctp-row"><span class="ctp-name">Before the change</span>' +
+        '<span class="ctp-val">' + (si.beforeRate === null ? '\u2014' : si.beforeRate) + '</span></div>' +
+      '<div class="ctp-row"><span class="ctp-name">After the change</span>' +
+        '<span class="ctp-val">' + (si.afterRate === null ? '\u2014' : si.afterRate) + '</span></div>' +
+      '<div class="ctp-cat">Outcome</div>' +
+      '<div class="ctp-row"><span class="ctp-name">Scored more after</span><span class="ctp-val">' + better + '</span></div>' +
+      '<div class="ctp-row"><span class="ctp-name">Scored less after</span><span class="ctp-val">' + worse + '</span></div>' +
+      '<div class="ctp-cat">Scoring from the bench</div>' +
+      '<div class="ctp-row"><span class="ctp-name">By players brought on</span>' +
+        '<span class="ctp-val">' + si.benchGoals + '-' + String(si.benchPoints).padStart(2,'0') + '</span></div>' +
+      '<div class="ctp-note">Points per 10 minutes. Small samples \u2014 read as a hint, not a verdict.</div>' +
+    '</div>';
+  }
+
+  el.innerHTML = html;
 }
 
 function renderClubDashboard() {
