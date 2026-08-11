@@ -117,9 +117,7 @@ body {
   padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
 }
 .scroll-area::-webkit-scrollbar { display: none; }
-/* The undo toast floats above the nav bar. Without this it covers whatever is
-   at the bottom of the page while it's showing. */
-.scroll-area.toast-open { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 74px); }
+
 
 /* ── BOTTOM NAV ── */
 .bottom-nav {
@@ -1309,9 +1307,16 @@ input:not([type]), textarea, select {
 .et-mgr-check.on { background:var(--red); border-color:var(--red); }
 .sh-filter-btn { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .sh-filter-btn.active { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:#fff; border-color:var(--red); }
-#undo-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(140%); bottom:calc(var(--nav-h) + var(--safe-bottom) + 6px); z-index:6000; display:flex; align-items:center; gap:14px; padding:11px 14px 11px 18px; background:rgba(20,22,20,0.96); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45); transition:transform 0.25s cubic-bezier(0.22,1,0.36,1); max-width:92vw; }
+/* Positioned just BELOW the topbar, not at the bottom of the screen.
+   Anchored to the bottom it covered the event boxes and the nav bar \u2014 exactly
+   the controls being tapped repeatedly during a match. Padding the scroll area
+   did not help, because the toast is fixed to the viewport rather than to the
+   end of the content.
+   It also must not sit at the very top: the topbar carries the live score, and
+   the user badge is pinned top-right above it. 56px clears both. */
+#undo-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(-220%); top:calc(env(safe-area-inset-top, 0px) + 56px); z-index:6000; display:flex; align-items:center; gap:12px; padding:9px 12px 9px 16px; background:rgba(20,22,20,0.97); border:1px solid var(--border); border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.5); transition:transform 0.25s cubic-bezier(0.22,1,0.36,1); max-width:94vw; }
 #undo-toast.show { transform:translateX(-50%) translateY(0); }
-#undo-toast span { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.5px; color:var(--cream); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#undo-toast span { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; color:var(--cream); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60vw; }
 #undo-toast button { padding:6px 14px; border-radius:8px; border:1px solid var(--red); background:rgba(224,48,48,0.15); color:#ff8080; font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; flex-shrink:0; }
 #undo-toast button:active { background:var(--red); color:#fff; }
 .record-stats-btn { display:block; width:100%; padding:12px; margin-bottom:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:var(--cream); font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
@@ -3240,7 +3245,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v62-2026-08-10';
+var CS_BUILD = 'v64-2026-08-11';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -4124,13 +4129,10 @@ function showUndoToast(label) {
   if (!toast || !txt) return;
   txt.textContent = label;
   toast.classList.add('show');
-  var scroller = document.getElementById('scroll-area');
-  if (scroller) scroller.classList.add('toast-open');
   if (undoToastTimer) clearTimeout(undoToastTimer);
-  undoToastTimer = setTimeout(function() {
-    toast.classList.remove('show');
-    if (scroller) scroller.classList.remove('toast-open');
-  }, 4000);
+  // Short-lived on purpose: it sits over the top of the screen, so it should
+  // clear itself quickly rather than linger during fast recording.
+  undoToastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3500);
 }
 
 function undoLastEvent() {
@@ -4143,8 +4145,6 @@ function undoLastEvent() {
   try { refreshEventTallies(); } catch(e) {}
   var toast = document.getElementById('undo-toast');
   if (toast) toast.classList.remove('show');
-  var scroller = document.getElementById('scroll-area');
-  if (scroller) scroller.classList.remove('toast-open');
   if (undoToastTimer) clearTimeout(undoToastTimer);
 }
 
@@ -12634,12 +12634,13 @@ function generateMatchReport(id) {
 
   // ── COACH'S ANALYSIS ──
   var analysis = analyseMatch(m);
-  html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0f5f2c;border-bottom:2px solid #16a34a;padding-bottom:5px;">Coach\u2019s Analysis</h2>';
+  html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0B4A24;border-bottom:2px solid #126E32;padding-bottom:5px;">Coach\u2019s Analysis</h2>';
   html += '<p style="font-size:15px;font-weight:600;margin:10px 0 4px;color:#111;">' + analysis.verdict + '</p>';
   if (analysis.dataNote) {
     html += '<p style="font-size:11px;color:#888;font-style:italic;margin:0 0 14px;">' + analysis.dataNote + '</p>';
   }
-  var toneColour = { good:'#16a34a', bad:'#dc2626', neutral:'#666' };
+  // Darkened for print: #16a34a is only 3.3:1 on white paper.
+  var toneColour = { good:'#126E32', bad:'#B91C1C', neutral:'#666' };
   analysis.sections.forEach(function(sec) {
     html += '<h3 style="font-size:12px;margin:18px 0 6px;color:#333;text-transform:uppercase;letter-spacing:1px;">' + sec.title + '</h3>';
     html += '<ul style="margin:0 0 4px;padding-left:18px;">';
@@ -12654,7 +12655,7 @@ function generateMatchReport(id) {
   // ── FULL EVENT LOG ──
   var logEvents = matchEventLog(m);
   if (logEvents.length) {
-    html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0f5f2c;border-bottom:2px solid #16a34a;padding-bottom:5px;">Match Events</h2>';
+    html += '<h2 style="font-size:15px;margin:34px 0 6px;color:#0B4A24;border-bottom:2px solid #126E32;padding-bottom:5px;">Match Events</h2>';
     html += '<p style="font-size:11px;color:#888;margin:0 0 10px;">' + logEvents.length + ' events recorded, in order of play.</p>';
     html += '<table style="width:100%;border-collapse:collapse;font-size:11.5px;">';
     html += '<tr style="background:#f2f7f3;">' +
