@@ -418,6 +418,71 @@ ok('bench total counts a goal as 3', function(){
 });
 loadHistory = _lh2;
 
+// ══ 8d. PHASE C: CONDITIONS AND OPPOSITION STRENGTH ══
+group('Opposition strength');
+var _lh3 = loadHistory;
+loadHistory = function(){ return [
+  // Strong side: puts up big scores against us
+  { id:1, away:'Strong', homeGoals:0, homePoints:8,  awayGoals:2, awayPoints:12 },
+  { id:2, away:'Strong', homeGoals:1, homePoints:9,  awayGoals:1, awayPoints:15 },
+  // Mid
+  { id:3, away:'Middling', homeGoals:1, homePoints:12, awayGoals:0, awayPoints:12 },
+  { id:4, away:'Middling', homeGoals:0, homePoints:14, awayGoals:1, awayPoints:9 },
+  // Weak
+  { id:5, away:'Weaker', homeGoals:3, homePoints:15, awayGoals:0, awayPoints:5 },
+  { id:6, away:'Weaker', homeGoals:2, homePoints:16, awayGoals:0, awayPoints:7 }
+];};
+var os = oppositionStrength();
+check('matches counted per club', os['Strong'].matches, 2);
+check('strong side tiered strong', os['Strong'].tier, 'strong');
+check('weak side tiered weaker', os['Weaker'].tier, 'weaker');
+check('their average against us', os['Weaker'].avgAgainst, 6);
+check('our average against them', os['Weaker'].avgFor, 23);   // 3-15=24 and 2-16=22
+check('results recorded', os['Weaker'].w + '-' + os['Weaker'].d + '-' + os['Weaker'].l, '2-0-0');
+ok('no tier is claimed with too few opponents', function(){
+  loadHistory = function(){ return [
+    { id:1, away:'OnlyOne', homeGoals:1, homePoints:5, awayGoals:0, awayPoints:8 }
+  ];};
+  var r = oppositionStrength();
+  if (r['OnlyOne'].tier !== null) throw new Error('should not tier with one opponent');
+});
+loadHistory = _lh3;
+
+group('Conditions in analysis');
+ok('conditions appear as context', function(){
+  var a = analyseMatch({ home:'A', away:'B', homeGoals:0, homePoints:9, awayGoals:0, awayPoints:11,
+    conditions:'Wet and windy', events:[], players:[],
+    shots:{home:{play:{point:7,wide:9},free:{point:2,wide:2}},
+           away:{play:{point:9,wide:4},free:{point:2,wide:1}}} });
+  var ctx = a.sections.find(function(s){ return s.title === 'Context'; });
+  if (!ctx) throw new Error('no context section');
+  if (ctx.points[0].text.indexOf('Wet and windy') === -1) throw new Error('conditions not mentioned');
+});
+ok('poor conditions soften a low conversion verdict', function(){
+  var a = analyseMatch({ home:'A', away:'B', homeGoals:0, homePoints:9, awayGoals:0, awayPoints:11,
+    conditions:'Windy', events:[], players:[],
+    shots:{home:{play:{point:7,wide:12},free:{point:2,wide:3}},
+           away:{play:{point:9,wide:4},free:{point:2,wide:1}}} });
+  var sc = a.sections.find(function(s){ return s.title === 'Scoring'; });
+  if (!sc) throw new Error('no scoring section');
+  if (sc.points[0].text.indexOf('conditions were against you') === -1)
+    throw new Error('conditions caveat missing: ' + sc.points[0].text);
+});
+ok('good conditions add no caveat', function(){
+  var a = analyseMatch({ home:'A', away:'B', homeGoals:0, homePoints:9, awayGoals:0, awayPoints:11,
+    conditions:'Good', events:[], players:[],
+    shots:{home:{play:{point:7,wide:12},free:{point:2,wide:3}},
+           away:{play:{point:9,wide:4},free:{point:2,wide:1}}} });
+  var sc = a.sections.find(function(s){ return s.title === 'Scoring'; });
+  if (sc.points[0].text.indexOf('conditions were against you') !== -1)
+    throw new Error('caveat added when conditions were fine');
+});
+ok('a match with no conditions still analyses', function(){
+  var a = analyseMatch({ home:'A', away:'B', homeGoals:1, homePoints:9,
+    awayGoals:0, awayPoints:11, events:[], players:[] });
+  if (!a.verdict) throw new Error('no verdict');
+});
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
