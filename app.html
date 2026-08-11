@@ -3240,7 +3240,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v61-2026-08-10';
+var CS_BUILD = 'v62-2026-08-10';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -5845,7 +5845,28 @@ function updateStats() {
   // ── COST OF TURNOVERS ──
   var hTC = turnoverCost('home', hf), aTC = turnoverCost('away', hf);
   if (hTC.turnovers || aTC.turnovers) {
-    statsRows.push(sec('💸 Cost of Turnovers' + (hf ? ' — ' + halfLabel(hf) : '')));
+    // ── SHOT QUALITY ──
+  var hXS = expectedScores(state.events, 'home', hf);
+  var aXS = expectedScores(state.events, 'away', hf);
+  if (hXS || aXS) {
+    var model = shotRateModel();
+    statsRows.push(sec('🎯 Shot Quality' + (hf ? ' — ' + halfLabel(hf) : '')));
+    statsRows.push(row(['Chances created (xS)',
+      hXS ? hXS.expected : '—', aXS ? aXS.expected : '—']));
+    statsRows.push(row(['Actually scored',
+      hXS ? hXS.actual : '—', aXS ? aXS.actual : '—']));
+    statsRows.push(row(['Finishing vs expected',
+      hXS ? (hXS.diff > 0 ? '+' : '') + hXS.diff : '—',
+      aXS ? (aXS.diff > 0 ? '+' : '') + aXS.diff : '—']));
+    if (hXS && hXS.unlocated) {
+      statsRows.push(row(['(shots without a location)', hXS.unlocated,
+        aXS ? aXS.unlocated : 0]));
+    }
+    statsRows.push(row(['Model',
+      model.learned + '/' + model.total + ' zones from your own data', '']));
+  }
+
+  statsRows.push(sec('💸 Cost of Turnovers' + (hf ? ' — ' + halfLabel(hf) : '')));
     [['Possessions lost', hTC.turnovers, aTC.turnovers],
      ['Led to a score against', hTC.chains, aTC.chains],
      ['Scores conceded from them',
@@ -11721,6 +11742,134 @@ function bestRunFromRecord(m) {
   return runs.length && runs[0].n >= 3 ? runs[0] : null;
 }
 
+// ── EXPECTED SCORES (xS) ───────────────────────────
+// Conversion rate treats a 13m free and a shot from the wing as the same event.
+// Expected Scores weighs each attempt by how often that kind of chance is
+// converted, so you can separate "we shot badly" from "we took bad shots".
+//
+// It starts from published baselines and switches to YOUR OWN rates for any
+// zone where you have enough shots — so it becomes your team's model over time
+// rather than someone else's.
+//
+// Called "expected scores" rather than "expected points" deliberately: it
+// models the chance of converting, not the goal-versus-point value, which
+// needs far more data than a club will ever have.
+
+var XS_BASELINE = {
+  'd-line':     { play: 0.70, free: 0.88 },
+  'left-d':     { play: 0.58, free: 0.80 },
+  'right-d':    { play: 0.58, free: 0.80 },
+  '45-centre':  { play: 0.50, free: 0.72 },
+  'left-45':    { play: 0.40, free: 0.60 },
+  'right-45':   { play: 0.40, free: 0.60 },
+  'left-wing':  { play: 0.28, free: 0.45 },
+  'right-wing': { play: 0.28, free: 0.45 },
+  'midfield':   { play: 0.20, free: 0.35 }
+};
+
+var XS_MIN_SAMPLE = 15;   // shots needed in a zone before trusting your own rate
+var _xsRates = null, _xsRatesAt = 0;
+
+// Build conversion rates from your own saved matches, falling back to the
+// baseline anywhere the sample is too thin to mean anything.
+function shotRateModel(force) {
+  var now = Date.now();
+  if (!force && _xsRates && (now - _xsRatesAt) < 10000) return _xsRates;
+
+  var tally = {};
+  loadHistory().forEach(function(m) {
+    (m.events || []).forEach(function(e) {
+      if (e.type !== 'shot' || e.team !== 'home' || !e.zone) return;
+      var mode = e.shotMode === 'free' ? 'free' : 'play';
+      var k = e.zone + '|' + mode;
+      var t = tally[k] || (tally[k] = { shots: 0, scores: 0 });
+      t.shots++;
+      if (SCORING_OUTCOMES.indexOf(e.outcome) !== -1) t.scores++;
+    });
+  });
+
+  var model = { rates: {}, source: {}, learned: 0, total: 0 };
+  Object.keys(XS_BASELINE).forEach(function(z) {
+    ['play','free'].forEach(function(mode) {
+      var k = z + '|' + mode;
+      var t = tally[k];
+      model.total++;
+      if (t && t.shots >= XS_MIN_SAMPLE) {
+        model.rates[k] = t.scores / t.shots;
+        model.source[k] = { from: 'own', shots: t.shots };
+        model.learned++;
+      } else {
+        model.rates[k] = XS_BASELINE[z][mode];
+        model.source[k] = { from: 'baseline', shots: t ? t.shots : 0 };
+      }
+    });
+  });
+  _xsRates = model; _xsRatesAt = now;
+  return model;
+}
+
+function xsForShot(zone, shotMode, model) {
+  if (!zone) return null;                       // no location tapped, can't judge
+  var m = model || shotRateModel();
+  var k = zone + '|' + (shotMode === 'free' ? 'free' : 'play');
+  return (k in m.rates) ? m.rates[k] : null;
+}
+
+// Expected vs actual for a set of shot events.
+function expectedScores(events, team, half) {
+  var model = shotRateModel();
+  var expected = 0, actual = 0, counted = 0, unlocated = 0;
+  (events || []).forEach(function(e) {
+    if (e.type !== 'shot') return;
+    if (team && e.team !== team) return;
+    if (half && e.half !== half) return;
+    var xs = xsForShot(e.zone, e.shotMode, model);
+    if (xs === null) { unlocated++; return; }
+    counted++;
+    expected += xs;
+    if (SCORING_OUTCOMES.indexOf(e.outcome) !== -1) actual += 1;
+  });
+  if (!counted) return null;
+  return {
+    shots: counted, unlocated: unlocated,
+    expected: Math.round(expected * 10) / 10,
+    actual: actual,
+    diff: Math.round((actual - expected) * 10) / 10,
+    pct: expected > 0 ? Math.round((actual / expected) * 100) : null
+  };
+}
+
+// Which players finish better than the chances they get.
+function playerFinishing(minShots) {
+  var min = minShots || 8;
+  var model = shotRateModel();
+  var byPlayer = {};
+  loadHistory().forEach(function(m) {
+    var names = m.players || [];
+    (m.events || []).forEach(function(e) {
+      if (e.type !== 'shot' || e.team !== 'home' || typeof e.player !== 'number') return;
+      var xs = xsForShot(e.zone, e.shotMode, model);
+      if (xs === null) return;
+      var p = names[e.player];
+      var nm = (p && p.name) ? p.name : ('#' + (e.player + 1));
+      var b = byPlayer[nm] || (byPlayer[nm] = { name: nm, shots: 0, expected: 0, actual: 0 });
+      b.shots++;
+      b.expected += xs;
+      if (SCORING_OUTCOMES.indexOf(e.outcome) !== -1) b.actual++;
+    });
+  });
+  return Object.keys(byPlayer)
+    .map(function(n) {
+      var b = byPlayer[n];
+      b.expected = Math.round(b.expected * 10) / 10;
+      b.diff = Math.round((b.actual - b.expected) * 10) / 10;
+      b.pct = b.expected > 0 ? Math.round((b.actual / b.expected) * 100) : null;
+      return b;
+    })
+    .filter(function(b) { return b.shots >= min; })
+    .sort(function(a, b) { return b.diff - a.diff; });
+}
+
 // ── OPPOSITION STRENGTH ────────────────────────────
 // A 60% conversion against a weak side is not the same as 45% against the
 // champions. There is never enough data to "adjust" numbers honestly, so this
@@ -11864,6 +12013,23 @@ function analyseMatch(m) {
         ? pt('Sharper in front of the posts than ' + them + ' (' + hConv + '% v ' + aConv + '%). That efficiency is what won the shooting exchange.', 'good')
         : pt(them + ' were the more clinical side (' + aConv + '% v ' + hConv + '%). They needed fewer chances to hurt you.', 'bad'));
     }
+
+    // Separate "we shot badly" from "we took bad shots"
+    try {
+      var xs = expectedScores(m.events, 'home');
+      if (xs && xs.shots >= 8) {
+        if (xs.diff <= -2.5) {
+          scoring.points.push(pt('The chances were worth about ' + xs.expected +
+            ' scores and you took ' + xs.actual + '. The openings were there \u2014 this was finishing, not shot selection.', 'bad'));
+        } else if (xs.diff >= 2.5) {
+          scoring.points.push(pt('Took ' + xs.actual + ' scores from chances worth about ' +
+            xs.expected + '. Excellent finishing, and some of it from difficult positions.', 'good'));
+        } else if (hConv !== null && hConv < 45) {
+          scoring.points.push(pt('Conversion was low, but the chances themselves were only worth about ' +
+            xs.expected + ' scores. The problem is where the shots are coming from, not the shooting.', 'bad'));
+        }
+      }
+    } catch(e) {}
 
     if (hWides >= 8) {
       scoring.points.push(pt(hWides + ' wides is a lot of possession turned into nothing. Worth reviewing shot selection rather than shooting technique.', 'bad'));
@@ -15029,6 +15195,26 @@ function renderClubTopPlayers() {
       (scorers.length ? '' : '<div class="ctp-empty">No player data recorded for this squad yet.</div>') +
     '</div>';
   }).join('');
+
+  // ── Finishing versus chance quality ──
+  var fin = [];
+  try { fin = playerFinishing(8); } catch(e) {}
+  if (fin.length) {
+    html += '<div class="ctp-squad">' +
+      '<div class="ctp-squad-head">Finishing<span class="ctp-squad-sub">8+ located shots</span></div>' +
+      '<div class="ctp-cat">Scores above what the chances were worth</div>' +
+      fin.slice(0, 5).map(function(p, i) {
+        return '<div class="ctp-row">' +
+          '<span class="ctp-rank">' + (i+1) + '</span>' +
+          '<span class="ctp-name">' + escapeHtml(p.name) +
+            '<span class="ctp-sub">' + p.actual + ' from ' + p.shots +
+            ' shots \u00B7 worth ' + p.expected + '</span></span>' +
+          '<span class="ctp-val">' + (p.diff > 0 ? '+' : '') + p.diff + '</span>' +
+        '</div>';
+      }).join('') +
+      '<div class="ctp-note">Compares what each player scored against what their chances were typically worth. Needs a decent sample before it means much.</div>' +
+    '</div>';
+  }
 
   // ── Substitution impact ──
   // Samples are small, so counts sit beside every rate and nothing is claimed
