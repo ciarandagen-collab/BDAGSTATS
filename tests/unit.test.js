@@ -483,6 +483,85 @@ ok('a match with no conditions still analyses', function(){
   if (!a.verdict) throw new Error('no verdict');
 });
 
+// ══ 8e. PHASE D: EXPECTED SCORES ══
+group('Expected scores model');
+var _lh4 = loadHistory;
+loadHistory = function(){ return []; };
+var model = shotRateModel(true);
+check('with no history every zone uses the baseline', model.learned, 0);
+check('a close central shot is rated highest', xsForShot('d-line','play',model), 0.70);
+check('a shot from midfield is rated lowest', xsForShot('midfield','play',model), 0.20);
+ok('a free is rated above a shot from play in the same zone', function(){
+  if (!(xsForShot('45-centre','free',model) > xsForShot('45-centre','play',model)))
+    throw new Error('frees should be rated higher');
+});
+check('an unlocated shot cannot be rated', xsForShot(null,'play',model), null);
+
+group('Expected vs actual');
+loadHistory = function(){ return []; };
+shotRateModel(true);
+// 10 shots from d-line (rated 0.70) => expected 7.0
+var evs = [];
+for (var i=0;i<10;i++) evs.push({ type:'shot', team:'home', shotMode:'play',
+  zone:'d-line', outcome: i < 9 ? 'point' : 'wide', half:1 });
+var xs = expectedScores(evs, 'home');
+check('shots counted', xs.shots, 10);
+check('expected total', xs.expected, 7);
+check('actual scores', xs.actual, 9);
+check('finishing above expectation', xs.diff, 2);
+ok('unlocated shots are excluded, not guessed', function(){
+  var e2 = evs.concat([{ type:'shot', team:'home', shotMode:'play', outcome:'point', half:1 }]);
+  var r = expectedScores(e2, 'home');
+  if (r.shots !== 10) throw new Error('unlocated shot was counted');
+  if (r.unlocated !== 1) throw new Error('unlocated shot not reported');
+});
+ok('a team with no located shots returns null, not zero', function(){
+  var r = expectedScores([{ type:'shot', team:'home', shotMode:'play', outcome:'point' }], 'home');
+  if (r !== null) throw new Error('expected null');
+});
+
+group('Model learns from your own data');
+// 20 shots from the wing, converted 15 times — well above the 0.28 baseline
+var learnEvents = [];
+for (var i=0;i<20;i++) learnEvents.push({ type:'shot', team:'home', shotMode:'play',
+  zone:'left-wing', outcome: i < 15 ? 'point' : 'wide', half:1 });
+loadHistory = function(){ return [{ id:1, events: learnEvents, players: [] }]; };
+var m2 = shotRateModel(true);
+check('the zone switches to your own rate', m2.source['left-wing|play'].from, 'own');
+check('your own rate is used', xsForShot('left-wing','play',m2), 0.75);
+check('a thin zone stays on the baseline', m2.source['midfield|play'].from, 'baseline');
+ok('sample size threshold is respected', function(){
+  var few = [];
+  for (var i=0;i<5;i++) few.push({ type:'shot', team:'home', shotMode:'play',
+    zone:'d-line', outcome:'point', half:1 });
+  loadHistory = function(){ return [{ id:1, events: few, players: [] }]; };
+  var m3 = shotRateModel(true);
+  if (m3.source['d-line|play'].from !== 'baseline')
+    throw new Error('5 shots should not override the baseline');
+});
+
+group('Player finishing');
+var finEvents = [];
+// Player 0: 10 shots from midfield (0.20 each = 2.0 expected), scores 6 -> +4
+for (var i=0;i<10;i++) finEvents.push({ type:'shot', team:'home', shotMode:'play',
+  zone:'midfield', outcome: i < 6 ? 'point' : 'wide', half:1, player:0 });
+// Player 1: 10 shots from d-line (0.70 each = 7.0 expected), scores 4 -> -3
+for (var i=0;i<10;i++) finEvents.push({ type:'shot', team:'home', shotMode:'play',
+  zone:'d-line', outcome: i < 4 ? 'point' : 'wide', half:1, player:1 });
+loadHistory = function(){ return [{ id:1, events: finEvents,
+  players:[{name:'Sharp'},{name:'Wasteful'}] }]; };
+shotRateModel(true);
+var fin = playerFinishing(8);
+check('best finisher ranked first', fin[0].name, 'Sharp');
+check('over-performance quantified', fin[0].diff, 4);
+check('worst finisher ranked last', fin[fin.length-1].name, 'Wasteful');
+check('under-performance quantified', fin[fin.length-1].diff, -3);
+ok('players below the shot threshold are excluded', function(){
+  if (playerFinishing(50).length !== 0) throw new Error('threshold not applied');
+});
+loadHistory = _lh4;
+shotRateModel(true);
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
