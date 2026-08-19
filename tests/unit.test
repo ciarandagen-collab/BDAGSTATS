@@ -277,15 +277,18 @@ check('event log sorts by half then minute',
 // ══ 8b. PHASE A: TURNOVERS, RUNS, PERIODS, LINES ══
 group('Turnover cost');
 resetMatch();
+// NOTE: a scoring shot writes TWO events — the shot AND a goal/point from
+// addScore(). Score counting must use only the goal/point events, so that is
+// what these fixtures contain.
 state.events = [
   { id:1, team:'home', type:'ballLost', outcome:'handPass', min:10, half:1 },
-  { id:2, team:'away', type:'shot',     outcome:'point',    min:11, half:1 },  // within 2 min -> counts
+  { id:2, team:'away', type:'point',                        min:11, half:1 },  // within 2 min -> counts
   { id:3, team:'home', type:'ballLost', outcome:'kickPass', min:20, half:1 },
-  { id:4, team:'away', type:'shot',     outcome:'goal',     min:21, half:1 },  // counts, worth 3
+  { id:4, team:'away', type:'goal',                         min:21, half:1 },  // counts, worth 3
   { id:5, team:'home', type:'ballLost', outcome:'handPass', min:30, half:1 },
-  { id:6, team:'away', type:'shot',     outcome:'point',    min:38, half:1 },  // too late -> ignored
+  { id:6, team:'away', type:'point',                        min:38, half:1 },  // too late -> ignored
   { id:7, team:'home', type:'ballLost', outcome:'handPass', min:5,  half:2 },
-  { id:8, team:'away', type:'shot',     outcome:'point',    min:6,  half:1 }   // wrong half -> ignored
+  { id:8, team:'away', type:'point',                        min:6,  half:1 }   // wrong half -> ignored
 ];
 var tc = turnoverCost('home', 0, 2);
 check('turnovers counted', tc.turnovers, 4);
@@ -298,12 +301,12 @@ check('a score is not double-counted', turnoverCost('home',0,2).chains, 2);
 group('Scoring runs');
 resetMatch();
 state.events = [
-  { id:1, team:'home', type:'shot', outcome:'point', min:2,  half:1 },
-  { id:2, team:'away', type:'shot', outcome:'point', min:5,  half:1 },
-  { id:3, team:'away', type:'shot', outcome:'point', min:8,  half:1 },
-  { id:4, team:'away', type:'shot', outcome:'goal',  min:11, half:1 },
-  { id:5, team:'away', type:'shot', outcome:'point', min:14, half:1 },
-  { id:6, team:'home', type:'shot', outcome:'point', min:20, half:1 }
+  { id:1, team:'home', type:'point', min:2,  half:1 },
+  { id:2, team:'away', type:'point', min:5,  half:1 },
+  { id:3, team:'away', type:'point', min:8,  half:1 },
+  { id:4, team:'away', type:'goal',  min:11, half:1 },
+  { id:5, team:'away', type:'point', min:14, half:1 },
+  { id:6, team:'home', type:'point', min:20, half:1 }
 ];
 var runs = scoringRuns(3);
 check('a run of 4 is found', runs.length, 1);
@@ -316,10 +319,10 @@ check('run end minute', runs[0].to, 14);
 group('Period splits');
 resetMatch();
 state.events = [
-  { id:1, team:'home', type:'shot', outcome:'point', min:3,  half:1 },
-  { id:2, team:'home', type:'shot', outcome:'goal',  min:12, half:1 },
-  { id:3, team:'home', type:'shot', outcome:'point', min:25, half:1 },
-  { id:4, team:'home', type:'shot', outcome:'point', min:33, half:2 }
+  { id:1, team:'home', type:'point', min:3,  half:1 },
+  { id:2, team:'home', type:'goal',  min:12, half:1 },
+  { id:3, team:'home', type:'point', min:25, half:1 },
+  { id:4, team:'home', type:'point', min:33, half:2 }
 ];
 check('opening 15 of the first half', periodScore('home',1,1,15).total, 4);
 check('closing period of the first half', periodScore('home',1,21,40).total, 1);
@@ -346,14 +349,14 @@ group('Report-level derivations');
 ok('turnoverCostFromRecord matches a saved record', function(){
   var r = turnoverCostFromRecord({ events:[
     { id:1, team:'home', type:'ballLost', min:10, half:1 },
-    { id:2, team:'away', type:'shot', outcome:'goal', min:11, half:1 }
+    { id:2, team:'away', type:'goal', min:11, half:1 }
   ]}, 'home');
   if (r.chains !== 1 || r.cost !== 3) throw new Error('got ' + JSON.stringify(r));
 });
 ok('bestRunFromRecord needs 3+ to count', function(){
   var r = bestRunFromRecord({ events:[
-    { id:1, team:'away', type:'shot', outcome:'point', min:1, half:1 },
-    { id:2, team:'away', type:'shot', outcome:'point', min:3, half:1 }
+    { id:1, team:'away', type:'point', min:1, half:1 },
+    { id:2, team:'away', type:'point', min:3, half:1 }
   ]});
   if (r !== null) throw new Error('a run of 2 should not count');
 });
@@ -632,6 +635,61 @@ ok('a full squad array with nulls does not crash', function(){
   var out = squadArr.map(function(p,i){ return playerScoreLine(p,i); }).filter(Boolean);
   if (out.length !== 2) throw new Error('expected 2 real players, got ' + out.length);
 });
+
+// ══ 8h. NO DOUBLE-COUNTING ══
+// Regression: a scoring shot writes both a 'shot' event and a 'goal'/'point'
+// event. Anything counting scores from the event log must use only the latter,
+// or every score is counted twice — which is what "How it unfolded" was doing.
+group('Scores are not double-counted');
+resetMatch();
+for (var i=0;i<15;i++) squad[i] = { name:'P'+(i+1), pos:'', stats:{} };
+function recScore(team, outcome, player) {
+  startEvent(team, 'shot', 'play');
+  selectShotOutcome(outcome);
+  if (pendingEvent) confirmPlayerPick(player);
+}
+recScore('home','point',6);
+ok('one point produces both a shot and a point event', function(){
+  var shots  = state.events.filter(function(e){ return e.type === 'shot'; }).length;
+  var scores = state.events.filter(function(e){ return e.type === 'point'; }).length;
+  if (shots !== 1) throw new Error('shot events: ' + shots);
+  if (scores !== 1) throw new Error('point events: ' + scores);
+});
+check('scoreboard shows one point', state.home.points, 1);
+ok('periodScore matches the scoreboard', function(){
+  var ps = periodScore('home', 1, 1, 40);
+  if (ps.total !== 1) throw new Error('periodScore gave ' + ps.total + ', expected 1');
+});
+resetMatch();
+recScore('home','goal',6);
+check('scoreboard shows one goal', state.home.goals, 1);
+ok('a goal counts once, not twice', function(){
+  var ps = periodScore('home', 1, 1, 40);
+  if (ps.goals !== 1) throw new Error('periodScore goals: ' + ps.goals);
+  if (ps.total !== 3) throw new Error('periodScore total: ' + ps.total);
+});
+resetMatch();
+recScore('home','twopointer',6);
+ok('a two-pointer counts as exactly two', function(){
+  var ps = periodScore('home', 1, 1, 40);
+  if (ps.points !== 2) throw new Error('expected 2 points, got ' + ps.points);
+  if (state.home.points !== 2) throw new Error('scoreboard: ' + state.home.points);
+});
+resetMatch();
+['point','point','goal'].forEach(function(o){ recScore('home', o, 6); });
+ok('period totals equal the scoreboard', function(){
+  var ps = periodScore('home', 1, 1, 40);
+  var board = state.home.goals * 3 + state.home.points;
+  if (ps.total !== board) throw new Error('period ' + ps.total + ' vs scoreboard ' + board);
+});
+ok('scoring runs count each score once', function(){
+  resetMatch();
+  ['point','point','point'].forEach(function(o){ recScore('away', o, 6); });
+  var runs = scoringRuns(3);
+  if (!runs.length) throw new Error('no run found');
+  if (runs[0].n !== 3) throw new Error('run length ' + runs[0].n + ', expected 3');
+});
+resetMatch();
 
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
