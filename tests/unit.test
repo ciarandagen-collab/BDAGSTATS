@@ -691,6 +691,60 @@ ok('scoring runs count each score once', function(){
 });
 resetMatch();
 
+// ══ 8i. STATS DO NOT CARRY BETWEEN MATCHES ══
+// Regression: resetMatch() was the only thing clearing player stats, and it is
+// never called after saving. Stats accumulated across matches, so a report
+// could credit a player with a goal scored in a previous game.
+group('Player stats are per-match');
+resetMatch();
+for (var i=0;i<15;i++) squad[i] = { name:'P'+(i+1), pos:'', stats:{} };
+
+function recS(team, mode, outcome, player) {
+  startEvent(team, 'shot', mode);
+  selectShotOutcome(outcome);
+  if (pendingEvent) confirmPlayerPick(player);
+}
+
+// Match 1: player 7 scores a goal
+recS('home','play','goal',6);
+check('match 1 goal recorded', (squad[6].stats.shotsPlay||{}).goal, 1);
+
+// Simulate finishing and starting a fresh match WITHOUT calling resetMatch,
+// which is exactly what happens when a coach saves and starts the next game.
+state.events = [];
+state.home = { goals:0, points:0 };
+state.away = { goals:0, points:0 };
+startGame();
+
+ok('stale stats are cleared at throw-in', function(){
+  var g = (squad[6].stats.shotsPlay || {}).goal || 0;
+  if (g !== 0) throw new Error('player still carries ' + g + ' goal(s) from the previous match');
+});
+
+// And a goalless match should credit nobody with a goal
+recS('home','play','point',6);
+recS('home','play','point',9);
+ok('a goalless match credits no goals', function(){
+  var totalGoals = 0;
+  squad.forEach(function(p){
+    if (!p || !p.stats) return;
+    totalGoals += ((p.stats.shotsPlay||{}).goal||0) + ((p.stats.shotsFree||{}).goal||0);
+  });
+  if (totalGoals !== 0) throw new Error('players credited with ' + totalGoals + ' goals');
+  if (state.home.goals !== 0) throw new Error('scoreboard shows goals');
+});
+ok('player totals match the scoreboard', function(){
+  var sumPts = 0;
+  squad.forEach(function(p){
+    if (!p || !p.stats) return;
+    var sp = p.stats.shotsPlay||{}, sf = p.stats.shotsFree||{};
+    sumPts += (sp.point||0)+(sf.point||0)+2*((sp.twopointer||0)+(sf.twopointer||0));
+  });
+  if (sumPts !== state.home.points)
+    throw new Error('players total ' + sumPts + ' but scoreboard says ' + state.home.points);
+});
+resetMatch();
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
