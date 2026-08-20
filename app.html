@@ -3254,7 +3254,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v66-2026-08-11';
+var CS_BUILD = 'v67-2026-08-19';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -5481,6 +5481,17 @@ var statsHalfFilter = 0;
 
 var SCORING_OUTCOMES = ['point','twopointer','goal'];
 
+// IMPORTANT: a scoring shot writes TWO events — the 'shot' itself, plus a
+// separate 'goal'/'point' from addScore(). Anything counting scores must use
+// ONLY the goal/point events, or every score is counted twice. A two-pointer
+// writes two 'point' events, so totals still come out right.
+function isScoreEvent(e) {
+  return e.type === 'goal' || e.type === 'point';
+}
+function scoreEventValue(e) {
+  return e.type === 'goal' ? 3 : 1;
+}
+
 // Shot stats computed from the event log so they can be filtered by half.
 function shotStats(team, half, shotMode) {
   var evs = state.events.filter(function(e) {
@@ -5561,9 +5572,7 @@ function turnoverCost(team, half, windowMins) {
   var oppScores = state.events.filter(function(e) {
     if (e.team !== opp) return false;
     if (half && e.half !== half) return false;
-    return (e.type === 'shot' && SCORING_OUTCOMES.indexOf(e.outcome) !== -1) ||
-           e.type === 'goal' || e.type === 'point' ||
-           (e.type === 'fortyFive' && e.outcome === 'scored');
+    return isScoreEvent(e);
   });
 
   var counted = {}, goals = 0, points = 0, chains = 0;
@@ -5576,9 +5585,7 @@ function turnoverCost(team, half, windowMins) {
       if (s.half === l.half && sm >= lm && sm - lm <= w) {
         counted[s.id] = true;
         chains++;
-        if (s.outcome === 'goal') goals++;
-        else if (s.outcome === 'twopointer') points += 2;
-        else points += 1;
+        if (s.type === 'goal') goals++; else points += 1;
         break;
       }
     }
@@ -5592,19 +5599,15 @@ function turnoverCost(team, half, windowMins) {
 // The passage that decided the game: an unanswered sequence.
 function scoringRuns(minLen) {
   var min = minLen || 3;
-  var scores = state.events.filter(function(e) {
-    return (e.type === 'shot' && SCORING_OUTCOMES.indexOf(e.outcome) !== -1) ||
-           e.type === 'goal' || e.type === 'point' ||
-           (e.type === 'fortyFive' && e.outcome === 'scored');
-  }).slice().sort(function(a,b) {
+  var scores = state.events.filter(isScoreEvent).slice().sort(function(a,b) {
     return ((a.half||1) - (b.half||1)) || ((a.min||0) - (b.min||0));
   });
 
   var runs = [], cur = null;
   scores.forEach(function(s) {
-    var val = s.outcome === 'goal' ? 3 : s.outcome === 'twopointer' ? 2 : 1;
-    var g = s.outcome === 'goal' ? 1 : 0;
-    var p = s.outcome === 'goal' ? 0 : val;
+    var val = scoreEventValue(s);
+    var g = s.type === 'goal' ? 1 : 0;
+    var p = s.type === 'goal' ? 0 : 1;
     if (cur && cur.team === s.team) {
       cur.n++; cur.goals += g; cur.points += p; cur.total += val; cur.to = s.min;
     } else {
@@ -5628,12 +5631,6 @@ function periodScore(team, half, fromMin, toMin) {
     if (m < fromMin || m > toMin) return;
     if (e.type === 'goal') g++;
     else if (e.type === 'point') p++;
-    else if (e.type === 'fortyFive' && e.outcome === 'scored') p++;
-    else if (e.type === 'shot') {
-      if (e.outcome === 'goal') g++;
-      else if (e.outcome === 'point') p++;
-      else if (e.outcome === 'twopointer') p += 2;
-    }
   });
   return { goals:g, points:p, total:g*3+p };
 }
@@ -11811,10 +11808,7 @@ function turnoverCostFromRecord(m, team, windowMins) {
   var evs = m.events || [];
   var losses = evs.filter(function(e){ return e.team === team && e.type === 'ballLost'; });
   var oppScores = evs.filter(function(e) {
-    if (e.team !== opp) return false;
-    return (e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1) ||
-           e.type === 'goal' || e.type === 'point' ||
-           (e.type === 'fortyFive' && e.outcome === 'scored');
+    return e.team === opp && (e.type === 'goal' || e.type === 'point');
   });
   var used = {}, goals = 0, points = 0, chains = 0;
   losses.forEach(function(l) {
@@ -11823,9 +11817,7 @@ function turnoverCostFromRecord(m, team, windowMins) {
       if (used[s.id]) continue;
       if (s.half === l.half && (s.min||0) >= (l.min||0) && (s.min||0) - (l.min||0) <= w) {
         used[s.id] = true; chains++;
-        if (s.outcome === 'goal') goals++;
-        else if (s.outcome === 'twopointer') points += 2;
-        else points += 1;
+        if (s.type === 'goal') goals++; else points += 1;
         break;
       }
     }
@@ -11836,13 +11828,11 @@ function turnoverCostFromRecord(m, team, windowMins) {
 
 function bestRunFromRecord(m) {
   var evs = (m.events || []).filter(function(e) {
-    return (e.type === 'shot' && ['goal','point','twopointer'].indexOf(e.outcome) !== -1) ||
-           e.type === 'goal' || e.type === 'point' ||
-           (e.type === 'fortyFive' && e.outcome === 'scored');
+    return e.type === 'goal' || e.type === 'point';
   }).slice().sort(function(a,b){ return ((a.half||1)-(b.half||1)) || ((a.min||0)-(b.min||0)); });
   var runs = [], cur = null;
   evs.forEach(function(s) {
-    var val = s.outcome === 'goal' ? 3 : s.outcome === 'twopointer' ? 2 : 1;
+    var val = s.type === 'goal' ? 3 : 1;
     if (cur && cur.team === s.team) { cur.n++; cur.total += val; cur.to = s.min; }
     else { if (cur) runs.push(cur); cur = { team:s.team, n:1, total:val, from:s.min, to:s.min, half:s.half }; }
   });
@@ -12052,17 +12042,17 @@ function analyseMatch(m) {
   var hBW = m.ballWon ? sum(m.ballWon.home) : 0;
 
   // ── Halves ────────────────────────────────────────
+  // A scoring shot writes TWO events: the 'shot' itself and a separate
+  // 'goal'/'point' from addScore(). Counting both doubled every score, so we
+  // count only the goal/point events — every score produces one, whether it
+  // came from a shot, a 45, or was tapped straight onto the scoreboard.
+  // (A two-pointer writes two 'point' events, so it totals correctly.)
   function halfScore(team, half) {
     var g = 0, p = 0;
     evs.forEach(function(e) {
       if (e.team !== team || e.half !== half) return;
       if (e.type === 'goal') g++;
       else if (e.type === 'point') p++;
-      else if (e.type === 'shot') {
-        if (e.outcome === 'goal') g++;
-        else if (e.outcome === 'point') p++;
-        else if (e.outcome === 'twopointer') p += 2;
-      } else if (e.type === 'fortyFive' && e.outcome === 'scored') p++;
     });
     return { g: g, p: p, total: g*3 + p };
   }
