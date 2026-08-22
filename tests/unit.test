@@ -745,6 +745,77 @@ ok('player totals match the scoreboard', function(){
 });
 resetMatch();
 
+// ══ 8j. KICKOUT FOULS AND SIDELINE BALLS ══
+group('Kickout fouls count correctly');
+resetMatch();
+state.events = [
+  { team:'home', type:'kickout', outcome:'wonClean',  half:1, min:5 },
+  { team:'home', type:'kickout', outcome:'foulWon',   half:1, min:9 },   // retained
+  { team:'home', type:'kickout', outcome:'breakWon',  half:1, min:13 },
+  { team:'home', type:'kickout', outcome:'lossClean', half:1, min:17 },
+  { team:'home', type:'kickout', outcome:'foulLost',  half:1, min:21 }   // lost
+];
+var kr = kickoutRetention('home', 0);
+check('foul won counts as retained', kr.won, 3);
+check('foul lost counts as lost', kr.lost, 2);
+check('retention percentage', kr.pct, 60);
+check('KO_WON includes foulWon', KO_WON.indexOf('foulWon') !== -1, true);
+check('KO_LOST includes foulLost', KO_LOST.indexOf('foulLost') !== -1, true);
+ok('koSum ignores unknown keys', function(){
+  if (koSum({ wonClean:2, nonsense:99 }, KO_WON) !== 2) throw new Error('unexpected total');
+});
+ok('koSum handles a missing bucket', function(){
+  if (koSum(null, KO_WON) !== 0) throw new Error('should be 0');
+});
+
+group('Sideline balls');
+check('sideline config exists', !!GENERIC_CONFIG.sideline, true);
+check('four outcomes offered', GENERIC_CONFIG.sideline.outcomes.length, 4);
+ok('outcomes distinguish whose sideline it was', function(){
+  var keys = GENERIC_CONFIG.sideline.outcomes.map(function(o){ return o.key; });
+  ['wonRetained','wonLost','oppRetained','oppWon'].forEach(function(k){
+    if (keys.indexOf(k) === -1) throw new Error('missing ' + k);
+  });
+});
+resetMatch();
+check('state initialised', typeof state.sideline.home.wonRetained, 'number');
+
+group('Kickout winner tagging');
+resetMatch();
+for (var i=0;i<15;i++) squad[i] = { name:'P'+(i+1), pos:'', stats:{} };
+ok('losing a kickout asks who won it', function(){
+  startEvent('home','generic','kickout');
+  selectGenericOutcome('lossClean');
+  if (!pendingEvent) throw new Error('no pending event after outcome');
+  confirmPlayerPick(0);
+  // Should still be pending — waiting on the winner
+  if (!pendingEvent) throw new Error('committed without asking who won it');
+  commitPendingKickout(11);
+  var ev = state.events.find(function(e){ return e.type === 'kickout'; });
+  if (!ev) throw new Error('kickout not recorded');
+  if (ev.wonBy !== 'away-11') throw new Error('winner not attached: ' + ev.wonBy);
+});
+resetMatch();
+ok('skipping the winner still records the kickout', function(){
+  startEvent('home','generic','kickout');
+  selectGenericOutcome('breakLoss');
+  confirmPlayerPick(0);
+  commitPendingKickout(null);
+  var ev = state.events.find(function(e){ return e.type === 'kickout'; });
+  if (!ev) throw new Error('kickout lost when winner skipped');
+  if (ev.wonBy) throw new Error('winner should be unset');
+});
+resetMatch();
+ok('winning a kickout does not ask', function(){
+  startEvent('home','generic','kickout');
+  selectGenericOutcome('wonClean');
+  confirmPlayerPick(0);
+  if (pendingEvent) throw new Error('should have committed immediately');
+  var ev = state.events.find(function(e){ return e.type === 'kickout'; });
+  if (!ev) throw new Error('not recorded');
+});
+resetMatch();
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
