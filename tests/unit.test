@@ -816,6 +816,62 @@ ok('winning a kickout does not ask', function(){
 });
 resetMatch();
 
+// ══ 8k. MATCH REPORT SECTION ORDER ══
+// Regression: the report had accumulated patches over time until the Shot Map
+// heading and its actual content ended up ~150 lines apart, with unrelated
+// player-stats code printed in between. Sections are now numbered by a
+// running counter and emitted in a fixed sequence, checked here directly.
+group('Match report section order');
+ok('sections appear in the requested order', function(){
+  var origOpen = global.window.open;
+  var captured = null;
+  global.window.open = function(){ return { document: { write: function(h){ captured = h; }, close: function(){} } }; };
+
+  var origLH = loadHistory;
+  loadHistory = function(){ return [{
+    id:1, savedAt: new Date().toISOString(), home:'A', away:'B',
+    homeGoals:1, homePoints:5, awayGoals:0, awayPoints:8,
+    possMethod:'counted', homePoss:50, awayPoss:50,
+    shots:{ home:{play:{point:5,goal:1,wide:2,short:0,saved:0,blocked:0,twopointer:0},free:{point:0,goal:0,wide:0,short:0,saved:0,blocked:0,twopointer:0}},
+            away:{play:{point:8,goal:0,wide:0,short:0,saved:0,blocked:0,twopointer:0},free:{point:0,goal:0,wide:0,short:0,saved:0,blocked:0,twopointer:0}} },
+    kickout:{ home:{wonClean:2,breakWon:0,foulWon:1,lossClean:1,breakLoss:0,foulLost:1,shortWon:0,shortLoss:0},
+              away:{wonClean:3,breakWon:0,foulWon:0,lossClean:0,breakLoss:0,foulLost:0,shortWon:0,shortLoss:0} },
+    ballLost:{ home:{handPass:2,kickPass:0,inContact:0,handling:0,overCarrying:0}, away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0} },
+    ballWon:{ home:{tackle:2,interception:0,inContact:0}, away:{tackle:0,interception:0,inContact:0} },
+    events:[], subs:[], matchNotes:'', players:[]
+  }]; };
+  vaLoadTags = function(){ return []; };
+
+  generateMatchReport(1);
+  var titles = (captured.match(/<h2[^>]*>[^<]+<\\/h2>/g) || []).map(function(t){ return t.replace(/<[^>]+>/g,''); });
+  var expected = ['1. Match Summary','2. Team Key Stats','3. Team Stats \u2014 Full Detail',
+                  '3a. Shooting Breakdown','3b. Ball Lost','3c. Ball Won','3d. Kickout Battle'];
+  for (var i = 0; i < expected.length; i++) {
+    if (titles[i] !== expected[i]) throw new Error('position ' + i + ': got "' + titles[i] + '", expected "' + expected[i] + '"');
+  }
+
+  loadHistory = origLH;
+  global.window.open = origOpen;
+});
+ok('Kickout Battle table includes the new foul outcomes', function(){
+  var origOpen = global.window.open;
+  var captured = null;
+  global.window.open = function(){ return { document: { write: function(h){ captured = h; }, close: function(){} } }; };
+  var origLH = loadHistory;
+  loadHistory = function(){ return [{
+    id:2, savedAt: new Date().toISOString(), home:'A', away:'B',
+    homeGoals:0, homePoints:0, awayGoals:0, awayPoints:0, homePoss:50, awayPoss:50,
+    kickout:{ home:{wonClean:0,foulWon:0,lossClean:0,foulLost:0}, away:{} },
+    events:[], subs:[], matchNotes:'', players:[]
+  }]; };
+  vaLoadTags = function(){ return []; };
+  generateMatchReport(2);
+  if (captured.indexOf('Foul Won') === -1) throw new Error('Foul Won missing from report');
+  if (captured.indexOf('Foul Lost') === -1) throw new Error('Foul Lost missing from report');
+  loadHistory = origLH;
+  global.window.open = origOpen;
+});
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
