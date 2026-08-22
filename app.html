@@ -1178,6 +1178,7 @@ input:not([type]), textarea, select {
 .pp-opp:active { background:var(--red); border-color:var(--red); color:#fff; }
 .pp-opp.on-yellow { box-shadow:inset 0 0 0 2px rgba(250,204,21,0.9); }
 .pp-opp.on-red { box-shadow:inset 0 0 0 2px rgba(220,38,38,0.95); }
+.kw-skip { width:100%; margin-top:12px; padding:12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .pp-opp-name { display:block; font-family:'Inter',sans-serif; font-size:8px; font-weight:400; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* ── CLUB REPORT: TOP PLAYERS ── */
 .ctp-squad { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; }
@@ -2885,6 +2886,21 @@ input:not([type]), textarea, select {
   <div class="lv-foot">Read-only view. Stats update automatically.</div>
 </div>
 
+<!-- KICKOUT WINNER (after a lost kickout) -->
+<div class="modal-overlay" id="kickout-winner-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitPendingKickout(null)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">🦶 Kickout Lost</div>
+        <div class="sheet-sub" id="kw-sub">Who won it?</div>
+      </div>
+      <button class="sheet-close" aria-label="Close" onclick="commitPendingKickout(null)">✕</button>
+    </div>
+    <div id="kw-body"></div>
+  </div>
+</div>
+
 <!-- PLAYER PICKER (final step of the record flow) -->
 <div class="modal-overlay" id="player-pick-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)cancelPlayerPick()">
   <div class="modal-sheet">
@@ -3254,7 +3270,7 @@ input:not([type]), textarea, select {
 </div>
 
 <script>
-var CS_BUILD = 'v67-2026-08-19';
+var CS_BUILD = 'v69-2026-08-19';
 
 // ── ERROR REPORTER ─────────────────────────────────
 // Surfaces JavaScript errors on screen. Without this a single thrown error
@@ -3647,7 +3663,8 @@ const state = {
   fortyFive:{home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}},
   ballLost:{home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}},
   ballWon:{home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}},
-  kickout:{home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}},
+  kickout:{home:{wonClean:0,breakWon:0,foulWon:0,lossClean:0,breakLoss:0,foulLost:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,foulWon:0,lossClean:0,breakLoss:0,foulLost:0,shortWon:0,shortLoss:0}},
+  sideline:{home:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0},away:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0}},
   turnover:{home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}},
   mark:{home:{won:0,lost:0},away:{won:0,lost:0}},
   possession:{home:{count:0},away:{count:0}},
@@ -3963,7 +3980,8 @@ function renderShotSummary() {
 const GENERIC_CONFIG = {
   ballLost:{title:'📤 Ball Lost',sub:'How was possession lost?',outcomes:[{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'inContact',icon:'💥',label:'In Contact'},{key:'handling',icon:'🖐️',label:'Handling'},{key:'overCarrying',icon:'🏃',label:'Over Carrying'}]},
   ballWon:{title:'📥 Ball Won',sub:'How was possession won?',outcomes:[{key:'inContact',icon:'💥',label:'In Contact'},{key:'tackle',icon:'🤼',label:'Tackle'},{key:'interception',icon:'🙌',label:'Interception'}]},
-  kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]},
+  kickout:{title:'🦶 Kickout',sub:'What was the result?',outcomes:[{key:'wonClean',icon:'✅',label:'Won Clean'},{key:'breakWon',icon:'🔄',label:'Break Won'},{key:'foulWon',icon:'🙌',label:'Foul Won'},{key:'lossClean',icon:'❌',label:'Loss Clean'},{key:'breakLoss',icon:'🔃',label:'Break Loss'},{key:'foulLost',icon:'⚠️',label:'Foul Lost'},{key:'shortWon',icon:'⬆️',label:'Short Won'},{key:'shortLoss',icon:'⬇️',label:'Short Loss'}]},
+  sideline:{title:'📍 Sideline Ball',sub:'Whose sideline was it, and how did it end?',outcomes:[{key:'wonRetained',icon:'✅',label:'Ours — Retained'},{key:'wonLost',icon:'❌',label:'Ours — Lost'},{key:'oppRetained',icon:'🔻',label:'Theirs — They Kept'},{key:'oppWon',icon:'🔄',label:'Theirs — We Won'}]},
   fortyFive:{title:'🏐 45',sub:'What was the result of the 45?',outcomes:[{key:'scored',icon:'✦',label:'Scored'},{key:'wide',icon:'↗️',label:'Wide'},{key:'short',icon:'⬇️',label:'Short'},{key:'pass',icon:'👟',label:'Pass'},{key:'ballLost',icon:'❌',label:'Ball Lost'}]},
   turnover:{title:'🔄 Turnover Forced',sub:'Where on the pitch?',outcomes:[{key:'inAttack',icon:'⚡',label:'In Attack'},{key:'midfield',icon:'🔀',label:'Midfield'},{key:'inDefence',icon:'🛡️',label:'In Defence'}]},
   mark:{title:'📌 Mark',sub:'Was the mark won or lost?',outcomes:[{key:'won',icon:'✅',label:'Won'},{key:'lost',icon:'❌',label:'Lost'}]},
@@ -4041,7 +4059,7 @@ function commitGeneric(team, category, key, playerRef) {
   if (category === 'cards') { try { renderRecordEventGrid(); } catch(e) {} }
 
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',
-                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
+                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff',sideline:'sl'};
   var pfx = catPfxMap[category];
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
 
@@ -4163,7 +4181,7 @@ function undoLastEvent() {
 // every lookup is guarded rather than assuming the elements exist.
 function renderGenericTallies() {
   var catPfxMap = {ballLost:'bl',ballWon:'bw',kickout:'ko',turnover:'to',mark:'mk',
-                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff'};
+                   possession:'ps',foul:'fo',cards:'cd',fortyFive:'ff',sideline:'sl'};
   Object.keys(catPfxMap).forEach(function(cat) {
     var pfx = catPfxMap[cat];
     ['home','away'].forEach(function(team) {
@@ -4649,8 +4667,58 @@ function confirmPlayerPick(ref) {
     renderRecordEventGrid();
     return;
   }
+  // Losing your own kickout means someone on the other team won it. Ask who,
+  // so their profile builds a picture of who dominates your restarts.
+  var lostOwnKickout = ev.kind === 'generic' && ev.arg === 'kickout' &&
+                       KO_LOST.indexOf(ev.outcomeKey) !== -1;
+  if (lostOwnKickout) {
+    ev.wonBy = null;
+    ev.ourPlayer = ref;
+    openKickoutWinnerPick(ev);
+    return;   // committed once the winner is chosen or skipped
+  }
+
   if (ev.kind === 'shot') commitShot(ev.team, ev.arg, ev.outcomeKey, ref);
   else commitGeneric(ev.team, ev.arg, ev.outcomeKey, ref);
+  pendingEvent = null;
+  refreshEventTallies();
+}
+
+// ── WHO WON THE KICKOUT ────────────────────────────
+// Shown after a lost kickout: pick the opposition player who claimed it.
+// Skippable, because in fast play you may not have seen the number.
+function openKickoutWinnerPick(ev) {
+  var body = document.getElementById('kw-body');
+  var sub = document.getElementById('kw-sub');
+  if (!body) { commitPendingKickout(null); return; }
+  var oppTeam = ev.team === 'home' ? 'away' : 'home';
+  if (sub) sub.textContent = 'Who won it for ' + (ev.team === 'home' ? 'the opposition' : 'your team') + '?';
+
+  var cards = cardStatus(oppTeam);
+  var html = '<div class="pp-opp-grid">';
+  for (var n = 1; n <= 30; n++) {
+    var nm = ev.team === 'home' ? oppPlayerName(awayName(), n) : null;
+    var oc = cards['away-' + n];
+    html += '<button class="pp-opp' + (oc ? ' on-' + oc : '') + '" onclick="commitPendingKickout(' + n + ')">' +
+      n + (nm ? '<span class="pp-opp-name">' + escapeHtml(surnameOf(nm)) + '</span>' : '') + '</button>';
+  }
+  html += '</div>';
+  html += '<button class="kw-skip" onclick="commitPendingKickout(null)">Skip \u2014 didn\u2019t see</button>';
+  body.innerHTML = html;
+  document.getElementById('kickout-winner-modal').classList.add('open');
+}
+
+function commitPendingKickout(winnerNum) {
+  var modal = document.getElementById('kickout-winner-modal');
+  if (modal) modal.classList.remove('open');
+  var ev = pendingEvent;
+  if (!ev) return;
+  commitGeneric(ev.team, ev.arg, ev.outcomeKey, ev.ourPlayer);
+  // Attach the winner to the event that commitGeneric just created
+  if (winnerNum !== null && winnerNum !== undefined) {
+    var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
+    if (justAdded) justAdded.wonBy = 'away-' + winnerNum;
+  }
   pendingEvent = null;
   refreshEventTallies();
 }
@@ -4985,6 +5053,7 @@ var ET_PICKER_TYPES = [
   { kind:'generic', arg:'fortyFive',  icon:'🏐',  label:'45m Free' },
   { kind:'generic', arg:'turnover',   icon:'🔄',  label:'Turnover Forced' },
   { kind:'generic', arg:'mark',       icon:'📌',  label:'Mark' },
+  { kind:'generic', arg:'sideline',   icon:'📍',  label:'Sideline Ball' },
   { kind:'generic', arg:'possession', icon:'🏉',  label:'Possession' },
   { kind:'generic', arg:'attacks',    icon:'⚔️',  label:'Attack' },
   { kind:'generic', arg:'foul',       icon:'⚠️',  label:'Foul Given' },
@@ -5701,10 +5770,21 @@ function eventStats(team, type, half) {
   return { total: evs.length, byOutcome: byOutcome };
 }
 
+// Which kickout outcomes count as keeping the ball. A foul won on your own
+// kickout returns possession to you, so it retains; a foul conceded hands it
+// over, so it counts as a loss. Defined once so every calculation agrees.
+var KO_WON  = ['wonClean','breakWon','shortWon','foulWon'];
+var KO_LOST = ['lossClean','breakLoss','shortLoss','foulLost'];
+
+function koSum(bucket, keys) {
+  if (!bucket) return 0;
+  return keys.reduce(function(a,k){ return a + (bucket[k]||0); }, 0);
+}
+
 function kickoutRetention(team, half) {
   var s = eventStats(team, 'kickout', half).byOutcome;
-  var won = (s.wonClean||0) + (s.breakWon||0) + (s.shortWon||0);
-  var lost = (s.lossClean||0) + (s.breakLoss||0) + (s.shortLoss||0);
+  var won = koSum(s, KO_WON);
+  var lost = koSum(s, KO_LOST);
   var tot = won + lost;
   return { won: won, lost: lost, total: tot, pct: tot > 0 ? Math.round((won/tot)*100) : 0 };
 }
@@ -5823,7 +5903,7 @@ function updateStats() {
       return true;
     });
     var won = evs.filter(function(e) {
-      return ['wonClean','breakWon','shortWon'].indexOf(e.outcome) !== -1;
+      return KO_WON.indexOf(e.outcome) !== -1;
     }).length;
     return evs.length ? { won: won, tot: evs.length, pct: Math.round((won/evs.length)*100) } : null;
   }
@@ -5923,6 +6003,42 @@ function updateStats() {
     statsRows.push(sec('🧱 By Line' + (hf ? ' — ' + halfLabel(hf) : '')));
     statsRows.push(row(['', 'Scored', 'Ball won/lost']));
     lineRows.forEach(function(r){ statsRows.push(r); });
+  }
+
+  // ── SIDELINE BALLS ──
+  var hSL = eventStats('home','sideline',hf).byOutcome;
+  var aSL = eventStats('away','sideline',hf).byOutcome;
+  var slTot = Object.keys(hSL).length + Object.keys(aSL).length;
+  if (slTot) {
+    statsRows.push(sec('📍 Sideline Balls' + (hf ? ' — ' + halfLabel(hf) : '')));
+    var hOurs = (hSL.wonRetained||0) + (hSL.wonLost||0);
+    var aOurs = (aSL.wonRetained||0) + (aSL.wonLost||0);
+    [['Our sidelines', hOurs, aOurs],
+     ['  kept', hSL.wonRetained||0, aSL.wonRetained||0],
+     ['  lost', hSL.wonLost||0, aSL.wonLost||0],
+     ['Retention',
+       hOurs ? Math.round(((hSL.wonRetained||0)/hOurs)*100)+'%' : '—',
+       aOurs ? Math.round(((aSL.wonRetained||0)/aOurs)*100)+'%' : '—'],
+     ['Won from their sideline', hSL.oppWon||0, aSL.oppWon||0]
+    ].forEach(function(r){ statsRows.push(row(r)); });
+  }
+
+  // ── WHO WINS YOUR KICKOUTS ──
+  // Built from the opposition player tagged when a kickout is lost.
+  var koWinners = {};
+  state.events.forEach(function(e) {
+    if (e.type !== 'kickout' || e.team !== 'home' || !e.wonBy) return;
+    if (hf && e.half !== hf) return;
+    koWinners[e.wonBy] = (koWinners[e.wonBy] || 0) + 1;
+  });
+  var winnerKeys = Object.keys(koWinners).sort(function(a,b){ return koWinners[b]-koWinners[a]; });
+  if (winnerKeys.length) {
+    statsRows.push(sec('🎯 Winning Our Kickouts' + (hf ? ' — ' + halfLabel(hf) : '')));
+    winnerKeys.slice(0,6).forEach(function(k) {
+      var num = String(k).split('-')[1];
+      var nm = oppPlayerName(awayName(), num);
+      statsRows.push(row(['#' + num + (nm ? ' ' + nm : ''), '', koWinners[k]]));
+    });
   }
 
   statsRows.push(sec('📤 Ball Lost'));
@@ -6357,6 +6473,17 @@ function renderGameControls() {
 
 // ── GAME FLOW FUNCTIONS ────────────────────────────
 function startGame() {
+  // Player stats are per-match, but resetMatch() is the only thing that used to
+  // clear them and it is never called automatically after a save. That meant
+  // stats accumulated across matches, so a report could credit a player with a
+  // goal scored in a previous game. Throw-in is the unambiguous point at which
+  // last match's figures stop being relevant.
+  var carriedOver = squad.some(function(p){ return p && p.stats && Object.keys(p.stats).length; });
+  if (carriedOver && state.events.length === 0) {
+    squad.forEach(function(p){ if (p) p.stats = {}; });
+    saveSquad();
+  }
+
   gamePhase = 'first_half';
   setHalf(1);
   $('current-min').value = 1;
@@ -6551,6 +6678,9 @@ const DEFAULT_EVENT_CONFIG = [
     outcomes:[{key:'won',label:'Won',perf:3},{key:'lost',label:'Lost',perf:-1}]},
   { id:'possession', label:'Possession', icon:'🏉', category:'possession', context:'both', editable:false, deletable:false,
     outcomes:[{key:'count',label:'Possession',perf:1}]},
+  { id:'sideline', label:'Sideline Ball', icon:'📍', category:'possession', context:'both', editable:true, deletable:true,
+    outcomes:[{key:'wonRetained',label:'Ours — Retained',perf:1},{key:'wonLost',label:'Ours — Lost',perf:-1},
+              {key:'oppRetained',label:'Theirs — They Kept',perf:0},{key:'oppWon',label:'Theirs — We Won',perf:2}]},
   { id:'attacks', label:'Attack', icon:'⚔️', category:'attacks', context:'both', editable:true, deletable:true,
     outcomes:[{key:'scored',label:'Score',perf:3},{key:'ballLost',label:'Ball Lost',perf:-1},{key:'turnedBack',label:'Turned Back',perf:-1}]},
   { id:'foul', label:'Foul Given', icon:'⚠️', category:'discipline', context:'both', editable:true, deletable:false,
@@ -9433,8 +9563,8 @@ function exportMatchesCSV() {
     }
     var ko = m.kickout || {};
     var hKOW = 0, hKOL = 0, aKOW = 0, aKOL = 0;
-    if (ko.home) { hKOW = (ko.home.wonClean||0)+(ko.home.breakWon||0)+(ko.home.shortWon||0); hKOL = (ko.home.lossClean||0)+(ko.home.breakLoss||0)+(ko.home.shortLoss||0); }
-    if (ko.away) { aKOW = (ko.away.wonClean||0)+(ko.away.breakWon||0)+(ko.away.shortWon||0); aKOL = (ko.away.lossClean||0)+(ko.away.breakLoss||0)+(ko.away.shortLoss||0); }
+    if (ko.home) { hKOW = koSum(ko.home, KO_WON); hKOL = koSum(ko.home, KO_LOST); }
+    if (ko.away) { aKOW = koSum(ko.away, KO_WON); aKOL = koSum(ko.away, KO_LOST); }
 
     var notes = (m.notes || '').replace(/,/g,' ').replace(/\n/g,' ');
     rows.push([
@@ -11755,6 +11885,7 @@ function resetMatch(){
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
   state.possession={home:{count:0},away:{count:0}};
   state.attacks={home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}};
+  state.sideline={home:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0},away:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
@@ -12032,8 +12163,8 @@ function analyseMatch(m) {
   // ── Kickouts ──────────────────────────────────────
   var hKO = m.kickout ? sum(m.kickout.home) : 0;
   var aKO = m.kickout ? sum(m.kickout.away) : 0;
-  var hKOW = m.kickout ? (m.kickout.home.wonClean||0)+(m.kickout.home.breakWon||0)+(m.kickout.home.shortWon||0) : 0;
-  var aKOW = m.kickout ? (m.kickout.away.wonClean||0)+(m.kickout.away.breakWon||0)+(m.kickout.away.shortWon||0) : 0;
+  var hKOW = m.kickout ? koSum(m.kickout.home, KO_WON) : 0;
+  var aKOW = m.kickout ? koSum(m.kickout.away, KO_WON) : 0;
   var hKOPct = pct(hKOW, hKO), aKOPct = pct(aKOW, aKO);
 
   // ── Turnovers ─────────────────────────────────────
@@ -12681,6 +12812,20 @@ function generateMatchReport(id) {
   if (m.players && m.players.length) {
     html += section(playerSectionNum + '. Player Contributions');
     html += '<table><thead><tr>' + th('#') + th('Player') + th('Team') + th('Goals') + th('Points') + th('Total') + '</tr></thead><tbody>';
+    // Sanity check against the scoreboard. If the player lines add up to more
+    // than the match actually produced, the figures are stale rather than real,
+    // and it is better to say so than to print goals that never happened.
+    var lineTotals = m.players.map(function(p, i){ return playerScoreLine(p, i); }).filter(Boolean);
+    var sumG = lineTotals.reduce(function(a,l){ return a + l.goals; }, 0);
+    var sumP = lineTotals.reduce(function(a,l){ return a + l.points; }, 0);
+    var overstated = (sumG > (m.homeGoals || 0)) || (sumP > (m.homePoints || 0));
+    if (overstated) {
+      html += '<p style="font-size:11px;color:#B91C1C;font-style:italic;margin:-6px 0 12px;">' +
+        'Player figures exceed the match scoreline (' + sumG + '-' + String(sumP).padStart(2,'0') +
+        ' against ' + (m.homeGoals||0) + '-' + String(m.homePoints||0).padStart(2,'0') +
+        '), so some may have carried over from an earlier match.</p>';
+    }
+
     m.players.forEach(function(p, i) {
       var line = playerScoreLine(p, i);
       if (!line || line.total <= 0) return;
@@ -12900,6 +13045,7 @@ function saveMatchToHistory() {
     }),
     subs: (state.subs || []).slice(),
     pitchOccupant: (state.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]).slice(),
+    sideline: JSON.parse(JSON.stringify(state.sideline || {home:{},away:{}})),
     conditions: (document.getElementById('conditions') || {}).value || '',
     squadId: currentClubSquadId || null,   // lets club reports group by squad
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
@@ -15872,7 +16018,7 @@ function renderLiveView(row) {
   }
   function koPct(side) {
     var k = (s.kickout && s.kickout[side]) || {};
-    var won = (k.wonClean||0)+(k.breakWon||0)+(k.shortWon||0);
+    var won = koSum(k, KO_WON);
     var lost = (k.lossClean||0)+(k.breakLoss||0)+(k.shortLoss||0);
     var t = won+lost;
     return t ? Math.round((won/t)*100) + '%' : '—';
