@@ -2909,6 +2909,22 @@ input:not([type]), textarea, select {
   <div class="lv-foot">Read-only view. Stats update automatically.</div>
 </div>
 
+<!-- TURNOVER METHOD (after a turnover is forced) -->
+<div class="modal-overlay" id="turnover-method-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitTurnoverMethod(null)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">🔄 Turnover Forced</div>
+        <div class="sheet-sub">How was it won?</div>
+      </div>
+      <button class="sheet-close" aria-label="Close" onclick="commitTurnoverMethod(null)">✕</button>
+    </div>
+    <div id="tm-body"></div>
+    <button class="kw-skip" onclick="commitTurnoverMethod(null)">Skip</button>
+  </div>
+</div>
+
 <!-- BLOCKER (after a blocked shot) -->
 <div class="modal-overlay" id="blocker-pick-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitPendingBlocker(null)">
   <div class="modal-sheet">
@@ -3715,6 +3731,7 @@ const state = {
   shotZones:{home:{},away:{}},
   turnoverZones:{home:{},away:{}},
   foulZones:{home:{},away:{}},
+  turnoverMethod:{home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}},
   scoreline:[], // [{min, h, a}]
   possHistory:[] // [homePercent 0-100] after each possession event
 };
@@ -4115,7 +4132,8 @@ function commitGeneric(team, category, key, playerRef) {
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
 
   if (['fortyFive','ballLost','turnover','kickout','foul'].indexOf(category) !== -1) {
-    openLocationPicker(team, category);
+    if (category === 'turnover') openTurnoverMethodPick(team);
+    else openLocationPicker(team, category);
   }
 }
 
@@ -4180,6 +4198,9 @@ function deleteEvent(id) {
     if (state[ev.type] && state[ev.type][t] && state[ev.type][t][ev.outcome] !== undefined) {
       state[ev.type][t][ev.outcome]=Math.max(0,state[ev.type][t][ev.outcome]-1);
     }
+    if (ev.type === 'turnover' && ev.method && state.turnoverMethod && state.turnoverMethod[t] && state.turnoverMethod[t][ev.method]) {
+      state.turnoverMethod[t][ev.method] = Math.max(0, state.turnoverMethod[t][ev.method] - 1);
+    }
     renderGenericTallies();
   }
 
@@ -4195,6 +4216,16 @@ function deleteEvent(id) {
   if (typeof ev.blockedBy === 'number' && squad[ev.blockedBy] && squad[ev.blockedBy].stats) {
     var bst = squad[ev.blockedBy].stats;
     if (bst.blocks && bst.blocks.count) bst.blocks.count = Math.max(0, bst.blocks.count - 1);
+    saveSquad();
+  }
+
+  // A turnover may have a method credited to the winning player, separate
+  // from the location-third outcome
+  if (ev.type === 'turnover' && ev.method && typeof ev.player === 'number' && squad[ev.player] && squad[ev.player].stats) {
+    var tst = squad[ev.player].stats;
+    if (tst.turnoverMethod && tst.turnoverMethod[ev.method]) {
+      tst.turnoverMethod[ev.method] = Math.max(0, tst.turnoverMethod[ev.method] - 1);
+    }
     saveSquad();
   }
 
@@ -4786,6 +4817,49 @@ function commitPendingKickout(winnerNum) {
   }
   pendingEvent = null;
   refreshEventTallies();
+}
+
+// ── HOW THE TURNOVER WAS WON ────────────────────────
+// Shown after a Turnover Forced is committed: tackle, interception, or the
+// opposition just making an error. Skippable — location capture still
+// follows either way. Distinct from Ball Won's own method field, which
+// covers general possession pickups rather than pressure specifically
+// forcing the other team into a mistake.
+var pendingTurnoverMethod = null;   // { team }
+var TURNOVER_METHODS = [
+  { key:'tackle',       label:'Tackle',        icon:'🤼' },
+  { key:'interception', label:'Interception',  icon:'🙌' },
+  { key:'forcedError',  label:'Forced Error',  icon:'💥' }
+];
+
+function openTurnoverMethodPick(team) {
+  pendingTurnoverMethod = { team: team };
+  var body = document.getElementById('tm-body');
+  if (!body) { openLocationPicker(team, 'turnover'); return; }
+  body.innerHTML = TURNOVER_METHODS.map(function(tmv) {
+    return '<button class="outcome-btn ob-gen" onclick="commitTurnoverMethod(\'' + tmv.key + '\')">' +
+      '<span class="o-icon">' + tmv.icon + '</span><span class="o-label">' + tmv.label + '</span></button>';
+  }).join('');
+  document.getElementById('turnover-method-modal').classList.add('open');
+}
+
+function commitTurnoverMethod(key) {
+  var modal = document.getElementById('turnover-method-modal');
+  if (modal) modal.classList.remove('open');
+  var team = pendingTurnoverMethod ? pendingTurnoverMethod.team : null;
+  pendingTurnoverMethod = null;
+
+  if (key && team) {
+    var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
+    if (justAdded) justAdded.method = key;
+    if (justAdded && typeof justAdded.player === 'number') {
+      addStatToPlayer(justAdded.player, 'turnoverMethod', key);
+    }
+    if (!state.turnoverMethod) state.turnoverMethod = { home:{tackle:0,interception:0,forcedError:0}, away:{tackle:0,interception:0,forcedError:0} };
+    if (!state.turnoverMethod[team]) state.turnoverMethod[team] = { tackle:0, interception:0, forcedError:0 };
+    state.turnoverMethod[team][key] = (state.turnoverMethod[team][key] || 0) + 1;
+  }
+  if (team) openLocationPicker(team, 'turnover');
 }
 
 // ── WHO MADE THE BLOCK ──────────────────────────────
@@ -5552,6 +5626,7 @@ function renderPlayerStats() {
     var wides = ((s.shotsPlay && s.shotsPlay.wide)||0) + ((s.shotsFree && s.shotsFree.wide)||0);
     var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
     var blocks = (s.blocks && s.blocks.count) || 0;
+    var tmTackles = (s.turnoverMethod && s.turnoverMethod.tackle) || 0;
     // Per-match figures (squad[].stats is current match only)
     var scoresThis = goals + points + (((s.shotsPlay&&s.shotsPlay.twopointer)||0) + ((s.shotsFree&&s.shotsFree.twopointer)||0));
     var shotsThis = shotsPlay + shotsFree;
@@ -5627,6 +5702,10 @@ function renderPlayerStats() {
         (blocks > 0 ?
         '<div class="psc-stat-row">' +
           '<div class="psc-stat"><div class="psc-stat-val">' + blocks + '</div><div class="psc-stat-label">Blocks</div></div>' +
+        '</div>' : '') +
+        (tmTackles > 0 ?
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + tmTackles + '</div><div class="psc-stat-label">Tackles Won</div></div>' +
         '</div>' : '') +
         seasonBlock +
       '</div>' +
@@ -6176,6 +6255,13 @@ function updateStats() {
        ['Midfield',state.turnover.home.midfield,state.turnover.away.midfield],
        ['In Defence',state.turnover.home.inDefence,state.turnover.away.inDefence]
       ].forEach(function(r){statsRows.push(row(r));});
+      var tmh = state.turnoverMethod && state.turnoverMethod.home;
+      var tma = state.turnoverMethod && state.turnoverMethod.away;
+      if (tmh && tma && ((tmh.tackle||0)+(tmh.interception||0)+(tmh.forcedError||0)+(tma.tackle||0)+(tma.interception||0)+(tma.forcedError||0)) > 0) {
+        statsRows.push(row(['  by tackle', tmh.tackle||0, tma.tackle||0]));
+        statsRows.push(row(['  by interception', tmh.interception||0, tma.interception||0]));
+        statsRows.push(row(['  forced error', tmh.forcedError||0, tma.forcedError||0]));
+      }
     }
   }
   // Mark
@@ -12183,6 +12269,7 @@ function resetMatch(){
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
   state.foulZones={home:{},away:{}};
+  state.turnoverMethod={home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}};
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
@@ -12679,6 +12766,19 @@ function analyseMatch(m) {
   }
 
   if (hBW >= 12) poss.points.push(pt('Won ' + hBW + ' turnovers. The work rate off the ball was there.', 'good'));
+
+  // Method breakdown, when it was tagged
+  var hTM = m.turnoverMethod && m.turnoverMethod.home;
+  if (hTM) {
+    var tmTotal = (hTM.tackle||0) + (hTM.interception||0) + (hTM.forcedError||0);
+    if (tmTotal >= 5) {
+      if (hTM.tackle >= Math.ceil(tmTotal * 0.5)) {
+        poss.points.push(pt(hTM.tackle + ' of ' + tmTotal + ' tagged turnovers came from tackles \u2014 an aggressive, front-foot pressing game.', 'good'));
+      } else if (hTM.interception >= Math.ceil(tmTotal * 0.5)) {
+        poss.points.push(pt(hTM.interception + ' of ' + tmTotal + ' tagged turnovers came from interceptions \u2014 reading the game well rather than pressing hard.', 'good'));
+      }
+    }
+  }
 
   // What the turnovers actually cost
   if (hasEvents) {
@@ -13482,6 +13582,7 @@ function saveMatchToHistory() {
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
     turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
     foulZones: JSON.parse(JSON.stringify(state.foulZones || {home:{},away:{}})),
+    turnoverMethod: JSON.parse(JSON.stringify(state.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}})),
     playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
     matchNotes: state.matchNotes || ''
   };
@@ -13786,6 +13887,7 @@ function loadMatchIntoTracker(id) {
   state.startingFifteen = m.startingFifteen || null;
   state.turnoverZones = m.turnoverZones || {home:{},away:{}};
   state.foulZones = m.foulZones || {home:{},away:{}};
+  state.turnoverMethod = m.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}};
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
