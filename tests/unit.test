@@ -59,6 +59,17 @@ function stubEl(id) {
   return el;
 }
 
+// Cache stubs by id so a value set on one getElementById call (e.g.
+// simulating a dropdown pick) is still there on the next call for the same
+// id — closer to how a real DOM element persists, and needed for testing
+// any function that reads back a value it didn't just render itself.
+const elCache = {};
+function cachedStubEl(id) {
+  if (!id) return stubEl(id);
+  if (!elCache[id]) elCache[id] = stubEl(id);
+  return elCache[id];
+}
+
 const store = {};
 global.localStorage = {
   get length() { return Object.keys(store).length; },
@@ -69,7 +80,7 @@ global.localStorage = {
   clear: () => { Object.keys(store).forEach(k => delete store[k]); }
 };
 global.document = {
-  getElementById: id => stubEl(id), querySelector: () => stubEl(),
+  getElementById: id => cachedStubEl(id), querySelector: () => stubEl(),
   querySelectorAll: () => [], createElement: () => stubEl(),
   addEventListener(t, f) { (global.__doc = global.__doc || []).push([t, f]); },
   body: stubEl(), documentElement: stubEl(), head: stubEl(),
@@ -972,6 +983,74 @@ check('kickout foulLost cleared', state.kickout.home.foulLost, 0);
 ok('kickout retention still works after reset (keys still present, not deleted)', function(){
   var r = kickoutRetention('home', 0);
   if (r.total !== 0) throw new Error('expected a clean slate');
+});
+
+// ══ 8n. SUBSTITUTIONS ══
+// Found via user feedback: the Off/On dropdowns weren't filtered by who was
+// actually on the pitch, so picking the wrong name silently failed to swap
+// state.pitchOccupant — the sub showed in the timeline, but the old player
+// kept showing up in the player picker for every event after.
+group('Substitutions keep the pitch and player picker in sync');
+resetMatch();
+for (var si=0; si<20; si++) squad[si] = { name:'Player'+(si+1), pos:'', stats:{} };
+state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+
+ok('Off list only offers players currently on the pitch', function(){
+  subTeam = 'home';
+  renderSubPlayerSelects();
+  var offHtml = document.getElementById('sub-off-select').__html || '';
+  if (offHtml.indexOf('Player16') !== -1) throw new Error('a bench player (16) should not be a valid "off" pick');
+  if (offHtml.indexOf('Player1<') === -1 && offHtml.indexOf('>Player1 ') === -1 && offHtml.indexOf('1 Player1') === -1)
+    throw new Error('an on-pitch player (1) should be offered');
+});
+
+ok('On list excludes players already on the pitch', function(){
+  subTeam = 'home';
+  renderSubPlayerSelects();
+  var onHtml = document.getElementById('sub-on-select').__html || '';
+  if (onHtml.indexOf('value="Player1"') !== -1) throw new Error('an on-pitch player should not be offered as a substitute');
+  if (onHtml.indexOf('value="Player16"') === -1) throw new Error('a bench player (16) should be offered as a substitute');
+});
+
+ok('a valid substitution updates pitchOccupant so the new player is tagged afterward', function(){
+  subTeam = 'home';
+  document.getElementById('sub-off-select').value = 'Player1';
+  document.getElementById('sub-on-name').value = '';
+  document.getElementById('sub-on-select').value = 'Player16';
+  document.getElementById('sub-minute').value = '50';
+  saveSubstitution();
+  if (state.pitchOccupant[0] !== 15) throw new Error('position 1 should now hold squad index 15 (Player16), got ' + state.pitchOccupant[0]);
+  var html = buildPlayerGridHTML('home', 'confirmPlayerPick');
+  if (html.indexOf('Player16') === -1) throw new Error('the substitute should now appear in the event player picker');
+  if (html.indexOf('confirmPlayerPick(15)') === -1) throw new Error('the picker should reference the substitute\\'s squad index');
+});
+
+resetMatch();
+for (var sj=0; sj<20; sj++) squad[sj] = { name:'Player'+(sj+1), pos:'', stats:{} };
+state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+ok('subbing off someone not on the pitch does not silently corrupt pitchOccupant', function(){
+  subTeam = 'home';
+  var before = state.pitchOccupant.slice();
+  // Bypass the (now-filtered) dropdown to simulate the old bug directly —
+  // typing a bench player's name straight into the off field.
+  document.getElementById('sub-off-select').value = 'Player16';
+  document.getElementById('sub-on-name').value = 'Player17';
+  document.getElementById('sub-on-select').value = '';
+  document.getElementById('sub-minute').value = '10';
+  saveSubstitution();
+  if (JSON.stringify(state.pitchOccupant) !== JSON.stringify(before))
+    throw new Error('pitchOccupant should be unchanged when the "off" player was never on the pitch');
+});
+
+resetMatch();
+ok('opening Select Starting 15 mid-match redirects rather than silently editing the pitch', function(){
+  for (var sk=0; sk<16; sk++) squad[sk] = { name:'Player'+(sk+1), pos:'', stats:{} };
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  gamePhase = 'first_half';
+  tsDraft = null;
+  openTeamSelector();
+  if (tsDraft !== null) throw new Error('team selector should not open a live edit session mid-match');
+  gamePhase = 'pregame';
 });
 
 // ══ 9. SAFETY HELPERS ══
