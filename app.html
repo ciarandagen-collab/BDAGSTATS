@@ -2909,6 +2909,20 @@ input:not([type]), textarea, select {
   <div class="lv-foot">Read-only view. Stats update automatically.</div>
 </div>
 
+<!-- PENALTY RESULT (after a foul is given as a penalty) -->
+<div class="modal-overlay" id="penalty-result-modal" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">🥅 Penalty</div>
+        <div class="sheet-sub" id="pr-sub">What happened?</div>
+      </div>
+    </div>
+    <div id="pr-body"></div>
+  </div>
+</div>
+
 <!-- TURNOVER METHOD (after a turnover is forced) -->
 <div class="modal-overlay" id="turnover-method-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitTurnoverMethod(null)">
   <div class="modal-sheet">
@@ -3054,7 +3068,8 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Card warning</span><span class="help-val">A carded player is ringed amber/dark/red, and warns before you record</span></div>
       <div class="help-row"><span class="help-key">Location</span><span class="help-val">Shots, 45s, ball lost, turnovers, kickouts and fouls ask where on the pitch — or Skip</span></div>
       <div class="help-row"><span class="help-key">Blocked shot</span><span class="help-val">Outcome → 🛡 Blocked prompts who made the block — skippable, credits the defender</span></div>
-      <div class="help-row"><span class="help-key">Foul reason</span><span class="help-val">🔄 Foul Given asks Shooting / Cynical / Dangerous / Dissent, then where on the pitch</span></div>
+      <div class="help-row"><span class="help-key">Foul reason</span><span class="help-val">🔄 Foul Given asks Shooting / Cynical / Dangerous / Dissent / Penalty, then where on the pitch</span></div>
+      <div class="help-row"><span class="help-key">Penalty conceded</span><span class="help-val">Foul Given → Penalty pauses to ask Goal / Point / Missed. Scores go to the team that WON the penalty, not the team that conceded it.</span></div>
       <div class="help-row"><span class="help-key">Turnover method</span><span class="help-val">🔄 Turnover Forced asks Tackle / Interception / Forced Error — skippable</span></div>
       <div class="help-row"><span class="help-key">Undo</span><span class="help-val">Bar at the bottom after each event — one tap puts everything back</span></div>
       <div class="help-row"><span class="help-key">Hide events</span><span class="help-val">⚙️ Choose which events show here — untick what you never use</span></div>
@@ -3732,7 +3747,7 @@ const state = {
   attacks:{home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}},
   pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
   startingFifteen:null,
-  foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0}},
+  foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
   shotZones:{home:{},away:{}},
   turnoverZones:{home:{},away:{}},
@@ -4075,7 +4090,7 @@ const GENERIC_CONFIG = {
   mark:{title:'📌 Mark',sub:'Was the mark won or lost?',outcomes:[{key:'won',icon:'✅',label:'Won'},{key:'lost',icon:'❌',label:'Lost'}]},
   possession:{title:'🏉 Possession',sub:'What did the player do on the ball?',outcomes:[{key:'carry',icon:'🏃',label:'Carried'},{key:'handPass',icon:'🤚',label:'Hand Pass'},{key:'kickPass',icon:'👟',label:'Kick Pass'},{key:'heldUp',icon:'✋',label:'Held Up'}]},
   attacks:{title:'⚔️ Attack',sub:'How did the attack end?',outcomes:[{key:'scored',icon:'✅',label:'Score'},{key:'ballLost',icon:'❌',label:'Ball Lost'},{key:'turnedBack',icon:'🔄',label:'Turned Back'}]},
-  foul:{title:'⚠️ Foul Given',sub:'What type of foul?',outcomes:[{key:'shooting',icon:'🎯',label:'Shooting'},{key:'cynical',icon:'🟨',label:'Cynical'},{key:'dangerous',icon:'💥',label:'Dangerous'},{key:'dissent',icon:'🗣️',label:'Dissent'}]},
+  foul:{title:'⚠️ Foul Given',sub:'What type of foul?',outcomes:[{key:'shooting',icon:'🎯',label:'Shooting'},{key:'cynical',icon:'🟨',label:'Cynical'},{key:'dangerous',icon:'💥',label:'Dangerous'},{key:'dissent',icon:'🗣️',label:'Dissent'},{key:'penalty',icon:'🥅',label:'Penalty'}]},
   cards:{title:'🟨 Card',sub:'Select card type — tag a player first',outcomes:[{key:'yellow',icon:'🟨',label:'Yellow'},{key:'black',icon:'⬛',label:'Black'},{key:'red',icon:'🟥',label:'Red'}]}
 };
 const gmodal = {team:null,category:null};
@@ -4155,6 +4170,7 @@ function commitGeneric(team, category, key, playerRef) {
 
   if (['fortyFive','ballLost','turnover','kickout','foul'].indexOf(category) !== -1) {
     if (category === 'turnover') openTurnoverMethodPick(team);
+    else if (category === 'foul' && key === 'penalty') { /* location tap deferred until the penalty result is resolved */ }
     else openLocationPicker(team, category);
   }
 }
@@ -4218,16 +4234,12 @@ function deleteEvent(id) {
     if (state.shots[t] && state.shots[t][ev.shotMode] && state.shots[t][ev.shotMode][ev.outcome] !== undefined) {
       state.shots[t][ev.shotMode][ev.outcome]=Math.max(0,state.shots[t][ev.shotMode][ev.outcome]-1);
     }
-    if (ev.outcome==='goal') state[t].goals=Math.max(0,state[t].goals-1);
-    else if (ev.outcome==='point') state[t].points=Math.max(0,state[t].points-1);
-    else if (ev.outcome==='twopointer') state[t].points=Math.max(0,state[t].points-2);
     renderShotCounts();renderShotSummary();
   }
   else if(ev.type==='fortyFive'){
     if (state.fortyFive[t] && state.fortyFive[t][ev.outcome] !== undefined) {
       state.fortyFive[t][ev.outcome]=Math.max(0,state.fortyFive[t][ev.outcome]-1);
     }
-    if (ev.outcome==='scored') state[t].points=Math.max(0,state[t].points-1);
     renderGenericTallies();
   }
   else if(['ballLost','ballWon','kickout','turnover','mark','possession','attacks','foul','cards'].includes(ev.type)){
@@ -4264,6 +4276,16 @@ function deleteEvent(id) {
     }
     saveSquad();
   }
+
+  // A penalty conceded credits the OTHER team's scoreboard, not this event's
+  // own team — reverse whichever team the linked score companion actually
+  // belongs to, not just this event's team.
+  state.events.forEach(function(e2){
+    if (e2.linkedTo === id && (e2.type === 'goal' || e2.type === 'point')) {
+      if (e2.type === 'goal') state[e2.team].goals = Math.max(0, state[e2.team].goals - 1);
+      else state[e2.team].points = Math.max(0, state[e2.team].points - 1);
+    }
+  });
 
   // Remove this event and any silent score companions linked to it (the
   // extra 'point' events a shot or a scored 45 wrote alongside itself)
@@ -4812,6 +4834,17 @@ function confirmPlayerPick(ref) {
     return;   // committed once the winner is chosen or skipped
   }
 
+  // A penalty conceded pauses for a result — the score, if any, goes to the
+  // OTHER team, so this can't just commit-and-clear like every other event.
+  var isPenalty = ev.kind === 'generic' && ev.arg === 'foul' && ev.outcomeKey === 'penalty';
+  if (isPenalty) {
+    commitGeneric(ev.team, ev.arg, ev.outcomeKey, ref);
+    pendingEvent.awaitingPenalty = true;
+    pendingEvent.foulEventId = lastEventId;
+    openPenaltyResultPick(ev.team);
+    return;   // committed once commitPenaltyResult resolves it
+  }
+
   if (ev.kind === 'shot') commitShot(ev.team, ev.arg, ev.outcomeKey, ref);
   else commitGeneric(ev.team, ev.arg, ev.outcomeKey, ref);
   pendingEvent = null;
@@ -4855,6 +4888,49 @@ function commitPendingKickout(winnerNum) {
   }
   pendingEvent = null;
   refreshEventTallies();
+}
+
+// ── PENALTY RESULT ───────────────────────────────────
+// A penalty conceded pauses for a result before anything is scored, because
+// the score — if any — belongs to the OTHER team, not the team the foul
+// event itself is tagged against. pendingEvent stays alive (repurposed)
+// until this resolves, which is what lets a caller check "did this pause
+// for a result" the same way the kickout-winner and other pickers work.
+function openPenaltyResultPick(concedingTeam) {
+  var body = document.getElementById('pr-body');
+  var sub = document.getElementById('pr-sub');
+  if (!body) { commitPenaltyResult(null); return; }
+  var scoringTeam = concedingTeam === 'home' ? 'away' : 'home';
+  if (sub) sub.textContent = 'Did ' + (scoringTeam === 'home' ? 'your team' : 'the opposition') + ' score it?';
+  body.innerHTML =
+    '<button class="outcome-btn ob-gen" onclick="commitPenaltyResult(\'goal\')"><span class="o-icon">🥅</span><span class="o-label">Goal</span></button>' +
+    '<button class="outcome-btn ob-gen" onclick="commitPenaltyResult(\'point\')"><span class="o-icon">✦</span><span class="o-label">Point</span></button>' +
+    '<button class="outcome-btn ob-gen" onclick="commitPenaltyResult(null)"><span class="o-icon">✕</span><span class="o-label">Missed</span></button>';
+  document.getElementById('penalty-result-modal').classList.add('open');
+}
+
+function commitPenaltyResult(result) {
+  var modal = document.getElementById('penalty-result-modal');
+  if (modal) modal.classList.remove('open');
+  if (!pendingEvent || !pendingEvent.awaitingPenalty) return;
+
+  var concedingTeam = pendingEvent.team;
+  var scoringTeam = concedingTeam === 'home' ? 'away' : 'home';
+  var foulEvId = pendingEvent.foulEventId;
+  var ev = state.events.find(function(e){ return e.id === foulEvId; });
+
+  if (result === 'goal' || result === 'point') {
+    // Linked to the FOUL event, not to either team's own event, so undoing
+    // the foul correctly reverses the OTHER team's score (see deleteEvent).
+    addScore(scoringTeam, result, foulEvId);
+    if (ev) ev.penaltyResult = result;
+  } else if (ev) {
+    ev.penaltyResult = 'missed';
+  }
+
+  pendingEvent = null;
+  refreshEventTallies();
+  openLocationPicker(concedingTeam, 'foul');
 }
 
 // ── HOW THE TURNOVER WAS WON ────────────────────────
@@ -12304,11 +12380,19 @@ function resetMatch(){
   state.shots={home:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}},away:{play:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0},free:{point:0,twopointer:0,goal:0,blocked:0,wide:0,saved:0,short:0}}};
   state.ballLost={home:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0},away:{handPass:0,kickPass:0,inContact:0,handling:0,overCarrying:0}};
   state.ballWon={home:{inContact:0,tackle:0,interception:0},away:{inContact:0,tackle:0,interception:0}};
-  state.kickout={home:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,lossClean:0,breakLoss:0,shortWon:0,shortLoss:0}};
+  state.kickout={home:{wonClean:0,breakWon:0,foulWon:0,lossClean:0,breakLoss:0,foulLost:0,shortWon:0,shortLoss:0},away:{wonClean:0,breakWon:0,foulWon:0,lossClean:0,breakLoss:0,foulLost:0,shortWon:0,shortLoss:0}};
   state.fortyFive={home:{scored:0,wide:0,short:0,pass:0,ballLost:0},away:{scored:0,wide:0,short:0,pass:0,ballLost:0}};
   state.possession={home:{count:0},away:{count:0}};
   state.attacks={home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}};
   state.sideline={home:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0},away:{wonRetained:0,wonLost:0,oppRetained:0,oppWon:0}};
+  // Found via a stale-stats bug: these four were never cleared here, so a
+  // foul, turnover, mark or card tally from the previous match silently
+  // carried into the next one — the same class of bug already fixed for
+  // player stats above.
+  state.foul={home:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0}};
+  state.turnover={home:{inAttack:0,inDefence:0,midfield:0},away:{inAttack:0,inDefence:0,midfield:0}};
+  state.mark={home:{won:0,lost:0},away:{won:0,lost:0}};
+  state.cards={home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
