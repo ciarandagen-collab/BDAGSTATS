@@ -2886,6 +2886,22 @@ input:not([type]), textarea, select {
   <div class="lv-foot">Read-only view. Stats update automatically.</div>
 </div>
 
+<!-- BLOCKER (after a blocked shot) -->
+<div class="modal-overlay" id="blocker-pick-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitPendingBlocker(null)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">🛡️ Shot Blocked</div>
+        <div class="sheet-sub" id="bp-sub">Who made the block?</div>
+      </div>
+      <button class="sheet-close" aria-label="Close" onclick="commitPendingBlocker(null)">✕</button>
+    </div>
+    <div id="bp-body"></div>
+    <button class="kw-skip" onclick="commitPendingBlocker(null)">Skip — didn’t see</button>
+  </div>
+</div>
+
 <!-- KICKOUT WINNER (after a lost kickout) -->
 <div class="modal-overlay" id="kickout-winner-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)commitPendingKickout(null)">
   <div class="modal-sheet">
@@ -3675,6 +3691,7 @@ const state = {
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
   shotZones:{home:{},away:{}},
   turnoverZones:{home:{},away:{}},
+  foulZones:{home:{},away:{}},
   scoreline:[], // [{min, h, a}]
   possHistory:[] // [homePercent 0-100] after each possession event
 };
@@ -3816,7 +3833,10 @@ function commitShot(team, mode, outcome, playerRef) {
   // Attach the player to the event addShot just created
   var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
   if (justAdded) justAdded.player = playerRef;
-  openLocationPicker(team, 'shot');
+  // A blocked shot is a defensive stat too — ask who made the block before
+  // moving on to location. Skippable, and location capture still follows.
+  if (outcome === 'blocked') openBlockerPick(team);
+  else openLocationPicker(team, 'shot');
 }
 
 var locPicker = {team:null, kind:null}; // kind: 'shot' | 'fortyFive'
@@ -3826,7 +3846,8 @@ var LOC_PICKER_COPY = {
   fortyFive:  { title:'📍 45 Location',       sub:'Tap where the 45 was struck from' },
   ballLost:   { title:'📍 Where was it lost?', sub:'Tap where possession was conceded' },
   turnover:   { title:'📍 Where was it won?',  sub:'Tap where the turnover was forced' },
-  kickout:    { title:'📍 Kickout',            sub:'Tap where the kickout landed' }
+  kickout:    { title:'📍 Kickout',            sub:'Tap where the kickout landed' },
+  foul:       { title:'📍 Where was the foul?', sub:'Tap where the foul occurred' }
 };
 
 function openLocationPicker(team, kind) {
@@ -3891,11 +3912,18 @@ function handleLocationTap(evt) {
   var evType = locPicker.kind || 'shot';
   var zone = nearestZone(team, vx, vy);
 
-  // Only shots and 45s feed the shot-zone map; turnovers get their own territory map
+  // Shots and 45s feed the shot-zone map; turnovers/ball-lost get their own
+  // territory map; fouls get their own so discipline-by-zone stays separate
+  // from turnover-by-zone.
   if (zone) {
     if (evType === 'shot' || evType === 'fortyFive') {
       if (!state.shotZones[team][zone]) state.shotZones[team][zone] = 0;
       state.shotZones[team][zone]++;
+    } else if (evType === 'foul') {
+      if (!state.foulZones) state.foulZones = { home:{}, away:{} };
+      if (!state.foulZones[team]) state.foulZones[team] = {};
+      if (!state.foulZones[team][zone]) state.foulZones[team][zone] = 0;
+      state.foulZones[team][zone]++;
     } else {
       if (!state.turnoverZones) state.turnoverZones = { home:{}, away:{} };
       if (!state.turnoverZones[team]) state.turnoverZones[team] = {};
@@ -4063,7 +4091,7 @@ function commitGeneric(team, category, key, playerRef) {
   var pfx = catPfxMap[category];
   if (pfx) pulseTally(pfx + '-' + team + '-tally');
 
-  if (['fortyFive','ballLost','turnover','kickout'].indexOf(category) !== -1) {
+  if (['fortyFive','ballLost','turnover','kickout','foul'].indexOf(category) !== -1) {
     openLocationPicker(team, category);
   }
 }
@@ -4137,6 +4165,13 @@ function deleteEvent(id) {
     var key = ev.type==='shot' ? (ev.shotMode==='free' ? 'shotsFree' : 'shotsPlay') : ev.type;
     if (st[key] && st[key][ev.outcome]) st[key][ev.outcome] = Math.max(0, st[key][ev.outcome]-1);
     if (ev.type==='shot' && st.shots && st.shots[ev.outcome]) st.shots[ev.outcome] = Math.max(0, st.shots[ev.outcome]-1);
+    saveSquad();
+  }
+
+  // A blocked shot may have a blocker credited separately from the shooter
+  if (typeof ev.blockedBy === 'number' && squad[ev.blockedBy] && squad[ev.blockedBy].stats) {
+    var bst = squad[ev.blockedBy].stats;
+    if (bst.blocks && bst.blocks.count) bst.blocks.count = Math.max(0, bst.blocks.count - 1);
     saveSquad();
   }
 
@@ -4600,6 +4635,14 @@ function openPlayerPick() {
   if (title) title.textContent = label + (pendingEvent.outcomeLabel ? ' — ' + pendingEvent.outcomeLabel : '');
   if (sub) sub.textContent = (team === 'home' ? 'My Team' : 'Opposition') + ' — tap the player';
 
+  body.innerHTML = buildPlayerGridHTML(team, 'confirmPlayerPick');
+  document.getElementById('player-pick-modal').classList.add('open');
+}
+
+// Shared grid renderer: My Team's pitch+bench, or Opposition's jersey numbers.
+// onclickFn is the name of the global function to call with the picked ref
+// (a squad index for home, or 'away-N' for away).
+function buildPlayerGridHTML(team, onclickFn) {
   if (team === 'home') {
     var occ = state.pitchOccupant || [];
     var cards = cardStatus('home');
@@ -4616,7 +4659,7 @@ function openPlayerPick() {
         var card = cards[idx];
         // Show the match jersey (position), not the squad slot — that's what a
         // coach sees on the pitch.
-        return '<button class="pp-player' + (card ? ' on-' + card : '') + '" onclick="confirmPlayerPick(' + idx + ')">' +
+        return '<button class="pp-player' + (card ? ' on-' + card : '') + '" onclick="' + onclickFn + '(' + idx + ')">' +
           '<span class="pp-circle">' + pos + '</span>' +
           '<span class="pp-name">' + escapeHtml(surnameOf(p.name)) + '</span></button>';
       }).join('') + '</div>';
@@ -4626,13 +4669,13 @@ function openPlayerPick() {
     var bench = '';
     for (var i = 15; i < 34; i++) {
       if (squad[i] && squad[i].name && (occ.indexOf(i) === -1)) {
-        bench += '<button class="pp-player small" onclick="confirmPlayerPick(' + i + ')">' +
+        bench += '<button class="pp-player small" onclick="' + onclickFn + '(' + i + ')">' +
           '<span class="pp-circle">' + (i+1) + '</span>' +
           '<span class="pp-name">' + surnameOf(squad[i].name) + '</span></button>';
       }
     }
     if (bench) html += '<div class="pp-bench-label">Bench</div><div class="pp-bench">' + bench + '</div>';
-    body.innerHTML = html;
+    return html;
   } else {
     // Opposition: jersey numbers, with any names we know
     var oppCards = cardStatus('away');
@@ -4640,13 +4683,12 @@ function openPlayerPick() {
     for (var n = 1; n <= 30; n++) {
       var nm = oppPlayerName(awayName(), n);
       var oc = oppCards['away-' + n];
-      h += '<button class="pp-opp' + (oc ? ' on-' + oc : '') + '" onclick="confirmPlayerPick(\'away-' + n + '\')">' +
+      h += '<button class="pp-opp' + (oc ? ' on-' + oc : '') + '" onclick="' + onclickFn + '(\'away-' + n + '\')">' +
         n + (nm ? '<span class="pp-opp-name">' + surnameOf(nm) + '</span>' : '') + '</button>';
     }
     h += '</div>';
-    body.innerHTML = h;
+    return h;
   }
-  document.getElementById('player-pick-modal').classList.add('open');
 }
 
 function cancelPlayerPick() {
@@ -4721,6 +4763,35 @@ function commitPendingKickout(winnerNum) {
   }
   pendingEvent = null;
   refreshEventTallies();
+}
+
+// ── WHO MADE THE BLOCK ──────────────────────────────
+// Shown after a blocked shot: pick the defending player who made the block.
+// Skippable, because in fast play you may not have clocked the number.
+var pendingBlocker = null;   // { shotTeam }
+
+function openBlockerPick(shotTeam) {
+  pendingBlocker = { shotTeam: shotTeam };
+  var oppTeam = shotTeam === 'home' ? 'away' : 'home';
+  var body = document.getElementById('bp-body');
+  if (!body) { commitPendingBlocker(null); return; }
+  var sub = document.getElementById('bp-sub');
+  if (sub) sub.textContent = 'Who made the block for ' + (oppTeam === 'home' ? 'your team' : 'the opposition') + '?';
+  body.innerHTML = buildPlayerGridHTML(oppTeam, 'commitPendingBlocker');
+  document.getElementById('blocker-pick-modal').classList.add('open');
+}
+
+function commitPendingBlocker(ref) {
+  var modal = document.getElementById('blocker-pick-modal');
+  if (modal) modal.classList.remove('open');
+  var shotTeam = pendingBlocker ? pendingBlocker.shotTeam : null;
+  pendingBlocker = null;
+  if (ref !== null && ref !== undefined) {
+    var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
+    if (justAdded) justAdded.blockedBy = ref;
+    if (typeof ref === 'number') addStatToPlayer(ref, 'blocks', 'count');
+  }
+  if (shotTeam) openLocationPicker(shotTeam, 'shot');
 }
 
 // ── RECORD TAB: PITCH-FIRST EVENT FLOW ─────────────
@@ -5457,6 +5528,7 @@ function renderPlayerStats() {
     var ballLost = Object.keys((s.ballLost||{})).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
     var wides = ((s.shotsPlay && s.shotsPlay.wide)||0) + ((s.shotsFree && s.shotsFree.wide)||0);
     var kickouts = Object.keys((s.kickout||{})).reduce(function(a,k){return a+(s.kickout[k]||0);},0);
+    var blocks = (s.blocks && s.blocks.count) || 0;
     // Per-match figures (squad[].stats is current match only)
     var scoresThis = goals + points + (((s.shotsPlay&&s.shotsPlay.twopointer)||0) + ((s.shotsFree&&s.shotsFree.twopointer)||0));
     var shotsThis = shotsPlay + shotsFree;
@@ -5529,6 +5601,10 @@ function renderPlayerStats() {
           '<div class="psc-stat"><div class="psc-stat-val">' + (freeConv !== null ? freeConv + '%' : '—') + '</div><div class="psc-stat-label">Frees</div></div>' +
           '<div class="psc-stat"><div class="psc-stat-val">' + (matchConv !== null ? matchConv + '%' : '—') + '</div><div class="psc-stat-label">Conversion</div></div>' +
         '</div>' +
+        (blocks > 0 ?
+        '<div class="psc-stat-row">' +
+          '<div class="psc-stat"><div class="psc-stat-val">' + blocks + '</div><div class="psc-stat-label">Blocks</div></div>' +
+        '</div>' : '') +
         seasonBlock +
       '</div>' +
       '</div>';
@@ -8683,12 +8759,19 @@ function oppPlayerStats(club) {
   var out = {}; // num -> {scores, goals, points, shots, ballWon, ballLost, fouls, matches:Set}
   function bucket(num) {
     if (!out[num]) out[num] = { goals:0, points:0, twoPointers:0, shots:0, ballWon:0,
-                                ballLost:0, fouls:0, cards:0, turnovers:0, matchIds:{} };
+                                ballLost:0, fouls:0, cards:0, turnovers:0, blocks:0, matchIds:{} };
     return out[num];
   }
   loadHistory().forEach(function(m) {
     if (m.away !== club || !m.events) return;
     m.events.forEach(function(e) {
+      // Blocks are credited to whoever made the block, which may be an
+      // opposition defender against one of our own shots — check first,
+      // independently of the team-tag filter below (which is for e.team==='away').
+      if (e.type === 'shot' && typeof e.blockedBy === 'string' && e.blockedBy.indexOf('away-') === 0) {
+        var bNum = e.blockedBy.split('-')[1];
+        if (bNum) { bucket(bNum).blocks++; bucket(bNum).matchIds[m.id] = true; }
+      }
       if (e.team !== 'away') return;
       // Opposition tags are stored as the string "away-<number>"
       if (typeof e.player !== 'string' || e.player.indexOf('away-') !== 0) return;
@@ -11889,6 +11972,7 @@ function resetMatch(){
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
+  state.foulZones={home:{},away:{}};
   setHalf(1); $('current-min').value=1; clockReset(); gamePhase = 'pregame'; renderGameControls();
   updateScoreboard(); renderTimeline(); renderPlayers(); renderShotCounts(); renderShotSummary(); renderGenericTallies(); renderTrends();
 }
@@ -13115,6 +13199,7 @@ function saveMatchToHistory() {
     squadId: currentClubSquadId || null,   // lets club reports group by squad
     startingFifteen: state.startingFifteen ? state.startingFifteen.slice() : null,
     turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
+    foulZones: JSON.parse(JSON.stringify(state.foulZones || {home:{},away:{}})),
     playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
     matchNotes: state.matchNotes || ''
   };
@@ -13418,6 +13503,7 @@ function loadMatchIntoTracker(id) {
   state.pitchOccupant = m.pitchOccupant || [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.startingFifteen = m.startingFifteen || null;
   state.turnoverZones = m.turnoverZones || {home:{},away:{}};
+  state.foulZones = m.foulZones || {home:{},away:{}};
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
