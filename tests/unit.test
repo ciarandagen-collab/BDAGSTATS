@@ -872,6 +872,104 @@ ok('Kickout Battle table includes the new foul outcomes', function(){
   global.window.open = origOpen;
 });
 
+// ══ 8l. PENALTY CONCEDED ══
+group('Penalty scoreboard direction');
+resetMatch();
+for (var i=0;i<15;i++) squad[i] = { name:'P'+(i+1), pos:'', stats:{} };
+
+function concedeFoul(team, outcome, player) {
+  startEvent(team, 'generic', 'foul');
+  selectGenericOutcome(outcome);
+  if (pendingEvent) confirmPlayerPick(player);
+}
+
+ok('a normal foul (not a penalty) does not touch the scoreboard', function(){
+  var hb = state.home.points, ab = state.away.points;
+  concedeFoul('home','highTackle',3);
+  if (state.home.points !== hb || state.away.points !== ab) throw new Error('scoreboard moved');
+});
+
+resetMatch();
+ok('My Team conceding a penalty scored as a GOAL credits the OPPOSITION', function(){
+  concedeFoul('home','penalty',3);          // My Team commits the foul
+  if (!pendingEvent) throw new Error('penalty did not pause for a result');
+  commitPenaltyResult('goal');
+  if (state.home.goals !== 0) throw new Error('conceding team should not gain a goal');
+  if (state.away.goals !== 1) throw new Error('opposition should have the goal, got ' + state.away.goals);
+});
+
+resetMatch();
+ok('My Team conceding a penalty scored as a POINT credits the OPPOSITION', function(){
+  concedeFoul('home','penalty',3);
+  commitPenaltyResult('point');
+  if (state.away.points !== 1) throw new Error('opposition should have the point');
+  if (state.home.points !== 0) throw new Error('conceding team should not gain a point');
+});
+
+resetMatch();
+ok('the Opposition conceding a penalty credits MY TEAM', function(){
+  concedeFoul('away','penalty',null);
+  commitPenaltyResult('goal');
+  if (state.home.goals !== 1) throw new Error('my team should have the goal, got ' + state.home.goals);
+  if (state.away.goals !== 0) throw new Error('opposition should not gain from their own concession');
+});
+
+resetMatch();
+ok('a missed penalty records the foul but adds no score', function(){
+  concedeFoul('home','penalty',3);
+  commitPenaltyResult(null);
+  if (state.home.points || state.home.goals || state.away.points || state.away.goals)
+    throw new Error('a missed penalty should not change either scoreboard');
+  var ev = state.events.find(function(e){ return e.outcome === 'penalty'; });
+  if (!ev) throw new Error('the foul itself should still be recorded');
+  if (ev.penaltyResult !== 'missed') throw new Error('result not marked missed');
+});
+
+resetMatch();
+ok('undoing a scored penalty reverses the correct team', function(){
+  concedeFoul('home','penalty',3);
+  commitPenaltyResult('goal');
+  var ev = state.events.find(function(e){ return e.outcome === 'penalty'; });
+  deleteEvent(ev.id);
+  if (state.away.goals !== 0) throw new Error('undo should have removed the away goal, still shows ' + state.away.goals);
+});
+
+resetMatch();
+ok('the foul tally itself is credited to the conceding team, not the scorer', function(){
+  concedeFoul('home','penalty',3);
+  commitPenaltyResult('goal');
+  if (state.foul.home.penalty !== 1) throw new Error('conceding team should carry the foul stat');
+  if (state.foul.away.penalty !== 0) throw new Error('the team that did not foul should not gain a foul stat');
+});
+resetMatch();
+
+// ══ 8m. RESET CLEARS EVERYTHING (regression) ══
+// Found while testing penalties: resetMatch() never cleared foul, turnover,
+// mark or cards, so those stats silently carried into the next match — the
+// same class of bug already fixed for player stats. Also the kickout reset
+// was missing the foulWon/foulLost keys added alongside Foul Won/Foul Lost.
+group('resetMatch clears every category');
+resetMatch();
+state.foul.home.penalty = 3;
+state.foul.home.cynical = 2;
+state.turnover.home.midfield = 4;
+state.mark.home.won = 5;
+state.cards.home.yellow = 2;
+state.kickout.home.foulWon = 3;
+state.kickout.home.foulLost = 1;
+resetMatch();
+check('foul.penalty cleared', state.foul.home.penalty, 0);
+check('foul.cynical cleared', state.foul.home.cynical, 0);
+check('turnover cleared', state.turnover.home.midfield, 0);
+check('mark cleared', state.mark.home.won, 0);
+check('cards cleared', state.cards.home.yellow, 0);
+check('kickout foulWon cleared', state.kickout.home.foulWon, 0);
+check('kickout foulLost cleared', state.kickout.home.foulLost, 0);
+ok('kickout retention still works after reset (keys still present, not deleted)', function(){
+  var r = kickoutRetention('home', 0);
+  if (r.total !== 0) throw new Error('expected a clean slate');
+});
+
 // ══ 9. SAFETY HELPERS ══
 group('Safety helpers');
 check('escapeHtml handles angle brackets', escapeHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
