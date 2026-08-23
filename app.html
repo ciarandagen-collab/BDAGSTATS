@@ -2722,6 +2722,7 @@ input:not([type]), textarea, select {
     <div class="export-row">
       <button class="btn-export" id="copy-btn" onclick="exportSummary()">📋 Copy Summary</button>
       <button class="btn-export" onclick="toggleShotMap()">🎯 Shot Map</button>
+      <button class="btn-export" onclick="toggleFoulMap()">⚠️ Foul Map</button>
       <button class="btn-export btn-reset" onclick="resetMatch()">↺ Reset</button>
     </div>
 
@@ -2752,6 +2753,28 @@ input:not([type]), textarea, select {
         <span class="sm-legend-item"><span class="sm-dot" style="background:#a855f7;"></span>Blocked</span>
       </div>
       <div id="shot-map-tooltip" class="shot-map-tooltip" style="display:none;"></div>
+    </div>
+
+    <!-- Foul Map -->
+    <div id="foul-map-section" style="display:none;">
+      <div class="sec-label">Foul Map</div>
+      <div class="shot-map-controls">
+        <div class="shot-map-toggle-group">
+          <button class="sm-toggle active" id="fm-team-both" onclick="setFoulMapFilter('team','both')">Both</button>
+          <button class="sm-toggle" id="fm-team-home" onclick="setFoulMapFilter('team','home')">My Team</button>
+          <button class="sm-toggle" id="fm-team-away" onclick="setFoulMapFilter('team','away')">Opposition</button>
+        </div>
+      </div>
+      <div class="shot-map-wrap">
+        <svg id="foul-map-svg" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="shot-map-legend">
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#f59e0b;"></span>Shooting</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#ef4444;"></span>Cynical</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#a855f7;"></span>Dangerous</span>
+        <span class="sm-legend-item"><span class="sm-dot" style="background:#3b82f6;"></span>Dissent</span>
+      </div>
+      <div id="foul-map-tooltip" class="shot-map-tooltip" style="display:none;"></div>
     </div>
 
     <div id="stats-video-tags-section" style="display:none;">
@@ -11261,6 +11284,127 @@ function hideShotTooltip() {
   if (tooltip) tooltip.style.display = 'none';
 }
 
+// ── FOUL MAP (live, in-app) ─────────────────────────────────────────
+// Same tapped-position data the location picker already captures for
+// fouls, plotted the same way as the Shot Map but coloured by foul type.
+var foulMapVisible = false;
+var foulMapTeamFilter = 'both';
+const FOUL_COLOURS = { shooting:'#f59e0b', cynical:'#ef4444', dangerous:'#a855f7', dissent:'#3b82f6' };
+
+function toggleFoulMap() {
+  foulMapVisible = !foulMapVisible;
+  var section = document.getElementById('foul-map-section');
+  if (section) section.style.display = foulMapVisible ? 'block' : 'none';
+  if (foulMapVisible) renderFoulMap();
+}
+
+function setFoulMapFilter(type, value) {
+  if (type === 'team') {
+    foulMapTeamFilter = value;
+    ['both','home','away'].forEach(function(v) {
+      var btn = document.getElementById('fm-team-' + v);
+      if (btn) btn.classList.toggle('active', v === value);
+    });
+  }
+  renderFoulMap();
+}
+
+function getFoulMapData() {
+  var fouls = [];
+  var eventsArr = (typeof loadedMatchState !== 'undefined' && loadedMatchState)
+    ? loadedMatchState.events : state.events;
+
+  (eventsArr || []).forEach(function(ev) {
+    if (ev.type !== 'foul') return;
+    if (foulMapTeamFilter !== 'both' && ev.team !== foulMapTeamFilter) return;
+    if (ev.x === undefined && !ev.zone) return;
+    fouls.push({
+      team: ev.team,
+      outcome: ev.outcome,
+      zone: ev.zone,
+      x: ev.x,
+      y: ev.y,
+      player: ev.player || null,
+      minute: ev.min || null,
+    });
+  });
+  return fouls;
+}
+
+function renderFoulMap() {
+  var svg = document.getElementById('foul-map-svg');
+  if (!svg) return;
+
+  var homeName = document.getElementById('stats-home-h') ? document.getElementById('stats-home-h').textContent : 'Home';
+  var awayName = document.getElementById('stats-away-h') ? document.getElementById('stats-away-h').textContent : 'Away';
+
+  var pitchSvg = drawPitch(homeName, awayName);
+  var fouls = getFoulMapData();
+  var zoneCount = {};
+
+  var dots = fouls.map(function(s) {
+    var cx, cy;
+    if (s.x !== undefined && s.y !== undefined) {
+      cx = (s.x / 100) * 320;
+      cy = (s.y / 100) * 480;
+    } else {
+      var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+      var base = coordMap[s.zone];
+      if (!base) return '';
+      var zoneKey = s.team + '_' + s.zone;
+      zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+      var count = zoneCount[zoneKey];
+      cx = base.x + (Math.sin(count * 137.5) * 14);
+      cy = base.y + (Math.cos(count * 137.5) * 10);
+    }
+    cx = Math.max(15, Math.min(305, cx));
+    cy = Math.max(15, Math.min(465, cy));
+
+    var colour = FOUL_COLOURS[s.outcome] || '#94a3b8';
+    var tooltip = (s.team === 'home' ? homeName : awayName) + ' \u00B7 ' +
+      (s.outcome || '') + (s.minute ? ' (' + s.minute + '\u2019)' : '');
+
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="6" ' +
+      'fill="' + colour + '" stroke="rgba(0,0,0,0.3)" stroke-width="0.5" ' +
+      'style="cursor:pointer;" ' +
+      'onmouseenter="showFoulTooltip(event,\'' + tooltip.replace(/'/g,"\\'") + '\')" ' +
+      'ontouchstart="showFoulTooltip(event,\'' + tooltip.replace(/'/g,"\\'") + '\')" ' +
+      'onmouseleave="hideFoulTooltip()" ontouchend="hideFoulTooltip()"/>';
+  }).join('');
+
+  var homeCount = fouls.filter(function(s) { return s.team === 'home'; }).length;
+  var awayCount = fouls.filter(function(s) { return s.team === 'away'; }).length;
+
+  svg.innerHTML = pitchSvg + dots;
+
+  var label = document.querySelector('#foul-map-section .sec-label');
+  if (label) {
+    label.textContent = 'Foul Map';
+    label.innerHTML += ' <span style="font-size:9px;color:var(--muted);font-weight:400;font-family:\'Inter\',sans-serif;letter-spacing:0;text-transform:none;">' +
+      homeCount + ' my team \u00B7 ' + awayCount + ' opposition</span>';
+  }
+
+  if (!fouls.length) {
+    svg.innerHTML += '<text x="160" y="245" text-anchor="middle" font-family="Arial" font-size="13" fill="rgba(240,253,244,0.3)">No fouls with locations recorded</text>';
+  }
+}
+
+function showFoulTooltip(event, text) {
+  var tooltip = document.getElementById('foul-map-tooltip');
+  if (!tooltip || !text) return;
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  var x = (event.touches ? event.touches[0].clientX : event.clientX) + 12;
+  var y = (event.touches ? event.touches[0].clientY : event.clientY) - 10;
+  tooltip.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function hideFoulTooltip() {
+  var tooltip = document.getElementById('foul-map-tooltip');
+  if (tooltip) tooltip.style.display = 'none';
+}
+
 // ── SHOT MAP IN PDF REPORT ────────────────────────────────────────────
 
 function generateShotMapSVGString(matchRecord) {
@@ -11337,6 +11481,72 @@ function generateShotMapSVGString(matchRecord) {
     '<rect x="113.5" y="375.8" width="53" height="36.2" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
     '<rect x="120.5" y="399.5" width="39" height="12.5" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
     // Goalposts (6.5m)
+    '<line x1="130.9" y1="8" x2="130.9" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="149.1" y1="8" x2="149.1" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="130.9" y1="412" x2="130.9" y2="418" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    '<line x1="149.1" y1="412" x2="149.1" y2="418" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.5"/>' +
+    dots +
+    '</svg>';
+}
+
+function generateFoulMapSVGString(matchRecord) {
+  if (!matchRecord) return '';
+  var fouls = [];
+  var eventsArr = matchRecord.events || [];
+
+  eventsArr.forEach(function(ev) {
+    if (ev.type !== 'foul') return;
+    if (ev.x === undefined && !ev.zone) return;
+    fouls.push(ev);
+  });
+
+  if (!fouls.length) return '';
+
+  var zoneCount = {};
+  var W = 280, H = 420;
+
+  var dots = fouls.map(function(s) {
+    var cx, cy;
+    if (s.x !== undefined && s.y !== undefined) {
+      cx = Math.round((s.x / 100) * W);
+      cy = Math.round((s.y / 100) * H);
+    } else {
+      var coordMap = s.team === 'away' ? ZONE_COORDS_AWAY : ZONE_COORDS_HOME;
+      var base = coordMap[s.zone];
+      if (!base) return '';
+      var zoneKey = s.team + '_' + s.zone;
+      zoneCount[zoneKey] = (zoneCount[zoneKey] || 0) + 1;
+      var count = zoneCount[zoneKey];
+      cx = Math.round(base.x * (W/320)) + Math.round(Math.sin(count * 137.5) * 12);
+      cy = Math.round(base.y * (H/480)) + Math.round(Math.cos(count * 137.5) * 9);
+    }
+    cx = Math.max(8, Math.min(W-8, cx));
+    cy = Math.max(8, Math.min(H-8, cy));
+
+    var colour = FOUL_COLOURS[s.outcome] || '#94a3b8';
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + colour + '" stroke="white" stroke-width="0.5"/>';
+  }).join('');
+
+  return '<svg width="' + W + '" height="' + H + '" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">' +
+    '<rect width="' + W + '" height="' + H + '" fill="#f0fdf4"/>' +
+    '<rect x="14.6" y="8" width="250.8" height="404" fill="none" stroke="#16a34a" stroke-width="1" stroke-opacity="0.35"/>' +
+    '<line x1="14.6" y1="210" x2="265.4" y2="210" stroke="#16a34a" stroke-opacity="0.25" stroke-width="1"/>' +
+    '<line x1="14.6" y1="44.2" x2="265.4" y2="44.2" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="63.7" x2="265.4" y2="63.7" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="133.4" x2="265.4" y2="133.4" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="4,4"/>' +
+    '<line x1="14.6" y1="189.1" x2="265.4" y2="189.1" stroke="#16a34a" stroke-opacity="0.1" stroke-width="0.8" stroke-dasharray="2,5"/>' +
+    '<line x1="14.6" y1="375.8" x2="265.4" y2="375.8" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="356.3" x2="265.4" y2="356.3" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="3,3"/>' +
+    '<line x1="14.6" y1="286.6" x2="265.4" y2="286.6" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="4,4"/>' +
+    '<line x1="14.6" y1="230.9" x2="265.4" y2="230.9" stroke="#16a34a" stroke-opacity="0.1" stroke-width="0.8" stroke-dasharray="2,5"/>' +
+    '<path d="M 28.6 8 A 111.4 111.4 0 0 0 251.4 8" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="5,4"/>' +
+    '<path d="M 28.6 412 A 111.4 111.4 0 0 1 251.4 412" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8" stroke-dasharray="5,4"/>' +
+    '<path d="M 103.8 63.7 A 36.2 36.2 0 0 0 176.2 63.7" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8"/>' +
+    '<path d="M 103.8 356.3 A 36.2 36.2 0 0 1 176.2 356.3" fill="none" stroke="#16a34a" stroke-opacity="0.14" stroke-width="0.8"/>' +
+    '<rect x="113.5" y="8" width="53" height="36.2" fill="none" stroke="#16a34a" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="120.5" y="8" width="39" height="12.5" fill="none" stroke="#16a34a" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="113.5" y="375.8" width="53" height="36.2" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
+    '<rect x="120.5" y="399.5" width="39" height="12.5" fill="none" stroke="#94a3b8" stroke-width="0.8" stroke-opacity="0.3"/>' +
     '<line x1="130.9" y1="8" x2="130.9" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
     '<line x1="149.1" y1="8" x2="149.1" y2="2" stroke="#16a34a" stroke-width="1.6" stroke-opacity="0.5"/>' +
     '<line x1="130.9" y1="412" x2="130.9" y2="418" stroke="#94a3b8" stroke-width="1.6" stroke-opacity="0.5"/>' +
@@ -12544,7 +12754,49 @@ function analyseMatch(m) {
     if (shootingFouls >= 4) {
       disc.points.push(pt(shootingFouls + ' fouls conceded in shooting positions. Those are the cheapest scores you can give away.', 'bad'));
     }
+    // Zone-based read, independent of the foul type tagged — a "cynical" or
+    // "dissent" foul given away in the D costs exactly as much as a shooting one.
+    var hFoulZones = m.foulZones && m.foulZones.home;
+    if (hFoulZones) {
+      var dZoneFouls = (hFoulZones['left-d']||0) + (hFoulZones['d-line']||0) + (hFoulZones['right-d']||0);
+      var totalZoned = Object.keys(hFoulZones).reduce(function(a,k){ return a + (hFoulZones[k]||0); }, 0);
+      if (totalZoned >= 6 && dZoneFouls >= 3 && dZoneFouls / totalZoned >= 0.35) {
+        disc.points.push(pt(dZoneFouls + ' of ' + totalZoned + ' fouls were conceded inside the D, whatever the reason given. That is where frees hurt most — worth a specific word with the full-back line.', 'bad'));
+      }
+    }
     if (disc.points.length) out.sections.push(disc);
+  }
+
+  // ════════════ SHOT BLOCKING ════════════
+  if (hasEvents) {
+    var blocksMade = evs.filter(function(e){
+      return e.type === 'shot' && e.team === 'away' && e.outcome === 'blocked' && typeof e.blockedBy === 'number';
+    });
+    var blocksConceded = evs.filter(function(e){
+      return e.type === 'shot' && e.team === 'home' && e.outcome === 'blocked';
+    });
+    var awayShotsBlocked = evs.filter(function(e){ return e.type === 'shot' && e.team === 'away' && e.outcome === 'blocked'; }).length;
+    if (awayShotsBlocked >= 2 || blocksConceded.length >= 2) {
+      var blk = { title: 'Shot blocking', points: [] };
+      if (awayShotsBlocked >= 2) {
+        blk.points.push(pt('Blocked ' + awayShotsBlocked + ' ' + them + ' shot' + (awayShotsBlocked !== 1 ? 's' : '') +
+          (blocksMade.length ? ', ' + blocksMade.length + ' of them credited to a named defender' : '') +
+          ' — direct scores taken off the board.', 'good'));
+        if (blocksMade.length) {
+          var counts = {};
+          blocksMade.forEach(function(e){ counts[e.blockedBy] = (counts[e.blockedBy]||0) + 1; });
+          var topIdx = Object.keys(counts).reduce(function(a,b){ return counts[a] >= counts[b] ? a : b; });
+          var topPlayer = m.players && m.players[topIdx];
+          if (counts[topIdx] >= 2 && topPlayer && topPlayer.name) {
+            blk.points.push(pt(topPlayer.name + ' made ' + counts[topIdx] + ' block' + (counts[topIdx] !== 1 ? 's' : '') + ' — a real defensive shift.', 'good'));
+          }
+        }
+      }
+      if (blocksConceded.length >= 3) {
+        blk.points.push(pt(blocksConceded.length + ' of your own shots were blocked. Worth a look at whether shots are being rushed or taken from too tight an angle.', 'bad'));
+      }
+      out.sections.push(blk);
+    }
   }
 
   // ════════════ PLAYERS ════════════
@@ -13012,7 +13264,37 @@ function generateMatchReport(id) {
     html += '</div></div>';
   }
 
-  // ══════════════ 8. VIDEO ANALYSIS TAGS ══════════════
+  // ══════════════ 8. FOUL MAP ══════════════
+  var foulsWithZones = (m.events || []).filter(function(ev) { return ev.type === 'foul' && (ev.zone || ev.x !== undefined); });
+  if (foulsWithZones.length > 0) {
+    html += nextSection('Foul Map');
+    var foulMapSvg = generateFoulMapSVGString(m);
+    var homeFoulCount = foulsWithZones.filter(function(s) { return s.team === 'home'; }).length;
+    var awayFoulCount = foulsWithZones.filter(function(s) { return s.team === 'away'; }).length;
+
+    html += '<div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:16px;">';
+    html += '<div style="flex-shrink:0;">' + foulMapSvg + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-size:12px;color:#374151;margin-bottom:12px;line-height:1.6;">Fouls plotted where they were given, regardless of which side conceded them.</div>';
+    html += '<table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 6px;background:#14532d;color:#fff;">Type</th><th style="padding:4px 6px;background:#14532d;color:#fff;text-align:center;">' + (m.home||'Home') + '</th><th style="padding:4px 6px;background:#14532d;color:#fff;text-align:center;">' + (m.away||'Away') + '</th></tr></thead><tbody>';
+
+    ['shooting','cynical','dangerous','dissent'].forEach(function(outcome, i) {
+      var hCount = foulsWithZones.filter(function(s) { return s.team==='home' && s.outcome===outcome; }).length;
+      var aCount = foulsWithZones.filter(function(s) { return s.team==='away' && s.outcome===outcome; }).length;
+      var colour = FOUL_COLOURS[outcome] || '#94a3b8';
+      var bg = i % 2 === 0 ? '#f9fafb' : '#fff';
+      html += '<tr style="background:' + bg + ';">' +
+        '<td style="padding:4px 6px;display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:' + colour + ';display:inline-block;flex-shrink:0;"></span>' + outcome.charAt(0).toUpperCase() + outcome.slice(1) + '</td>' +
+        '<td style="padding:4px 6px;text-align:center;">' + (hCount || '\u2014') + '</td>' +
+        '<td style="padding:4px 6px;text-align:center;">' + (aCount || '\u2014') + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div style="margin-top:10px;font-size:11px;color:#6b7280;">Total fouls mapped: ' + homeFoulCount + ' (' + (m.home||'Home') + ') \u00B7 ' + awayFoulCount + ' (' + (m.away||'Away') + ')</div>';
+    html += '</div></div>';
+  }
+
+  // ══════════════ 9. VIDEO ANALYSIS TAGS ══════════════
   var vtags = vaLoadTags(m.id);
   if (vtags && vtags.length > 0) {
     html += nextSection('Video Analysis Tags');
