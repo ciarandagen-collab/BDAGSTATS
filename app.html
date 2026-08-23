@@ -3050,8 +3050,12 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Running tally</span><span class="help-val">Each half shows a live count for that team</span></div>
       <div class="help-row"><span class="help-key">Nothing saves early</span><span class="help-val">The event is only recorded once you pick the player — back out and nothing is logged</span></div>
       <div class="help-row"><span class="help-key">Shortcuts</span><span class="help-val">Attack needs no player · Possession has no outcome</span></div>
+      <div class="help-row"><span class="help-key">2-Pointer</span><span class="help-val">Shot outcome picker → ⭐ 2 Pointer. Recorded as one shot, worth 2 points, shown as its own line everywhere — timeline, stats and reports.</span></div>
       <div class="help-row"><span class="help-key">Card warning</span><span class="help-val">A carded player is ringed amber/dark/red, and warns before you record</span></div>
-      <div class="help-row"><span class="help-key">Location</span><span class="help-val">Shots, 45s, ball lost, turnovers and kickouts ask where on the pitch — or Skip</span></div>
+      <div class="help-row"><span class="help-key">Location</span><span class="help-val">Shots, 45s, ball lost, turnovers, kickouts and fouls ask where on the pitch — or Skip</span></div>
+      <div class="help-row"><span class="help-key">Blocked shot</span><span class="help-val">Outcome → 🛡 Blocked prompts who made the block — skippable, credits the defender</span></div>
+      <div class="help-row"><span class="help-key">Foul reason</span><span class="help-val">🔄 Foul Given asks Shooting / Cynical / Dangerous / Dissent, then where on the pitch</span></div>
+      <div class="help-row"><span class="help-key">Turnover method</span><span class="help-val">🔄 Turnover Forced asks Tackle / Interception / Forced Error — skippable</span></div>
       <div class="help-row"><span class="help-key">Undo</span><span class="help-val">Bar at the bottom after each event — one tap puts everything back</span></div>
       <div class="help-row"><span class="help-key">Hide events</span><span class="help-val">⚙️ Choose which events show here — untick what you never use</span></div>
       <div class="help-row"><span class="help-key">Substitution</span><span class="help-val">Tap Substitutions heading → + Record Substitution. Suggests who is fading after 20 mins.</span></div>
@@ -3090,11 +3094,13 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Save match</span><span class="help-val">Stats tab → Save Match — banner turns green</span></div>
       <div class="help-row"><span class="help-key">Match notes</span><span class="help-val">Stats tab → 📝 Match Notes — auto-saves as you type</span></div>
       <div class="help-row"><span class="help-key">Half filter</span><span class="help-val">Stats tab → Full Match / 1st Half / 2nd Half toggle</span></div>
-      <div class="help-row"><span class="help-key">Shooting</span><span class="help-val">Conversion % overall, from play and from frees, plus kickout retention</span></div>
+      <div class="help-row"><span class="help-key">Shooting</span><span class="help-val">Conversion % overall, from play and from frees, plus kickout retention. 2-pointers break out as their own row.</span></div>
       <div class="help-row"><span class="help-key">Kickout detail</span><span class="help-val">Retention by short/middle/long and left/centre/right channel</span></div>
       <div class="help-row"><span class="help-key">Possession</span><span class="help-val">Real split when tagged both sides · otherwise labelled "Dominance Index"</span></div>
       <div class="help-row"><span class="help-key">Shot map</span><span class="help-val">Stats tab → 🎯 Shot Map — shots plot exactly where you tapped</span></div>
-      <div class="help-row"><span class="help-key">Match report</span><span class="help-val">History → report includes written Coach\u2019s Analysis and full event log</span></div>
+      <div class="help-row"><span class="help-key">Foul map</span><span class="help-val">Stats tab → ⚠️ Foul Map — fouls plotted by location and type, filter by My Team / Opposition</span></div>
+      <div class="help-row"><span class="help-key">Blocks</span><span class="help-val">Player card shows Blocks and Tackles Won when a player has any credited</span></div>
+      <div class="help-row"><span class="help-key">Match report</span><span class="help-val">History → report includes written Coach\u2019s Analysis, Foul Map and full event log</span></div>
       <div class="help-row"><span class="help-key">Share report</span><span class="help-val">History → 📤 Share on match card → WhatsApp / email</span></div>
       <div class="help-row"><span class="help-key">Season summary</span><span class="help-val">History → 📊 Season Summary → PDF</span></div>
       <div class="help-row"><span class="help-key">Scout report</span><span class="help-val">History → 🔍 Scout on match card</span></div>
@@ -3810,9 +3816,16 @@ function updateScoreboard() {
 }
 
 // ── SCORE ──────────────────────────────────────────
-function addScore(team, type) {
+function addScore(team, type, linkedTo) {
   if(type==='goal') state[team].goals++; else state[team].points++;
-  state.events.unshift({id:Date.now(),team,type,min:getMin(),half:state.half});
+  // This event exists purely so minute-by-minute counting logic elsewhere
+  // (half splits, scoring runs, turnover cost) can tally "how many points/
+  // goals happened" without re-deriving it from shot outcomes. It always has
+  // a fuller sibling event (the shot, or the 45) that carries the real detail,
+  // so it's marked silent and linked to that sibling — hidden from the
+  // timeline and report event log, and cleaned up together if the sibling
+  // is deleted.
+  state.events.unshift({id:Date.now()+Math.random(),team,type,min:getMin(),half:state.half,silent:true,linkedTo:linkedTo||null});
   snapPossession();
   updateScoreboard(); renderTimeline(); bumpMin();
 }
@@ -3821,6 +3834,9 @@ function undoLast(team) {
   const idx=state.events.findIndex(e=>e.team===team&&(e.type==='goal'||e.type==='point'));
   if(idx===-1)return;
   const ev=state.events[idx];
+  // Companions are always linked to a shot or 45 now — undo the whole score
+  // (and its shot/45 detail) together rather than leaving the shot behind.
+  if (ev.linkedTo) { deleteEvent(ev.linkedTo); return; }
   if(ev.type==='goal') state[team].goals=Math.max(0,state[team].goals-1);
   else state[team].points=Math.max(0,state[team].points-1);
   state.events.splice(idx,1);
@@ -4005,14 +4021,18 @@ function addShot(team,mode,outcome) {
     state.shots[team][mode][outcome] = 0;
   }
   state.shots[team][mode][outcome]++;
-  if(outcome==='goal') addScore(team,'goal');
-  else if(outcome==='point') addScore(team,'point');
-  else if(outcome==='twopointer') { addScore(team,'point'); addScore(team,'point'); }
 
-  // Always push to events (including goals/points) so zone data is captured
+  // Create the shot event first so score companions (below) can link back
+  // to it — that's what lets the timeline hide the companions and show only
+  // this one line per shot, including two-pointers.
   var shotEvId = Date.now();
   state.events.unshift({id:shotEvId,team:team,type:'shot',subtype:mode,shotMode:mode,outcome:outcome,min:getMin(),half:state.half});
   lastEventId = shotEvId;
+
+  if(outcome==='goal') addScore(team,'goal',shotEvId);
+  else if(outcome==='point') addScore(team,'point',shotEvId);
+  else if(outcome==='twopointer') { addScore(team,'point',shotEvId); addScore(team,'point',shotEvId); }
+
   showUndoToast((mode==='play'?'Shot from Play':'Shot from Free') + ' — ' + String(outcome).toUpperCase());
   renderTimeline(); bumpMin();
 
@@ -4114,12 +4134,14 @@ function commitGeneric(team, category, key, playerRef) {
   if (playerRef !== null && playerRef !== undefined) {
     addStatToPlayer(playerRef, category, key);
   }
-  if (category === 'fortyFive' && key === 'scored') addScore(team, 'point');
 
   var genEvId = Date.now();
   state.events.unshift({id:genEvId,team:team,type:category,outcome:key,
     outcomeLabel:outcomeLabel,min:getMin(),half:state.half,player:playerRef});
   lastEventId = genEvId;
+
+  if (category === 'fortyFive' && key === 'scored') addScore(team, 'point', genEvId);
+
   showUndoToast((cfg.title || category).replace(/^[^\w]+\s*/, '') + ' — ' + outcomeLabel);
   renderTimeline(); bumpMin(); renderGenericTallies();
   refreshEventTallies();
@@ -4147,11 +4169,16 @@ const catLabels={ballLost:'BALL LOST',ballWon:'BALL WON',kickout:'KICKOUT',forty
 
 function renderTimeline() {
   const list=$('timeline-list');
-  if(!state.events.length){list.innerHTML='<div class="empty-note">No events yet</div>';return;}
-  list.innerHTML=state.events.map(e=>{
+  // Companions (from addScore) are always type 'goal'/'point' with no
+  // detail of their own — the shot or 45 event next to them has the real
+  // story. Filter by type rather than just the newer 'silent' flag so this
+  // also cleans up matches saved before that flag existed.
+  const visible=state.events.filter(e=>!e.silent && e.type!=='goal' && e.type!=='point');
+  if(!visible.length){list.innerHTML='<div class="empty-note">No events yet</div>';return;}
+  list.innerHTML=visible.map(e=>{
     let icon,label,cls;
     if(e.type==='shot'){
-      icon=shotIcons[e.outcome]||'●'; label=`${e.outcome.toUpperCase()} (${e.shotMode==='free'?'FREE':'PLAY'})`;
+      icon=shotIcons[e.outcome]||'●'; label=`${e.outcome==='twopointer'?'2 POINTER':e.outcome.toUpperCase()} (${e.shotMode==='free'?'FREE':'PLAY'})`;
       cls=e.outcome==='goal'?`goal-${e.team}`:e.outcome==='point'?`point-${e.team}`:'';
     } else if(catIcons[e.type]){
       icon=catIcons[e.type]; label=`${catLabels[e.type]} — ${e.outcomeLabel}`; cls='';
@@ -4175,6 +4202,15 @@ function deleteEvent(id) {
   const idx=state.events.findIndex(e=>e.id===id); if(idx===-1)return;
   const ev=state.events[idx];
   const t = ev.team;
+
+  // Companions (silent 'goal'/'point' events written alongside a shot or a
+  // scored 45) are never shown with their own delete button, but redirect
+  // just in case — deleting the parent removes the whole score together and
+  // avoids double-decrementing the scoreboard.
+  if ((ev.type === 'goal' || ev.type === 'point') && ev.linkedTo) {
+    deleteEvent(ev.linkedTo);
+    return;
+  }
 
   if(ev.type==='goal') state[t].goals=Math.max(0,state[t].goals-1);
   else if(ev.type==='point') state[t].points=Math.max(0,state[t].points-1);
@@ -4229,7 +4265,9 @@ function deleteEvent(id) {
     saveSquad();
   }
 
-  state.events.splice(idx,1);
+  // Remove this event and any silent score companions linked to it (the
+  // extra 'point' events a shot or a scored 45 wrote alongside itself)
+  state.events = state.events.filter(function(e2){ return e2.id !== id && e2.linkedTo !== id; });
   updateScoreboard(); renderTimeline();
   try { updateStats(); } catch(e) {}
   try { refreshEventTallies(); } catch(e) {}
@@ -6426,7 +6464,11 @@ function renderTrends() {
   drawSpark('spark-possession', bwHTrend, bwATrend);
 
   // ── MOMENTUM ──
-  const scoreEvts=state.events.filter(e=>e.type==='goal'||e.type==='point'||(e.type==='shot'&&(e.outcome==='goal'||e.outcome==='point'))).slice(0,5);
+  // Count only the 'goal'/'point' companion events, same convention used
+  // everywhere else scores are tallied from state.events — each shot writes
+  // one of these per point (two for a two-pointer), so this stays accurate
+  // without also matching the shot event itself and double-counting.
+  const scoreEvts=state.events.filter(e=>e.type==='goal'||e.type==='point').slice(0,5);
   const mH=scoreEvts.filter(e=>e.team==='home').length, mA=scoreEvts.filter(e=>e.team==='away').length;
   const total5=mH+mA||1;
   const momFill=$('momentum-fill'), momText=$('momentum-lead-text');
@@ -9280,7 +9322,9 @@ function buildHalftimeDashboard() {
   var aCards = state.cards.away.yellow + state.cards.away.black + state.cards.away.red;
 
   // ── MOMENTUM (last 5 scores) ──
-  var scoreEvents = ev.filter(function(e){ return e.type==='goal'||e.type==='point'||e.outcome==='goal'||e.outcome==='point'; }).slice(0,5);
+  // Same convention as the live momentum widget — count the 'goal'/'point'
+  // companions only, not the shot event too (see renderStats).
+  var scoreEvents = ev.filter(function(e){ return e.type==='goal'||e.type==='point'; }).slice(0,5);
 
   // ── ALERTS (things that have happened multiple times) ──
   var alerts = [];
@@ -12654,6 +12698,27 @@ function analyseMatch(m) {
     if (m.homeGoals >= 3) {
       scoring.points.push(pt(m.homeGoals + ' goals — the forwards got in behind repeatedly.', 'good'));
     }
+
+    // Two-pointers — worth calling out on their own since they're a newer
+    // scoring option and can swing a tight game by more than their raw count suggests.
+    var hTwos = m.shots ? ((m.shots.home.play.twopointer||0) + (m.shots.home.free.twopointer||0)) : 0;
+    var aTwos = m.shots ? ((m.shots.away.play.twopointer||0) + (m.shots.away.free.twopointer||0)) : 0;
+    if (hTwos > 0 || aTwos > 0) {
+      var twoSwing = (hTwos - aTwos); // extra points banked from twos, relative to them
+      if (hTwos > 0 && aTwos === 0) {
+        scoring.points.push(pt(hTwos + ' two-pointer' + (hTwos !== 1 ? 's' : '') + ' — ' + (hTwos*2) + ' points from the arc that ' + them + ' didn\u2019t answer.', 'good'));
+      } else if (hTwos > 0 && aTwos > 0) {
+        scoring.points.push(pt('Two-pointers: ' + hTwos + ' to ' + aTwos + '.' +
+          (twoSwing !== 0 ? ' That\u2019s a net ' + Math.abs(twoSwing*2) + ' points ' + (twoSwing > 0 ? 'in your favour' : 'the wrong way') + ' from the arc alone.' : ''),
+          twoSwing > 0 ? 'good' : twoSwing < 0 ? 'bad' : 'neutral'));
+      } else if (aTwos > 0) {
+        scoring.points.push(pt(them + ' hit ' + aTwos + ' two-pointer' + (aTwos !== 1 ? 's' : '') + ' and you had none \u2014 ' + (aTwos*2) + ' points conceded from range that a normal shot wouldn\u2019t have cost.', 'bad'));
+      }
+      // If the two-pointer swing is close to or bigger than the final margin, say so explicitly.
+      if (Math.abs(twoSwing*2) >= Math.abs(margin) && Math.abs(twoSwing) > 0 && Math.abs(margin) > 0) {
+        scoring.points.push(pt('The two-pointer difference alone is close to the final margin of ' + Math.abs(margin) + ' \u2014 shots from that arc were a genuine factor in the result.', 'neutral'));
+      }
+    }
   }
 
   // Free-taking split
@@ -12966,7 +13031,9 @@ function analyseMatch(m) {
 
 // Full chronological event log for the report
 function matchEventLog(m) {
-  var evs = (m.events || []).slice().sort(function(a,b) {
+  // Same filtering as the live timeline — see renderTimeline for why bare
+  // 'goal'/'point' events are always companions, never their own story.
+  var evs = (m.events || []).filter(function(e){ return !e.silent && e.type!=='goal' && e.type!=='point'; }).slice().sort(function(a,b) {
     if ((a.half||1) !== (b.half||1)) return (a.half||1) - (b.half||1);
     return (a.min||0) - (b.min||0);
   });
@@ -13196,6 +13263,7 @@ function generateMatchReport(id) {
     var outcomes = [
       ['Goal (3pt)', m.shots.home.play.goal+m.shots.home.free.goal, m.shots.away.play.goal+m.shots.away.free.goal],
       ['Point', m.shots.home.play.point+m.shots.home.free.point, m.shots.away.play.point+m.shots.away.free.point],
+      ['2-Pointer', (m.shots.home.play.twopointer||0)+(m.shots.home.free.twopointer||0), (m.shots.away.play.twopointer||0)+(m.shots.away.free.twopointer||0)],
       ['Wide', hWides, aWides],
       ['Short', hShort, aShort],
       ['Blocked/Saved', hBlocked, aBlocked],
