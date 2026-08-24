@@ -4123,6 +4123,23 @@ function selectGenericOutcome(key) {
     refreshEventTallies();
     return;
   }
+
+  // A lost kickout only needs the player who WON it — who kicked it out
+  // isn't the useful stat here (it's almost always the keeper), so skip
+  // straight past "pick our player" to asking who claimed it, and don't
+  // ask for anyone on the team that lost it at all.
+  if (category === 'kickout' && KO_LOST.indexOf(key) !== -1) {
+    if (pendingEvent) {
+      pendingEvent.outcomeKey = key;
+      pendingEvent.outcomeLabel = outcomeLabel;
+      pendingEvent.ourPlayer = null;
+      openKickoutWinnerPick(pendingEvent);
+      return;   // committed once the winner is chosen or skipped
+    }
+    commitGeneric(team, category, key, null);
+    return;
+  }
+
   if (pendingEvent) {
     pendingEvent.outcomeKey = key;              // data value
     pendingEvent.outcomeLabel = outcomeLabel;   // display only
@@ -4823,16 +4840,6 @@ function confirmPlayerPick(ref) {
     renderRecordEventGrid();
     return;
   }
-  // Losing your own kickout means someone on the other team won it. Ask who,
-  // so their profile builds a picture of who dominates your restarts.
-  var lostOwnKickout = ev.kind === 'generic' && ev.arg === 'kickout' &&
-                       KO_LOST.indexOf(ev.outcomeKey) !== -1;
-  if (lostOwnKickout) {
-    ev.wonBy = null;
-    ev.ourPlayer = ref;
-    openKickoutWinnerPick(ev);
-    return;   // committed once the winner is chosen or skipped
-  }
 
   // A penalty conceded pauses for a result — the score, if any, goes to the
   // OTHER team, so this can't just commit-and-clear like every other event.
@@ -4852,39 +4859,34 @@ function confirmPlayerPick(ref) {
 }
 
 // ── WHO WON THE KICKOUT ────────────────────────────
-// Shown after a lost kickout: pick the opposition player who claimed it.
-// Skippable, because in fast play you may not have seen the number.
+// Shown after a lost kickout: pick the player who claimed it for the OTHER
+// team — never the team that lost it, since who kicked it out isn't the
+// useful stat here. Skippable, because in fast play you may not have seen
+// the number. Works both directions: if the opposition loses their own
+// kickout, this correctly shows YOUR named squad, not a jersey-number grid.
 function openKickoutWinnerPick(ev) {
   var body = document.getElementById('kw-body');
   var sub = document.getElementById('kw-sub');
   if (!body) { commitPendingKickout(null); return; }
-  var oppTeam = ev.team === 'home' ? 'away' : 'home';
-  if (sub) sub.textContent = 'Who won it for ' + (ev.team === 'home' ? 'the opposition' : 'your team') + '?';
-
-  var cards = cardStatus(oppTeam);
-  var html = '<div class="pp-opp-grid">';
-  for (var n = 1; n <= 30; n++) {
-    var nm = ev.team === 'home' ? oppPlayerName(awayName(), n) : null;
-    var oc = cards['away-' + n];
-    html += '<button class="pp-opp' + (oc ? ' on-' + oc : '') + '" onclick="commitPendingKickout(' + n + ')">' +
-      n + (nm ? '<span class="pp-opp-name">' + escapeHtml(surnameOf(nm)) + '</span>' : '') + '</button>';
-  }
-  html += '</div>';
-  html += '<button class="kw-skip" onclick="commitPendingKickout(null)">Skip \u2014 didn\u2019t see</button>';
-  body.innerHTML = html;
+  var winningTeam = ev.team === 'home' ? 'away' : 'home';
+  if (sub) sub.textContent = 'Who won it for ' + (winningTeam === 'home' ? 'your team' : 'the opposition') + '?';
+  body.innerHTML = buildPlayerGridHTML(winningTeam, 'commitPendingKickout') +
+    '<button class="kw-skip" onclick="commitPendingKickout(null)">Skip \u2014 didn\u2019t see</button>';
   document.getElementById('kickout-winner-modal').classList.add('open');
 }
 
-function commitPendingKickout(winnerNum) {
+function commitPendingKickout(winnerRef) {
   var modal = document.getElementById('kickout-winner-modal');
   if (modal) modal.classList.remove('open');
   var ev = pendingEvent;
   if (!ev) return;
-  commitGeneric(ev.team, ev.arg, ev.outcomeKey, ev.ourPlayer);
-  // Attach the winner to the event that commitGeneric just created
-  if (winnerNum !== null && winnerNum !== undefined) {
+  commitGeneric(ev.team, ev.arg, ev.outcomeKey, ev.ourPlayer || null);
+  // Attach the winner to the event that commitGeneric just created. A
+  // number is a home squad index; a string like 'away-7' is an opposition
+  // jersey — buildPlayerGridHTML already produced whichever fits.
+  if (winnerRef !== null && winnerRef !== undefined) {
     var justAdded = state.events.find(function(e){ return e.id === lastEventId; });
-    if (justAdded) justAdded.wonBy = 'away-' + winnerNum;
+    if (justAdded) justAdded.wonBy = winnerRef;
   }
   pendingEvent = null;
   refreshEventTallies();
