@@ -5174,17 +5174,9 @@ function openTeamSelector() {
     showSync('Add players to your squad first', 2500);
     return;
   }
-  // Once the match is under way, changing the pitch here would silently
-  // swap players with no sub event, no timeline entry, and no minutes-played
-  // record — the same swap done properly through Substitutions logs all of
-  // that. Redirect there instead of allowing an untracked edit.
-  if (gamePhase !== 'pregame') {
-    showSync('Match is live — use Substitutions to bring players on, so it\'s tracked', 3000);
-    var sec = document.getElementById('subs-section');
-    if (sec && sec.style.display === 'none') toggleSubs();
-    return;
-  }
-  // Start from the current lineup so edits are incremental
+  // Start from the current lineup so edits are incremental — mid-match this
+  // doubles as the substitution screen: change a position here and it's
+  // logged as a proper sub on confirm, same as the dropdown-based flow.
   tsDraft = (state.pitchOccupant || []).slice(0, 15);
   while (tsDraft.length < 15) tsDraft.push(null);
   renderTeamSelector();
@@ -5201,7 +5193,9 @@ function renderTeamSelector() {
   if (!pitch || !tsDraft) return;
   var filled = tsDraft.filter(function(v){ return typeof v === 'number'; }).length;
   var sub = document.getElementById('ts-subtitle');
-  if (sub) sub.textContent = filled + ' of 15 selected — tap a position to pick a player';
+  if (sub) sub.textContent = gamePhase !== 'pregame'
+    ? 'Match is live — changing a position here records a substitution'
+    : (filled + ' of 15 selected — tap a position to pick a player');
 
   pitch.innerHTML = TS_ROWS.map(function(row) {
     return '<div class="ts-row">' + row.map(function(pos) {
@@ -5284,14 +5278,40 @@ function confirmTeamSheet() {
   if (!tsDraft) return;
   var filled = tsDraft.filter(function(v){ return typeof v === 'number'; }).length;
   if (filled === 0) { showSync('Pick at least one player', 2000); return; }
+
+  var subsMade = 0;
+  if (gamePhase !== 'pregame') {
+    // Mid-match, this screen doubles as the substitution flow: any position
+    // that changed since it was opened is logged as a real sub (timeline,
+    // minutes played, subs list) rather than silently rewriting the pitch —
+    // the same record the dropdown-based Substitutions flow creates.
+    var prevOcc = (state.pitchOccupant || []).slice(0, 15);
+    for (var i = 0; i < 15; i++) {
+      var prevIdx = prevOcc[i];
+      var newIdx = tsDraft[i];
+      if (prevIdx === newIdx) continue;
+      var prevName = (typeof prevIdx === 'number' && squad[prevIdx]) ? squad[prevIdx].name : null;
+      var newName = (typeof newIdx === 'number' && squad[newIdx]) ? squad[newIdx].name : null;
+      if (!prevName && !newName) continue;
+      var sub = { id: Date.now() + i, type: 'sub', team: 'home', off: prevName, on: newName, min: getMin(), half: state.half };
+      if (!state.subs) state.subs = [];
+      state.subs.push(sub);
+      state.events.unshift(Object.assign({}, sub));
+      subsMade++;
+    }
+    if (subsMade) { renderSubsList(); updateSubsBadge(); }
+  }
+
   state.pitchOccupant = tsDraft.slice();
   // If the game hasn't started, this is also the starting fifteen
   if (gamePhase === 'pregame') state.startingFifteen = null;
   saveTeamSheetSession();
   refreshTeamSheetLabel();
   renderRecordPitch();
+  renderTimeline();
   closeTeamSelector();
-  showSync('✓ Starting 15 set (' + filled + ' players)', 2000);
+  showSync(subsMade ? ('✓ ' + subsMade + ' substitution' + (subsMade !== 1 ? 's' : '') + ' recorded')
+                     : ('✓ Starting 15 set (' + filled + ' players)'), 2000);
 }
 
 function refreshTeamSheetLabel() {
