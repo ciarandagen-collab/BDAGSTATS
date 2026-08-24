@@ -5174,6 +5174,16 @@ function openTeamSelector() {
     showSync('Add players to your squad first', 2500);
     return;
   }
+  // Once the match is under way, changing the pitch here would silently
+  // swap players with no sub event, no timeline entry, and no minutes-played
+  // record — the same swap done properly through Substitutions logs all of
+  // that. Redirect there instead of allowing an untracked edit.
+  if (gamePhase !== 'pregame') {
+    showSync('Match is live — use Substitutions to bring players on, so it\'s tracked', 3000);
+    var sec = document.getElementById('subs-section');
+    if (sec && sec.style.display === 'none') toggleSubs();
+    return;
+  }
   // Start from the current lineup so edits are incremental
   tsDraft = (state.pitchOccupant || []).slice(0, 15);
   while (tsDraft.length < 15) tsDraft.push(null);
@@ -8256,15 +8266,36 @@ function setSubTeam(team) {
 }
 
 function renderSubPlayerSelects() {
+  var occ = state.pitchOccupant || [];
+  var onPitchIdx = occ.slice(0, 15).filter(function(v){ return typeof v === 'number'; });
+
   var activePlayers = squad.map(function(p,i) { return {p,i}; }).filter(function(x) { return x.p && x.p.name; });
-  var options = '<option value="">Select player...</option>' +
-    activePlayers.map(function(x) {
-      return '<option value="' + x.p.name + '">' + (x.i+1) + ' ' + x.p.name + (x.p.pos ? ' (' + x.p.pos + ')' : '') + '</option>';
-    }).join('');
+
+  // For the home team, the "Off" list only makes sense as players actually
+  // on the pitch right now — picking anyone else silently fails to update
+  // the pitch later (their old spot doesn't exist to swap out of), so the
+  // substitute would never show up when recording events. The "On" list
+  // excludes anyone already on the pitch for the same reason in reverse.
+  var offPlayers = subTeam === 'home'
+    ? activePlayers.filter(function(x){ return onPitchIdx.indexOf(x.i) !== -1; })
+    : activePlayers;
+  var onPlayers = subTeam === 'home'
+    ? activePlayers.filter(function(x){ return onPitchIdx.indexOf(x.i) === -1; })
+    : activePlayers;
+
+  function opts(list) {
+    return '<option value="">Select player...</option>' +
+      list.map(function(x) {
+        return '<option value="' + x.p.name + '">' + (x.i+1) + ' ' + x.p.name + (x.p.pos ? ' (' + x.p.pos + ')' : '') + '</option>';
+      }).join('');
+  }
   var offSel = document.getElementById('sub-off-select');
   var onSel = document.getElementById('sub-on-select');
-  if (offSel) offSel.innerHTML = options;
-  if (onSel) onSel.innerHTML = options;
+  if (offSel) offSel.innerHTML = opts(offPlayers);
+  if (onSel) onSel.innerHTML = opts(onPlayers);
+  if (subTeam === 'home' && !offPlayers.length) {
+    showSync('No one is set on the pitch yet — check Select Starting 15', 2500);
+  }
 }
 
 function saveSubstitution() {
@@ -8296,9 +8327,18 @@ function saveSubstitution() {
     if (offIdx !== -1 && onIdx !== -1) {
       if (!state.pitchOccupant) state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
       var slot = state.pitchOccupant.indexOf(offIdx);
-      if (slot !== -1) {
+      var alreadyOn = state.pitchOccupant.slice(0,15).indexOf(onIdx) !== -1;
+      if (slot !== -1 && !alreadyOn) {
         state.pitchOccupant[slot] = onIdx;
         renderRecordPitch();
+      } else if (slot === -1) {
+        // The chosen "off" player isn't actually one of the 15 right now —
+        // recorded as a sub in the timeline, but the pitch can't be swapped
+        // because there's no position to take them out of. Flag it clearly
+        // instead of silently leaving the old player showing on the pitch.
+        showSync('⚠️ ' + off + ' wasn\'t on the pitch — sub logged, but the player list wasn\'t updated', 3500);
+      } else if (alreadyOn) {
+        showSync('⚠️ ' + onName + ' is already on the pitch — sub logged, but the player list wasn\'t updated', 3500);
       }
     } else if (offIdx !== -1 && onIdx === -1) {
       showSync('Add ' + onName + ' to your squad to tag them on the pitch', 2500);
@@ -16281,6 +16321,12 @@ function closeSquadPicker() {
 function selectMatchSquad(squadId) {
   var sq = clubSquads.find(function(s){ return String(s.id) === String(squadId); });
   if (!sq) return;
+  // Switching squads mid-match wipes the pitch line-up (a different squad
+  // means different players at different indices) — cheap to do by accident
+  // if this gets tapped after throw-in, so check first once the game is live.
+  if (gamePhase !== 'pregame' && String(squadId) !== String(currentClubSquadId)) {
+    if (!confirm('Switch squad mid-match? This resets your Starting 15 / pitch line-up for the new squad.')) return;
+  }
   squad = sq.players || [];
   while (squad.length < 34) squad.push(null);
   currentClubSquadId = squadId;
