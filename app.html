@@ -5732,7 +5732,7 @@ function seasonPlayerStats(force) {
       var s = p.stats || {};
       var b = out[p.name] || (out[p.name] = { matches:0, mins:0, goals:0, points:0, twoPointers:0,
                                               shots:0, freeShots:0, freeScores:0, wides:0,
-                                              ballWon:0, ballLost:0 });
+                                              ballWon:0, ballLost:0, blocks:0, tackles:0 });
       // Only count an appearance if they actually did something or logged minutes
       var did = Object.keys(s).length > 0 || (p.mins || 0) > 0;
       if (did) b.matches++;
@@ -5748,6 +5748,8 @@ function seasonPlayerStats(force) {
       b.freeScores  += (sf.point||0) + (sf.goal||0) + (sf.twopointer||0);
       b.ballWon     += Object.keys(s.ballWon||{}).reduce(function(a,k){return a+(s.ballWon[k]||0);},0);
       b.ballLost    += Object.keys(s.ballLost||{}).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
+      b.blocks      += (s.blocks && s.blocks.count) || 0;
+      b.tackles     += (s.turnoverMethod && s.turnoverMethod.tackle) || 0;
     });
   });
   Object.keys(out).forEach(function(n) {
@@ -5939,6 +5941,8 @@ function renderPlayerStats() {
             '<span><b>' + perMatch + '</b> pts/match</span>' +
             (sn.conv !== null ? '<span><b>' + sn.conv + '%</b> conv</span>' : '') +
             (sn.freeConv !== null && sn.freeShots >= 3 ? '<span><b>' + sn.freeConv + '%</b> frees</span>' : '') +
+            (sn.blocks > 0 ? '<span><b>' + sn.blocks + '</b> blocks</span>' : '') +
+            (sn.tackles > 0 ? '<span><b>' + sn.tackles + '</b> tackles</span>' : '') +
           '</div>' +
           (cons && cons.matches >= 3 ?
             '<div class="psc-spread">Best ' + cons.best + ' \u00B7 worst ' + cons.worst +
@@ -6570,7 +6574,8 @@ function updateStats() {
         [['Fouls Total',foh,foa],['Shooting Fouls',state.foul.home.shooting,state.foul.away.shooting],
          ['Cynical',state.foul.home.cynical,state.foul.away.cynical],
          ['Dangerous',state.foul.home.dangerous,state.foul.away.dangerous],
-         ['Dissent',state.foul.home.dissent,state.foul.away.dissent]
+         ['Dissent',state.foul.home.dissent,state.foul.away.dissent],
+         ['Penalty Conceded',state.foul.home.penalty,state.foul.away.penalty]
         ].forEach(function(r){statsRows.push(row(r));});
       }
       if (cdh + cda > 0) {
@@ -12666,6 +12671,41 @@ function turnoverCostFromRecord(m, team, windowMins) {
            cost: goals*3 + points };
 }
 
+// Same idea as turnoverCostFromRecord, applied to fouls: how many of the
+// frees you gave away actually turned into scores? A penalty's link is
+// certain (penaltyResult is set directly on the foul event, no guessing
+// needed); every other foul uses the same timing-correlation approach as
+// turnover cost, just with a tighter window — a free is usually taken
+// within the same minute or so, not built up over a longer passage.
+function foulCostFromRecord(m, team, windowMins) {
+  var w = (windowMins === undefined) ? 1 : windowMins;
+  var opp = team === 'home' ? 'away' : 'home';
+  var evs = m.events || [];
+  var fouls = evs.filter(function(e){ return e.team === team && e.type === 'foul'; });
+  var oppScores = evs.filter(function(e) {
+    return e.team === opp && (e.type === 'goal' || e.type === 'point');
+  });
+  var used = {}, goals = 0, points = 0, chains = 0, penaltiesScored = 0;
+  fouls.forEach(function(f) {
+    if (f.outcome === 'penalty' && (f.penaltyResult === 'goal' || f.penaltyResult === 'point')) {
+      chains++; penaltiesScored++;
+      if (f.penaltyResult === 'goal') goals++; else points++;
+      return;
+    }
+    for (var i = 0; i < oppScores.length; i++) {
+      var s = oppScores[i];
+      if (used[s.id]) continue;
+      if (s.half === f.half && (s.min||0) >= (f.min||0) && (s.min||0) - (f.min||0) <= w) {
+        used[s.id] = true; chains++;
+        if (s.type === 'goal') goals++; else points++;
+        break;
+      }
+    }
+  });
+  return { fouls: fouls.length, chains: chains, goals: goals, points: points,
+           cost: goals*3 + points, penaltiesScored: penaltiesScored };
+}
+
 function bestRunFromRecord(m) {
   var evs = (m.events || []).filter(function(e) {
     return e.type === 'goal' || e.type === 'point';
@@ -13213,6 +13253,22 @@ function analyseMatch(m) {
         disc.points.push(pt(dZoneFouls + ' of ' + totalZoned + ' fouls were conceded inside the D, whatever the reason given. That is where frees hurt most — worth a specific word with the full-back line.', 'bad'));
       }
     }
+    // What the fouls actually cost — mirrors the turnover-cost read above,
+    // applied to discipline. Penalty links are certain; everything else is
+    // timing-correlated the same way turnover cost already is.
+    var fc = foulCostFromRecord(m, 'home');
+    if (fc.chains > 0) {
+      disc.points.push(pt('Conceded ' + fc.goals + '-' + String(fc.points).padStart(2,'0') +
+        ' directly from fouls given away (' + fc.chains + ' of ' + fc.fouls +
+        (fc.penaltiesScored ? ', including ' + fc.penaltiesScored + ' scored penalt' + (fc.penaltiesScored !== 1 ? 'ies' : 'y') : '') +
+        '). That is ' + fc.cost + ' point' + (fc.cost !== 1 ? 's' : '') + ' handed over from frees alone.',
+        fc.cost >= 4 ? 'bad' : 'neutral'));
+    }
+    var fcThem = foulCostFromRecord(m, 'away');
+    if (fcThem.chains > 0) {
+      disc.points.push(pt('Made ' + them + '\u2019s fouls count for ' +
+        fcThem.goals + '-' + String(fcThem.points).padStart(2,'0') + ' from frees.', 'good'));
+    }
     if (disc.points.length) out.sections.push(disc);
   }
 
@@ -13602,6 +13658,32 @@ function generateMatchReport(id) {
     });
     html += statRow('Retention %', hKOPct+'%', aKOPct+'%');
     html += '</tbody></table>';
+  }
+
+  if (m.foul || m.cards) {
+    var chHome = (m.foul && m.foul.home) || {shooting:0,cynical:0,dangerous:0,dissent:0,penalty:0};
+    var chAway = (m.foul && m.foul.away) || {shooting:0,cynical:0,dangerous:0,dissent:0,penalty:0};
+    var cardsHome = (m.cards && m.cards.home) || {yellow:0,black:0,red:0};
+    var cardsAway = (m.cards && m.cards.away) || {yellow:0,black:0,red:0};
+    var foulTotalH = Object.values(chHome).reduce(function(a,b){return a+b;},0);
+    var foulTotalA = Object.values(chAway).reduce(function(a,b){return a+b;},0);
+    var cardTotalH = Object.values(cardsHome).reduce(function(a,b){return a+b;},0);
+    var cardTotalA = Object.values(cardsAway).reduce(function(a,b){return a+b;},0);
+    if (foulTotalH + foulTotalA + cardTotalH + cardTotalA > 0) {
+      html += nextSubSection('Discipline');
+      html += '<table><thead><tr>' + th('Type') + th(m.home) + th(m.away) + '</tr></thead><tbody>';
+      html += statRow('Fouls Total', foulTotalH, foulTotalA);
+      html += statRow('Shooting', chHome.shooting||0, chAway.shooting||0);
+      html += statRow('Cynical', chHome.cynical||0, chAway.cynical||0);
+      html += statRow('Dangerous', chHome.dangerous||0, chAway.dangerous||0);
+      html += statRow('Dissent', chHome.dissent||0, chAway.dissent||0);
+      html += statRow('Penalty Conceded', chHome.penalty||0, chAway.penalty||0);
+      html += statRow('Cards Total', cardTotalH, cardTotalA);
+      html += statRow('Yellow', cardsHome.yellow||0, cardsAway.yellow||0);
+      html += statRow('Black', cardsHome.black||0, cardsAway.black||0);
+      html += statRow('Red', cardsHome.red||0, cardsAway.red||0);
+      html += '</tbody></table>';
+    }
   }
 
   var matchSubs = m.subs || [];
@@ -16255,7 +16337,7 @@ function clubTopPlayers() {
       var sp = s.shotsPlay || {}, sf = s.shotsFree || {};
       var e = bucket.players[p.name] || (bucket.players[p.name] = {
         name:p.name, matches:0, mins:0, goals:0, points:0, shots:0,
-        ballWon:0, ballLost:0, frees:0, freeScores:0
+        ballWon:0, ballLost:0, frees:0, freeScores:0, blocks:0, tackles:0
       });
       var played = Object.keys(s).length > 0 || (p.mins || 0) > 0;
       if (played) e.matches++;
@@ -16268,6 +16350,8 @@ function clubTopPlayers() {
       e.freeScores += (sf.point||0)+(sf.goal||0)+(sf.twopointer||0);
       e.ballWon  += Object.keys(s.ballWon||{}).reduce(function(a,k){return a+(s.ballWon[k]||0);},0);
       e.ballLost += Object.keys(s.ballLost||{}).reduce(function(a,k){return a+(s.ballLost[k]||0);},0);
+      e.blocks   += (s.blocks && s.blocks.count) || 0;
+      e.tackles  += (s.turnoverMethod && s.turnoverMethod.tackle) || 0;
     });
   });
 
@@ -16320,6 +16404,10 @@ function renderClubTopPlayers() {
                       .sort(function(a,b){ return b.ballWon - a.ballWon; });
     var takers = list.slice().filter(function(e){ return e.frees >= 3; })
                       .sort(function(a,b){ return b.freeConv - a.freeConv; });
+    var blockers = list.slice().filter(function(e){ return e.blocks > 0; })
+                      .sort(function(a,b){ return b.blocks - a.blocks; });
+    var tacklers = list.slice().filter(function(e){ return e.tackles > 0; })
+                      .sort(function(a,b){ return b.tackles - a.tackles; });
 
     return '<div class="ctp-squad">' +
       '<div class="ctp-squad-head">' + sq +
@@ -16329,6 +16417,8 @@ function renderClubTopPlayers() {
       leaderRow('Most accurate (5+ shots)', accurate, function(e){ return e.conv; }, '%') +
       leaderRow('Free-taking (3+ frees)', takers, function(e){ return e.freeConv; }, '%') +
       leaderRow('Most ball won', workers, function(e){ return e.ballWon; }) +
+      leaderRow('Most blocks', blockers, function(e){ return e.blocks; }) +
+      leaderRow('Most tackles won', tacklers, function(e){ return e.tackles; }) +
       (scorers.length ? '' : '<div class="ctp-empty">No player data recorded for this squad yet.</div>') +
     '</div>';
   }).join('');
