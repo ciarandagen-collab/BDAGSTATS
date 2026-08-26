@@ -1,0 +1,12 @@
+{
+  "name": "coach-stats-tests",
+  "private": true,
+  "scripts": {
+    "test:unit": "node unit.test.cjs",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}
