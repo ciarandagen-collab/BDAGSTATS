@@ -1238,6 +1238,56 @@ ok('skipping the method still records the turnover with no method', function(){
 });
 resetMatch();
 
+// ══ 11. MATCHDAY SQUAD ══
+// Narrows the Starting 15 picker, the event-recording bench, and the
+// Substitutions "On" list to players actually declared for this match,
+// once a matchday squad has been set. Undeclared (the default), every
+// named player stays eligible — the old behavior, unchanged.
+group('Matchday squad narrows player pickers');
+resetMatch();
+for (var mi=0; mi<20; mi++) squad[mi] = { name:'M'+(mi+1), pos:'', stats:{} };
+
+ok('undeclared matchday squad — everyone named is still eligible', function(){
+  state.matchdaySquad = null;
+  if (!isInMatchdaySquad(0)) throw new Error('index 0 should be eligible when nothing is declared');
+  if (!isInMatchdaySquad(19)) throw new Error('index 19 should be eligible when nothing is declared');
+});
+
+ok('declaring a matchday squad restricts isInMatchdaySquad to that list', function(){
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]; // 17 players, excludes 17,18,19
+  if (!isInMatchdaySquad(16)) throw new Error('index 16 should be in the declared squad');
+  if (isInMatchdaySquad(17)) throw new Error('index 17 should NOT be in the declared squad');
+});
+
+ok('the bench in buildPlayerGridHTML only offers declared matchday squad players', function(){
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; // squad index 15 (M16) is the only eligible sub
+  var html = buildPlayerGridHTML('home', 'confirmPlayerPick');
+  if (html.indexOf('M16') === -1) throw new Error('M16 (declared, on bench) should appear');
+  if (html.indexOf('M18') !== -1) throw new Error('M18 (not declared) should NOT appear on the bench');
+});
+
+ok('the Substitutions On-list only offers declared matchday squad players', function(){
+  subTeam = 'home';
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; // only M16 (index 15) eligible
+  renderSubPlayerSelects();
+  var onHtml = document.getElementById('sub-on-select').__html || '';
+  if (onHtml.indexOf('value="M16"') === -1) throw new Error('M16 should be offered as a substitute');
+  if (onHtml.indexOf('value="M18"') !== -1) throw new Error('M18 (not declared) should not be offered as a substitute');
+});
+
+ok('a player already placed in the Starting 15 draft still shows even if un-ticked from the squad afterward', function(){
+  tsDraft = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]; // excludes index 14, who is still placed at position 15
+  openTsPlayerPicker(15);
+  var html = document.getElementById('ts-player-list').__html || '';
+  if (html.indexOf('M15') === -1) throw new Error('M15 is already placed and should still be visible, even though un-ticked');
+});
+resetMatch();
+state.matchdaySquad = null;
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
