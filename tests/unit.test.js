@@ -1349,6 +1349,46 @@ resetMatch();
 state.matchdaySquad = null;
 
 
+group('Two-point range geometry');
+ok('a shot at the goal line is inside the arc', function(){
+  if (isTwoPointRange('home', 50, 98) !== false) throw new Error('expected inside the arc, close to goal');
+});
+ok('a shot from well outside 40m is beyond the arc', function(){
+  if (isTwoPointRange('home', 50, 50) !== true) throw new Error('expected beyond the arc, near midfield');
+});
+ok('an unlocated shot (no x/y) returns null, not a guess', function(){
+  if (isTwoPointRange('home', undefined, undefined) !== null) throw new Error('should not classify an unlocated shot');
+});
+ok('home and away use their own goal end — same coordinates read differently', function(){
+  // Near the home (bottom) goal: inside for home, but that same spot is a
+  // very long-range attempt from the away goal at the far end.
+  var homeSide = isTwoPointRange('home', 50, 95);
+  var awaySide = isTwoPointRange('away', 50, 95);
+  if (homeSide !== false) throw new Error('expected inside for home near their own goal');
+  if (awaySide !== true) throw new Error('expected beyond the arc for away, that spot is the far end for them');
+});
+
+group('twoPointerAttempts');
+ok('counts attempts and scores only from located shots beyond the arc', function(){
+  var m = { events: [
+    { type:'shot', team:'home', outcome:'twopointer', x:50, y:50 },  // beyond arc, scored
+    { type:'shot', team:'home', outcome:'wide',        x:50, y:50 },  // beyond arc, missed
+    { type:'shot', team:'home', outcome:'point',       x:50, y:98 },  // inside arc — not an attempt
+    { type:'shot', team:'home', outcome:'wide' }                      // unlocated — excluded entirely
+  ]};
+  var r = twoPointerAttempts(m, 'home');
+  if (r.attempts !== 2) throw new Error('expected 2 attempts, got ' + r.attempts);
+  if (r.scored !== 1) throw new Error('expected 1 scored, got ' + r.scored);
+  if (r.conv !== 50) throw new Error('expected 50%, got ' + r.conv);
+});
+ok('no located shots beyond the arc returns null conversion, not zero', function(){
+  var m = { events: [{ type:'shot', team:'home', outcome:'point', x:50, y:98 }] };
+  var r = twoPointerAttempts(m, 'home');
+  if (r.attempts !== 0) throw new Error('expected 0 attempts');
+  if (r.conv !== null) throw new Error('expected null conversion with no attempts, got ' + r.conv);
+});
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
