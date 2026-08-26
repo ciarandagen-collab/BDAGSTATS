@@ -267,6 +267,20 @@ check('free conversion', sn['A'].freeConv, 67);
 check('a player who did not feature counts zero', sn['B'].matches, 0);
 loadHistory = _lh;
 
+// Season aggregation for blocks/tackles — added alongside the matchday
+// squad work, since these had shipped without ever accumulating past a
+// single match (reset every game, no season record at all).
+group('Season aggregation — blocks and tackles');
+var _lh2 = loadHistory;
+loadHistory = function(){ return [
+  { id:1, players:[{name:'C', mins:60, stats:{blocks:{count:2}, turnoverMethod:{tackle:3,interception:1}}}] },
+  { id:2, players:[{name:'C', mins:60, stats:{blocks:{count:1}, turnoverMethod:{tackle:1}}}] },
+];};
+var sn2 = seasonPlayerStats(true);
+check('blocks accumulate across matches', sn2['C'].blocks, 3);
+check('tackles accumulate across matches', sn2['C'].tackles, 4);
+loadHistory = _lh2;
+
 // ══ 8. MATCH ANALYSIS ══
 group('Match analysis');
 ok('a sparse legacy match produces a report, not a crash', function(){
@@ -368,6 +382,29 @@ ok('turnoverCostFromRecord matches a saved record', function(){
   ]}, 'home');
   if (r.chains !== 1 || r.cost !== 3) throw new Error('got ' + JSON.stringify(r));
 });
+ok('foulCostFromRecord counts a penalty scored as a direct, certain link', function(){
+  var r = foulCostFromRecord({ events:[
+    { id:1, team:'home', type:'foul', outcome:'penalty', penaltyResult:'goal', min:20, half:1 }
+  ]}, 'home');
+  if (r.chains !== 1 || r.penaltiesScored !== 1 || r.cost !== 3) throw new Error('got ' + JSON.stringify(r));
+});
+ok('foulCostFromRecord correlates a non-penalty foul with a score shortly after', function(){
+  var r = foulCostFromRecord({ events:[
+    { id:1, team:'home', type:'foul', outcome:'shooting', min:15, half:1 },
+    { id:2, team:'away', type:'point', min:15, half:1 },   // same minute -> counts
+    { id:3, team:'home', type:'foul', outcome:'cynical', min:40, half:1 },
+    { id:4, team:'away', type:'point', min:44, half:1 }    // too late for a 1-min window -> ignored
+  ]}, 'home');
+  if (r.fouls !== 2 || r.chains !== 1 || r.points !== 1) throw new Error('got ' + JSON.stringify(r));
+});
+ok('foulCostFromRecord does not double-count a score against two fouls', function(){
+  var r = foulCostFromRecord({ events:[
+    { id:1, team:'home', type:'foul', outcome:'cynical', min:10, half:1 },
+    { id:2, team:'home', type:'foul', outcome:'cynical', min:10, half:1 },
+    { id:3, team:'away', type:'point', min:10, half:1 }
+  ]}, 'home');
+  if (r.chains !== 1) throw new Error('one score should only ever be attributed once, got chains=' + r.chains);
+});
 ok('bestRunFromRecord needs 3+ to count', function(){
   var r = bestRunFromRecord({ events:[
     { id:1, team:'away', type:'point', min:1, half:1 },
@@ -447,6 +484,30 @@ ok('bench total counts a goal as 3', function(){
   if (si.benchScores !== 5) throw new Error('expected 5, got ' + si.benchScores);
 });
 loadHistory = _lh2;
+
+group('Club leaderboards include blocks and tackles');
+var _lh2b = loadHistory;
+loadHistory = function(){ return [
+  { id:1, squadId:'senior', players:[
+      { name:'Defender', mins:60, stats:{blocks:{count:2}, turnoverMethod:{tackle:4}} },
+      { name:'Forward', mins:60, stats:{shotsPlay:{point:2}} }
+  ]}
+];};
+var ctp = clubTopPlayers();
+var seniorList = ctp['senior'] ? ctp['senior'].list : (ctp['Unassigned'] ? ctp['Unassigned'].list : []);
+ok('blocks are aggregated into the club-wide player list', function(){
+  var d = seniorList.find(function(e){ return e.name === 'Defender'; });
+  if (!d || d.blocks !== 2) throw new Error('expected 2 blocks, got ' + JSON.stringify(d));
+});
+ok('tackles are aggregated into the club-wide player list', function(){
+  var d = seniorList.find(function(e){ return e.name === 'Defender'; });
+  if (!d || d.tackles !== 4) throw new Error('expected 4 tackles, got ' + JSON.stringify(d));
+});
+ok('a player with no blocks/tackles still gets zeroed fields, not undefined', function(){
+  var f = seniorList.find(function(e){ return e.name === 'Forward'; });
+  if (!f || f.blocks !== 0 || f.tackles !== 0) throw new Error('expected zeroed fields, got ' + JSON.stringify(f));
+});
+loadHistory = _lh2b;
 
 // ══ 8d. PHASE C: CONDITIONS AND OPPOSITION STRENGTH ══
 group('Opposition strength');
