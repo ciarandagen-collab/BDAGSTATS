@@ -2298,6 +2298,13 @@ input:not([type]), textarea, select {
           </button>
         </div>
         <div class="meta-row">
+          <button class="comp-picker-btn" id="matchday-squad-btn" onclick="openMatchdaySquadPicker()" type="button">
+            <span style="color:var(--muted);font-size:11px;">🎽</span>
+            <span id="matchday-squad-text">Select Matchday Squad</span>
+            <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
+          </button>
+        </div>
+        <div class="meta-row">
           <button class="comp-picker-btn" id="team-sheet-btn" onclick="openTeamSelector()" type="button">
             <span style="color:var(--muted);font-size:11px;">📋</span>
             <span id="team-sheet-text">Select Starting 15</span>
@@ -2863,6 +2870,26 @@ input:not([type]), textarea, select {
   </div>
 </div>
 
+<!-- MATCHDAY SQUAD -->
+<div class="modal-overlay" role="dialog" aria-modal="true" id="matchday-squad-modal" onclick="if(event.target===this)closeMatchdaySquadPicker()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">🎽 Matchday Squad</div>
+        <div class="sheet-sub" id="mds-subtitle">Who's togged out today?</div>
+      </div>
+      <button class="sheet-close" aria-label="Close" onclick="closeMatchdaySquadPicker()">✕</button>
+    </div>
+    <div class="ts-actions">
+      <button class="ts-action-btn" onclick="selectAllMatchdaySquad()">Select all</button>
+      <button class="ts-action-btn" onclick="clearMatchdaySquad()">Clear all</button>
+    </div>
+    <div id="mds-list"></div>
+    <button class="ts-confirm-btn" onclick="confirmMatchdaySquad()">Confirm Matchday Squad</button>
+  </div>
+</div>
+
 <!-- STARTING TEAM SELECTOR -->
 <div class="modal-overlay" role="dialog" aria-modal="true" id="team-selector-modal" onclick="if(event.target===this)closeTeamSelector()">
   <div class="modal-sheet">
@@ -3052,6 +3079,7 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Start game</span><span class="help-val">▶ Start Game — clock starts, Match Info collapses</span></div>
       <div class="help-row"><span class="help-key">Half time</span><span class="help-val">⏸ Half Time → half time report appears → ▶ Start 2nd Half</span></div>
       <div class="help-row"><span class="help-key">Half time report</span><span class="help-val">Auto shows shooting %, kickouts, possession, discipline + key observations</span></div>
+      <div class="help-row"><span class="help-key">Matchday squad</span><span class="help-val">🎽 Select Matchday Squad — tick who's togged out today. Narrows subs and the bench to just them, rather than your whole panel. Optional — skip it and every named player stays eligible.</span></div>
       <div class="help-row"><span class="help-key">Starting 15</span><span class="help-val">📋 Select Starting 15 — tap a position, pick a player. Numbers shown are match jerseys.</span></div>
       <div class="help-row"><span class="help-key">Squad</span><span class="help-val">Club accounts: pick which squad the match is for</span></div>
       <div class="help-row"><span class="help-key">Undo score</span><span class="help-val">Scoreboard → ↩ Undo</span></div>
@@ -3746,6 +3774,11 @@ const state = {
   possession:{home:{count:0},away:{count:0}},
   attacks:{home:{scored:0,ballLost:0,turnedBack:0},away:{scored:0,ballLost:0,turnedBack:0}},
   pitchOccupant:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+  // null = not declared, so every named squad player is a valid candidate
+  // (matches how the app behaved before this feature existed). Once set,
+  // it's the list of squad indices togged out for this specific match —
+  // narrows subs and the Starting 15 picker to just those players.
+  matchdaySquad: null,
   startingFifteen:null,
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
@@ -3778,7 +3811,8 @@ function showPage(name, btn) {
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
   if (name === 'record') { renderRecordEventGrid(); try { refreshSquadPickerDisplay(); } catch(e) {} }
-  if (name === 'match') { try { refreshTeamSheetLabel(); } catch(e) {} }
+  if (name === 'match') { try { refreshTeamSheetLabel(); } catch(e) {}
+  try { refreshMatchdaySquadLabel(); } catch(e) {} }
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
@@ -4799,7 +4833,7 @@ function buildPlayerGridHTML(team, onclickFn) {
     // Bench, for anyone brought on
     var bench = '';
     for (var i = 15; i < 34; i++) {
-      if (squad[i] && squad[i].name && (occ.indexOf(i) === -1)) {
+      if (squad[i] && squad[i].name && (occ.indexOf(i) === -1) && isInMatchdaySquad(i)) {
         bench += '<button class="pp-player small" onclick="' + onclickFn + '(' + i + ')">' +
           '<span class="pp-circle">' + (i+1) + '</span>' +
           '<span class="pp-name">' + surnameOf(squad[i].name) + '</span></button>';
@@ -5171,6 +5205,98 @@ var TS_ROWS = [[1],[2,3,4],[5,6,7],[8,9],[10,11,12],[13,14,15]];
 var tsDraft = null;      // working copy while the sheet is open
 var tsActiveSlot = null; // 1-based position being filled
 
+// ── MATCHDAY SQUAD ──────────────────────────────────
+// A subset of the full club panel (up to 34) who are actually togged out
+// for THIS match. Declaring it narrows every player picker that matters
+// mid-match — the Starting 15 screen, the bench shown when tagging a
+// scorer, and the substitute lists — down to people actually at the game,
+// instead of the whole panel including players not even present today.
+// Left undeclared (null), everything behaves exactly as before: any named
+// squad player is fair game.
+var mdsDraft = null;
+
+function isInMatchdaySquad(idx) {
+  if (!state.matchdaySquad || !state.matchdaySquad.length) return true; // not declared — everyone's eligible
+  return state.matchdaySquad.indexOf(idx) !== -1;
+}
+
+function openMatchdaySquadPicker() {
+  if (!squad.some(function(p){ return p && p.name; })) {
+    showSync('Add players to your squad first', 2500);
+    return;
+  }
+  mdsDraft = state.matchdaySquad && state.matchdaySquad.length
+    ? state.matchdaySquad.slice()
+    : squad.map(function(p,i){ return p && p.name ? i : null; }).filter(function(i){ return i !== null; });
+  renderMatchdaySquadList();
+  document.getElementById('matchday-squad-modal').classList.add('open');
+}
+
+function closeMatchdaySquadPicker() {
+  document.getElementById('matchday-squad-modal').classList.remove('open');
+  mdsDraft = null;
+}
+
+function renderMatchdaySquadList() {
+  var list = document.getElementById('mds-list');
+  if (!list || !mdsDraft) return;
+  var html = '';
+  squad.forEach(function(p, i) {
+    if (!p || !p.name) return;
+    var picked = mdsDraft.indexOf(i) !== -1;
+    html += '<button class="ts-player-row' + (picked ? ' selected' : '') + '" onclick="toggleMatchdaySquadPlayer(' + i + ')">' +
+      '<span class="ts-pr-num">' + (i+1) + '</span>' +
+      '<span class="ts-pr-name">' + escapeHtml(p.name) +
+        (p.pos ? '<span class="ts-pr-pos">' + escapeHtml(p.pos) + '</span>' : '') + '</span>' +
+      '<span class="ts-pr-tag' + (picked ? ' here' : '') + '">' + (picked ? '✓ In' : 'Not in') + '</span>' +
+      '</button>';
+  });
+  list.innerHTML = html || '<div class="ptr-no-notes">No players in your squad</div>';
+  var sub = document.getElementById('mds-subtitle');
+  if (sub) sub.textContent = mdsDraft.length + ' selected \u2014 tap a player to toggle';
+}
+
+function toggleMatchdaySquadPlayer(idx) {
+  if (!mdsDraft) return;
+  var at = mdsDraft.indexOf(idx);
+  if (at !== -1) mdsDraft.splice(at, 1);
+  else mdsDraft.push(idx);
+  renderMatchdaySquadList();
+}
+
+function selectAllMatchdaySquad() {
+  mdsDraft = squad.map(function(p,i){ return p && p.name ? i : null; }).filter(function(i){ return i !== null; });
+  renderMatchdaySquadList();
+}
+
+function clearMatchdaySquad() {
+  mdsDraft = [];
+  renderMatchdaySquadList();
+}
+
+function confirmMatchdaySquad() {
+  if (!mdsDraft) return;
+  // Anyone currently on the pitch or on the subs list who got un-ticked
+  // stays put — this declares who's ELIGIBLE going forward, it doesn't
+  // retroactively pull someone already playing.
+  state.matchdaySquad = mdsDraft.slice();
+  mdsDraft = null;
+  document.getElementById('matchday-squad-modal').classList.remove('open');
+  refreshMatchdaySquadLabel();
+  saveTeamSheetSession();
+  showSync('✓ Matchday squad set (' + state.matchdaySquad.length + ' players)', 2000);
+}
+
+function refreshMatchdaySquadLabel() {
+  var el = document.getElementById('matchday-squad-text');
+  if (!el) return;
+  if (state.matchdaySquad && state.matchdaySquad.length) {
+    el.textContent = state.matchdaySquad.length + ' Named for Matchday';
+  } else {
+    el.textContent = 'Select Matchday Squad';
+  }
+}
+
 function openTeamSelector() {
   if (!squad.some(function(p){ return p && p.name; })) {
     showSync('Add players to your squad first', 2500);
@@ -5230,6 +5356,10 @@ function openTsPlayerPicker(pos) {
   }
   squad.forEach(function(p, i) {
     if (!p || !p.name) return;
+    // Filter to the declared matchday squad, but never hide someone who's
+    // already placed in the draft — a coach needs to be able to see and
+    // clear them even if they got un-ticked from the squad afterward.
+    if (!isInMatchdaySquad(i) && tsDraft.indexOf(i) === -1) return;
     var usedAt = tsDraft.indexOf(i);
     var isHere = usedAt === (pos-1);
     var usedElsewhere = usedAt !== -1 && !isHere;
@@ -5309,6 +5439,7 @@ function confirmTeamSheet() {
   if (gamePhase === 'pregame') state.startingFifteen = null;
   saveTeamSheetSession();
   refreshTeamSheetLabel();
+  try { refreshMatchdaySquadLabel(); } catch(e) {}
   renderRecordPitch();
   renderTimeline();
   closeTeamSelector();
@@ -5327,12 +5458,18 @@ function refreshTeamSheetLabel() {
 
 function saveTeamSheetSession() {
   safeSetItem('cs_team_sheet', JSON.stringify(state.pitchOccupant || []));
+  safeSetItem('cs_matchday_squad', JSON.stringify(state.matchdaySquad || null));
 }
 function loadTeamSheetSession() {
   try {
     var v = JSON.parse(localStorage.getItem('cs_team_sheet') || 'null');
     if (Array.isArray(v) && v.length) state.pitchOccupant = v;
   } catch(e) {}
+  try {
+    var mds = JSON.parse(localStorage.getItem('cs_matchday_squad') || 'null');
+    if (Array.isArray(mds)) state.matchdaySquad = mds;
+  } catch(e) {}
+  try { refreshMatchdaySquadLabel(); } catch(e) {}
 }
 
 var homeCards = {}, awayCards = {};
@@ -8302,7 +8439,7 @@ function renderSubPlayerSelects() {
     ? activePlayers.filter(function(x){ return onPitchIdx.indexOf(x.i) !== -1; })
     : activePlayers;
   var onPlayers = subTeam === 'home'
-    ? activePlayers.filter(function(x){ return onPitchIdx.indexOf(x.i) === -1; })
+    ? activePlayers.filter(function(x){ return onPitchIdx.indexOf(x.i) === -1 && isInMatchdaySquad(x.i); })
     : activePlayers;
 
   function opts(list) {
@@ -12456,6 +12593,7 @@ function resetMatch(){
   state.mark={home:{won:0,lost:0},away:{won:0,lost:0}};
   state.cards={home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.matchdaySquad=null;
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
   state.foulZones={home:{},away:{}};
@@ -13797,6 +13935,7 @@ function saveMatchToHistory() {
     turnoverZones: JSON.parse(JSON.stringify(state.turnoverZones || {home:{},away:{}})),
     foulZones: JSON.parse(JSON.stringify(state.foulZones || {home:{},away:{}})),
     turnoverMethod: JSON.parse(JSON.stringify(state.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}})),
+    matchdaySquad: state.matchdaySquad ? state.matchdaySquad.slice() : null,
     playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
     matchNotes: state.matchNotes || ''
   };
@@ -14102,6 +14241,7 @@ function loadMatchIntoTracker(id) {
   state.turnoverZones = m.turnoverZones || {home:{},away:{}};
   state.foulZones = m.foulZones || {home:{},away:{}};
   state.turnoverMethod = m.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}};
+  state.matchdaySquad = m.matchdaySquad || null;
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
@@ -15775,6 +15915,7 @@ function onSignedIn() {
   loadActiveSquadSession();
   loadTeamSheetSession();
   try { refreshTeamSheetLabel(); } catch(e) {}
+  try { refreshMatchdaySquadLabel(); } catch(e) {}
 
   // Check subscription status before loading data
   checkSubscription();
@@ -16358,6 +16499,7 @@ function selectMatchSquad(squadId) {
   state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   saveTeamSheetSession();
   refreshTeamSheetLabel();
+  try { refreshMatchdaySquadLabel(); } catch(e) {}
   refreshSquadPickerDisplay();
   renderSquadGrid();
   try { renderRecordPitch(); } catch(e) {}
