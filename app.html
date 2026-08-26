@@ -2730,6 +2730,7 @@ input:not([type]), textarea, select {
       <button class="btn-export" id="copy-btn" onclick="exportSummary()">📋 Copy Summary</button>
       <button class="btn-export" onclick="toggleShotMap()">🎯 Shot Map</button>
       <button class="btn-export" onclick="toggleFoulMap()">⚠️ Foul Map</button>
+      <button class="btn-export" onclick="toggleDashboard()">📊 Dashboard</button>
       <button class="btn-export btn-reset" onclick="resetMatch()">↺ Reset</button>
     </div>
 
@@ -2782,6 +2783,27 @@ input:not([type]), textarea, select {
         <span class="sm-legend-item"><span class="sm-dot" style="background:#3b82f6;"></span>Dissent</span>
       </div>
       <div id="foul-map-tooltip" class="shot-map-tooltip" style="display:none;"></div>
+    </div>
+
+    <!-- Match Dashboard -->
+    <div id="dashboard-section" style="display:none;">
+      <div class="sec-label">Match Dashboard</div>
+      <div class="trend-card full-width" style="margin-bottom:10px;">
+        <div class="trend-label" style="margin-bottom:6px;">Score Progression</div>
+        <canvas id="dash-score-chart" style="width:100%;height:110px;display:block;"></canvas>
+        <div class="chart-legend" style="display:flex;gap:14px;justify-content:center;margin-top:6px;font-size:10px;color:var(--muted);">
+          <span><span style="display:inline-block;width:12px;height:2px;background:var(--red-light);vertical-align:middle;border-radius:1px;margin-right:4px;"></span><span id="dash-home-name">My Team</span></span>
+          <span><span style="display:inline-block;width:12px;height:2px;background:var(--blue);vertical-align:middle;border-radius:1px;margin-right:4px;"></span><span id="dash-away-name">Opposition</span></span>
+        </div>
+      </div>
+      <div class="trend-card full-width" style="margin-bottom:10px;">
+        <div class="trend-label" style="margin-bottom:6px;">Shooting Comparison</div>
+        <canvas id="dash-shooting-chart" style="width:100%;height:130px;display:block;"></canvas>
+      </div>
+      <div class="trend-card full-width" style="margin-bottom:14px;">
+        <div class="trend-label" style="margin-bottom:6px;">Discipline &amp; Kickouts</div>
+        <canvas id="dash-discipline-chart" style="width:100%;height:130px;display:block;"></canvas>
+      </div>
     </div>
 
     <div id="stats-video-tags-section" style="display:none;">
@@ -3142,6 +3164,7 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Possession</span><span class="help-val">Real split when tagged both sides · otherwise labelled "Dominance Index"</span></div>
       <div class="help-row"><span class="help-key">Shot map</span><span class="help-val">Stats tab → 🎯 Shot Map — shots plot exactly where you tapped</span></div>
       <div class="help-row"><span class="help-key">Foul map</span><span class="help-val">Stats tab → ⚠️ Foul Map — fouls plotted by location and type, filter by My Team / Opposition</span></div>
+      <div class="help-row"><span class="help-key">Dashboard</span><span class="help-val">Stats tab → 📊 Dashboard — score progression, shooting and discipline compared side by side as charts</span></div>
       <div class="help-row"><span class="help-key">Blocks</span><span class="help-val">Player card shows Blocks and Tackles Won when a player has any credited</span></div>
       <div class="help-row"><span class="help-key">Match report</span><span class="help-val">History → report includes written Coach\u2019s Analysis, Foul Map and full event log</span></div>
       <div class="help-row"><span class="help-key">Share report</span><span class="help-val">History → 📤 Share on match card → WhatsApp / email</span></div>
@@ -6300,6 +6323,8 @@ function updateStats() {
    ['2nd Half Goals',countHalf('home','goal',2),countHalf('away','goal',2)],['2nd Half Points',countHalf('home','point',2),countHalf('away','point',2)]
   ].forEach(function(r){statsRows.push(row(r));});
 
+  var hTwoPtAtt = twoPointerAttempts({events: state.events}, 'home');
+  var aTwoPtAtt = twoPointerAttempts({events: state.events}, 'away');
   statsRows.push(sec('📊 Shooting Efficiency' + (hf ? ' — ' + halfLabel(hf) : '')));
   [['Conversion (All)', hSA.pct+'% ('+hSA.scores+'/'+hSA.total+')', aSA.pct+'% ('+aSA.scores+'/'+aSA.total+')'],
    ['From Play', hSP.pct+'% ('+hSP.scores+'/'+hSP.total+')', aSP.pct+'% ('+aSP.scores+'/'+aSP.total+')'],
@@ -6307,6 +6332,11 @@ function updateStats() {
    ['Wides', hSA.wides, aSA.wides],
    ['Kickout Retention', hKOR.pct+'% ('+hKOR.won+'/'+hKOR.total+')', aKOR.pct+'% ('+aKOR.won+'/'+aKOR.total+')']
   ].forEach(function(r){statsRows.push(row(r));});
+  if (hTwoPtAtt.attempts > 0 || aTwoPtAtt.attempts > 0) {
+    statsRows.push(row(['2PT Range Conv. (located)',
+      hTwoPtAtt.attempts ? hTwoPtAtt.conv+'% ('+hTwoPtAtt.scored+'/'+hTwoPtAtt.attempts+')' : '\u2014',
+      aTwoPtAtt.attempts ? aTwoPtAtt.conv+'% ('+aTwoPtAtt.scored+'/'+aTwoPtAtt.attempts+')' : '\u2014']));
+  }
   statsRows.push(sec('🎯 Shots from Play'));
   [['Total',hFP,aFP],['Point',state.shots.home.play.point,state.shots.away.play.point],['2 Pointer',state.shots.home.play.twopointer||0,state.shots.away.play.twopointer||0],['Goal',state.shots.home.play.goal,state.shots.away.play.goal],
    ['Blocked',state.shots.home.play.blocked,state.shots.away.play.blocked],['Wide',state.shots.home.play.wide,state.shots.away.play.wide],
@@ -11590,6 +11620,41 @@ function renderShotMap() {
   }
 }
 
+// Is a tapped shot location beyond the 40m two-point arc? Uses the same
+// geometry drawPitch() renders, so "beyond the arc" here always matches
+// what's visually drawn — no separate distance model to keep in sync.
+// x/y are the stored percentages (0-100) of the 320x480 pitch viewBox.
+// My Team shoots at the bottom goal (y=470), the Opposition at the top
+// (y=10) — see the "ATTACK" labels in drawPitch for the same convention.
+var TWO_PT_ARC_RADIUS = 126.9, TWO_PT_ARC_CX = 160;
+function isTwoPointRange(team, x, y) {
+  if (typeof x !== 'number' || typeof y !== 'number') return null; // unlocated — can't say
+  var vx = (x / 100) * 320, vy = (y / 100) * 480;
+  var goalY = team === 'home' ? 470 : 10;
+  var dist = Math.sqrt(Math.pow(vx - TWO_PT_ARC_CX, 2) + Math.pow(vy - goalY, 2));
+  return dist >= TWO_PT_ARC_RADIUS;
+}
+
+// Attempt-based 2-pointer stats: how many LOCATED shots were actually taken
+// from beyond the arc, and how many of those scored? Raw outcome counts
+// alone only show scored two-pointers — a missed attempt from distance
+// looks identical to a missed attempt from close in, unless the tapped
+// location is used to tell them apart.
+function twoPointerAttempts(m, team) {
+  var evs = (m.events || []).filter(function(e){ return e.type === 'shot' && e.team === team && e.x !== undefined; });
+  var attempts = 0, scored = 0;
+  evs.forEach(function(e) {
+    var beyond = isTwoPointRange(team, e.x, e.y);
+    if (beyond === true) {
+      attempts++;
+      if (e.outcome === 'twopointer') scored++;
+    }
+  });
+  return { attempts: attempts, scored: scored,
+           conv: attempts > 0 ? Math.round((scored / attempts) * 100) : null,
+           located: evs.length };
+}
+
 function drawPitch(homeName, awayName) {
   // Proper GAA football pitch, scaled from 145m x 90m into a 320x480 box.
   // 1m = 3.1724 units. Playing area: x 17.2-302.8, y 10-470 (halfway = 240).
@@ -11813,6 +11878,140 @@ function showFoulTooltip(event, text) {
 function hideFoulTooltip() {
   var tooltip = document.getElementById('foul-map-tooltip');
   if (tooltip) tooltip.style.display = 'none';
+}
+
+// ── MATCH DASHBOARD (live, in-app) ──────────────────────────────────
+// Visual, at-a-glance summary alongside the Match Stats table — same
+// canvas-drawing approach as the Trends tab sparklines, just bigger and
+// with real axis/value labels since this is meant to be read on its own,
+// not glanced at mid-recording.
+var dashboardVisible = false;
+
+function toggleDashboard() {
+  dashboardVisible = !dashboardVisible;
+  var section = document.getElementById('dashboard-section');
+  if (section) section.style.display = dashboardVisible ? 'block' : 'none';
+  if (dashboardVisible) renderDashboard();
+}
+
+function renderDashboard() {
+  var hn = document.getElementById('dash-home-name');
+  var an = document.getElementById('dash-away-name');
+  var homeLabel = document.getElementById('stats-home-h') ? document.getElementById('stats-home-h').textContent : 'My Team';
+  var awayLabel = document.getElementById('stats-away-h') ? document.getElementById('stats-away-h').textContent : 'Opposition';
+  if (hn) hn.textContent = homeLabel || 'My Team';
+  if (an) an.textContent = awayLabel || 'Opposition';
+
+  drawDashScoreChart('dash-score-chart');
+
+  var hSA = shotStats('home', 0, null), aSA = shotStats('away', 0, null);
+  drawGroupedBarChart('dash-shooting-chart', [
+    { label: 'Goals', home: state.home.goals, away: state.away.goals },
+    { label: 'Points', home: state.home.points, away: state.away.points },
+    { label: '2PT', home: (state.shots.home.play.twopointer||0)+(state.shots.home.free.twopointer||0),
+                     away: (state.shots.away.play.twopointer||0)+(state.shots.away.free.twopointer||0) },
+    { label: 'Wides', home: hSA.wides, away: aSA.wides },
+    { label: 'Conv%', home: hSA.pct||0, away: aSA.pct||0, suffix: '%' }
+  ]);
+
+  var hFouls = state.foul ? Object.values(state.foul.home).reduce(function(a,b){return a+b;},0) : 0;
+  var aFouls = state.foul ? Object.values(state.foul.away).reduce(function(a,b){return a+b;},0) : 0;
+  var hCards = state.cards ? Object.values(state.cards.home).reduce(function(a,b){return a+b;},0) : 0;
+  var aCards = state.cards ? Object.values(state.cards.away).reduce(function(a,b){return a+b;},0) : 0;
+  var hKOR = kickoutRetention('home', 0), aKOR = kickoutRetention('away', 0);
+  drawGroupedBarChart('dash-discipline-chart', [
+    { label: 'Fouls', home: hFouls, away: aFouls },
+    { label: 'Cards', home: hCards, away: aCards },
+    { label: 'KO Ret%', home: hKOR.pct||0, away: aKOR.pct||0, suffix: '%' }
+  ]);
+}
+
+// Score progression with a light grid and end-of-line value labels — the
+// Trends tab sparkline is deliberately minimal for a glance mid-match;
+// this is the same data read properly after the fact.
+function drawDashScoreChart(canvasId) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.getContext) return;
+  var ctx; try { ctx = canvas.getContext('2d'); } catch(e) { return; }
+  var W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 110;
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  var pad = { l: 4, r: 34, t: 8, b: 4 };
+  var plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+  var sl = state.scoreline || [];
+
+  if (sl.length < 2) {
+    ctx.fillStyle = 'rgba(240,253,244,0.3)'; ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Record scores to see progression', W/2, H/2 + 4);
+    return;
+  }
+
+  var maxV = Math.max.apply(null, sl.map(function(s){return Math.max(s.h,s.a);}).concat([1]));
+  // Light horizontal gridlines at quarter intervals
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (var g = 0; g <= 4; g++) {
+    var gy = pad.t + plotH - (g/4) * plotH;
+    ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + plotW, gy); ctx.stroke();
+  }
+
+  function plot(data, color, key) {
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    data.forEach(function(s, i) {
+      var x = pad.l + (i/(data.length-1)) * plotW;
+      var y = pad.t + plotH - (s[key]/maxV) * plotH;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    var last = data[data.length-1];
+    var ly = pad.t + plotH - (last[key]/maxV) * plotH;
+    ctx.fillStyle = color; ctx.font = 'bold 11px Oswald,sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(String(last[key]), pad.l + plotW + 6, ly + 4);
+  }
+  plot(sl, 'rgba(224,48,48,0.85)', 'h');
+  plot(sl, 'rgba(59,130,246,0.85)', 'a');
+}
+
+// Generic grouped bar chart: two bars (home/away) per category, with value
+// labels on top and category labels underneath. Used for every dashboard
+// comparison so a new stat can be added by extending the data array —
+// no new drawing code needed per chart.
+function drawGroupedBarChart(canvasId, groups) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.getContext) return;
+  var ctx; try { ctx = canvas.getContext('2d'); } catch(e) { return; }
+  var W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 130;
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!groups.length) return;
+
+  var padTop = 18, padBottom = 20, plotH = H - padTop - padBottom;
+  var groupW = W / groups.length;
+  var barW = Math.min(22, groupW * 0.28);
+  var maxV = Math.max.apply(null, groups.map(function(g){ return Math.max(g.home, g.away); }).concat([1]));
+
+  groups.forEach(function(g, i) {
+    var cx = groupW * i + groupW/2;
+    var hH = maxV > 0 ? (g.home/maxV) * plotH : 0;
+    var aH = maxV > 0 ? (g.away/maxV) * plotH : 0;
+    var hx = cx - barW - 3, ax = cx + 3;
+
+    ctx.fillStyle = 'rgba(224,48,48,0.75)';
+    ctx.fillRect(hx, padTop + plotH - hH, barW, hH);
+    ctx.fillStyle = 'rgba(59,130,246,0.75)';
+    ctx.fillRect(ax, padTop + plotH - aH, barW, aH);
+
+    ctx.fillStyle = 'rgba(240,253,244,0.85)'; ctx.font = 'bold 10px Oswald,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(g.home + (g.suffix||''), hx + barW/2, padTop + plotH - hH - 5);
+    ctx.fillText(g.away + (g.suffix||''), ax + barW/2, padTop + plotH - aH - 5);
+
+    ctx.fillStyle = 'rgba(240,253,244,0.5)'; ctx.font = '9px Inter,sans-serif';
+    ctx.fillText(g.label, cx, H - 6);
+  });
 }
 
 // ── SHOT MAP IN PDF REPORT ────────────────────────────────────────────
@@ -13037,6 +13236,18 @@ function analyseMatch(m) {
           twoSwing > 0 ? 'good' : twoSwing < 0 ? 'bad' : 'neutral'));
       } else if (aTwos > 0) {
         scoring.points.push(pt(them + ' hit ' + aTwos + ' two-pointer' + (aTwos !== 1 ? 's' : '') + ' and you had none \u2014 ' + (aTwos*2) + ' points conceded from range that a normal shot wouldn\u2019t have cost.', 'bad'));
+      }
+
+      // Attempt-based conversion, when enough shots were located to say
+      // something real — a raw "scored" count alone hides missed attempts
+      // from distance, which look identical to any other miss otherwise.
+      var hTwoAtt = twoPointerAttempts(m, 'home');
+      if (hTwoAtt.attempts >= 3) {
+        scoring.points.push(pt('From beyond the arc specifically: ' + hTwoAtt.scored + ' from ' + hTwoAtt.attempts +
+          ' located attempts (' + hTwoAtt.conv + '%). ' +
+          (hTwoAtt.conv < 30 ? 'Worth asking whether those are the right shots to be taking.' :
+           hTwoAtt.conv >= 50 ? 'A shot worth taking on that return.' : ''),
+          hTwoAtt.conv >= 50 ? 'good' : hTwoAtt.conv < 30 ? 'bad' : 'neutral'));
       }
       // If the two-pointer swing is close to or bigger than the final margin, say so explicitly.
       if (Math.abs(twoSwing*2) >= Math.abs(margin) && Math.abs(twoSwing) > 0 && Math.abs(margin) > 0) {
