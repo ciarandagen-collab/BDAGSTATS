@@ -673,6 +673,9 @@ input:not([type]), textarea, select {
 .pw-tier-tabs { display: flex; gap: 0; width: 100%; max-width: 400px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .pw-tier-tab { flex: 1; padding: 10px 8px; background: transparent; border: none; color: var(--muted); font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
 .pw-tier-tab.active { background: rgba(224,48,48,0.12); color: var(--cream); border-bottom: 2px solid var(--red); }
+.pw-currency-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.pw-currency-btn { padding: 7px 16px; background: transparent; border: 1px solid var(--border); border-radius: 20px; color: var(--muted); font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: all 0.15s; }
+.pw-currency-btn.active { background: var(--gold); border-color: var(--gold); color: #0d2015; font-weight: 600; }
 .pw-tier-panel { display: none; width: 100%; max-width: 400px; }
 .pw-tier-panel.active { display: block; }
 .pw-tier-label { font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; text-align: center; margin-bottom: 12px; }
@@ -3324,6 +3327,12 @@ input:not([type]), textarea, select {
   </div>
   <div class="pw-sub" id="pw-sub-text">Your 30-day free trial has ended. Subscribe to keep full access to all features.</div>
 
+  <!-- Currency -->
+  <div class="pw-currency-toggle">
+    <button class="pw-currency-btn active" id="currency-btn-gbp" onclick="selectCurrency('gbp')">🇬🇧 GBP £</button>
+    <button class="pw-currency-btn" id="currency-btn-eur" onclick="selectCurrency('eur')">🇮🇪 EUR €</button>
+  </div>
+
   <!-- Tier Tabs -->
   <div class="pw-tier-tabs">
     <button class="pw-tier-tab active" id="tier-tab-individual" onclick="selectTier('individual')">👤 Individual</button>
@@ -3336,15 +3345,15 @@ input:not([type]), textarea, select {
     <div class="pw-plans">
       <div class="pw-plan selected" id="plan-monthly" onclick="selectPlan('monthly')">
         <div class="pw-plan-period">Monthly</div>
-        <div class="pw-plan-price"><sup>£</sup>5</div>
+        <div class="pw-plan-price"><sup id="price-symbol-monthly">£</sup><span id="price-amount-monthly">5</span></div>
         <div class="pw-plan-unit">per month</div>
       </div>
       <div class="pw-plan pw-plan-featured" id="plan-annual" onclick="selectPlan('annual')">
         <div class="pw-plan-badge">BEST VALUE</div>
         <div class="pw-plan-period">Annual</div>
-        <div class="pw-plan-price"><sup>£</sup>50</div>
+        <div class="pw-plan-price"><sup id="price-symbol-annual">£</sup><span id="price-amount-annual">50</span></div>
         <div class="pw-plan-unit">per year</div>
-        <div class="pw-plan-saving">Save £10 vs monthly</div>
+        <div class="pw-plan-saving" id="price-saving-annual">Save £10 vs monthly</div>
       </div>
     </div>
     <div class="pw-features">
@@ -3362,15 +3371,15 @@ input:not([type]), textarea, select {
     <div class="pw-plans">
       <div class="pw-plan selected" id="plan-club-monthly" onclick="selectPlan('club-monthly')">
         <div class="pw-plan-period">Monthly</div>
-        <div class="pw-plan-price"><sup>£</sup>10</div>
+        <div class="pw-plan-price"><sup id="price-symbol-club-monthly">£</sup><span id="price-amount-club-monthly">10</span></div>
         <div class="pw-plan-unit">per month</div>
       </div>
       <div class="pw-plan pw-plan-featured" id="plan-club-annual" onclick="selectPlan('club-annual')">
         <div class="pw-plan-badge">BEST VALUE</div>
         <div class="pw-plan-period">Annual</div>
-        <div class="pw-plan-price"><sup>£</sup>90</div>
+        <div class="pw-plan-price"><sup id="price-symbol-club-annual">£</sup><span id="price-amount-club-annual">90</span></div>
         <div class="pw-plan-unit">per year</div>
-        <div class="pw-plan-saving">Save £30 vs monthly</div>
+        <div class="pw-plan-saving" id="price-saving-club-annual">Save £30 vs monthly</div>
       </div>
     </div>
     <div class="pw-features">
@@ -3498,11 +3507,69 @@ var STRIPE_MONTHLY_PRICE_ID      = 'price_1TZbzKHimBSnUeOtOTyXwv40';
 var STRIPE_ANNUAL_PRICE_ID       = 'price_1TZc1RHimBSnUeOtStGENRlU';
 var STRIPE_CLUB_MONTHLY_PRICE_ID = 'price_1Tb41RHimBSnUeOt5orveJpi';
 var STRIPE_CLUB_ANNUAL_PRICE_ID  = 'price_1Tb42zHimBSnUeOtuHLJNtJn';
+// EUR equivalents — create these as separate Price objects in Stripe (a
+// Price is always a single fixed currency, so EUR pricing needs its own
+// set, it can't share the GBP ones) and replace these placeholder IDs.
+// See PLAN_PRICING below for the displayed amounts, which you should
+// review — these are rounded estimates, not a considered EUR price.
+var STRIPE_MONTHLY_PRICE_ID_EUR      = 'price_REPLACE_WITH_EUR_MONTHLY';
+var STRIPE_ANNUAL_PRICE_ID_EUR       = 'price_REPLACE_WITH_EUR_ANNUAL';
+var STRIPE_CLUB_MONTHLY_PRICE_ID_EUR = 'price_REPLACE_WITH_EUR_CLUB_MONTHLY';
+var STRIPE_CLUB_ANNUAL_PRICE_ID_EUR  = 'price_REPLACE_WITH_EUR_CLUB_ANNUAL';
 // Replace with your deployed webhook/checkout URL
 var CHECKOUT_URL = 'https://coachstats.app/.netlify/functions/create-checkout';
 
+// Single source of truth for what's shown and what's charged, per plan per
+// currency — selectCurrency() and selectPlan() both just read from this
+// rather than touching hardcoded text in several places.
+var PLAN_PRICING = {
+  monthly: {
+    gbp: { symbol: '£', amount: '5',  priceId: STRIPE_MONTHLY_PRICE_ID },
+    eur: { symbol: '€', amount: '6',  priceId: STRIPE_MONTHLY_PRICE_ID_EUR }
+  },
+  annual: {
+    gbp: { symbol: '£', amount: '50', priceId: STRIPE_ANNUAL_PRICE_ID, saving: 'Save £10 vs monthly' },
+    eur: { symbol: '€', amount: '60', priceId: STRIPE_ANNUAL_PRICE_ID_EUR, saving: 'Save €12 vs monthly' }
+  },
+  'club-monthly': {
+    gbp: { symbol: '£', amount: '10', priceId: STRIPE_CLUB_MONTHLY_PRICE_ID },
+    eur: { symbol: '€', amount: '12', priceId: STRIPE_CLUB_MONTHLY_PRICE_ID_EUR }
+  },
+  'club-annual': {
+    gbp: { symbol: '£', amount: '90', priceId: STRIPE_CLUB_ANNUAL_PRICE_ID, saving: 'Save £30 vs monthly' },
+    eur: { symbol: '€', amount: '108', priceId: STRIPE_CLUB_ANNUAL_PRICE_ID_EUR, saving: 'Save €36 vs monthly' }
+  }
+};
+
+var selectedCurrency = 'gbp'; // 'gbp' | 'eur'
 var selectedPlan = 'monthly';
 var subStatus = null; // 'trialing' | 'active' | 'expired' | null
+
+// ── CURRENCY SELECTOR ──────────────────────────────
+function selectCurrency(cur) {
+  selectedCurrency = cur;
+  try { safeSetItem('cs_currency', cur); } catch(e) {}
+  document.getElementById('currency-btn-gbp').classList.toggle('active', cur === 'gbp');
+  document.getElementById('currency-btn-eur').classList.toggle('active', cur === 'eur');
+  ['monthly','annual','club-monthly','club-annual'].forEach(function(plan) {
+    var p = PLAN_PRICING[plan][cur];
+    var symEl = document.getElementById('price-symbol-' + plan);
+    var amtEl = document.getElementById('price-amount-' + plan);
+    var savEl = document.getElementById('price-saving-' + plan);
+    if (symEl) symEl.textContent = p.symbol;
+    if (amtEl) amtEl.textContent = p.amount;
+    if (savEl && p.saving) savEl.textContent = p.saving;
+  });
+  refreshCtaLabel();
+}
+
+function refreshCtaLabel() {
+  var btn = document.getElementById('pw-cta-btn');
+  if (!btn) return;
+  var p = PLAN_PRICING[selectedPlan][selectedCurrency];
+  var unit = (selectedPlan === 'annual' || selectedPlan === 'club-annual') ? '/year' : '/month';
+  btn.textContent = 'Subscribe Now — ' + p.symbol + p.amount + unit;
+}
 
 // ── TIER SELECTOR ──────────────────────────────────
 function selectTier(tier) {
@@ -3531,15 +3598,7 @@ function selectPlan(plan) {
   var caEl = document.getElementById('plan-club-annual');
   if (cmEl) cmEl.classList.toggle('selected', plan === 'club-monthly');
   if (caEl) caEl.classList.toggle('selected', plan === 'club-annual');
-  // Update CTA button
-  var btn = document.getElementById('pw-cta-btn');
-  var labels = {
-    'monthly': 'Subscribe Now — £5/month',
-    'annual': 'Subscribe Now — £50/year',
-    'club-monthly': 'Subscribe Now — £10/month',
-    'club-annual': 'Subscribe Now — £90/year'
-  };
-  btn.textContent = labels[plan] || 'Subscribe Now';
+  refreshCtaLabel();
 }
 
 // ── SHOW PAYWALL ───────────────────────────────────
@@ -3570,13 +3629,7 @@ function startCheckout() {
   btn.textContent = 'Redirecting...';
   btn.disabled = true;
 
-  var priceMap = {
-    'monthly':      STRIPE_MONTHLY_PRICE_ID,
-    'annual':       STRIPE_ANNUAL_PRICE_ID,
-    'club-monthly': STRIPE_CLUB_MONTHLY_PRICE_ID,
-    'club-annual':  STRIPE_CLUB_ANNUAL_PRICE_ID
-  };
-  var priceId = priceMap[selectedPlan] || STRIPE_MONTHLY_PRICE_ID;
+  var priceId = PLAN_PRICING[selectedPlan][selectedCurrency].priceId;
 
   fetch(CHECKOUT_URL, {
     method: 'POST',
@@ -16318,7 +16371,12 @@ function onSignedIn() {
   loadActiveSquadSession();
   loadTeamSheetSession();
   try { refreshMatchdaySquadLabel(); } catch(e) {}
-  try { refreshMatchdaySquadLabel(); } catch(e) {}
+
+  // Restore currency preference before the paywall might need to show it
+  try {
+    var savedCurrency = localStorage.getItem('cs_currency');
+    if (savedCurrency === 'eur' || savedCurrency === 'gbp') selectCurrency(savedCurrency);
+  } catch(e) {}
 
   // Check subscription status before loading data
   checkSubscription();
