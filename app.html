@@ -1183,6 +1183,9 @@ input:not([type]), textarea, select {
 /* ── CLUB REPORT: TOP PLAYERS ── */
 .ctp-squad { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; }
 .ctp-squad-head { font-family:'Oswald',sans-serif; font-size:14px; font-weight:600; color:var(--cream); letter-spacing:0.5px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.crsf-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.crsf-pill { padding:7px 14px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+.crsf-pill.active { background:var(--gold); border-color:var(--gold); color:#0d2015; font-weight:600; }
 .ctp-squad-sub { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; white-space:nowrap; }
 .ctp-cat { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:#86efac; text-transform:uppercase; margin:12px 0 5px; }
 .ctp-row { display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
@@ -2138,6 +2141,7 @@ input:not([type]), textarea, select {
     <!-- Reports view -->
     <div id="dash-view-reports" style="display:none;">
       <div style="font-size:9px;letter-spacing:3px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin-bottom:12px;">Top Players by Squad</div>
+      <div id="club-reports-squad-filter" class="crsf-row"></div>
       <div id="club-top-players"></div>
       <div style="font-size:9px;letter-spacing:3px;color:rgba(240,253,244,0.4);text-transform:uppercase;margin:22px 0 12px;">Match Reports by Squad</div>
       <div id="club-reports-list"></div>
@@ -5845,13 +5849,13 @@ function playerConsistency() {
 // ── SUBSTITUTION IMPACT ────────────────────────────
 // You now get told who to bring off. This asks whether it worked.
 // Samples are small, so it reports counts alongside every rate.
-function substitutionImpact(windowMins) {
+function substitutionImpact(windowMins, squadId) {
   var w = windowMins || 10;
   var out = { subs: [], benchScores: 0, benchGoals: 0, benchPoints: 0,
               beforeRate: null, afterRate: null, matches: 0 };
   var beforeTot = 0, beforeMins = 0, afterTot = 0, afterMins = 0;
 
-  loadHistory().forEach(function(m) {
+  loadHistory().filter(function(m){ return matchInSquadFilter(m, squadId); }).forEach(function(m) {
     var subs = (m.subs || []).filter(function(s){ return s.team === 'home'; });
     if (!subs.length) return;
     out.matches++;
@@ -13017,12 +13021,22 @@ function expectedScores(events, team, half) {
   };
 }
 
+// Shared by any report that needs to scope loadHistory() to one squad —
+// undefined means no filter (all squads), null means specifically matches
+// with no squad assigned ("Unassigned" in the reports UI), otherwise an
+// exact squadId match.
+function matchInSquadFilter(m, squadId) {
+  if (squadId === undefined) return true;
+  var sqId = m.squadId || m.squad_id || null;
+  return squadId === null ? !sqId : String(sqId) === String(squadId);
+}
+
 // Which players finish better than the chances they get.
-function playerFinishing(minShots) {
+function playerFinishing(minShots, squadId) {
   var min = minShots || 8;
   var model = shotRateModel();
   var byPlayer = {};
-  loadHistory().forEach(function(m) {
+  loadHistory().filter(function(m){ return matchInSquadFilter(m, squadId); }).forEach(function(m) {
     var names = m.players || [];
     (m.events || []).forEach(function(e) {
       if (e.type !== 'shot' || e.team !== 'home' || typeof e.player !== 'number') return;
@@ -16580,6 +16594,32 @@ function clubTopPlayers() {
   return bySquad;
 }
 
+// ── SQUAD FILTER FOR CLUB REPORTS ───────────────────
+// Clubs with several squads (senior, U20, minor...) can end up with a lot
+// of stacked leaderboards otherwise — this narrows the view to one squad
+// at a time, "All Squads" included for the original stacked view.
+var reportsSquadFilter = 'all';
+
+function renderClubReportsSquadFilter() {
+  var el = document.getElementById('club-reports-squad-filter');
+  if (!el) return;
+  var data = clubTopPlayers();
+  var squads = Object.keys(data).sort();
+  if (squads.length <= 1) { el.innerHTML = ''; return; } // nothing to filter with only one (or no) squad
+  if (reportsSquadFilter !== 'all' && squads.indexOf(reportsSquadFilter) === -1) reportsSquadFilter = 'all';
+  var html = '<button class="crsf-pill' + (reportsSquadFilter === 'all' ? ' active' : '') + '" onclick="setReportsSquadFilter(\'all\')">All Squads</button>';
+  squads.forEach(function(sq) {
+    html += '<button class="crsf-pill' + (reportsSquadFilter === sq ? ' active' : '') + '" onclick="setReportsSquadFilter(' + JSON.stringify(sq) + ')">' + escapeHtml(sq) + '</button>';
+  });
+  el.innerHTML = html;
+}
+
+function setReportsSquadFilter(sq) {
+  reportsSquadFilter = sq;
+  renderClubReportsSquadFilter();
+  renderClubTopPlayers();
+}
+
 function renderClubTopPlayers() {
   var el = document.getElementById('club-top-players');
   if (!el) return;
@@ -16589,6 +16629,7 @@ function renderClubTopPlayers() {
     el.innerHTML = '<div class="ctp-empty">No saved matches yet. Save a match and the leaders appear here.</div>';
     return;
   }
+  var visibleSquads = reportsSquadFilter === 'all' ? squads : squads.filter(function(s){ return s === reportsSquadFilter; });
 
   function leaderRow(title, list, valueFn, suffix) {
     if (!list.length) return '';
@@ -16603,7 +16644,7 @@ function renderClubTopPlayers() {
       }).join('');
   }
 
-  var html = squads.map(function(sq) {
+  var html = visibleSquads.map(function(sq) {
     var list = data[sq].list;
     var scorers = list.slice().sort(function(a,b){ return b.scoreTotal - a.scoreTotal; })
                       .filter(function(e){ return e.scoreTotal > 0; });
@@ -16636,7 +16677,10 @@ function renderClubTopPlayers() {
 
   // ── Finishing versus chance quality ──
   var fin = [];
-  try { fin = playerFinishing(8); } catch(e) {}
+  var filterSquadId = reportsSquadFilter === 'all' ? undefined
+    : reportsSquadFilter === 'Unassigned' ? null
+    : ((typeof clubSquads !== 'undefined' ? clubSquads : []).find(function(s){ return s.name === reportsSquadFilter; }) || {}).id;
+  try { fin = playerFinishing(8, filterSquadId); } catch(e) {}
   if (fin.length) {
     html += '<div class="ctp-squad">' +
       '<div class="ctp-squad-head">Finishing<span class="ctp-squad-sub">8+ located shots</span></div>' +
@@ -16658,7 +16702,7 @@ function renderClubTopPlayers() {
   // Samples are small, so counts sit beside every rate and nothing is claimed
   // until there have been enough substitutions to mean anything.
   var si = { count: 0 };
-  try { si = substitutionImpact(10); } catch(e) {}
+  try { si = substitutionImpact(10, filterSquadId); } catch(e) {}
   if (si.count >= 3) {
     var better = si.subs.filter(function(s){ return s.delta > 0; }).length;
     var worse  = si.subs.filter(function(s){ return s.delta < 0; }).length;
@@ -17001,7 +17045,7 @@ function saveClubSettings() {
 
 // ── DASH TAB SWITCHER ──────────────────────────────
 function switchDashTab(tab, btn) {
-  if (tab === 'reports') { try { renderClubTopPlayers(); } catch(e) {} }
+  if (tab === 'reports') { try { renderClubReportsSquadFilter(); renderClubTopPlayers(); } catch(e) {} }
   var tabs = ['squads','members','reports','settings'];
   tabs.forEach(function(t) {
     var el = document.getElementById('dash-view-' + t);
