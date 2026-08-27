@@ -1439,6 +1439,118 @@ ok('home and away use their own goal end — same coordinates read differently',
   if (awaySide !== true) throw new Error('expected beyond the arc for away, that spot is the far end for them');
 });
 
+group('Matchday squad rework — Starting 15 + numbered bench');
+resetMatch();
+for (var mn=0; mn<20; mn++) squad[mn] = { name:'N'+(mn+1), pos:'', stats:{} };
+
+ok('matchdayNumberFor: a starter gets their position number', function(){
+  state.pitchOccupant = [5,1,2,3,4,0,6,7,8,9,10,11,12,13,14]; // squad idx 5 sits in position 1
+  state.subsBench = [];
+  if (matchdayNumberFor(5) !== 1) throw new Error('expected position 1, got ' + matchdayNumberFor(5));
+});
+ok('matchdayNumberFor: a bench player gets 16 + their bench order', function(){
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.subsBench = [15, 16, 17];
+  if (matchdayNumberFor(15) !== 16) throw new Error('first sub should be 16, got ' + matchdayNumberFor(15));
+  if (matchdayNumberFor(17) !== 18) throw new Error('third sub should be 18, got ' + matchdayNumberFor(17));
+});
+ok('matchdayNumberFor: someone not in the 15 or the bench returns null', function(){
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.subsBench = [15];
+  if (matchdayNumberFor(19) !== null) throw new Error('expected null for someone outside the declared squad');
+});
+
+resetMatch();
+ok('pregame, confirming after picking 15 moves to the subs step rather than closing', function(){
+  gamePhase = 'pregame';
+  tsDraft = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  tsPhase = 'fifteen';
+  tsConfirmStep();
+  if (tsPhase !== 'subs') throw new Error('should have moved to the subs phase, got ' + tsPhase);
+  if (state.pitchOccupant.length === 15 && state.pitchOccupant[0] === 0 && !tsSubsDraft) {
+    // fine — just checking the modal wasn't finalized yet below
+  }
+});
+ok('adding and removing bench players updates tsSubsDraft in order', function(){
+  tsSubsDraft = [];
+  addToSubsBench(15);
+  addToSubsBench(16);
+  if (JSON.stringify(tsSubsDraft) !== JSON.stringify([15,16])) throw new Error('expected [15,16], got ' + JSON.stringify(tsSubsDraft));
+  removeFromSubsBench(15);
+  if (JSON.stringify(tsSubsDraft) !== JSON.stringify([16])) throw new Error('expected [16] after removal, got ' + JSON.stringify(tsSubsDraft));
+});
+ok('confirming the subs step sets pitchOccupant, subsBench and derives matchdaySquad', function(){
+  tsDraft = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  tsSubsDraft = [15,16,17];
+  tsPhase = 'subs';
+  confirmTeamSheet();
+  if (JSON.stringify(state.subsBench) !== JSON.stringify([15,16,17])) throw new Error('subsBench not saved correctly');
+  if (state.matchdaySquad.length !== 18) throw new Error('matchdaySquad should be 15 + 3 = 18, got ' + state.matchdaySquad.length);
+  if (state.matchdaySquad.indexOf(16) === -1) throw new Error('a bench player should be included in matchdaySquad');
+});
+ok('a confirmed sub shows their matchday number on the bench in the event picker', function(){
+  var html = buildPlayerGridHTML('home', 'confirmPlayerPick');
+  if (html.indexOf('>16<') === -1) throw new Error('bench player at subsBench[0] should show matchday number 16');
+});
+
+resetMatch();
+ok('Starting 15 picker always shows the full panel, even with a previously-declared squad', function(){
+  for (var pn=0; pn<20; pn++) squad[pn] = { name:'N'+(pn+1), pos:'', stats:{} };
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]; // declared from a PREVIOUS match, excludes N16-N20
+  gamePhase = 'pregame';
+  tsDraft = [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null];
+  tsActiveSlot = 1;
+  openTsPlayerPicker(1);
+  var html = document.getElementById('ts-player-list').__html || '';
+  if (html.indexOf('N16') === -1) throw new Error('a panel player outside a stale declared squad should still be pickable pregame');
+});
+ok('mid-match, the position picker is restricted to the declared bench', function(){
+  state.matchdaySquad = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; // N16 (idx 15) declared, N17+ are not
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.subsBench = [15];
+  gamePhase = 'first_half';
+  tsDraft = state.pitchOccupant.slice();
+  tsActiveSlot = 1;
+  openTsPlayerPicker(1);
+  var html = document.getElementById('ts-player-list').__html || '';
+  if (html.indexOf('N16') === -1) throw new Error('the declared sub should be offered mid-match');
+  if (html.indexOf('N17') !== -1) throw new Error('an undeclared panel player should not be offered mid-match');
+});
+
+resetMatch();
+ok('saveSubstitution records matchday numbers for both players', function(){
+  for (var sn=0; sn<20; sn++) squad[sn] = { name:'S'+(sn+1), pos:'', stats:{} };
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.subsBench = [15];
+  state.matchdaySquad = state.pitchOccupant.concat(state.subsBench);
+  subTeam = 'home';
+  document.getElementById('sub-off-select').value = 'S1';
+  document.getElementById('sub-on-select').value = 'S16';
+  document.getElementById('sub-on-name').value = '';
+  document.getElementById('sub-minute').value = '50';
+  saveSubstitution();
+  var logged = state.subs[state.subs.length - 1];
+  if (logged.offNumber !== 1) throw new Error('off player should show matchday number 1, got ' + logged.offNumber);
+  if (logged.onNumber !== 16) throw new Error('on player should show matchday number 16, got ' + logged.onNumber);
+});
+
+resetMatch();
+ok('the mid-match Select Starting 15 path also records matchday numbers on the sub', function(){
+  for (var tn=0; tn<20; tn++) squad[tn] = { name:'T'+(tn+1), pos:'', stats:{} };
+  state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  state.subsBench = [15];
+  state.matchdaySquad = state.pitchOccupant.concat(state.subsBench);
+  gamePhase = 'first_half';
+  tsDraft = state.pitchOccupant.slice();
+  tsActiveSlot = 1;
+  assignTsSlot(15); // bring on T16 (bench, matchday #16) for position 1 (T1, matchday #1)
+  confirmTeamSheet();
+  var logged = state.subs[state.subs.length - 1];
+  if (logged.offNumber !== 1) throw new Error('outgoing player should show matchday number 1, got ' + logged.offNumber);
+  if (logged.onNumber !== 16) throw new Error('incoming player should show matchday number 16, got ' + logged.onNumber);
+});
+gamePhase = 'pregame';
+
 group('twoPointerAttempts');
 ok('counts attempts and scores only from located shots beyond the arc', function(){
   var m = { events: [
