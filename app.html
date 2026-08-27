@@ -3612,10 +3612,21 @@ function signOutFromPaywall() {
 }
 
 // ── FREE ACCOUNTS (always full access) ────────────
-var FREE_ACCOUNTS = ['ciarandagen@icloud.com'];
+// Checked against app_metadata, not user_metadata — Supabase only lets a
+// user edit their OWN user_metadata via the client SDK, so a flag here can't
+// be self-granted. Set it via Supabase Dashboard → Authentication → Users →
+// (select user) → edit raw app_metadata → add {"free_account": true}.
+//
+// FREE_ACCOUNTS below is only a local emergency fallback (e.g. for testing
+// before app_metadata is set up) — deliberately left empty in the shipped
+// app so no personal email sits in the page source. Add an email here only
+// temporarily, and prefer the app_metadata flag for anything permanent.
+var FREE_ACCOUNTS = [];
 
 function isFreeAccount() {
-  return currentUser && FREE_ACCOUNTS.indexOf((currentUser.email || '').toLowerCase().trim()) !== -1;
+  if (!currentUser) return false;
+  if (currentUser.app_metadata && currentUser.app_metadata.free_account === true) return true;
+  return FREE_ACCOUNTS.indexOf((currentUser.email || '').toLowerCase().trim()) !== -1;
 }
 
 // ── CHECK SUBSCRIPTION STATUS ──────────────────────
@@ -3718,26 +3729,54 @@ function updateTrialBanner(daysLeft) {
 }
 
 // ── HANDLE CHECKOUT RETURN ─────────────────────────
+// IMPORTANT: this URL parameter is fully controlled by the browser — anyone
+// could type ?checkout=success into the address bar themselves. It must
+// NEVER be trusted to grant access directly. The only thing allowed to mark
+// a subscription 'active' is the Stripe webhook (see netlify/functions/
+// stripe-webhook.js), which only Stripe's servers can trigger, using a
+// signature Stripe alone can produce. This handler just shows a "confirming
+// your payment" message and polls Supabase — the real source of truth —
+// until the webhook has actually landed.
 function handleCheckoutReturn() {
   var params = new URLSearchParams(window.location.search);
   if (params.get('checkout') === 'success') {
-    // Clean URL and immediately grant access
     window.history.replaceState({}, document.title, window.location.pathname);
     hidePaywall();
     showPage('match');
-    document.getElementById('trial-banner').style.display = 'none';
-    showSync('✓ Payment successful — welcome to Coach Stats!', 5000);
-    // Update subscription status to active immediately
-    if (currentUser && currentToken) {
-      supaDB('subscriptions?user_id=eq.' + currentUser.id, 'PATCH',
-        { status: 'active' }, currentToken).catch(function(){});
-      subStatus = 'active';
-      safeSetItem('cs_sub_status', 'active');
-    }
+    showSync('✓ Payment received — confirming your subscription...', 4000);
+    pollForActiveSubscription();
   } else if (params.get('checkout') === 'cancelled') {
     window.history.replaceState({}, document.title, window.location.pathname);
     showSync('Checkout cancelled — your access is unchanged.', 3000);
   }
+}
+
+// Stripe webhooks usually land within a couple of seconds, but can take
+// longer under load — poll a handful of times with a short delay rather
+// than giving up or, worse, assuming success without checking.
+function pollForActiveSubscription(attempt) {
+  attempt = attempt || 0;
+  if (!currentUser || !currentToken) return;
+  if (attempt >= 10) {
+    showSync('Still confirming your payment \u2014 this can take a minute. Reload shortly if your access hasn\u2019t updated.', 6000);
+    return;
+  }
+  supaDB('subscriptions?user_id=eq.' + currentUser.id + '&select=*&limit=1', 'GET', null, currentToken)
+    .then(function(data) {
+      var sub = data && data[0];
+      if (sub && sub.status === 'active') {
+        subStatus = 'active';
+        safeSetItem('cs_sub_status', 'active');
+        hidePaywall();
+        document.getElementById('trial-banner').style.display = 'none';
+        showSync('✓ Subscription active \u2014 welcome to Coach Stats!', 4000);
+        return;
+      }
+      setTimeout(function(){ pollForActiveSubscription(attempt + 1); }, 2000);
+    })
+    .catch(function() {
+      setTimeout(function(){ pollForActiveSubscription(attempt + 1); }, 2500);
+    });
 }
 
 if (!Element.prototype.closest) {
