@@ -43,7 +43,11 @@ exports.handler = async function(event) {
       },
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
-      currency: 'gbp',
+      // currency intentionally NOT set here — it was previously hardcoded
+      // to 'gbp', which conflicts with any EUR (or other-currency) price
+      // passed in via priceId. A Checkout Session's currency is already
+      // fully determined by the Price object referenced in line_items, so
+      // this doesn't need to be — and must not be — specified separately.
     });
 
     return {
