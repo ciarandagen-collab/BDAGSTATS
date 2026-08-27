@@ -1270,6 +1270,11 @@ input:not([type]), textarea, select {
 .ts-player-row.selected { background:rgba(224,48,48,0.12); }
 .ts-player-row.clear { color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; justify-content:center; }
 .ts-pr-num { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; color:var(--cream); flex-shrink:0; }
+.ts-bench-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin:14px 0 6px; }
+.ts-bench-row { display:flex; align-items:center; gap:10px; width:100%; padding:11px 8px; border:1px solid var(--border); border-radius:8px; background:rgba(255,255,255,0.03); margin-bottom:6px; }
+.ts-bench-num { width:28px; height:28px; border-radius:6px; background:var(--gold); color:#0d2015; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; flex-shrink:0; }
+.ts-bench-name { flex:1; font-family:'Inter',sans-serif; font-size:13px; color:var(--cream); }
+.ts-bench-remove { background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; padding:4px 8px; }
 .ts-pr-name { flex:1; font-family:'Inter',sans-serif; font-size:14px; color:var(--cream); }
 .ts-pr-pos { display:block; font-size:10px; color:var(--muted); margin-top:1px; }
 .ts-pr-tag { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:3px 7px; border-radius:6px; flex-shrink:0; }
@@ -2302,16 +2307,9 @@ input:not([type]), textarea, select {
           </button>
         </div>
         <div class="meta-row">
-          <button class="comp-picker-btn" id="matchday-squad-btn" onclick="openMatchdaySquadPicker()" type="button">
-            <span style="color:var(--muted);font-size:11px;">🎽</span>
-            <span id="matchday-squad-text">Select Matchday Squad</span>
-            <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
-          </button>
-        </div>
-        <div class="meta-row">
           <button class="comp-picker-btn" id="team-sheet-btn" onclick="openTeamSelector()" type="button">
-            <span style="color:var(--muted);font-size:11px;">📋</span>
-            <span id="team-sheet-text">Select Starting 15</span>
+            <span style="color:var(--muted);font-size:11px;">🎽</span>
+            <span id="team-sheet-text">Select Matchday Squad</span>
             <span style="color:var(--muted);font-size:11px;margin-left:auto;">▼</span>
           </button>
         </div>
@@ -2896,43 +2894,33 @@ input:not([type]), textarea, select {
   </div>
 </div>
 
-<!-- MATCHDAY SQUAD -->
-<div class="modal-overlay" role="dialog" aria-modal="true" id="matchday-squad-modal" onclick="if(event.target===this)closeMatchdaySquadPicker()">
-  <div class="modal-sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div>
-        <div class="sheet-title">🎽 Matchday Squad</div>
-        <div class="sheet-sub" id="mds-subtitle">Who's togged out today?</div>
-      </div>
-      <button class="sheet-close" aria-label="Close" onclick="closeMatchdaySquadPicker()">✕</button>
-    </div>
-    <div class="ts-actions">
-      <button class="ts-action-btn" onclick="selectAllMatchdaySquad()">Select all</button>
-      <button class="ts-action-btn" onclick="clearMatchdaySquad()">Clear all</button>
-    </div>
-    <div id="mds-list"></div>
-    <button class="ts-confirm-btn" onclick="confirmMatchdaySquad()">Confirm Matchday Squad</button>
-  </div>
-</div>
-
-<!-- STARTING TEAM SELECTOR -->
+<!-- STARTING TEAM SELECTOR / MATCHDAY SQUAD -->
 <div class="modal-overlay" role="dialog" aria-modal="true" id="team-selector-modal" onclick="if(event.target===this)closeTeamSelector()">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div>
-        <div class="sheet-title">📋 Starting 15</div>
+        <div class="sheet-title" id="ts-title">🎽 Matchday Squad</div>
         <div class="sheet-sub" id="ts-subtitle">Tap a position to pick a player</div>
       </div>
       <button class="sheet-close" aria-label="Close" onclick="closeTeamSelector()">✕</button>
     </div>
-    <div class="ts-actions">
-      <button class="ts-action-btn" onclick="autoFillTeam()">Auto-fill 1–15</button>
-      <button class="ts-action-btn" onclick="clearTeamSheet()">Clear all</button>
+    <div id="ts-phase-fifteen">
+      <div class="ts-actions">
+        <button class="ts-action-btn" onclick="autoFillTeam()">Auto-fill 1–15</button>
+        <button class="ts-action-btn" onclick="clearTeamSheet()">Clear all</button>
+      </div>
+      <div class="ts-pitch" id="ts-pitch"></div>
     </div>
-    <div class="ts-pitch" id="ts-pitch"></div>
-    <button class="ts-confirm-btn" onclick="confirmTeamSheet()">Confirm Starting 15</button>
+    <div id="ts-phase-subs" style="display:none;">
+      <div class="ts-actions">
+        <button class="ts-action-btn" onclick="clearSubsBench()">Clear bench</button>
+      </div>
+      <div id="ts-bench-list"></div>
+      <div class="ts-bench-label" id="ts-panel-label">Rest of panel — tap to add to the bench</div>
+      <div id="ts-panel-list"></div>
+    </div>
+    <button class="ts-confirm-btn" id="ts-confirm-btn" onclick="tsConfirmStep()">Next: Select Subs</button>
   </div>
 </div>
 
@@ -3105,8 +3093,7 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Start game</span><span class="help-val">▶ Start Game — clock starts, Match Info collapses</span></div>
       <div class="help-row"><span class="help-key">Half time</span><span class="help-val">⏸ Half Time → half time report appears → ▶ Start 2nd Half</span></div>
       <div class="help-row"><span class="help-key">Half time report</span><span class="help-val">Auto shows shooting %, kickouts, possession, discipline + key observations</span></div>
-      <div class="help-row"><span class="help-key">Matchday squad</span><span class="help-val">🎽 Select Matchday Squad — tick who's togged out today. Narrows subs and the bench to just them, rather than your whole panel. Optional — skip it and every named player stays eligible.</span></div>
-      <div class="help-row"><span class="help-key">Starting 15</span><span class="help-val">📋 Select Starting 15 — tap a position, pick a player. Numbers shown are match jerseys.</span></div>
+      <div class="help-row"><span class="help-key">Matchday squad</span><span class="help-val">🎽 Select Matchday Squad — pick your Starting 15 first (tap a position, pick a player), then tap "Next: Select Subs" to add from the rest of your panel. Each sub gets the next matchday number in order (16, 17, 18...). Optional — skip it and every named player stays eligible.</span></div>
       <div class="help-row"><span class="help-key">Squad</span><span class="help-val">Club accounts: pick which squad the match is for</span></div>
       <div class="help-row"><span class="help-key">Undo score</span><span class="help-val">Scoreboard → ↩ Undo</span></div>
     </div>
@@ -3127,7 +3114,7 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Turnover method</span><span class="help-val">🔄 Turnover Forced asks Tackle / Interception / Forced Error — skippable</span></div>
       <div class="help-row"><span class="help-key">Undo</span><span class="help-val">Bar at the bottom after each event — one tap puts everything back</span></div>
       <div class="help-row"><span class="help-key">Hide events</span><span class="help-val">⚙️ Choose which events show here — untick what you never use</span></div>
-      <div class="help-row"><span class="help-key">Substitution</span><span class="help-val">Tap Substitutions heading → + Record Substitution. Suggests who is fading after 20 mins.</span></div>
+      <div class="help-row"><span class="help-key">Substitution</span><span class="help-val">Tap Substitutions heading → + Record Substitution — or tap a position in Select Matchday Squad mid-match, either logs it the same way. Shows each player's real matchday number once one's been set. Suggests who is fading after 20 mins.</span></div>
       <div class="help-row"><span class="help-key">Share live</span><span class="help-val">📡 Share Live — gives a code so someone else can follow on their phone</span></div>
     </div>
 
@@ -3806,6 +3793,9 @@ const state = {
   // it's the list of squad indices togged out for this specific match —
   // narrows subs and the Starting 15 picker to just those players.
   matchdaySquad: null,
+  // Ordered bench: matchday number = 16 + array position. Only set pregame,
+  // alongside matchdaySquad (see confirmTeamSheet).
+  subsBench: [],
   startingFifteen:null,
   foul:{home:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0},away:{shooting:0,cynical:0,dissent:0,dangerous:0,penalty:0}},
   cards:{home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}},
@@ -3838,8 +3828,7 @@ function showPage(name, btn) {
   $('scroll-area').scrollTop = 0;
   if (name === 'trends') renderTrends();
   if (name === 'record') { renderRecordEventGrid(); try { refreshSquadPickerDisplay(); } catch(e) {} }
-  if (name === 'match') { try { refreshTeamSheetLabel(); } catch(e) {}
-  try { refreshMatchdaySquadLabel(); } catch(e) {} }
+  if (name === 'match') { try { refreshMatchdaySquadLabel(); } catch(e) {} }
   if (name === 'history') renderHistory();
   if (name === 'players') renderSquadGrid();
   if (name === 'stats') { renderStatsVideoTags(); updateStatsContext(); loadMatchNotes(); }
@@ -4861,8 +4850,9 @@ function buildPlayerGridHTML(team, onclickFn) {
     var bench = '';
     for (var i = 15; i < 34; i++) {
       if (squad[i] && squad[i].name && (occ.indexOf(i) === -1) && isInMatchdaySquad(i)) {
+        var benchNum = matchdayNumberFor(i);
         bench += '<button class="pp-player small" onclick="' + onclickFn + '(' + i + ')">' +
-          '<span class="pp-circle">' + (i+1) + '</span>' +
+          '<span class="pp-circle">' + (benchNum !== null ? benchNum : (i+1)) + '</span>' +
           '<span class="pp-name">' + surnameOf(squad[i].name) + '</span></button>';
       }
     }
@@ -5240,89 +5230,34 @@ var tsActiveSlot = null; // 1-based position being filled
 // instead of the whole panel including players not even present today.
 // Left undeclared (null), everything behaves exactly as before: any named
 // squad player is fair game.
-var mdsDraft = null;
-
+//
+// Rebuilt as a two-phase flow: pick the Starting 15 first (unchanged), then
+// allocate matchday numbers to the bench (16, 17, 18... in the order
+// they're added) from whoever's left in the panel. The old flat "tick
+// anyone" screen is gone — state.matchdaySquad is now always derived from
+// pitchOccupant + subsBench rather than set directly, so a coach can't end
+// up with a "matchday squad" that doesn't correspond to an actual 15 +
+// numbered bench. Only settable pregame — once the match is live the bench
+// is fixed, same as a real matchday programme, and further changes go
+// through the substitution flow instead.
 function isInMatchdaySquad(idx) {
   if (!state.matchdaySquad || !state.matchdaySquad.length) return true; // not declared — everyone's eligible
   return state.matchdaySquad.indexOf(idx) !== -1;
 }
 
-function openMatchdaySquadPicker() {
-  if (!squad.some(function(p){ return p && p.name; })) {
-    showSync('Add players to your squad first', 2500);
-    return;
-  }
-  mdsDraft = state.matchdaySquad && state.matchdaySquad.length
-    ? state.matchdaySquad.slice()
-    : squad.map(function(p,i){ return p && p.name ? i : null; }).filter(function(i){ return i !== null; });
-  renderMatchdaySquadList();
-  document.getElementById('matchday-squad-modal').classList.add('open');
+// A player's number for today: their position (1-15) if they started, or
+// 16+ in bench order if they're a numbered sub. Null if they're not part
+// of the declared matchday squad at all.
+function matchdayNumberFor(idx) {
+  var pos = (state.pitchOccupant || []).indexOf(idx);
+  if (pos !== -1) return pos + 1;
+  var benchPos = (state.subsBench || []).indexOf(idx);
+  if (benchPos !== -1) return 16 + benchPos;
+  return null;
 }
 
-function closeMatchdaySquadPicker() {
-  document.getElementById('matchday-squad-modal').classList.remove('open');
-  mdsDraft = null;
-}
-
-function renderMatchdaySquadList() {
-  var list = document.getElementById('mds-list');
-  if (!list || !mdsDraft) return;
-  var html = '';
-  squad.forEach(function(p, i) {
-    if (!p || !p.name) return;
-    var picked = mdsDraft.indexOf(i) !== -1;
-    html += '<button class="ts-player-row' + (picked ? ' selected' : '') + '" onclick="toggleMatchdaySquadPlayer(' + i + ')">' +
-      '<span class="ts-pr-num">' + (i+1) + '</span>' +
-      '<span class="ts-pr-name">' + escapeHtml(p.name) +
-        (p.pos ? '<span class="ts-pr-pos">' + escapeHtml(p.pos) + '</span>' : '') + '</span>' +
-      '<span class="ts-pr-tag' + (picked ? ' here' : '') + '">' + (picked ? '✓ In' : 'Not in') + '</span>' +
-      '</button>';
-  });
-  list.innerHTML = html || '<div class="ptr-no-notes">No players in your squad</div>';
-  var sub = document.getElementById('mds-subtitle');
-  if (sub) sub.textContent = mdsDraft.length + ' selected \u2014 tap a player to toggle';
-}
-
-function toggleMatchdaySquadPlayer(idx) {
-  if (!mdsDraft) return;
-  var at = mdsDraft.indexOf(idx);
-  if (at !== -1) mdsDraft.splice(at, 1);
-  else mdsDraft.push(idx);
-  renderMatchdaySquadList();
-}
-
-function selectAllMatchdaySquad() {
-  mdsDraft = squad.map(function(p,i){ return p && p.name ? i : null; }).filter(function(i){ return i !== null; });
-  renderMatchdaySquadList();
-}
-
-function clearMatchdaySquad() {
-  mdsDraft = [];
-  renderMatchdaySquadList();
-}
-
-function confirmMatchdaySquad() {
-  if (!mdsDraft) return;
-  // Anyone currently on the pitch or on the subs list who got un-ticked
-  // stays put — this declares who's ELIGIBLE going forward, it doesn't
-  // retroactively pull someone already playing.
-  state.matchdaySquad = mdsDraft.slice();
-  mdsDraft = null;
-  document.getElementById('matchday-squad-modal').classList.remove('open');
-  refreshMatchdaySquadLabel();
-  saveTeamSheetSession();
-  showSync('✓ Matchday squad set (' + state.matchdaySquad.length + ' players)', 2000);
-}
-
-function refreshMatchdaySquadLabel() {
-  var el = document.getElementById('matchday-squad-text');
-  if (!el) return;
-  if (state.matchdaySquad && state.matchdaySquad.length) {
-    el.textContent = state.matchdaySquad.length + ' Named for Matchday';
-  } else {
-    el.textContent = 'Select Matchday Squad';
-  }
-}
+var tsPhase = 'fifteen';       // 'fifteen' | 'subs'
+var tsSubsDraft = null;        // working bench array during setup, mirrors tsDraft
 
 function openTeamSelector() {
   if (!squad.some(function(p){ return p && p.name; })) {
@@ -5334,16 +5269,106 @@ function openTeamSelector() {
   // logged as a proper sub on confirm, same as the dropdown-based flow.
   tsDraft = (state.pitchOccupant || []).slice(0, 15);
   while (tsDraft.length < 15) tsDraft.push(null);
+  tsPhase = 'fifteen';
   renderTeamSelector();
   document.getElementById('team-selector-modal').classList.add('open');
 }
 
 function closeTeamSelector() {
   document.getElementById('team-selector-modal').classList.remove('open');
-  tsDraft = null; tsActiveSlot = null;
+  tsDraft = null; tsActiveSlot = null; tsSubsDraft = null; tsPhase = 'fifteen';
+}
+
+// Dispatches what the big confirm button at the bottom does, since it does
+// different things depending on phase and game state.
+function tsConfirmStep() {
+  if (tsPhase === 'fifteen') {
+    var filled = (tsDraft || []).filter(function(v){ return typeof v === 'number'; }).length;
+    if (filled === 0) { showSync('Pick at least one player', 2000); return; }
+    if (gamePhase !== 'pregame') {
+      // Mid-match: no bench step, this is just a substitution — commit
+      // straight away like before.
+      confirmTeamSheet();
+      return;
+    }
+    tsPhase = 'subs';
+    tsSubsDraft = (state.subsBench || []).slice();
+    renderTsSubsPhase();
+    return;
+  }
+  // phase === 'subs'
+  confirmTeamSheet();
+}
+
+function renderTsSubsPhase() {
+  document.getElementById('ts-phase-fifteen').style.display = 'none';
+  document.getElementById('ts-phase-subs').style.display = '';
+  document.getElementById('ts-title').textContent = '🎽 Matchday Squad — Subs';
+  document.getElementById('ts-subtitle').textContent = 'Add from the panel to allocate a matchday number';
+  document.getElementById('ts-confirm-btn').textContent = 'Confirm Matchday Squad';
+
+  var benchList = document.getElementById('ts-bench-list');
+  var html = '';
+  tsSubsDraft.forEach(function(idx, i) {
+    var p = squad[idx];
+    if (!p || !p.name) return;
+    html += '<div class="ts-bench-row">' +
+      '<span class="ts-bench-num">' + (16 + i) + '</span>' +
+      '<span class="ts-bench-name">' + escapeHtml(p.name) + (p.pos ? ' \u00B7 ' + escapeHtml(p.pos) : '') + '</span>' +
+      '<button class="ts-bench-remove" onclick="removeFromSubsBench(' + idx + ')">\u2715</button>' +
+      '</div>';
+  });
+  benchList.innerHTML = html || '<div class="ptr-no-notes">No subs added yet</div>';
+
+  var panelList = document.getElementById('ts-panel-list');
+  var pHtml = '';
+  squad.forEach(function(p, i) {
+    if (!p || !p.name) return;
+    if (tsDraft.indexOf(i) !== -1) return;      // already starting
+    if (tsSubsDraft.indexOf(i) !== -1) return;  // already on the bench
+    pHtml += '<button class="ts-player-row" onclick="addToSubsBench(' + i + ')">' +
+      '<span class="ts-pr-num">' + (i+1) + '</span>' +
+      '<span class="ts-pr-name">' + escapeHtml(p.name) + (p.pos ? '<span class="ts-pr-pos">' + escapeHtml(p.pos) + '</span>' : '') + '</span>' +
+      '<span class="ts-pr-tag">+ Add</span>' +
+      '</button>';
+  });
+  panelList.innerHTML = pHtml || '<div class="ptr-no-notes">Everyone named is already in the 15 or on the bench</div>';
+}
+
+function addToSubsBench(idx) {
+  if (!tsSubsDraft) return;
+  if (tsSubsDraft.indexOf(idx) === -1) tsSubsDraft.push(idx);
+  renderTsSubsPhase();
+}
+
+function removeFromSubsBench(idx) {
+  if (!tsSubsDraft) return;
+  var at = tsSubsDraft.indexOf(idx);
+  if (at !== -1) tsSubsDraft.splice(at, 1);
+  renderTsSubsPhase();
+}
+
+function clearSubsBench() {
+  tsSubsDraft = [];
+  renderTsSubsPhase();
+}
+
+function refreshMatchdaySquadLabel() {
+  var el = document.getElementById('team-sheet-text');
+  if (!el) return;
+  if (state.matchdaySquad && state.matchdaySquad.length) {
+    var benchCount = (state.subsBench || []).length;
+    el.textContent = 'Matchday: 15 + ' + benchCount + ' sub' + (benchCount !== 1 ? 's' : '');
+  } else {
+    el.textContent = 'Select Matchday Squad';
+  }
 }
 
 function renderTeamSelector() {
+  document.getElementById('ts-phase-fifteen').style.display = '';
+  document.getElementById('ts-phase-subs').style.display = 'none';
+  document.getElementById('ts-title').textContent = '🎽 Matchday Squad';
+  document.getElementById('ts-confirm-btn').textContent = (gamePhase === 'pregame') ? 'Next: Select Subs' : 'Confirm';
   var pitch = document.getElementById('ts-pitch');
   if (!pitch || !tsDraft) return;
   var filled = tsDraft.filter(function(v){ return typeof v === 'number'; }).length;
@@ -5383,10 +5408,14 @@ function openTsPlayerPicker(pos) {
   }
   squad.forEach(function(p, i) {
     if (!p || !p.name) return;
-    // Filter to the declared matchday squad, but never hide someone who's
-    // already placed in the draft — a coach needs to be able to see and
-    // clear them even if they got un-ticked from the squad afterward.
-    if (!isInMatchdaySquad(i) && tsDraft.indexOf(i) === -1) return;
+    // Picking the Starting 15 always draws from the full panel — this is
+    // the declaration step, so restricting it to a previously-declared
+    // matchday squad would make it impossible to change who's involved
+    // from one match to the next. Mid-match, though, a substitute has to
+    // come from the declared bench, same as a real matchday programme —
+    // but never hide someone already placed in the draft, so a coach can
+    // still see and clear them.
+    if (gamePhase !== 'pregame' && !isInMatchdaySquad(i) && tsDraft.indexOf(i) === -1) return;
     var usedAt = tsDraft.indexOf(i);
     var isHere = usedAt === (pos-1);
     var usedElsewhere = usedAt !== -1 && !isHere;
@@ -5444,6 +5473,8 @@ function confirmTeamSheet() {
     // that changed since it was opened is logged as a real sub (timeline,
     // minutes played, subs list) rather than silently rewriting the pitch —
     // the same record the dropdown-based Substitutions flow creates.
+    // Matchday numbers are looked up BEFORE pitchOccupant is overwritten,
+    // since that's what matchdayNumberFor reads from.
     var prevOcc = (state.pitchOccupant || []).slice(0, 15);
     for (var i = 0; i < 15; i++) {
       var prevIdx = prevOcc[i];
@@ -5452,40 +5483,49 @@ function confirmTeamSheet() {
       var prevName = (typeof prevIdx === 'number' && squad[prevIdx]) ? squad[prevIdx].name : null;
       var newName = (typeof newIdx === 'number' && squad[newIdx]) ? squad[newIdx].name : null;
       if (!prevName && !newName) continue;
-      var sub = { id: Date.now() + i, type: 'sub', team: 'home', off: prevName, on: newName, min: getMin(), half: state.half };
+      var sub = {
+        id: Date.now() + i, type: 'sub', team: 'home', off: prevName, on: newName,
+        offNumber: typeof prevIdx === 'number' ? matchdayNumberFor(prevIdx) : null,
+        onNumber: typeof newIdx === 'number' ? matchdayNumberFor(newIdx) : null,
+        min: getMin(), half: state.half
+      };
       if (!state.subs) state.subs = [];
       state.subs.push(sub);
       state.events.unshift(Object.assign({}, sub));
       subsMade++;
     }
     if (subsMade) { renderSubsList(); updateSubsBadge(); }
+    state.pitchOccupant = tsDraft.slice();
+    saveTeamSheetSession();
+    refreshMatchdaySquadLabel();
+    renderRecordPitch();
+    renderTimeline();
+    closeTeamSelector();
+    showSync(subsMade ? ('✓ ' + subsMade + ' substitution' + (subsMade !== 1 ? 's' : '') + ' recorded')
+                       : ('✓ Starting 15 set (' + filled + ' players)'), 2000);
+    return;
   }
 
+  // Pregame: phase 'fifteen' has already been redirected to the subs step by
+  // tsConfirmStep() before this ever runs, so reaching here pregame always
+  // means the bench (however many subs, including zero) has been confirmed.
   state.pitchOccupant = tsDraft.slice();
-  // If the game hasn't started, this is also the starting fifteen
-  if (gamePhase === 'pregame') state.startingFifteen = null;
+  state.subsBench = (tsSubsDraft || []).slice();
+  state.matchdaySquad = state.pitchOccupant.concat(state.subsBench);
+  state.startingFifteen = null;
+  var benchCount = state.subsBench.length;
   saveTeamSheetSession();
-  refreshTeamSheetLabel();
-  try { refreshMatchdaySquadLabel(); } catch(e) {}
+  refreshMatchdaySquadLabel();
   renderRecordPitch();
   renderTimeline();
   closeTeamSelector();
-  showSync(subsMade ? ('✓ ' + subsMade + ' substitution' + (subsMade !== 1 ? 's' : '') + ' recorded')
-                     : ('✓ Starting 15 set (' + filled + ' players)'), 2000);
-}
-
-function refreshTeamSheetLabel() {
-  var el = document.getElementById('team-sheet-text');
-  if (!el) return;
-  var occ = state.pitchOccupant || [];
-  var filled = occ.slice(0,15).filter(function(v){ return typeof v === 'number' && squad[v] && squad[v].name; }).length;
-  el.textContent = filled ? ('Starting 15 — ' + filled + ' selected') : 'Select Starting 15';
-  el.style.color = filled ? '' : 'var(--muted)';
+  showSync('✓ Matchday squad set — 15 + ' + benchCount + ' sub' + (benchCount !== 1 ? 's' : ''), 2200);
 }
 
 function saveTeamSheetSession() {
   safeSetItem('cs_team_sheet', JSON.stringify(state.pitchOccupant || []));
   safeSetItem('cs_matchday_squad', JSON.stringify(state.matchdaySquad || null));
+  safeSetItem('cs_subs_bench', JSON.stringify(state.subsBench || []));
 }
 function loadTeamSheetSession() {
   try {
@@ -5495,6 +5535,10 @@ function loadTeamSheetSession() {
   try {
     var mds = JSON.parse(localStorage.getItem('cs_matchday_squad') || 'null');
     if (Array.isArray(mds)) state.matchdaySquad = mds;
+  } catch(e) {}
+  try {
+    var sb = JSON.parse(localStorage.getItem('cs_subs_bench') || 'null');
+    if (Array.isArray(sb)) state.subsBench = sb;
   } catch(e) {}
   try { refreshMatchdaySquadLabel(); } catch(e) {}
 }
@@ -8484,7 +8528,8 @@ function renderSubPlayerSelects() {
   function opts(list) {
     return '<option value="">Select player...</option>' +
       list.map(function(x) {
-        return '<option value="' + x.p.name + '">' + (x.i+1) + ' ' + x.p.name + (x.p.pos ? ' (' + x.p.pos + ')' : '') + '</option>';
+        var num = matchdayNumberFor(x.i);
+        return '<option value="' + x.p.name + '">' + (num !== null ? num : (x.i+1)) + ' ' + x.p.name + (x.p.pos ? ' (' + x.p.pos + ')' : '') + '</option>';
       }).join('');
   }
   var offSel = document.getElementById('sub-off-select');
@@ -8504,12 +8549,20 @@ function saveSubstitution() {
 
   if (!off && !onName) { showSync('Enter at least one player name', 2000); return; }
 
+  // Look up matchday numbers before anything changes pitchOccupant, since
+  // that's what matchdayNumberFor reads from. Only meaningful for the home
+  // team — the opposition isn't tracked with numbered squad slots.
+  var offIdxForNum = subTeam === 'home' ? squadIndexByName(off) : -1;
+  var onIdxForNum = subTeam === 'home' ? squadIndexByName(onName) : -1;
+
   var sub = {
     id: Date.now(),
     type: 'sub',
     team: subTeam,
     off: off || null,
     on: onName || null,
+    offNumber: offIdxForNum !== -1 ? matchdayNumberFor(offIdxForNum) : null,
+    onNumber: onIdxForNum !== -1 ? matchdayNumberFor(onIdxForNum) : null,
     min: min,
     half: state.half
   };
@@ -8520,8 +8573,7 @@ function saveSubstitution() {
 
   // Swap the player shown on the Record-tab pitch for this position
   if (subTeam === 'home' && off && onName) {
-    var offIdx = squadIndexByName(off);
-    var onIdx = squadIndexByName(onName);
+    var offIdx = offIdxForNum, onIdx = onIdxForNum;
     if (offIdx !== -1 && onIdx !== -1) {
       if (!state.pitchOccupant) state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
       var slot = state.pitchOccupant.indexOf(offIdx);
@@ -8559,7 +8611,9 @@ function renderSubsList() {
     var homeLabel = document.getElementById('sfp-home-h') ? document.getElementById('sfp-home-h').textContent : 'Home';
     var awayLabel = document.getElementById('sfp-away-h') ? document.getElementById('sfp-away-h').textContent : 'Away';
     var teamLabel = s.team === 'home' ? homeLabel : awayLabel;
-    var detail = (s.off ? '⬆ OFF: ' + s.off : '') + (s.off && s.on ? '  ' : '') + (s.on ? '⬇ ON: ' + s.on : '');
+    var detail = (s.off ? '⬆ OFF: ' + (s.offNumber ? '#' + s.offNumber + ' ' : '') + s.off : '') +
+                 (s.off && s.on ? '  ' : '') +
+                 (s.on ? '⬇ ON: ' + (s.onNumber ? '#' + s.onNumber + ' ' : '') + s.on : '');
     return '<div class="sub-event-row">' +
       '<div class="sub-minute">' + (s.min||'?') + '\'</div>' +
       '<div class="sub-detail">' + detail + '</div>' +
@@ -12802,6 +12856,7 @@ function resetMatch(){
   state.cards={home:{yellow:0,black:0,red:0},away:{yellow:0,black:0,red:0}};
   state.pitchOccupant=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   state.matchdaySquad=null;
+  state.subsBench=[];
   state.startingFifteen=null;
   state.turnoverZones={home:{},away:{}};
   state.foulZones={home:{},away:{}};
@@ -14243,6 +14298,7 @@ function saveMatchToHistory() {
     foulZones: JSON.parse(JSON.stringify(state.foulZones || {home:{},away:{}})),
     turnoverMethod: JSON.parse(JSON.stringify(state.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}})),
     matchdaySquad: state.matchdaySquad ? state.matchdaySquad.slice() : null,
+    subsBench: state.subsBench ? state.subsBench.slice() : [],
     playerMinutes: (function(){ try { return playerMinutes(); } catch(e) { return {}; } }()),
     matchNotes: state.matchNotes || ''
   };
@@ -14549,6 +14605,7 @@ function loadMatchIntoTracker(id) {
   state.foulZones = m.foulZones || {home:{},away:{}};
   state.turnoverMethod = m.turnoverMethod || {home:{tackle:0,interception:0,forcedError:0},away:{tackle:0,interception:0,forcedError:0}};
   state.matchdaySquad = m.matchdaySquad || null;
+  state.subsBench = m.subsBench || [];
   state.matchNotes = m.matchNotes || '';
   loadMatchNotes();
   renderSubsList();
@@ -16221,7 +16278,7 @@ function onSignedIn() {
   loadClubSession();
   loadActiveSquadSession();
   loadTeamSheetSession();
-  try { refreshTeamSheetLabel(); } catch(e) {}
+  try { refreshMatchdaySquadLabel(); } catch(e) {}
   try { refreshMatchdaySquadLabel(); } catch(e) {}
 
   // Check subscription status before loading data
@@ -16843,7 +16900,7 @@ function selectMatchSquad(squadId) {
   // Different squad means a different panel of players — reset the team sheet
   state.pitchOccupant = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   saveTeamSheetSession();
-  refreshTeamSheetLabel();
+  refreshMatchdaySquadLabel();
   try { refreshMatchdaySquadLabel(); } catch(e) {}
   refreshSquadPickerDisplay();
   renderSquadGrid();
