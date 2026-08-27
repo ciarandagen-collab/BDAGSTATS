@@ -509,6 +509,77 @@ ok('a player with no blocks/tackles still gets zeroed fields, not undefined', fu
 });
 loadHistory = _lh2b;
 
+group('Club reports — squad filter');
+var _lh2c = loadHistory;
+var _origClubSquads = clubSquads;
+clubSquads = [{ id:'s1', name:'Senior' }, { id:'u20', name:'Under-20' }];
+loadHistory = function(){ return [
+  { id:1, squadId:'s1',  players:[{ name:'A', mins:60, stats:{shotsPlay:{point:3}} }] },
+  { id:2, squadId:'u20', players:[{ name:'B', mins:60, stats:{shotsPlay:{point:1}} }] },
+  { id:3, players:[{ name:'C', mins:60, stats:{shotsPlay:{point:1}} }] }, // no squadId -> Unassigned
+];};
+
+ok('matchInSquadFilter: undefined means no filtering at all', function(){
+  if (!matchInSquadFilter({squadId:'s1'}, undefined)) throw new Error('should match anything when unfiltered');
+  if (!matchInSquadFilter({}, undefined)) throw new Error('should match anything when unfiltered, even with no squadId');
+});
+ok('matchInSquadFilter: null means specifically unassigned matches', function(){
+  if (matchInSquadFilter({squadId:'s1'}, null)) throw new Error('a match with a squad should not pass the Unassigned filter');
+  if (!matchInSquadFilter({}, null)) throw new Error('a match with no squad should pass the Unassigned filter');
+});
+ok('matchInSquadFilter: an explicit id only matches that squad', function(){
+  if (!matchInSquadFilter({squadId:'s1'}, 's1')) throw new Error('exact squadId should match');
+  if (matchInSquadFilter({squadId:'u20'}, 's1')) throw new Error('a different squad should not match');
+});
+
+ok('clubTopPlayers groups matches under the correct squad name', function(){
+  var ctp = clubTopPlayers();
+  if (!ctp['Senior'] || !ctp['Senior'].list.find(function(e){return e.name==='A';}))
+    throw new Error('Senior squad should contain player A');
+  if (!ctp['Under-20'] || !ctp['Under-20'].list.find(function(e){return e.name==='B';}))
+    throw new Error('Under-20 squad should contain player B');
+  if (!ctp['Unassigned'] || !ctp['Unassigned'].list.find(function(e){return e.name==='C';}))
+    throw new Error('a match with no squadId should fall under Unassigned');
+});
+
+ok('playerFinishing respects a squad filter', function(){
+  var evLoadHistory = loadHistory;
+  loadHistory = function(){ return [
+    { id:1, squadId:'s1', players:[{name:'A'}], events:[
+      { type:'shot', team:'home', player:0, zone:'d-line', shotMode:'play', outcome:'point' }
+    ]},
+    { id:2, squadId:'u20', players:[{name:'B'}], events:[
+      { type:'shot', team:'home', player:0, zone:'d-line', shotMode:'play', outcome:'wide' }
+    ]}
+  ];};
+  var all = playerFinishing(1);
+  var s1Only = playerFinishing(1, 's1');
+  loadHistory = evLoadHistory;
+  if (all.length < 2) throw new Error('unfiltered should include both players, got ' + all.length);
+  if (s1Only.length !== 1 || s1Only[0].name !== 'A') throw new Error('squad-filtered should only include A, got ' + JSON.stringify(s1Only));
+});
+
+ok('renderClubReportsSquadFilter renders one pill per squad plus All Squads', function(){
+  reportsSquadFilter = 'all';
+  renderClubReportsSquadFilter();
+  var html = document.getElementById('club-reports-squad-filter').__html || '';
+  if (html.indexOf('All Squads') === -1) throw new Error('missing All Squads pill');
+  if (html.indexOf('Senior') === -1) throw new Error('missing Senior pill');
+  if (html.indexOf('Under-20') === -1) throw new Error('missing Under-20 pill');
+  if (html.indexOf('Unassigned') === -1) throw new Error('missing Unassigned pill');
+});
+
+ok('setReportsSquadFilter narrows renderClubTopPlayers to just that squad', function(){
+  setReportsSquadFilter('Senior');
+  var html = document.getElementById('club-top-players').__html || '';
+  if (html.indexOf('>A<') === -1 && html.indexOf('A</span>') === -1) throw new Error('Senior view should show player A');
+  if (html.indexOf('>B<') !== -1 && html.indexOf('B</span>') !== -1) throw new Error('Senior view should not show player B from Under-20');
+  reportsSquadFilter = 'all';
+});
+
+loadHistory = _lh2c;
+clubSquads = _origClubSquads;
+
 // ══ 8d. PHASE C: CONDITIONS AND OPPOSITION STRENGTH ══
 group('Opposition strength');
 var _lh3 = loadHistory;
