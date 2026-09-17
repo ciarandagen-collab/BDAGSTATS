@@ -1704,6 +1704,22 @@ input:not([type]), textarea, select {
 .grading-invited-btn.no-active { background:rgba(255,80,80,0.1); border-color:var(--red-light); color:var(--red-light); }
 .grading-invited-btn.maybe-active { background:rgba(245,166,35,0.1); border-color:#f5a623; color:#f5a623; }
 .grading-note-input { width:100%; padding:7px 10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:7px; color:var(--cream); font-size:12px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; }
+.grading-detail-toggle { display:flex; gap:6px; margin:8px 0; }
+.grading-detail-btn { flex:1; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.02); color:var(--muted); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; text-align:center; }
+.grading-detail-btn.open { background:rgba(74,222,128,0.1); border-color:var(--green); color:var(--green); }
+.grading-detail-panel { display:none; padding:10px; margin-bottom:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:8px; }
+.grading-detail-panel.open { display:block; }
+.grading-detail-section-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin:10px 0 6px; }
+.grading-detail-section-label:first-child { margin-top:0; }
+.grading-test-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; }
+.grading-test-label { font-size:11px; color:var(--cream); font-family:'Inter',sans-serif; flex:1; }
+.grading-test-input { width:70px; padding:5px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--cream); font-size:12px; font-family:'Inter',sans-serif; outline:none; text-align:center; flex-shrink:0; }
+.grading-test-unit { font-size:10px; color:var(--muted); width:22px; flex-shrink:0; }
+.grading-skill-row { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; }
+.grading-skill-label { font-size:11px; color:var(--cream); font-family:'Inter',sans-serif; flex:1; }
+.grading-skill-dots { display:flex; gap:2px; flex-shrink:0; }
+.grading-skill-dot { width:19px; height:19px; border-radius:4px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; transition:all 0.1s; flex-shrink:0; }
+.grading-skill-dot.on { background:var(--green); border-color:var(--green); }
 .trial-lb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .trial-lb-note { font-size:11px; color:var(--muted); font-style:italic; }
 .trial-report-btn { padding:7px 12px; background:rgba(224,48,48,0.12); border:1px solid rgba(22,163,74,0.25); border-radius:7px; color:var(--red-light); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; cursor:pointer; }
@@ -3143,6 +3159,7 @@ input:not([type]), textarea, select {
       <div class="help-section-title">🧪 Trial Tab</div>
       <div class="help-row"><span class="help-key">New trial</span><span class="help-val">Squad → Trial → + New Trial</span></div>
       <div class="help-row"><span class="help-key">Grade session</span><span class="help-val">Sessions → + New Session → score 1–10 per trialist</span></div>
+      <div class="help-row"><span class="help-key">Physical &amp; skills</span><span class="help-val">Grading → ▼ Physical Testing &amp; Skills — sprint times, jumps, aerobic, agility, plus kicking/catching/handpassing/tackling ratings. Goalkeeping tests appear only for players listed as GK.</span></div>
       <div class="help-row"><span class="help-key">Multi-coach</span><span class="help-val">Sessions → tap 📤 on session → share link with co-coaches</span></div>
       <div class="help-row"><span class="help-key">Sync grades</span><span class="help-val">Sessions → 🔄 Sync Co-Coach Grades</span></div>
       <div class="help-row"><span class="help-key">Promote</span><span class="help-val">Rankings → tap trialist → Promote → assign squad slot</span></div>
@@ -3512,7 +3529,7 @@ var STRIPE_CLUB_ANNUAL_PRICE_ID  = 'price_1Tb42zHimBSnUeOtuHLJNtJn';
 // set, it can't share the GBP ones) and replace these placeholder IDs.
 // See PLAN_PRICING below for the displayed amounts, which you should
 // review — these are rounded estimates, not a considered EUR price.
-var STRIPE_MONTHLY_PRICE_ID_EUR      = 'price_price_1U95z2HimBSnUeOtR3QZDhGz';
+var STRIPE_MONTHLY_PRICE_ID_EUR      = 'price_1U95z2HimBSnUeOtR3QZDhGz';
 var STRIPE_ANNUAL_PRICE_ID_EUR       = 'price_1U95qtHimBSnUeOtrmnIZyKZ';
 var STRIPE_CLUB_MONTHLY_PRICE_ID_EUR = 'price_1U95prHimBSnUeOtb1FHl6xm';
 var STRIPE_CLUB_ANNUAL_PRICE_ID_EUR  = 'price_1U95liHimBSnUeOtxgXRTPF2';
@@ -7703,6 +7720,86 @@ function closeNewTrialSession() {
   document.body.style.overflow = '';
 }
 
+// ── TRIAL ASSESSMENT CATEGORIES ─────────────────────
+// Physical tests are objective measurements (a stopwatch/tape-measure
+// result), technical skills are 1-10 ratings from a standardised drill —
+// kept as two different input types rather than forcing both into the
+// same rating-dot format, since a sprint time and a subjective skill
+// score aren't really comparable the same way.
+var PHYSICAL_TESTS = [
+  { key: 'sprint10',   label: '10m Sprint',                unit: 's' },
+  { key: 'sprint20',   label: '20m Sprint',                 unit: 's' },
+  { key: 'sprint40',   label: '40m Sprint',                 unit: 's' },
+  { key: 'rsa',        label: 'Repeated Sprint (fatigue %)', unit: '%' },
+  { key: 'vertJump',   label: 'Vertical Jump',               unit: 'cm' },
+  { key: 'broadJump',  label: 'Broad Jump',                  unit: 'cm' },
+  { key: 'aerobic',    label: 'Aerobic (Yo-Yo level)',       unit: '' },
+  { key: 'agility',    label: 'Agility (T-test)',            unit: 's' }
+];
+var TECHNICAL_SKILLS = [
+  { key: 'kickDistance',  label: 'Kicking — Distance' },
+  { key: 'kickAccR',      label: 'Kicking Accuracy — Right' },
+  { key: 'kickAccL',      label: 'Kicking Accuracy — Left' },
+  { key: 'kickPressure',  label: 'Kicking Under Pressure' },
+  { key: 'catching',      label: 'Catching / High Fielding' },
+  { key: 'handpassAcc',   label: 'Handpassing — Accuracy' },
+  { key: 'handpassSpeed', label: 'Handpassing — Speed' },
+  { key: 'soloEvasion',   label: 'Solo Running & Evasion' },
+  { key: 'tackling',      label: 'Tackling Technique' },
+  { key: 'contact',       label: 'Shoulder-to-Shoulder Contact' }
+];
+var GOALKEEPER_SKILLS = [
+  { key: 'gkKickouts',     label: 'GK — Kickouts' },
+  { key: 'gkShotStop',     label: 'GK — Shot-Stopping' },
+  { key: 'gkDistribution', label: 'GK — Distribution' }
+];
+
+// Builds the collapsible Physical Testing + Technical Skills panel shared
+// by both the coach's own grading screen and the emailed-link version other
+// coaches grade from — onclick names differ between the two (setX vs tgsX)
+// so this takes the prefix rather than hardcoding one.
+function buildTrialDetailPanelHTML(trialistId, fnPrefix, isGoalkeeper, existing) {
+  var phys = (existing && existing.physical) || {};
+  var tech = (existing && existing.technical) || {};
+
+  var physRows = PHYSICAL_TESTS.map(function(t) {
+    var v = phys[t.key] != null ? phys[t.key] : '';
+    return '<div class="grading-test-row">' +
+      '<span class="grading-test-label">' + t.label + '</span>' +
+      '<input class="grading-test-input" type="number" step="0.01" inputmode="decimal" value="' + v + '" ' +
+        'onchange="' + fnPrefix + 'SetPhysical(' + trialistId + ',\'' + t.key + '\',this.value)">' +
+      '<span class="grading-test-unit">' + t.unit + '</span>' +
+    '</div>';
+  }).join('');
+
+  function skillRow(s) {
+    var v = tech[s.key] || 0;
+    var dots = Array.from({length:10}, function(_,i) {
+      return '<div class="grading-skill-dot' + (i < v ? ' on' : '') + '" ' +
+        'onclick="' + fnPrefix + 'SetTechnical(this,' + trialistId + ',\'' + s.key + '\',' + (i+1) + ')"></div>';
+    }).join('');
+    return '<div class="grading-skill-row" data-skill="' + s.key + '">' +
+      '<span class="grading-skill-label">' + s.label + '</span>' +
+      '<div class="grading-skill-dots">' + dots + '</div>' +
+    '</div>';
+  }
+
+  var techRows = TECHNICAL_SKILLS.map(skillRow).join('');
+  var gkRows = isGoalkeeper ? GOALKEEPER_SKILLS.map(skillRow).join('') : '';
+
+  return '<div class="grading-detail-section-label">🏃 Physical Testing</div>' + physRows +
+    '<div class="grading-detail-section-label">⚙️ Technical Skills</div>' + techRows +
+    (gkRows ? '<div class="grading-detail-section-label">🥅 Goalkeeping</div>' + gkRows : '');
+}
+
+function toggleGradingDetail(btn, trialistId) {
+  var panel = document.getElementById('gdetail-' + trialistId);
+  if (!panel) return;
+  var open = panel.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.textContent = open ? '▲ Hide Testing & Skills' : '▼ Physical Testing & Skills';
+}
+
 function renderTrialGradingList(existingGrades) {
   var trial = getActiveTrial();
   var container = document.getElementById('trial-grading-list');
@@ -7723,6 +7820,7 @@ function renderTrialGradingList(existingGrades) {
     var invYes = g.invitedBack === true || g.invitedBack === 'yes' ? ' yes-active' : '';
     var invNo = g.invitedBack === false || g.invitedBack === 'no' ? ' no-active' : '';
     var invMaybe = g.invitedBack === 'maybe' ? ' maybe-active' : '';
+    var isGK = t.pos === 'GK';
     return '<div class="grading-row" data-trialist="' + t.id + '">' +
       '<div class="grading-name-row">' +
         '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
@@ -7732,6 +7830,8 @@ function renderTrialGradingList(existingGrades) {
         '</div>' +
       '</div>' +
       '<div class="grading-score-row" id="gscore-' + t.id + '">' + scoreDots + '</div>' +
+      '<button class="grading-detail-btn" onclick="toggleGradingDetail(this,' + t.id + ')">▼ Physical Testing & Skills</button>' +
+      '<div class="grading-detail-panel" id="gdetail-' + t.id + '">' + buildTrialDetailPanelHTML(t.id, '', isGK, g) + '</div>' +
       '<div class="grading-invited-row">' +
         '<button class="grading-invited-btn' + invYes + '" onclick="setGradeInvite(this,' + t.id + ',true)">✅ Invite Back</button>' +
         '<button class="grading-invited-btn' + invMaybe + '" onclick="setGradeInvite(this,' + t.id + ',\'maybe\')">🤔 Maybe</button>' +
@@ -7740,6 +7840,34 @@ function renderTrialGradingList(existingGrades) {
       '<input class="grading-note-input" placeholder="Notes (optional)" value="' + (g.notes||'') + '">' +
     '</div>';
   }).join('');
+}
+
+// Local (coach's own device) versions — data lives in dataset attributes on
+// the panel itself, since saveTrialSession() re-scans the DOM at save time
+// rather than keeping a live JS object (see how it already does this for
+// score/attendance/invite above).
+function SetPhysical(trialistId, key, value) {
+  var panel = document.getElementById('gdetail-' + trialistId);
+  if (!panel) return;
+  if (!panel.dataset.physical) panel.dataset.physical = '{}';
+  var data = JSON.parse(panel.dataset.physical);
+  data[key] = value === '' ? null : parseFloat(value);
+  panel.dataset.physical = JSON.stringify(data);
+}
+
+function SetTechnical(dot, trialistId, key, score) {
+  var panel = document.getElementById('gdetail-' + trialistId);
+  if (!panel) return;
+  var row = panel.querySelector('.grading-skill-row[data-skill="' + key + '"]');
+  if (row) {
+    row.querySelectorAll('.grading-skill-dot').forEach(function(d, i) {
+      d.className = 'grading-skill-dot' + (i < score ? ' on' : '');
+    });
+  }
+  if (!panel.dataset.technical) panel.dataset.technical = '{}';
+  var data = JSON.parse(panel.dataset.technical);
+  data[key] = score;
+  panel.dataset.technical = JSON.stringify(data);
 }
 
 function setGradeScore(dot, trialistId, score) {
@@ -7781,7 +7909,10 @@ function saveTrialSession() {
     var invBtn = row.querySelector('.grading-invited-btn.yes-active,.grading-invited-btn.no-active,.grading-invited-btn.maybe-active');
     var invited = invBtn ? (invBtn.classList.contains('yes-active') ? true : invBtn.classList.contains('no-active') ? false : 'maybe') : true;
     var note = row.querySelector('.grading-note-input') ? row.querySelector('.grading-note-input').value.trim() : '';
-    grades[tid] = { attended, overall: score, invitedBack: invited, notes: note };
+    var detailPanel = document.getElementById('gdetail-' + tid);
+    var physical = detailPanel && detailPanel.dataset.physical ? JSON.parse(detailPanel.dataset.physical) : {};
+    var technical = detailPanel && detailPanel.dataset.technical ? JSON.parse(detailPanel.dataset.technical) : {};
+    grades[tid] = { attended, overall: score, invitedBack: invited, notes: note, physical: physical, technical: technical };
   });
 
   if (editingTrialSessionId) {
@@ -8116,6 +8247,36 @@ function generateTrialReport() {
       html += '<td class="' + sc + '">' + (g.overall || '—') + '</td>';
     });
     html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  // Most recent recorded value per test/skill, since these are often only
+  // captured once (a single testing day) rather than every session
+  html += '<h2>Physical Testing</h2>';
+  html += '<table><thead><tr><th>Player</th>' + PHYSICAL_TESTS.map(function(pt){ return '<th>' + pt.label + (pt.unit ? ' (' + pt.unit + ')' : '') + '</th>'; }).join('') + '</tr></thead><tbody>';
+  ranked.forEach(function(item) {
+    var latestPhys = {};
+    sessions.forEach(function(s) {
+      var g = s.grades && s.grades[item.t.id];
+      if (g && g.physical) Object.keys(g.physical).forEach(function(k){ if (g.physical[k] != null) latestPhys[k] = g.physical[k]; });
+    });
+    html += '<tr><td><strong>' + item.t.name + '</strong></td>' +
+      PHYSICAL_TESTS.map(function(pt){ return '<td>' + (latestPhys[pt.key] != null ? latestPhys[pt.key] : '—') + '</td>'; }).join('') +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<h2>Technical Skills (1–10)</h2>';
+  html += '<table><thead><tr><th>Player</th>' + TECHNICAL_SKILLS.map(function(ts){ return '<th>' + ts.label + '</th>'; }).join('') + '</tr></thead><tbody>';
+  ranked.forEach(function(item) {
+    var latestTech = {};
+    sessions.forEach(function(s) {
+      var g = s.grades && s.grades[item.t.id];
+      if (g && g.technical) Object.keys(g.technical).forEach(function(k){ if (g.technical[k]) latestTech[k] = g.technical[k]; });
+    });
+    html += '<tr><td><strong>' + item.t.name + '</strong></td>' +
+      TECHNICAL_SKILLS.map(function(ts){ return '<td>' + (latestTech[ts.key] || '—') + '</td>'; }).join('') +
+      '</tr>';
   });
   html += '</tbody></table>';
 
@@ -11467,6 +11628,7 @@ function renderTrialGradingForm(trial, session) {
       return '<div class="grading-score-dot" onclick="tgsSetScore(this,' + t.id + ',' + (i+1) + ')" style="width:32px;height:32px;">' + (i+1) + '</div>';
     }).join('');
 
+    var isGK = t.pos === 'GK';
     return '<div class="grading-row tgs-trialist-row" data-trialist="' + t.id + '" style="padding:14px 0;">' +
       '<div class="grading-name-row">' +
         '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
@@ -11477,6 +11639,8 @@ function renderTrialGradingForm(trial, session) {
       '</div>' +
       '<div style="font-family:\'Oswald\',sans-serif;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Grade (1–10)</div>' +
       '<div class="grading-score-row" id="tgscore-' + t.id + '">' + scoreDots + '</div>' +
+      '<button class="grading-detail-btn" onclick="toggleGradingDetail(this,' + t.id + ')">▼ Physical Testing & Skills</button>' +
+      '<div class="grading-detail-panel" id="gdetail-' + t.id + '">' + buildTrialDetailPanelHTML(t.id, 'tgs', isGK, null) + '</div>' +
       '<div class="grading-invited-row">' +
         '<button class="grading-invited-btn yes-active" onclick="tgsSetInvite(this,' + t.id + ',true)">✅ Invite Back</button>' +
         '<button class="grading-invited-btn" onclick="tgsSetInvite(this,' + t.id + ',\'maybe\')">🤔 Maybe</button>' +
@@ -11490,8 +11654,29 @@ function renderTrialGradingForm(trial, session) {
 
   // Init grades with defaults
   tgsTrialists.forEach(function(t) {
-    tgsGrades[t.id] = { attended: true, overall: 0, invitedBack: true, notes: '' };
+    tgsGrades[t.id] = { attended: true, overall: 0, invitedBack: true, notes: '', physical: {}, technical: {} };
   });
+}
+
+function tgsSetPhysical(trialistId, key, value) {
+  if (!tgsGrades[trialistId]) tgsGrades[trialistId] = { physical: {}, technical: {} };
+  if (!tgsGrades[trialistId].physical) tgsGrades[trialistId].physical = {};
+  tgsGrades[trialistId].physical[key] = value === '' ? null : parseFloat(value);
+}
+
+function tgsSetTechnical(dot, trialistId, key, score) {
+  var panel = document.getElementById('gdetail-' + trialistId);
+  if (panel) {
+    var row = panel.querySelector('.grading-skill-row[data-skill="' + key + '"]');
+    if (row) {
+      row.querySelectorAll('.grading-skill-dot').forEach(function(d, i) {
+        d.className = 'grading-skill-dot' + (i < score ? ' on' : '');
+      });
+    }
+  }
+  if (!tgsGrades[trialistId]) tgsGrades[trialistId] = { physical: {}, technical: {} };
+  if (!tgsGrades[trialistId].technical) tgsGrades[trialistId].technical = {};
+  tgsGrades[trialistId].technical[key] = score;
 }
 
 function tgsSetScore(dot, trialistId, score) {
