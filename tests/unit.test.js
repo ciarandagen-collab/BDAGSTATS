@@ -1572,6 +1572,76 @@ ok('no located shots beyond the arc returns null conversion, not zero', function
 });
 
 
+group('Trial: physical testing & technical skills');
+resetMatch();
+
+ok('buildTrialDetailPanelHTML includes all physical tests and technical skills', function(){
+  var html = buildTrialDetailPanelHTML(1, '', false, null);
+  PHYSICAL_TESTS.forEach(function(t){ if (html.indexOf(t.label) === -1) throw new Error('missing physical test: ' + t.label); });
+  TECHNICAL_SKILLS.forEach(function(s){ if (html.indexOf(s.label) === -1) throw new Error('missing technical skill: ' + s.label); });
+});
+ok('goalkeeping skills only appear when isGoalkeeper is true', function(){
+  var withGK = buildTrialDetailPanelHTML(1, '', true, null);
+  var withoutGK = buildTrialDetailPanelHTML(1, '', false, null);
+  GOALKEEPER_SKILLS.forEach(function(s){
+    if (withGK.indexOf(s.label) === -1) throw new Error('GK skill missing when isGoalkeeper=true: ' + s.label);
+    if (withoutGK.indexOf(s.label) !== -1) throw new Error('GK skill should NOT appear when isGoalkeeper=false: ' + s.label);
+  });
+});
+ok('existing physical/technical values pre-fill the panel', function(){
+  var existing = { physical: { sprint10: 1.85 }, technical: { tackling: 7 } };
+  var html = buildTrialDetailPanelHTML(1, '', false, existing);
+  if (html.indexOf('value="1.85"') === -1) throw new Error('sprint10 value should pre-fill the input');
+});
+
+ok('local SetPhysical stores a value on the panel dataset', function(){
+  SetPhysical(5, 'sprint10', '1.92');
+  var panel = document.getElementById('gdetail-5');
+  var data = JSON.parse(panel.dataset.physical);
+  if (data.sprint10 !== 1.92) throw new Error('expected 1.92, got ' + JSON.stringify(data));
+});
+ok('local SetPhysical treats an empty string as null, not NaN', function(){
+  SetPhysical(6, 'agility', '');
+  var panel = document.getElementById('gdetail-6');
+  var data = JSON.parse(panel.dataset.physical);
+  if (data.agility !== null) throw new Error('expected null for a cleared field, got ' + JSON.stringify(data.agility));
+});
+ok('local SetTechnical stores a 1-10 score on the panel dataset', function(){
+  SetTechnical(null, 7, 'tackling', 8);
+  var panel = document.getElementById('gdetail-7');
+  var data = JSON.parse(panel.dataset.technical);
+  if (data.tackling !== 8) throw new Error('expected 8, got ' + JSON.stringify(data));
+});
+
+ok('shared-link tgsSetPhysical writes into tgsGrades, not the DOM', function(){
+  tgsGrades = {};
+  tgsSetPhysical(9, 'vertJump', '48');
+  if (tgsGrades[9].physical.vertJump !== 48) throw new Error('expected 48, got ' + JSON.stringify(tgsGrades[9]));
+});
+ok('shared-link tgsSetTechnical writes into tgsGrades', function(){
+  tgsGrades = {};
+  tgsSetTechnical(null, 9, 'catching', 6);
+  if (tgsGrades[9].technical.catching !== 6) throw new Error('expected 6, got ' + JSON.stringify(tgsGrades[9]));
+});
+ok('tgsGrades defaults include empty physical/technical objects per trialist', function(){
+  tgsTrialists = [{ id: 11, name: 'Test Trialist', pos: '' }];
+  tgsGrades = {};
+  renderTrialGradingForm({ name: 'Test Trial' }, { date: '2026-01-01', label: '' });
+  if (!tgsGrades[11] || typeof tgsGrades[11].physical !== 'object' || typeof tgsGrades[11].technical !== 'object') {
+    throw new Error('expected default physical/technical objects, got ' + JSON.stringify(tgsGrades[11]));
+  }
+});
+
+ok('toggleGradingDetail opens and closes the panel, updating button text', function(){
+  var panel = document.getElementById('gdetail-20');
+  var btn = { classList: { _open: false, toggle(c, f) { this._open = f !== undefined ? f : !this._open; return this._open; } }, textContent: '' };
+  toggleGradingDetail(btn, 20);
+  if (!panel.classList.contains('open')) throw new Error('panel should be open after first toggle');
+  toggleGradingDetail(btn, 20);
+  if (panel.classList.contains('open')) throw new Error('panel should be closed after second toggle');
+});
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
