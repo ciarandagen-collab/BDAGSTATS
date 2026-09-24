@@ -2765,7 +2765,10 @@ input:not([type]), textarea, select {
 
     <!-- SQUAD LIST -->
     <div id="squad-view-squad">
-      <div class="sec-label">Squad — tap a slot to add/edit</div>
+      <div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Squad — tap a slot to add/edit</span>
+        <button id="squad-manage-btn" onclick="openSquadPicker()" style="display:none;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:4px 9px;color:var(--muted);font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;text-transform:none;">Manage Squads</button>
+      </div>
       <div class="squad-grid" id="squad-grid"></div>
     </div>
 
@@ -2848,10 +2851,26 @@ input:not([type]), textarea, select {
       </div>
       <button class="btn-save-player" onclick="savePlayerEdit()" style="margin-bottom:12px;">Save Player</button>
       <button class="btn-clear-player" id="btn-clear-player" onclick="clearPlayerSlot()" style="display:none;margin-bottom:12px;">Remove Player</button>
+      <button id="btn-add-from-squad" onclick="openAddFromOtherSquad()" style="display:none;width:100%;margin-bottom:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">↓ Add Existing Player From Another Squad</button>
       <div class="edit-field">
         <div class="edit-label">Position</div>
         <div class="pos-grid" id="pos-grid"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ADD EXISTING PLAYER FROM ANOTHER SQUAD -->
+  <div class="modal-overlay" role="dialog" aria-modal="true" id="add-from-squad-modal" onclick="if(event.target===this)closeAddFromOtherSquad()">
+    <div class="training-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">Add From Another Squad</div>
+          <div class="sheet-sub">Copies their name and position into this slot</div>
+        </div>
+        <button class="sheet-close" aria-label="Close" onclick="closeAddFromOtherSquad()">✕</button>
+      </div>
+      <div id="add-from-squad-list"></div>
     </div>
   </div>
 
@@ -3280,6 +3299,9 @@ input:not([type]), textarea, select {
     <div class="help-section">
       <div class="help-section-title">👥 Squad Tab</div>
       <div class="help-row"><span class="help-key">Add player</span><span class="help-val">Squad sub-tab → tap empty slot → name → Save Player</span></div>
+      <div class="help-row"><span class="help-key">Remove player</span><span class="help-val">Tap their slot → Remove Player</span></div>
+      <div class="help-row"><span class="help-key">Manage squads</span><span class="help-val">Squad sub-tab → Manage Squads (club accounts) — switch, or delete a squad (admin only)</span></div>
+      <div class="help-row"><span class="help-key">Player in 2 squads</span><span class="help-val">Tap an empty slot → ↓ Add Existing Player From Another Squad. Copies their name/position across — 🔗 marks a linked player. Stats still track separately per squad.</span></div>
       <div class="help-row"><span class="help-key">Injury badge</span><span class="help-val">Red dot on squad slot = active injury logged</span></div>
       <div class="help-row"><span class="help-key">Performance</span><span class="help-val">Stats sub-tab — this match plus a season block per player</span></div>
       <div class="help-row"><span class="help-key">Season figures</span><span class="help-val">Built from saved matches only — save every match to keep them accurate</span></div>
@@ -3309,6 +3331,7 @@ input:not([type]), textarea, select {
     <div class="help-section">
       <div class="help-section-title">🧪 Trial Tab</div>
       <div class="help-row"><span class="help-key">New trial</span><span class="help-val">Club button → Trial → + New Trial</span></div>
+      <div class="help-row"><span class="help-key">Trialist details</span><span class="help-val">+ Add Trialist captures position, age group (U14/U16/Minor/U20/Senior) and which club they're with.</span></div>
       <div class="help-row"><span class="help-key">Grade session</span><span class="help-val">Sessions → + New Session → score 1–10 per trialist</span></div>
       <div class="help-row"><span class="help-key">Physical &amp; skills</span><span class="help-val">Grading → ▼ Physical Testing &amp; Skills — sprint times, jumps, aerobic, agility, plus kicking/catching/handpassing/tackling ratings. Goalkeeping tests appear only for players listed as Goalkeeper.</span></div>
       <div class="help-row"><span class="help-key">Team assignment</span><span class="help-val">Grading → ▼ Assign Teams — split trialists across Team A–D with a jersey number for that match. Teams can be reshuffled freely session to session.</span></div>
@@ -4712,6 +4735,13 @@ function switchSquadTab(tab, btn) {
   if (tab === 'stats') renderPlayerStats();
   if (tab === 'training') initTrainingTab();
   if (tab === 'print') renderTeamSheet();
+  // Manage Squads only ever got refreshed when the Record tab opened or
+  // right as club squads finished loading from the server — if a coach
+  // landed on the Squad tab before that background load resolved, the
+  // button stayed hidden even after squads arrived. Refreshing it here
+  // too means opening the tab you're actually looking at always shows
+  // the current, correct state.
+  try { refreshSquadPickerDisplay(); } catch(e) {}
 }
 
 function playerSlot(num) {
@@ -4916,9 +4946,10 @@ function renderSquadGrid() {
       var badgeClass = trainingSessions.length ? (attStats.pct >= 85 ? 'green' : attStats.pct >= 70 ? 'yellow' : 'red') : '';
       var availIcon = p.availability ? (p.availability.status === 'available' ? ' ✅' : p.availability.status === 'unavailable' ? ' ❌' : p.availability.status === 'maybe' ? ' 🤔' : '') : '';
       var injuredBadge = hasActiveInjury(i) ? '<div class="squad-injury-badge"></div>' : '';
+      var linkedBadge = p.linkedId ? '<span title="Also on another squad" style="position:absolute;top:4px;left:4px;font-size:10px;opacity:0.7;">🔗</span>' : '';
       html += '<div class="squad-slot filled" data-slot="' + i + '" onclick="openPlayerEdit(' + i + ')" style="position:relative;">' +
         (badgeClass ? '<div class="squad-att-badge ' + badgeClass + '"></div>' : '') +
-        injuredBadge +
+        injuredBadge + linkedBadge +
         '<div class="squad-num">' + num + '</div>' +
         '<div class="squad-name">' + p.name + availIcon + '</div>' +
         '<div class="squad-pos">' + (p.pos || '') + '</div>' +
@@ -4952,6 +4983,16 @@ function openPlayerEdit(slotIndex) {
   var clearBtn = document.getElementById('btn-clear-player');
   if (clearBtn) clearBtn.style.display = (p && p.name) ? '' : 'none';
 
+  // Only worth offering on an empty slot, and only if there's actually
+  // another squad in the club with players to pull from.
+  var addFromBtn = document.getElementById('btn-add-from-squad');
+  if (addFromBtn) {
+    var hasOtherSquadPlayers = currentClub && clubSquads && clubSquads.some(function(s) {
+      return String(s.id) !== String(currentClubSquadId) && (s.players || []).some(function(pp) { return pp && pp.name; });
+    });
+    addFromBtn.style.display = (!p || !p.name) && hasOtherSquadPlayers ? '' : 'none';
+  }
+
   document.getElementById('player-edit-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -4970,7 +5011,12 @@ function savePlayerEdit() {
   if (!name) { document.getElementById('edit-player-name').focus(); return; }
   var selectedPosBtn = document.querySelector('.pos-btn.selected');
   var pos = selectedPosBtn ? selectedPosBtn.textContent : '';
-  squad[editingSlot] = { name: name, pos: pos, stats: {} };
+  // Preserve an existing link to another squad's copy of this player —
+  // a name/position touch-up shouldn't silently break that connection.
+  var existing = squad[editingSlot];
+  var newEntry = { name: name, pos: pos, stats: {} };
+  if (existing && existing.linkedId) newEntry.linkedId = existing.linkedId;
+  squad[editingSlot] = newEntry;
   saveSquad();
   closePlayerEdit();
   renderSquadGrid();
@@ -4983,6 +5029,69 @@ function clearPlayerSlot() {
   saveSquad();
   closePlayerEdit();
   renderSquadGrid();
+}
+
+// ── ADD EXISTING PLAYER FROM ANOTHER SQUAD ─────────────
+// Copies a player's name and position across into the slot being edited,
+// and tags both copies with a shared linkedId so they're recognisable as
+// the same person later. This is deliberately a copy, not a true shared
+// record — each squad still tracks that player's stats independently,
+// since match recording throughout the app is built around a squad's own
+// player list. A full shared-player-across-squads model would need many
+// more parts of the app rebuilt around player identity rather than squad
+// position, which is a much bigger change than this.
+function openAddFromOtherSquad() {
+  var list = document.getElementById('add-from-squad-list');
+  if (!list || !currentClub) return;
+  var rows = '';
+  clubSquads.forEach(function(sq) {
+    if (String(sq.id) === String(currentClubSquadId)) return; // not the squad we're already editing
+    (sq.players || []).forEach(function(p, idx) {
+      if (!p || !p.name) return;
+      rows += '<button class="ts-player-row" onclick="linkPlayerFromOtherSquad(\'' + sq.id + '\', ' + idx + ')">' +
+        '<span class="ts-pr-num">' + (idx+1) + '</span>' +
+        '<span class="ts-pr-name">' + escapeHtml(p.name) + (p.pos ? '<span class="ts-pr-pos">' + escapeHtml(p.pos) + '</span>' : '') + '</span>' +
+        '<span class="ts-pr-tag">' + escapeHtml(sq.name) + '</span>' +
+        '</button>';
+    });
+  });
+  list.innerHTML = rows || '<div class="ptr-no-notes">No players in your other squads yet</div>';
+  document.getElementById('add-from-squad-modal').classList.add('open');
+}
+function closeAddFromOtherSquad() {
+  document.getElementById('add-from-squad-modal').classList.remove('open');
+}
+function linkPlayerFromOtherSquad(sourceSquadId, sourcePlayerIndex) {
+  if (editingSlot === null) return;
+  var sourceSquad = clubSquads.find(function(s){ return String(s.id) === String(sourceSquadId); });
+  if (!sourceSquad || !sourceSquad.players || !sourceSquad.players[sourcePlayerIndex]) return;
+  var sourcePlayer = sourceSquad.players[sourcePlayerIndex];
+
+  // Reuse the source's linkedId if they're already linked to something
+  // else, otherwise mint a new one now and stamp it onto the source too,
+  // so a THIRD squad could later recognise the same person from either
+  // existing copy.
+  var linkedId = sourcePlayer.linkedId || ('lnk_' + Date.now());
+  if (!sourcePlayer.linkedId) {
+    sourcePlayer.linkedId = linkedId;
+    syncClubSquadById(sourceSquadId);
+  }
+
+  squad[editingSlot] = { name: sourcePlayer.name, pos: sourcePlayer.pos || '', stats: {}, linkedId: linkedId };
+  saveSquad();
+  closeAddFromOtherSquad();
+  closePlayerEdit();
+  renderSquadGrid();
+  showSync('✓ ' + sourcePlayer.name + ' added — also on ' + sourceSquad.name, 2200);
+}
+// syncClubSquad() only pushes the CURRENTLY active squad's own players
+// array — stamping a linkedId onto a player in a squad that ISN'T the
+// active one (the source squad here) needs its own direct write instead.
+function syncClubSquadById(squadId) {
+  if (!currentUser || !currentToken) return;
+  var sq = clubSquads.find(function(s){ return String(s.id) === String(squadId); });
+  if (!sq) return;
+  supaDB('club_squads?id=eq.' + squadId, 'PATCH', { players: sq.players }, currentToken).catch(function(){});
 }
 
 function closePlayerEdit() {
@@ -8368,6 +8477,7 @@ function openAddTrialist() {
   document.getElementById('trialist-name').value = '';
   document.getElementById('trialist-pos').value = '';
   document.getElementById('trialist-age').value = '';
+  document.getElementById('trialist-club').value = '';
   document.getElementById('add-trialist-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -8384,7 +8494,8 @@ function saveTrialist() {
     id: Date.now(),
     name: name,
     pos: document.getElementById('trialist-pos').value,
-    ageGroup: document.getElementById('trialist-age').value.trim(),
+    ageGroup: document.getElementById('trialist-age').value,
+    club: document.getElementById('trialist-club').value.trim(),
     finalDecision: null,
     promotedToSlot: null
   });
@@ -8410,7 +8521,7 @@ function renderTrialistsList() {
     return '<div class="trial-trialist-row" onclick="openTrialistProfile(' + t.id + ')">' +
       '<div class="ttr-name">' +
         '<div class="ttr-name-main">' + t.name + '</div>' +
-        '<div class="ttr-pos">' + (t.pos || '') + (t.ageGroup ? ' · ' + t.ageGroup : '') + '</div>' +
+        '<div class="ttr-pos">' + (t.pos || '') + (t.ageGroup ? ' · ' + t.ageGroup : '') + (t.club ? ' · ' + escapeHtml(t.club) : '') + '</div>' +
       '</div>' +
       decisionHtml +
       '<div class="ttr-invited" title="Last invited back">' + inviteIcon + '</div>' +
@@ -8768,7 +8879,7 @@ function renderTrialLeaderboard() {
       '<div class="trial-lb-rank ' + rankClass + '">' + rankSymbol + '</div>' +
       '<div class="trial-lb-info">' +
         '<div class="trial-lb-name">' + item.t.name + ' ' + decisionBadge + '</div>' +
-        '<div class="trial-lb-detail">' + (item.t.pos || '') + (item.t.ageGroup ? ' · ' + item.t.ageGroup : '') + ' · ' + sessionCount + ' session' + (sessionCount!==1?'s':'') + ' attended</div>' +
+        '<div class="trial-lb-detail">' + (item.t.pos || '') + (item.t.ageGroup ? ' · ' + item.t.ageGroup : '') + (item.t.club ? ' · ' + escapeHtml(item.t.club) : '') + ' · ' + sessionCount + ' session' + (sessionCount!==1?'s':'') + ' attended</div>' +
       '</div>' +
       '<div class="trial-lb-score ' + scoreClass + '">' + (avg !== null ? avg.toFixed(1) : '—') + '</div>' +
     '</div>';
@@ -8786,7 +8897,7 @@ function openTrialistProfile(trialistId) {
   activeTrialistId = trialistId;
 
   document.getElementById('tpro-name').textContent = trialist.name;
-  document.getElementById('tpro-meta').textContent = (trialist.pos || '') + (trialist.ageGroup ? ' · ' + trialist.ageGroup : '');
+  document.getElementById('tpro-meta').textContent = (trialist.pos || '') + (trialist.ageGroup ? ' · ' + trialist.ageGroup : '') + (trialist.club ? ' · ' + trialist.club : '');
 
   // Grade history
   var sessions = (trial.sessions || []).slice().sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
@@ -9027,13 +9138,13 @@ function generateTrialReport() {
   html += '<div class="cover-sub">' + trial.season + ' · ' + trial.trialists.length + ' trialists · ' + sessions.length + ' sessions · Status: ' + trial.status + '</div>';
 
   html += '<h2>Rankings</h2>';
-  html += '<table><thead><tr><th>#</th><th>Player</th><th>Position</th><th>Sessions</th><th>Avg Grade</th><th>Decision</th></tr></thead><tbody>';
+  html += '<table><thead><tr><th>#</th><th>Player</th><th>Position</th><th>Age Group</th><th>Club</th><th>Sessions</th><th>Avg Grade</th><th>Decision</th></tr></thead><tbody>';
   ranked.forEach(function(item, idx) {
     var avgStr = item.avg !== null ? item.avg.toFixed(1) : '—';
     var scoreClass = item.avg === null ? '' : item.avg >= 7 ? 'high' : item.avg >= 5 ? 'mid' : 'low';
     var attended = sessions.filter(function(s) { return s.grades && s.grades[item.t.id] && s.grades[item.t.id].attended; }).length;
     html += '<tr><td>' + (idx+1) + '</td><td><strong>' + item.t.name + '</strong></td>' +
-      '<td>' + (item.t.pos || '—') + '</td><td>' + attended + '/' + sessions.length + '</td>' +
+      '<td>' + (item.t.pos || '—') + '</td><td>' + (item.t.ageGroup || '—') + '</td><td>' + (item.t.club || '—') + '</td><td>' + attended + '/' + sessions.length + '</td>' +
       '<td class="' + scoreClass + '">' + avgStr + '</td>' +
       '<td class="' + (item.t.finalDecision || '') + '">' + (item.t.finalDecision || '—') + '</td></tr>';
   });
@@ -12218,7 +12329,7 @@ function syncTrialToShared() {
         name: trial.name,
         season: trial.season,
         trialists: trial.trialists.map(function(t) {
-          return { id: t.id, name: t.name, pos: t.pos || '', ageGroup: t.ageGroup || '' };
+          return { id: t.id, name: t.name, pos: t.pos || '', ageGroup: t.ageGroup || '', club: t.club || '' };
         }),
         sessions: trial.sessions.map(function(s) {
           return { id: s.id, date: s.date, label: s.label || '' };
@@ -18021,9 +18132,16 @@ function loadActiveSquadSession() {
 function refreshSquadPickerDisplay() {
   var row = document.getElementById('squad-picker-row');
   var txt = document.getElementById('squad-display-text');
+  var manageBtn = document.getElementById('squad-manage-btn');
+  var hasClubSquads = currentClub && clubSquads && clubSquads.length;
+
+  // Independent of row/txt below (which live on the Match tab) — no reason
+  // a missing Match-tab element should be able to silently skip updating
+  // this Squad-tab button too.
+  if (manageBtn) manageBtn.style.display = hasClubSquads ? '' : 'none';
+
   if (!row || !txt) return;
-  // Only relevant for club accounts that actually have squads
-  if (!currentClub || !clubSquads || !clubSquads.length) {
+  if (!hasClubSquads) {
     row.style.display = 'none';
     var chipOff = document.getElementById('rec-active-squad');
     if (chipOff) chipOff.style.display = 'none';
@@ -18053,7 +18171,10 @@ function openSquadPicker() {
       return '<div class="comp-item" onclick="selectMatchSquad(\'' + sq.id + '\')" style="display:flex;align-items:center;justify-content:space-between;">' +
         '<div><div style="font-weight:600;">' + sq.name + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' + filled + ' players</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
         (active ? '<div style="color:var(--red-light);font-size:16px;">✓</div>' : '') +
+        (currentClubRole === 'admin' ? '<button onclick="deleteClubSquad(\'' + sq.id + '\', event)" aria-label="Delete squad" style="background:none;border:none;color:rgba(255,80,80,0.5);font-size:15px;cursor:pointer;padding:4px;">🗑️</button>' : '') +
+        '</div>' +
         '</div>';
     }).join('');
   }
@@ -18106,7 +18227,10 @@ function renderClubSquads() {
           '<div style="font-family:\'Oswald\',sans-serif;font-size:15px;font-weight:600;color:#f0fdf4;text-transform:uppercase;letter-spacing:1px;">' + sq.name + '</div>' +
           '<div style="font-size:11px;color:rgba(240,253,244,0.4);margin-top:3px;">' + filled + ' players</div>' +
         '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        (currentClubRole === 'admin' ? '<button onclick="deleteClubSquad(\'' + sq.id + '\', event)" aria-label="Delete squad" style="background:none;border:none;color:rgba(255,80,80,0.5);font-size:16px;cursor:pointer;padding:4px;">🗑️</button>' : '') +
         '<div style="font-size:22px;color:rgba(224,48,48,0.5);">›</div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -18166,6 +18290,41 @@ function saveNewSquad() {
       showSync('✓ Squad added: ' + name, 2000);
     }
   }).catch(function() {});
+}
+
+// Admin-only, matches the same gate squad creation already uses. Reachable
+// both from the Club dashboard's squad list and from Manage Squads on the
+// Squad tab itself — both render from clubSquads, so one delete handles
+// either entry point.
+function deleteClubSquad(squadId, evt) {
+  if (evt) evt.stopPropagation();
+  if (currentClubRole !== 'admin') { showSync('Only a club admin can delete a squad', 2500); return; }
+  var sq = clubSquads.find(function(s){ return String(s.id) === String(squadId); });
+  if (!sq) return;
+  if (!confirm('Delete "' + sq.name + '"? This removes the squad and its player list. Match history already saved under it is not affected.')) return;
+
+  supaDB('club_squads?id=eq.' + squadId, 'DELETE', null, currentToken).then(function() {
+    clubSquads = clubSquads.filter(function(s){ return String(s.id) !== String(squadId); });
+
+    // If the deleted squad was the one currently loaded into the app,
+    // clear it out rather than leave the grid showing an orphaned roster.
+    if (String(currentClubSquadId) === String(squadId)) {
+      currentClubSquadId = null;
+      squad = [];
+      for (var i = 0; i < 34; i++) squad.push(null);
+      saveSquad();
+      saveActiveSquadSession();
+      renderSquadGrid();
+    }
+
+    renderClubSquads();
+    refreshSquadPickerDisplay();
+    var pickerList = document.getElementById('squad-picker-list');
+    if (pickerList && document.getElementById('squad-picker-modal').classList.contains('open')) openSquadPicker();
+    showSync('Squad deleted: ' + sq.name, 2000);
+  }).catch(function() {
+    showSync('Could not delete the squad — try again', 2500);
+  });
 }
 
 // ── MEMBERS ────────────────────────────────────────
@@ -20008,8 +20167,16 @@ window.addEventListener('resize', function() {
       </div>
       <div class="tr-meta-field">
         <div class="tr-meta-label">Age Group</div>
-        <input type="text" id="trialist-age" class="tr-meta-input" placeholder="e.g. U20, Senior">
+        <select id="trialist-age" class="tr-meta-input training-season-sel" style="width:100%;">
+          <option value="">Select</option>
+          <option>U14</option><option>U16</option><option>Minor</option>
+          <option>U20</option><option>Senior</option>
+        </select>
       </div>
+    </div>
+    <div class="tr-meta-field" style="margin-top:12px;">
+      <div class="tr-meta-label">Club</div>
+      <input type="text" id="trialist-club" class="tr-meta-input" placeholder="Which club are they with?">
     </div>
     <button class="btn-save-player" onclick="saveTrialist()" style="margin-top:12px;">Add Trialist</button>
   </div>
