@@ -2091,6 +2091,23 @@ resetMatch();
 
 group('Squad: delete squad');
 resetMatch();
+ok('switching to the Squad tab refreshes Manage Squads even if clubSquads loaded without calling refreshSquadPickerDisplay itself', function(){
+  currentClub = { id: 'club1', name: 'My Club' };
+  clubSquads = [{ id: 'senior', name: 'Senior', players: [] }];
+  var btn = document.getElementById('squad-manage-btn');
+  btn.style.display = 'none'; // simulate it being stuck hidden from an earlier state
+  switchSquadTab('squad');
+  if (btn.style.display === 'none') throw new Error('expected switchSquadTab to reveal Manage Squads once clubSquads has data');
+});
+ok('refreshSquadPickerDisplay still hides Manage Squads correctly when there are no club squads', function(){
+  currentClub = { id: 'club1', name: 'My Club' };
+  clubSquads = [];
+  var btn = document.getElementById('squad-manage-btn');
+  btn.style.display = '';
+  refreshSquadPickerDisplay();
+  if (btn.style.display !== 'none') throw new Error('expected Manage Squads to stay hidden with no club squads');
+});
+resetMatch();
 ok('a non-admin cannot delete a squad', function(){
   clubSquads = [{ id: 's1', name: 'Senior', players: [] }];
   currentClubRole = 'coach';
