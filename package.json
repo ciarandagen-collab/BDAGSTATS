@@ -1,26 +1,12 @@
 {
-  "name": "coachstats-tests",
-  "version": "1.0.0",
-  "description": "Coach Stats — GAA Match Statistics",
+  "name": "coach-stats-tests",
+  "private": true,
   "scripts": {
-    "test:unit": "node tests/unit.test.js",
-    "test:browser": "npx playwright test",
-    "test": "node tests/unit.test.js && npx playwright test",
-    "build": "echo 'No build step needed'",
-    "cap:add": "npx cap add ios",
-    "cap:sync": "npx cap sync ios",
-    "cap:open": "npx cap open ios"
-  },
-  "dependencies": {
-    "stripe": "^14.0.0",
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/ios": "^6.0.0",
-    "@capacitor/splash-screen": "^6.0.0",
-    "@capacitor/push-notifications": "^6.0.0",
-    "@capacitor/status-bar": "^6.0.0"
+    "test:unit": "node unit.test.cjs",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0",
-    "@capacitor/cli": "^6.0.0"
+    "@playwright/test": "^1.48.0"
   }
 }
