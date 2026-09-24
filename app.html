@@ -1072,8 +1072,8 @@ input:not([type]), textarea, select {
 
 .edit-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .edit-label { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; }
-.pos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.pos-btn { padding:8px 4px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; }
+.pos-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+.pos-btn { padding:9px 6px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; text-align:center; line-height:1.3; }
 .pos-btn.selected, .pos-btn:hover { background:var(--red); border-color:var(--red); color:#fff; }
 .btn-save-player { width:100%; padding:14px; background:linear-gradient(135deg,var(--red-dark),var(--red)); border:none; border-radius:10px; color:#fff; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:4px; }
 .btn-save-player:hover { filter:brightness(1.1); }
@@ -1726,6 +1726,19 @@ input:not([type]), textarea, select {
 .trial-lb-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
 .trial-lb-row:active { background:rgba(224,48,48,0.06); }
 .trial-lb-rank { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; color:var(--muted); width:28px; flex-shrink:0; text-align:center; }
+.tby-match-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.tby-match-pill { padding:6px 12px; border-radius:16px; border:1px solid var(--border); background:rgba(255,255,255,0.02); color:var(--muted); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:0.5px; cursor:pointer; }
+.tby-match-pill.on { background:rgba(74,222,128,0.12); border-color:var(--green); color:var(--green); }
+.tby-team-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tby-team-card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:10px; min-width:0; }
+.tby-team-name { font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:0.5px; margin-bottom:4px; }
+.tby-player-row { display:flex; align-items:center; gap:6px; padding:5px 0; border-top:1px solid rgba(255,255,255,0.05); }
+.tby-player-row:first-child { border-top:none; }
+.tby-jersey { width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.08); color:var(--cream); font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Oswald',sans-serif; }
+.tby-player-name { flex:1; font-size:11px; color:var(--cream); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tby-score-pill { flex-shrink:0; min-width:26px; padding:3px 7px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11px; font-family:'Oswald',sans-serif; cursor:pointer; text-align:center; }
+.tby-score-pill.has-score { color:var(--cream); border-color:rgba(255,255,255,0.15); }
+.tby-unassigned { font-size:10px; color:var(--muted); padding:10px 4px; text-align:center; }
 .trial-lb-rank.top3 { color:var(--gold); }
 .trial-lb-info { flex:1; }
 .trial-lb-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
@@ -2134,6 +2147,7 @@ input:not([type]), textarea, select {
     <div id="club-admin-tabs" style="display:none;margin-bottom:16px;">
       <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(22,163,74,0.25);">
         <button class="club-dash-tab active" onclick="switchDashTab('squads',this)" style="flex:1;padding:10px;background:#16a34a;border:none;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Squads</button>
+        <button class="club-dash-tab" onclick="switchDashTab('trial',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(240,253,244,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Trial</button>
         <button class="club-dash-tab" onclick="switchDashTab('members',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(240,253,244,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Members</button>
         <button class="club-dash-tab" onclick="switchDashTab('reports',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(240,253,244,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Reports</button>
         <button class="club-dash-tab" onclick="switchDashTab('settings',this)" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;color:rgba(240,253,244,0.5);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Settings</button>
@@ -2147,6 +2161,57 @@ input:not([type]), textarea, select {
         <button id="btn-add-squad" onclick="openAddSquad()" style="display:none;background:#16a34a;border:none;border-radius:6px;padding:7px 12px;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;">+ Add Squad</button>
       </div>
       <div id="club-squads-list"></div>
+    </div>
+
+    <!-- Trial view -->
+    <div id="dash-view-trial" style="display:none;">
+      <!-- Trial list screen -->
+      <div id="trial-list-screen">
+        <button class="training-new-btn" onclick="openNewTrial()">+ New Trial</button>
+        <div id="trial-list-container"></div>
+      </div>
+      <!-- Trial detail screen (shown when a trial is open) -->
+      <div id="trial-detail-screen" style="display:none">
+        <div class="trial-detail-header">
+          <button class="trial-back-btn" onclick="closeTrialDetail()">← Trials</button>
+          <div class="trial-detail-title-wrap">
+            <div class="trial-detail-name" id="trial-detail-name"></div>
+            <div class="trial-detail-meta" id="trial-detail-meta"></div>
+          </div>
+          <button aria-label="Trial options" class="trial-menu-btn" onclick="openTrialMenu()">⋯</button>
+        </div>
+        <div class="trial-detail-tabs">
+          <button class="trial-dtab active" id="tdtab-sessions" onclick="switchTrialDetailTab('sessions')">Sessions</button>
+          <button class="trial-dtab" id="tdtab-trialists" onclick="switchTrialDetailTab('trialists')">Trialists</button>
+          <button class="trial-dtab" id="tdtab-teams" onclick="switchTrialDetailTab('teams')">By Match</button>
+          <button class="trial-dtab" id="tdtab-leaderboard" onclick="switchTrialDetailTab('leaderboard')">Rankings</button>
+        </div>
+        <!-- Sessions sub-view -->
+        <div id="trial-sessions-panel">
+          <button class="training-new-btn" onclick="openNewTrialSession()">+ New Session</button>
+          <div id="trial-sessions-list"></div>
+        </div>
+        <!-- Trialists sub-view -->
+        <div id="trial-trialists-panel" style="display:none">
+          <button class="training-new-btn" onclick="openAddTrialist()">+ Add Trialist</button>
+          <div id="trial-trialists-list"></div>
+        </div>
+        <!-- By Match sub-view: 2x2 team grid, one or more matches compared -->
+        <div id="trial-teams-panel" style="display:none">
+          <div class="trial-lb-note" style="margin-bottom:8px;">Matches included</div>
+          <div id="trial-match-pills" class="tby-match-pills"></div>
+          <div id="trial-team-grid" class="tby-team-grid"></div>
+        </div>
+        <!-- Rankings sub-view -->
+        <div id="trial-leaderboard-panel" style="display:none">
+          <div class="trial-lb-header">
+            <div class="trial-lb-note">Ranked by average grade across all attended sessions</div>
+            <button class="trial-report-btn" onclick="generateTrialReport()">📄 PDF Report</button>
+          </div>
+          <div id="trial-leaderboard-list"></div>
+          <button class="trial-build-squad-btn" id="trial-build-squad-btn" onclick="openBuildSquad()" style="display:none;">🏆 Build Squad from Trial</button>
+        </div>
+      </div>
     </div>
 
     <!-- Members view -->
@@ -2575,7 +2640,6 @@ input:not([type]), textarea, select {
       <button class="squad-sub-btn active" id="squad-tab-squad" onclick="switchSquadTab('squad',this)">👥 Squad</button>
       <button class="squad-sub-btn" id="squad-tab-stats" onclick="switchSquadTab('stats',this)">📈 Stats</button>
       <button class="squad-sub-btn" id="squad-tab-training" onclick="switchSquadTab('training',this)">🏃 Training</button>
-      <button class="squad-sub-btn" id="squad-tab-trial" onclick="switchSquadTab('trial',this)">🧪 Trial</button>
       <button class="squad-sub-btn" id="squad-tab-timeline" onclick="switchSquadTab('timeline',this)">⏱ Timeline</button>
       <button class="squad-sub-btn" id="squad-tab-print" onclick="switchSquadTab('print',this)">🖨️ Sheet</button>
     </div>
@@ -2594,49 +2658,6 @@ input:not([type]), textarea, select {
 
     <!-- TIMELINE -->
     <!-- TRIAL VIEW -->
-    <div id="squad-view-trial" style="display:none">
-      <!-- Trial list screen -->
-      <div id="trial-list-screen">
-        <button class="training-new-btn" onclick="openNewTrial()">+ New Trial</button>
-        <div id="trial-list-container"></div>
-      </div>
-      <!-- Trial detail screen (shown when a trial is open) -->
-      <div id="trial-detail-screen" style="display:none">
-        <div class="trial-detail-header">
-          <button class="trial-back-btn" onclick="closeTrialDetail()">← Trials</button>
-          <div class="trial-detail-title-wrap">
-            <div class="trial-detail-name" id="trial-detail-name"></div>
-            <div class="trial-detail-meta" id="trial-detail-meta"></div>
-          </div>
-          <button aria-label="Trial options" class="trial-menu-btn" onclick="openTrialMenu()">⋯</button>
-        </div>
-        <div class="trial-detail-tabs">
-          <button class="trial-dtab active" id="tdtab-sessions" onclick="switchTrialDetailTab('sessions')">Sessions</button>
-          <button class="trial-dtab" id="tdtab-trialists" onclick="switchTrialDetailTab('trialists')">Trialists</button>
-          <button class="trial-dtab" id="tdtab-leaderboard" onclick="switchTrialDetailTab('leaderboard')">Rankings</button>
-        </div>
-        <!-- Sessions sub-view -->
-        <div id="trial-sessions-panel">
-          <button class="training-new-btn" onclick="openNewTrialSession()">+ New Session</button>
-          <div id="trial-sessions-list"></div>
-        </div>
-        <!-- Trialists sub-view -->
-        <div id="trial-trialists-panel" style="display:none">
-          <button class="training-new-btn" onclick="openAddTrialist()">+ Add Trialist</button>
-          <div id="trial-trialists-list"></div>
-        </div>
-        <!-- Rankings sub-view -->
-        <div id="trial-leaderboard-panel" style="display:none">
-          <div class="trial-lb-header">
-            <div class="trial-lb-note">Ranked by average grade across all attended sessions</div>
-            <button class="trial-report-btn" onclick="generateTrialReport()">📄 PDF Report</button>
-          </div>
-          <div id="trial-leaderboard-list"></div>
-          <button class="trial-build-squad-btn" id="trial-build-squad-btn" onclick="openBuildSquad()" style="display:none;">🏆 Build Squad from Trial</button>
-        </div>
-      </div>
-    </div>
-
     <!-- TRAINING VIEW -->
     <div id="squad-view-training" style="display:none">
 
@@ -3157,9 +3178,11 @@ input:not([type]), textarea, select {
 
     <div class="help-section">
       <div class="help-section-title">🧪 Trial Tab</div>
-      <div class="help-row"><span class="help-key">New trial</span><span class="help-val">Squad → Trial → + New Trial</span></div>
+      <div class="help-row"><span class="help-key">New trial</span><span class="help-val">Club button → Trial → + New Trial</span></div>
       <div class="help-row"><span class="help-key">Grade session</span><span class="help-val">Sessions → + New Session → score 1–10 per trialist</span></div>
-      <div class="help-row"><span class="help-key">Physical &amp; skills</span><span class="help-val">Grading → ▼ Physical Testing &amp; Skills — sprint times, jumps, aerobic, agility, plus kicking/catching/handpassing/tackling ratings. Goalkeeping tests appear only for players listed as GK.</span></div>
+      <div class="help-row"><span class="help-key">Physical &amp; skills</span><span class="help-val">Grading → ▼ Physical Testing &amp; Skills — sprint times, jumps, aerobic, agility, plus kicking/catching/handpassing/tackling ratings. Goalkeeping tests appear only for players listed as Goalkeeper.</span></div>
+      <div class="help-row"><span class="help-key">Team assignment</span><span class="help-val">Grading → ▼ Assign Teams — split trialists across Team A–D with a jersey number for that match. Teams can be reshuffled freely session to session.</span></div>
+      <div class="help-row"><span class="help-key">By Match</span><span class="help-val">Sessions → tab → By Match — 4-team grid with jerseys and scores. Tap match pills to select more than one; scores shown are the average across whichever matches are selected. Team groupings always follow the most recently selected match.</span></div>
       <div class="help-row"><span class="help-key">Multi-coach</span><span class="help-val">Sessions → tap 📤 on session → share link with co-coaches</span></div>
       <div class="help-row"><span class="help-key">Sync grades</span><span class="help-val">Sessions → 🔄 Sync Co-Coach Grades</span></div>
       <div class="help-row"><span class="help-key">Promote</span><span class="help-val">Rankings → tap trialist → Promote → assign squad slot</span></div>
@@ -4549,7 +4572,7 @@ function setHalf(h) {
 
 // ── TEAM SHEET ─────────────────────────────────────
 function switchSquadTab(tab, btn) {
-  var tabs = ['squad','stats','training','trial','timeline','print'];
+  var tabs = ['squad','stats','training','timeline','print'];
   tabs.forEach(function(t) {
     var view = document.getElementById('squad-view-' + t);
     var tabBtn = document.getElementById('squad-tab-' + t);
@@ -4558,7 +4581,6 @@ function switchSquadTab(tab, btn) {
   });
   if (tab === 'stats') renderPlayerStats();
   if (tab === 'training') initTrainingTab();
-  if (tab === 'trial') initTrialTab();
   if (tab === 'print') renderTeamSheet();
 }
 
@@ -4725,7 +4747,7 @@ function shareTeamSheet() {
   }
 }
 const SQUAD_KEY = 'gaa_squad';
-const POSITIONS = ['GK','CB','LHB','RHB','MF','LHF','RHF','FF','CF','SUB'];
+const POSITIONS = ['Goalkeeper','Corner Back','Full Back','Wing Half Back','Centre Half Back','Midfield','Wing Half Forward','Centre Half Forward','Corner Forward','Full Forward'];
 
 var squad = loadSquad(); // array of 34 slots, index = shirt number - 1
 var editingSlot = null;
@@ -7573,6 +7595,7 @@ function openTrialDetail(id) {
   document.getElementById('trial-detail-meta').textContent = trial.season + ' · ' + (trial.trialists||[]).length + ' trialists · ' + (trial.sessions||[]).length + ' sessions';
   document.getElementById('trial-list-screen').style.display = 'none';
   document.getElementById('trial-detail-screen').style.display = '';
+  tbySelectedSessions = null; // a different trial means different sessions — don't carry over a stale selection
   switchTrialDetailTab('sessions');
 }
 
@@ -7585,7 +7608,7 @@ function closeTrialDetail() {
 
 function switchTrialDetailTab(tab) {
   trialDetailTab = tab;
-  ['sessions','trialists','leaderboard'].forEach(function(t) {
+  ['sessions','trialists','teams','leaderboard'].forEach(function(t) {
     var panel = document.getElementById('trial-' + t + '-panel');
     var btn = document.getElementById('tdtab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -7593,6 +7616,7 @@ function switchTrialDetailTab(tab) {
   });
   if (tab === 'sessions') renderTrialSessions();
   if (tab === 'trialists') renderTrialistsList();
+  if (tab === 'teams') renderTrialByMatch();
   if (tab === 'leaderboard') renderTrialLeaderboard();
 }
 
@@ -7697,6 +7721,7 @@ function openNewTrialSession() {
   document.getElementById('trial-session-sheet-title').textContent = 'New Trial Session';
   document.getElementById('trial-session-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('trial-session-label').value = '';
+  renderTeamAssignment(null);
   renderTrialGradingList({});
   document.getElementById('new-trial-session-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -7710,6 +7735,7 @@ function openTrialSessionGrading(sessionId) {
   document.getElementById('trial-session-sheet-title').textContent = 'Edit Session';
   document.getElementById('trial-session-date').value = session.date;
   document.getElementById('trial-session-label').value = session.label || '';
+  renderTeamAssignment(session.teamAssignments || null);
   renderTrialGradingList(session.grades || {});
   document.getElementById('new-trial-session-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -7718,6 +7744,68 @@ function openTrialSessionGrading(sessionId) {
 function closeNewTrialSession() {
   document.getElementById('new-trial-session-modal').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ── TEAM ASSIGNMENT (per session) ───────────────────
+// Trialists get split across up to 4 internal teams for a trial match, each
+// with their own number for that match — reshuffled freely session to
+// session, so this lives on the session, not the trialist.
+var TEAM_LETTERS = ['A', 'B', 'C', 'D'];
+var taWorking = {}; // trialistId -> { team: 'A'|null, number: n|null } — working copy while the sheet is open
+
+function toggleTeamAssignSection(btn) {
+  var panel = document.getElementById('trial-team-assign-panel');
+  if (!panel) return;
+  var open = panel.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.textContent = open ? '▲ Hide Team Assignment' : '▼ Assign Teams (optional)';
+}
+
+function renderTeamAssignment(existing) {
+  var trial = getActiveTrial();
+  if (!trial) return;
+  taWorking = {};
+  trial.trialists.forEach(function(t) {
+    var e = (existing && existing[t.id]) || {};
+    taWorking[t.id] = { team: e.team || null, number: e.number != null ? e.number : null };
+  });
+  renderTeamAssignmentRows();
+}
+
+// Re-renders using whatever's already in taWorking — used after a change,
+// so it doesn't stomp the in-progress assignment the way calling
+// renderTeamAssignment() again would.
+function renderTeamAssignmentRows() {
+  var trial = getActiveTrial();
+  var container = document.getElementById('trial-team-assign-panel');
+  if (!container || !trial) return;
+
+  container.innerHTML = trial.trialists.map(function(t) {
+    var a = taWorking[t.id] || { team: null, number: null };
+    var teamBtns = TEAM_LETTERS.map(function(letter) {
+      return '<button class="tby-match-pill' + (a.team === letter ? ' on' : '') + '" style="padding:5px 10px;" ' +
+        'onclick="assignTrialistTeam(' + t.id + ',\'' + letter + '\')">' + letter + '</button>';
+    }).join('');
+    return '<div class="grading-test-row" style="align-items:center;">' +
+      '<span class="grading-test-label">' + t.name + '</span>' +
+      '<div style="display:flex;gap:4px;align-items:center;">' + teamBtns +
+      '<input class="grading-test-input" style="width:44px;" type="number" placeholder="#" value="' + (a.number != null ? a.number : '') + '" ' +
+        'onchange="setTrialistJersey(' + t.id + ',this.value)"></div>' +
+    '</div>';
+  }).join('');
+}
+
+function assignTrialistTeam(trialistId, letter) {
+  if (!taWorking[trialistId]) taWorking[trialistId] = { team: null, number: null };
+  // Tapping the already-selected team clears it, same toggle pattern used
+  // elsewhere in the app rather than forcing exactly one choice.
+  taWorking[trialistId].team = taWorking[trialistId].team === letter ? null : letter;
+  renderTeamAssignmentRows();
+}
+
+function setTrialistJersey(trialistId, value) {
+  if (!taWorking[trialistId]) taWorking[trialistId] = { team: null, number: null };
+  taWorking[trialistId].number = value === '' ? null : parseInt(value);
 }
 
 // ── TRIAL ASSESSMENT CATEGORIES ─────────────────────
@@ -7820,7 +7908,7 @@ function renderTrialGradingList(existingGrades) {
     var invYes = g.invitedBack === true || g.invitedBack === 'yes' ? ' yes-active' : '';
     var invNo = g.invitedBack === false || g.invitedBack === 'no' ? ' no-active' : '';
     var invMaybe = g.invitedBack === 'maybe' ? ' maybe-active' : '';
-    var isGK = t.pos === 'GK';
+    var isGK = t.pos === 'Goalkeeper';
     return '<div class="grading-row" data-trialist="' + t.id + '">' +
       '<div class="grading-name-row">' +
         '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
@@ -7917,9 +8005,9 @@ function saveTrialSession() {
 
   if (editingTrialSessionId) {
     var idx = trial.sessions.findIndex(function(s) { return s.id === editingTrialSessionId; });
-    if (idx >= 0) trial.sessions[idx] = Object.assign(trial.sessions[idx], { date, label, grades });
+    if (idx >= 0) trial.sessions[idx] = Object.assign(trial.sessions[idx], { date, label, grades, teamAssignments: taWorking });
   } else {
-    trial.sessions.push({ id: Date.now(), date, label, grades });
+    trial.sessions.push({ id: Date.now(), date, label, grades, teamAssignments: taWorking });
   }
 
   saveTrials();
@@ -11519,6 +11607,100 @@ function getTrialistAvg(trialistId) {
   return scores.reduce(function(a,b) { return a+b; }, 0) / scores.length;
 }
 
+// Same idea as getTrialistAvg, but scoped to a specific set of sessions
+// rather than every session ever recorded — what the "By Match" grid uses
+// when more than one match is selected for comparison.
+function getTrialistAvgForSessions(trialistId, sessionIdSet) {
+  var trial = getActiveTrial();
+  if (!trial) return null;
+  var scores = [];
+  (trial.sessions || []).forEach(function(s) {
+    if (!sessionIdSet.has(s.id)) return;
+    var g = s.grades && s.grades[trialistId];
+    if (g && g.attended && g.overall) scores.push(g.overall);
+    var sg = s.sharedGrades && s.sharedGrades[trialistId];
+    if (sg && sg.submissions) {
+      sg.submissions.forEach(function(sub) {
+        if (sub.attended && sub.overall) scores.push(sub.overall);
+      });
+    }
+  });
+  if (!scores.length) return null;
+  return scores.reduce(function(a,b) { return a+b; }, 0) / scores.length;
+}
+
+// ── BY MATCH: 4-team grid across one or more selected matches ──────
+// Which team a trialist appears under always reflects the MOST RECENT
+// selected match's assignment (teams get reshuffled session to session,
+// so "current lineup" has to mean something specific) — but the score
+// shown is the average across every match currently selected, so a coach
+// can compare form across several matches without losing the "who's on
+// what team tonight" view.
+var tbySelectedSessions = null; // Set of session ids, null until first render
+
+function renderTrialByMatch() {
+  var trial = getActiveTrial();
+  var pillsEl = document.getElementById('trial-match-pills');
+  var gridEl = document.getElementById('trial-team-grid');
+  if (!pillsEl || !gridEl || !trial) return;
+
+  var sessions = (trial.sessions || []).slice().sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
+  if (!sessions.length) {
+    pillsEl.innerHTML = '';
+    gridEl.innerHTML = '<div class="trial-empty">Record a session first to assign teams and compare matches</div>';
+    return;
+  }
+
+  if (!tbySelectedSessions) tbySelectedSessions = new Set([sessions[sessions.length - 1].id]);
+
+  pillsEl.innerHTML = sessions.map(function(s) {
+    var on = tbySelectedSessions.has(s.id);
+    var label = (s.label ? s.label + ' · ' : '') + new Date(s.date + 'T12:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+    return '<button class="tby-match-pill' + (on ? ' on' : '') + '" onclick="toggleTbySession(' + s.id + ')">' + label + '</button>';
+  }).join('');
+
+  // Team grouping comes from whichever selected session is most recent
+  var selectedSessions = sessions.filter(function(s) { return tbySelectedSessions.has(s.id); });
+  var latestSession = selectedSessions[selectedSessions.length - 1];
+  var assignments = (latestSession && latestSession.teamAssignments) || {};
+
+  var teamsHtml = TEAM_LETTERS.map(function(letter) {
+    var players = trial.trialists
+      .filter(function(t) { return assignments[t.id] && assignments[t.id].team === letter; })
+      .map(function(t) {
+        var avg = getTrialistAvgForSessions(t.id, tbySelectedSessions);
+        var num = assignments[t.id].number;
+        return '<div class="tby-player-row">' +
+          '<div class="tby-jersey">' + (num != null ? num : '–') + '</div>' +
+          '<div class="tby-player-name">' + t.name + '</div>' +
+          '<button class="tby-score-pill' + (avg !== null ? ' has-score' : '') + '" onclick="openTrialByMatchGrading(' + latestSession.id + ')">' +
+            (avg !== null ? avg.toFixed(1) : '—') +
+          '</button>' +
+        '</div>';
+      }).join('');
+    return '<div class="tby-team-card">' +
+      '<div class="tby-team-name">Team ' + letter + '</div>' +
+      (players || '<div class="tby-unassigned">No one assigned</div>') +
+    '</div>';
+  }).join('');
+
+  gridEl.innerHTML = teamsHtml;
+}
+
+function toggleTbySession(sessionId) {
+  if (!tbySelectedSessions) return;
+  if (tbySelectedSessions.has(sessionId)) {
+    if (tbySelectedSessions.size > 1) tbySelectedSessions.delete(sessionId); // always keep at least one
+  } else {
+    tbySelectedSessions.add(sessionId);
+  }
+  renderTrialByMatch();
+}
+
+function openTrialByMatchGrading(sessionId) {
+  openTrialSessionGrading(sessionId);
+}
+
 // ── UPDATED openTrialistProfile to show per-coach grades ──
 function renderTrialistCoachBreakdown(trialistId) {
   var trial = getActiveTrial();
@@ -11628,7 +11810,7 @@ function renderTrialGradingForm(trial, session) {
       return '<div class="grading-score-dot" onclick="tgsSetScore(this,' + t.id + ',' + (i+1) + ')" style="width:32px;height:32px;">' + (i+1) + '</div>';
     }).join('');
 
-    var isGK = t.pos === 'GK';
+    var isGK = t.pos === 'Goalkeeper';
     return '<div class="grading-row tgs-trialist-row" data-trialist="' + t.id + '" style="padding:14px 0;">' +
       '<div class="grading-name-row">' +
         '<span>' + t.name + (t.pos ? ' <span style="color:var(--muted);font-size:10px;">' + t.pos + '</span>' : '') + '</span>' +
@@ -17385,7 +17567,8 @@ function saveClubSettings() {
 // ── DASH TAB SWITCHER ──────────────────────────────
 function switchDashTab(tab, btn) {
   if (tab === 'reports') { try { renderClubReportsSquadFilter(); renderClubTopPlayers(); } catch(e) {} }
-  var tabs = ['squads','members','reports','settings'];
+  if (tab === 'trial') { try { initTrialTab(); } catch(e) {} }
+  var tabs = ['squads','trial','members','reports','settings'];
   tabs.forEach(function(t) {
     var el = document.getElementById('dash-view-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -19100,9 +19283,10 @@ window.addEventListener('resize', function() {
         <div class="tr-meta-label">Position</div>
         <select id="trialist-pos" class="tr-meta-input training-season-sel" style="width:100%;">
           <option value="">Select</option>
-          <option>GK</option><option>CB</option><option>LHB</option><option>RHB</option>
-          <option>MF</option><option>LHF</option><option>RHF</option><option>FF</option>
-          <option>CF</option><option>SUB</option>
+          <option>Goalkeeper</option><option>Corner Back</option><option>Full Back</option>
+          <option>Wing Half Back</option><option>Centre Half Back</option><option>Midfield</option>
+          <option>Wing Half Forward</option><option>Centre Half Forward</option>
+          <option>Corner Forward</option><option>Full Forward</option>
         </select>
       </div>
       <div class="tr-meta-field">
@@ -19133,6 +19317,8 @@ window.addEventListener('resize', function() {
       </div>
     </div>
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <button class="grading-detail-btn" style="margin:8px 0;" onclick="toggleTeamAssignSection(this)">▼ Assign Teams (optional)</button>
+      <div class="grading-detail-panel" id="trial-team-assign-panel"></div>
       <div id="trial-grading-list"></div>
     </div>
     <div style="flex-shrink:0;padding:12px 0 calc(16px + var(--safe-bottom));">
