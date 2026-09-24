@@ -1769,6 +1769,253 @@ ok('selecting both sessions shows an averaged score for a trialist on both', fun
 resetMatch();
 
 
+group('Tactics Board');
+resetMatch();
+
+ok('TACTIC_CATEGORIES has all 6 required categories', function(){
+  var keys = TACTIC_CATEGORIES.map(function(c){ return c.key; });
+  ['kickouts','attacking','defending','setpieces','freekicks','sideline'].forEach(function(k) {
+    if (keys.indexOf(k) === -1) throw new Error('missing category: ' + k);
+  });
+});
+ok('the default formation has exactly 15 players, numbered 1-15', function(){
+  if (TACTIC_DEFAULT_HOME.length !== 15) throw new Error('expected 15, got ' + TACTIC_DEFAULT_HOME.length);
+  var nums = TACTIC_DEFAULT_HOME.map(function(p){ return p.num; }).sort(function(a,b){return a-b;});
+  for (var i=0;i<15;i++) if (nums[i] !== i+1) throw new Error('expected number ' + (i+1) + ' present, got ' + JSON.stringify(nums));
+});
+ok('home attacks the bottom of the pitch (matching drawPitch\u2019s own convention) \u2014 GK near the top, forwards near the bottom', function(){
+  var gk = TACTIC_DEFAULT_HOME.find(function(p){ return p.num === 1; });
+  var ff = TACTIC_DEFAULT_HOME.find(function(p){ return p.num === 14; });
+  if (gk.y > 20) throw new Error('home GK should sit near the top (low y), got y=' + gk.y);
+  if (ff.y < 70) throw new Error('home full-forward should sit near the bottom (high y), got y=' + ff.y);
+});
+ok('the away formation mirrors home on y and number', function(){
+  var away = tacticDefaultAway();
+  TACTIC_DEFAULT_HOME.forEach(function(h, i) {
+    var a = away[i];
+    if (a.num !== h.num) throw new Error('away should match home on number, got ' + JSON.stringify(a) + ' vs ' + JSON.stringify(h));
+    if (Math.abs(a.y - (100 - h.y)) > 0.001) throw new Error('away y should mirror home, got ' + a.y + ' vs 100-' + h.y);
+  });
+});
+ok('no home marker and no away marker ever land on the exact same spot, checked against every possible pair', function(){
+  var away = tacticDefaultAway();
+  var minDist = Infinity;
+  TACTIC_DEFAULT_HOME.forEach(function(h) {
+    away.forEach(function(a) {
+      var d = Math.sqrt(Math.pow(h.x-a.x,2) + Math.pow(h.y-a.y,2));
+      if (d < minDist) minDist = d;
+    });
+  });
+  if (minDist < 5) throw new Error('closest home/away pair is only ' + minDist.toFixed(2) + ' apart \u2014 too close to read as two distinct formations');
+});
+
+ok('openTacticEditor(null) starts a fresh tactic with default formation and no arrows/notes', function(){
+  tactics = [];
+  activeTacticCategory = 'attacking';
+  openTacticEditor(null);
+  if (tbWorking.category !== 'attacking') throw new Error('new tactic should default to the active category');
+  if (tbWorking.players.home.length !== 15 || tbWorking.players.away.length !== 15) throw new Error('expected 15 players per side');
+  if (tbWorking.arrows.length !== 0 || tbWorking.notes.length !== 0) throw new Error('a new tactic should start with no arrows or notes');
+});
+ok('editing an existing tactic loads a deep copy, not a live reference', function(){
+  tactics = [{ id: 500, name: 'Original', category: 'kickouts', players: { home: TACTIC_DEFAULT_HOME.slice(), away: tacticDefaultAway() }, arrows: [], notes: [] }];
+  openTacticEditor(500);
+  tbWorking.players.home[0].x = 99;
+  if (tactics[0].players.home[0].x === 99) throw new Error('mutating tbWorking should not mutate the saved tactic before Save is pressed');
+});
+
+ok('saveTactic assigns a new id and timestamps for a brand-new tactic', function(){
+  tactics = [];
+  activeTacticCategory = 'defending';
+  openTacticEditor(null);
+  document.getElementById('tactic-name-input').value = 'Press High';
+  document.getElementById('tactic-notes-input').value = 'Squeeze the middle';
+  saveTactic();
+  if (tactics.length !== 1) throw new Error('expected exactly one saved tactic');
+  if (tactics[0].name !== 'Press High') throw new Error('expected the entered name to be saved');
+  if (!tactics[0].id || !tactics[0].createdAt) throw new Error('a new tactic should get an id and createdAt');
+});
+ok('saveTactic on an existing tactic keeps its id and updates in place', function(){
+  tactics = [{ id: 700, name: 'Old Name', category: 'kickouts', players: { home: [], away: [] }, arrows: [], notes: [], createdAt: 111 }];
+  openTacticEditor(700);
+  document.getElementById('tactic-name-input').value = 'New Name';
+  saveTactic();
+  if (tactics.length !== 1) throw new Error('editing should not create a second entry');
+  if (tactics[0].id !== 700) throw new Error('id should be preserved across an edit');
+  if (tactics[0].name !== 'New Name') throw new Error('expected the updated name to be saved');
+});
+ok('saveTactic refuses to save with an empty name', function(){
+  tactics = [];
+  openTacticEditor(null);
+  document.getElementById('tactic-name-input').value = '   ';
+  saveTactic();
+  if (tactics.length !== 0) throw new Error('a blank name should not be saved');
+});
+ok('deleteTactic removes only the tactic being edited', function(){
+  tactics = [
+    { id: 1, name: 'Keep Me', category: 'kickouts', players:{home:[],away:[]}, arrows:[], notes:[] },
+    { id: 2, name: 'Delete Me', category: 'kickouts', players:{home:[],away:[]}, arrows:[], notes:[] }
+  ];
+  openTacticEditor(2);
+  deleteTactic();
+  if (tactics.length !== 1 || tactics[0].id !== 1) throw new Error('expected only tactic 1 to remain, got ' + JSON.stringify(tactics));
+});
+
+ok('the library list only shows tactics for the active category', function(){
+  tactics = [
+    { id: 1, name: 'Kickout A', category: 'kickouts', players:{home:[],away:[]}, arrows:[], notes:[], updatedAt: 1 },
+    { id: 2, name: 'Attack A', category: 'attacking', players:{home:[],away:[]}, arrows:[], notes:[], updatedAt: 1 }
+  ];
+  switchTacticCategory('kickouts');
+  var html = document.getElementById('tactics-library-list').__html || '';
+  if (html.indexOf('Kickout A') === -1) throw new Error('expected Kickout A to show under kickouts');
+  if (html.indexOf('Attack A') !== -1) throw new Error('Attack A should not show under the kickouts category');
+});
+
+ok('tbPitchXY converts a click position into a 0-100 pitch percentage', function(){
+  tactics = [];
+  openTacticEditor(null);
+  var pt = tbPitchXY({ clientX: 50, clientY: 25 }); // stub rect is {top:0,left:0,width:100,height:100}
+  if (Math.abs(pt.x - 50) > 0.01 || Math.abs(pt.y - 25) > 0.01) throw new Error('expected {50,25}, got ' + JSON.stringify(pt));
+});
+ok('tbPitchXY clamps out-of-bounds coordinates to 0-100', function(){
+  tactics = [];
+  openTacticEditor(null);
+  var pt = tbPitchXY({ clientX: -20, clientY: 500 });
+  if (pt.x !== 0 || pt.y !== 100) throw new Error('expected clamped {0,100}, got ' + JSON.stringify(pt));
+});
+
+ok('the arrow tool needs two taps and records the chosen type', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('pass');
+  var fakeEvt = { target: { closest: function(){ return null; } }, clientX: 10, clientY: 10 };
+  tbArrowToolClick(fakeEvt);
+  if (tbWorking.arrows.length !== 0) throw new Error('one tap should not create an arrow yet');
+  fakeEvt.clientX = 60; fakeEvt.clientY = 60;
+  tbArrowToolClick(fakeEvt);
+  if (tbWorking.arrows.length !== 1) throw new Error('a second tap should complete the arrow');
+  if (tbWorking.arrows[0].type !== 'pass') throw new Error('expected a pass arrow, got ' + tbWorking.arrows[0].type);
+});
+ok('the arrow tool ignores a tap that starts on an existing player', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('run');
+  var onPlayer = { target: { closest: function(sel){ return sel === '.tb-player' ? {} : null; } }, clientX: 10, clientY: 10 };
+  tbArrowToolClick(onPlayer);
+  if (tbArrowStart !== null) throw new Error('a tap on a player should not start an arrow');
+});
+
+ok('the text tool adds a note at the tapped location', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('text');
+  var originalPrompt = global.prompt;
+  global.prompt = function() { return 'Push up here'; };
+  tbTextToolClick({ target: { closest: function(){ return null; } }, clientX: 40, clientY: 30 });
+  global.prompt = originalPrompt;
+  if (tbWorking.notes.length !== 1) throw new Error('expected one note to be added');
+  if (tbWorking.notes[0].text !== 'Push up here') throw new Error('expected the prompted text to be saved');
+});
+
+group('Tactics Board — undo/redo');
+ok('opening the editor starts a fresh one-entry history', function(){
+  tactics = [];
+  openTacticEditor(null);
+  if (tbHistory.length !== 1 || tbHistoryIndex !== 0) throw new Error('expected a single starting entry, got length=' + tbHistory.length + ' index=' + tbHistoryIndex);
+});
+ok('adding a note pushes a new history entry', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('text');
+  var originalPrompt = global.prompt;
+  global.prompt = function() { return 'Note'; };
+  tbTextToolClick({ target: { closest: function(){ return null; } }, clientX: 40, clientY: 30 });
+  global.prompt = originalPrompt;
+  if (tbHistory.length !== 2 || tbHistoryIndex !== 1) throw new Error('expected 2 entries after one action, got length=' + tbHistory.length + ' index=' + tbHistoryIndex);
+});
+ok('undo restores the previous state and can be redone', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('run');
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 10, clientY: 10 });
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 60, clientY: 60 });
+  if (tbWorking.arrows.length !== 1) throw new Error('setup: expected one arrow before testing undo');
+  tbUndo();
+  if (tbWorking.arrows.length !== 0) throw new Error('undo should remove the arrow that was just added');
+  tbRedo();
+  if (tbWorking.arrows.length !== 1) throw new Error('redo should bring the arrow back');
+});
+ok('undo has no effect at the very first history entry', function(){
+  tactics = [];
+  openTacticEditor(null);
+  var before = JSON.stringify(tbWorking);
+  tbUndo();
+  if (JSON.stringify(tbWorking) !== before) throw new Error('undo at the start of history should be a no-op');
+});
+ok('a new action after an undo discards the old redo branch', function(){
+  tactics = [];
+  openTacticEditor(null);
+  setTacticTool('run');
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 10, clientY: 10 });
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 60, clientY: 60 }); // arrow A
+  tbUndo(); // back to no arrows
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 20, clientY: 20 });
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 70, clientY: 70 }); // arrow B, a new branch
+  tbRedo(); // should do nothing — arrow A's branch was discarded
+  if (tbWorking.arrows.length !== 1) throw new Error('expected exactly one arrow (B), got ' + tbWorking.arrows.length);
+  if (Math.abs(tbWorking.arrows[0].x1 - 20) > 0.01) throw new Error('expected the surviving arrow to be the new one (B), got ' + JSON.stringify(tbWorking.arrows[0]));
+});
+ok('undo/redo history is capped at 50 entries', function(){
+  tactics = [];
+  openTacticEditor(null);
+  for (var i = 0; i < 60; i++) tbPushHistory();
+  if (tbHistory.length > 50) throw new Error('expected history capped at 50, got ' + tbHistory.length);
+});
+
+group('Tactics Board — presentation mode');
+ok('entering presentation mode from the editor shows the live (possibly unsaved) tbWorking', function(){
+  tactics = [];
+  openTacticEditor(null);
+  document.getElementById('tactic-name-input').value = 'Unsaved Draft';
+  tbWorking.name = 'Unsaved Draft';
+  setTacticTool('run');
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 10, clientY: 10 });
+  tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 60, clientY: 60 });
+  enterPresentMode(null);
+  if (presentData !== tbWorking) throw new Error('presenting from the editor should show the live tbWorking object');
+  if (document.getElementById('present-tactic-name').textContent !== 'Unsaved Draft') throw new Error('expected the unsaved name to show in presentation mode');
+});
+ok('entering presentation mode from a library card shows that saved tactic without touching tbWorking', function(){
+  tactics = [{ id: 42, name: 'Saved One', category: 'kickouts', players: { home: TACTIC_DEFAULT_HOME, away: tacticDefaultAway() }, arrows: [], notes: [] }];
+  tbWorking = null;
+  enterPresentMode(42);
+  if (presentData.id !== 42) throw new Error('expected to present tactic 42');
+  if (tbWorking !== null) throw new Error('presenting from the library should never open the editor');
+});
+ok('presentation mode renders every arrow and note from the presented tactic', function(){
+  tactics = [{ id: 43, name: 'Full Board', category: 'kickouts',
+    players: { home: TACTIC_DEFAULT_HOME, away: tacticDefaultAway() },
+    arrows: [{ type:'kick', x1:10,y1:10,x2:50,y2:50 }],
+    notes: [{ x:30, y:30, text:'Hold width' }] }];
+  enterPresentMode(43);
+  var arrowHtml = document.getElementById('present-arrow-layer').__html || '';
+  var noteHtml = document.getElementById('present-notes-layer').__html || '';
+  if (arrowHtml.indexOf('present-arrow') === -1) throw new Error('expected the arrow to render with the present-arrow class (for the flow animation)');
+  if (noteHtml.indexOf('Hold width') === -1) throw new Error('expected the note text to render');
+});
+ok('exitPresentMode clears presentData and hides the overlay', function(){
+  tactics = [{ id: 44, name: 'X', category: 'kickouts', players: { home: [], away: [] }, arrows: [], notes: [] }];
+  enterPresentMode(44);
+  exitPresentMode();
+  if (presentData !== null) throw new Error('expected presentData to be cleared on exit');
+  var overlay = document.getElementById('tactics-present-mode');
+  if (overlay.style.display !== 'none') throw new Error('expected the presentation overlay to be hidden after exit');
+});
+
+resetMatch();
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
