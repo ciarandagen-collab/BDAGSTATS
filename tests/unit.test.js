@@ -2064,6 +2064,136 @@ ok('buildTacticExportSVG renders a note as wrapped, escaped text', function(){
 resetMatch();
 
 
+group('Trial: club field and age group dropdown');
+resetMatch();
+ok('saveTrialist captures the club and age group fields', function(){
+  trials = [{ id: 1, name: 'T', season: '2026', status: 'active', trialists: [], sessions: [] }];
+  activeTrialId = 1;
+  document.getElementById('trialist-name').value = 'New Trialist';
+  document.getElementById('trialist-pos').value = 'Midfield';
+  document.getElementById('trialist-age').value = 'U20';
+  document.getElementById('trialist-club').value = 'Rivals GAA';
+  saveTrialist();
+  var t = trials[0].trialists[0];
+  if (t.ageGroup !== 'U20') throw new Error('expected ageGroup U20, got ' + t.ageGroup);
+  if (t.club !== 'Rivals GAA') throw new Error('expected club "Rivals GAA", got ' + JSON.stringify(t.club));
+});
+ok('the trialist list shows club alongside position and age group', function(){
+  trials = [{ id: 2, name: 'T2', season: '2026', status: 'active',
+    trialists: [{ id: 9, name: 'Jane', pos: 'Corner Forward', ageGroup: 'Minor', club: 'Oak Hill' }], sessions: [] }];
+  activeTrialId = 2;
+  renderTrialistsList();
+  var html = document.getElementById('trial-trialists-list').__html || '';
+  if (html.indexOf('Minor') === -1) throw new Error('expected age group to show');
+  if (html.indexOf('Oak Hill') === -1) throw new Error('expected club to show');
+});
+resetMatch();
+
+group('Squad: delete squad');
+resetMatch();
+ok('a non-admin cannot delete a squad', function(){
+  clubSquads = [{ id: 's1', name: 'Senior', players: [] }];
+  currentClubRole = 'coach';
+  currentClubSquadId = null;
+  deleteClubSquad('s1');
+  if (clubSquads.length !== 1) throw new Error('a non-admin delete attempt should not remove anything');
+});
+ok('an admin can delete a squad, and it is removed from clubSquads', function(){
+  clubSquads = [{ id: 's1', name: 'Senior', players: [] }, { id: 's2', name: 'U20', players: [] }];
+  currentClubRole = 'admin';
+  currentClubSquadId = null;
+  var originalConfirm = global.confirm;
+  var originalSupaDB = supaDB;
+  global.confirm = function() { return true; };
+  // A fake thenable whose .then() fires synchronously — ok() doesn't await
+  // a returned promise, so a real Promise.resolve() would resolve AFTER
+  // this test already reported pass/fail, silently skipping the assertion.
+  supaDB = function() { return { then: function(cb){ cb({}); return this; }, catch: function(){ return this; } }; };
+  deleteClubSquad('s1');
+  global.confirm = originalConfirm;
+  supaDB = originalSupaDB;
+  if (clubSquads.length !== 1 || clubSquads[0].id !== 's2') throw new Error('expected only s2 to remain, got ' + JSON.stringify(clubSquads));
+});
+ok('deleting the currently active squad clears the loaded roster rather than leaving it orphaned', function(){
+  clubSquads = [{ id: 's3', name: 'Minor', players: [{name:'Someone', pos:'', stats:{}}] }];
+  currentClubRole = 'admin';
+  currentClubSquadId = 's3';
+  squad = [{name:'Someone', pos:'', stats:{}}];
+  var originalConfirm = global.confirm;
+  var originalSupaDB = supaDB;
+  global.confirm = function() { return true; };
+  supaDB = function() { return { then: function(cb){ cb({}); return this; }, catch: function(){ return this; } }; };
+  deleteClubSquad('s3');
+  global.confirm = originalConfirm;
+  supaDB = originalSupaDB;
+  if (currentClubSquadId !== null) throw new Error('expected currentClubSquadId to be cleared');
+  if (squad.length !== 34 || squad[0] !== null) throw new Error('expected the roster to reset to 34 empty slots, got ' + JSON.stringify(squad.slice(0,2)));
+});
+resetMatch();
+
+group('Squad: add existing player from another squad');
+resetMatch();
+ok('the picker only lists players from OTHER squads, never the one currently open', function(){
+  clubSquads = [
+    { id: 'cur', name: 'Current', players: [{name:'Should Not Appear', pos:'', stats:{}}] },
+    { id: 'other', name: 'Other Squad', players: [{name:'Should Appear', pos:'Midfield', stats:{}}] }
+  ];
+  currentClub = { id: 'club1' };
+  currentClubSquadId = 'cur';
+  openAddFromOtherSquad();
+  var html = document.getElementById('add-from-squad-list').__html || '';
+  if (html.indexOf('Should Appear') === -1) throw new Error('expected the other squad\u2019s player to be listed');
+  if (html.indexOf('Should Not Appear') !== -1) throw new Error('the current squad\u2019s own players should never be offered');
+});
+ok('linking a player copies their name/position into the slot and mints a shared linkedId', function(){
+  clubSquads = [
+    { id: 'cur2', name: 'Current2', players: [] },
+    { id: 'other2', name: 'Other2', players: [{ name: 'Copied Player', pos: 'Full Back', stats: {} }] }
+  ];
+  currentClub = { id: 'club1' };
+  currentClubSquadId = 'cur2';
+  squad = []; for (var i=0;i<34;i++) squad.push(null);
+  editingSlot = 5;
+  var originalSupaDB = supaDB;
+  supaDB = function() { return Promise.resolve({}); };
+  linkPlayerFromOtherSquad('other2', 0);
+  supaDB = originalSupaDB;
+  if (!squad[5] || squad[5].name !== 'Copied Player') throw new Error('expected the player copied into slot 5, got ' + JSON.stringify(squad[5]));
+  if (!squad[5].linkedId) throw new Error('expected a linkedId to be assigned');
+  var sourcePlayer = clubSquads.find(function(s){return s.id==='other2';}).players[0];
+  if (sourcePlayer.linkedId !== squad[5].linkedId) throw new Error('expected the source player to be stamped with the same linkedId');
+});
+ok('linking again from an already-linked source reuses the same linkedId rather than minting a new one', function(){
+  clubSquads = [
+    { id: 'cur3', name: 'Current3', players: [] },
+    { id: 'other3', name: 'Other3', players: [{ name: 'Twice Linked', pos: '', stats: {}, linkedId: 'lnk_fixed_123' }] }
+  ];
+  currentClub = { id: 'club1' };
+  currentClubSquadId = 'cur3';
+  squad = []; for (var i=0;i<34;i++) squad.push(null);
+  editingSlot = 2;
+  var originalSupaDB = supaDB;
+  supaDB = function() { return Promise.resolve({}); };
+  linkPlayerFromOtherSquad('other3', 0);
+  supaDB = originalSupaDB;
+  if (squad[2].linkedId !== 'lnk_fixed_123') throw new Error('expected the existing linkedId to be reused, got ' + squad[2].linkedId);
+});
+ok('editing a linked player\u2019s name afterward preserves the linkedId', function(){
+  squad = []; for (var i=0;i<34;i++) squad.push(null);
+  squad[3] = { name: 'Old Name', pos: 'Midfield', stats: {}, linkedId: 'lnk_preserve_me' };
+  editingSlot = 3;
+  document.getElementById('edit-player-name').value = 'Corrected Name';
+  var posBtn = { textContent: 'Midfield', classList: { contains: function(){ return true; } } };
+  var originalQS = document.querySelector;
+  document.querySelector = function(sel) { return sel === '.pos-btn.selected' ? posBtn : originalQS.call(document, sel); };
+  savePlayerEdit();
+  document.querySelector = originalQS;
+  if (squad[3].name !== 'Corrected Name') throw new Error('expected the name to update');
+  if (squad[3].linkedId !== 'lnk_preserve_me') throw new Error('expected linkedId to survive the edit, got ' + squad[3].linkedId);
+});
+resetMatch();
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
