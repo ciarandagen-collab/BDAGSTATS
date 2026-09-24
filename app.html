@@ -1739,6 +1739,41 @@ input:not([type]), textarea, select {
 .tby-score-pill { flex-shrink:0; min-width:26px; padding:3px 7px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11px; font-family:'Oswald',sans-serif; cursor:pointer; text-align:center; }
 .tby-score-pill.has-score { color:var(--cream); border-color:rgba(255,255,255,0.15); }
 .tby-unassigned { font-size:10px; color:var(--muted); padding:10px 4px; text-align:center; }
+
+/* ── TACTICS BOARD ── */
+.tb-cat-tabs { display:flex; gap:6px; overflow-x:auto; margin-bottom:14px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+.tb-cat-tab { flex-shrink:0; padding:8px 14px; border-radius:16px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; }
+.tb-cat-tab.active { background:rgba(74,222,128,0.14); border-color:var(--green); color:var(--green); }
+.tb-lib-card { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+.tb-lib-card:active { background:rgba(255,255,255,0.05); }
+.tb-lib-name { font-family:'Inter',sans-serif; font-size:14px; color:var(--cream); font-weight:600; }
+.tb-lib-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.tb-lib-chevron { color:var(--muted); font-size:16px; flex-shrink:0; }
+.tb-toolbar { display:flex; gap:6px; overflow-x:auto; margin-bottom:6px; -webkit-overflow-scrolling:touch; }
+.tb-tool-btn { flex-shrink:0; padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-family:'Oswald',sans-serif; font-size:11px; cursor:pointer; white-space:nowrap; }
+.tb-tool-btn.active { background:rgba(74,222,128,0.14); border-color:var(--green); color:var(--green); }
+.tb-tool-btn:disabled { opacity:0.35; cursor:default; }
+.tb-sub { font-size:11px; color:var(--muted); margin-bottom:10px; font-family:'Inter',sans-serif; }
+.tb-pitch-wrap { position:relative; width:100%; aspect-ratio:320/480; background:#0d2015; border:1px solid var(--border); border-radius:10px; overflow:hidden; touch-action:none; user-select:none; }
+.tb-pitch-wrap svg#tb-arrow-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+#tb-pitch-bg { position:absolute; top:0; left:0; width:100%; height:100%; }
+#tb-pitch-bg svg { width:100%; height:100%; display:block; }
+#tb-players-layer, #tb-notes-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+.tb-player, .tb-note { pointer-events:auto; }
+.tb-player { position:absolute; width:26px; height:26px; margin-left:-13px; margin-top:-13px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; color:#fff; cursor:grab; box-shadow:0 1px 3px rgba(0,0,0,0.5); touch-action:none; }
+.tb-player.home { background:#16a34a; border:2px solid #4ade80; }
+.tb-player.away { background:#334155; border:2px solid #94a3b8; }
+.tb-player.dragging { cursor:grabbing; opacity:0.85; z-index:5; }
+.tb-note { position:absolute; transform:translate(-50%,-50%); background:rgba(8,15,11,0.92); border:1px solid var(--gold); border-radius:6px; padding:4px 8px; font-size:10px; color:var(--cream); font-family:'Inter',sans-serif; max-width:100px; text-align:center; cursor:pointer; }
+.tb-legend { display:flex; gap:14px; justify-content:center; margin:10px 0; font-size:10px; color:var(--muted); font-family:'Inter',sans-serif; }
+.tb-legend-swatch { display:inline-block; width:12px; height:3px; margin-right:4px; vertical-align:middle; border-radius:1px; }
+.tb-lib-present-btn { flex-shrink:0; width:30px; height:30px; border-radius:50%; border:1px solid var(--green); background:rgba(74,222,128,0.1); color:var(--green); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+/* Presentation mode: every arrow gets a travelling dash so it reads as
+   motion, not just a static line — this is the one place in the app
+   where an arrow animates, deliberately kept out of the editor itself
+   so dragging/drawing there isn't fighting a moving target. */
+#tactics-present-mode .present-arrow { stroke-dasharray: 10 6; animation: tb-arrow-flow 0.9s linear infinite; }
+@keyframes tb-arrow-flow { to { stroke-dashoffset: -16; } }
 .trial-lb-rank.top3 { color:var(--gold); }
 .trial-lb-info { flex:1; }
 .trial-lb-name { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); }
@@ -2255,6 +2290,87 @@ input:not([type]), textarea, select {
   </div>
 </div>
 
+<!-- ── TACTICS BOARD ── -->
+<div id="tactics-board" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#080f0b;z-index:9998;overflow-y:auto;font-family:'Oswald',sans-serif;">
+  <div style="padding:16px;max-width:900px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:20px;font-weight:700;color:#4ade80;letter-spacing:0.5px;">🎯 Tactics Board</div>
+      <button onclick="closeTacticsBoard()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(240,253,244,0.75);font-size:12px;cursor:pointer;padding:6px 12px;border-radius:8px;">✕ Close</button>
+    </div>
+
+    <!-- Category tabs -->
+    <div id="tactics-cat-tabs" class="tb-cat-tabs"></div>
+
+    <!-- Library view: list of saved tactics for the active category -->
+    <div id="tactics-library-view">
+      <button class="training-new-btn" onclick="openTacticEditor(null)">+ New Tactic</button>
+      <div id="tactics-library-list"></div>
+    </div>
+
+    <!-- Editor view: pitch + tools, shown when creating/editing a tactic -->
+    <div id="tactics-editor-view" style="display:none;">
+      <button class="trial-back-btn" onclick="closeTacticEditor()" style="margin-bottom:10px;">← Library</button>
+
+      <input id="tactic-name-input" type="text" placeholder="Tactic name — e.g. Long to Full Forward"
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#f0fdf4;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;">
+
+      <div class="tb-toolbar">
+        <button class="tb-tool-btn active" id="tb-tool-select" onclick="setTacticTool('select')">👆 Move</button>
+        <button class="tb-tool-btn" id="tb-tool-run" onclick="setTacticTool('run')">➡️ Run</button>
+        <button class="tb-tool-btn" id="tb-tool-pass" onclick="setTacticTool('pass')">〜 Pass</button>
+        <button class="tb-tool-btn" id="tb-tool-kick" onclick="setTacticTool('kick')">┅ Kick</button>
+        <button class="tb-tool-btn" id="tb-tool-text" onclick="setTacticTool('text')">T Note</button>
+        <button class="tb-tool-btn" id="tb-tool-erase" onclick="setTacticTool('erase')">🧹 Erase</button>
+      </div>
+      <div class="tb-toolbar">
+        <button class="tb-tool-btn" id="tb-undo-btn" onclick="tbUndo()" disabled>↩ Undo</button>
+        <button class="tb-tool-btn" id="tb-redo-btn" onclick="tbRedo()" disabled>↪ Redo</button>
+        <button class="tb-tool-btn" style="margin-left:auto;color:var(--green);border-color:var(--green);" onclick="enterPresentMode(null)">▶ Present</button>
+      </div>
+      <div class="tb-sub" id="tb-tool-hint">Drag a player to move them.</div>
+
+      <div id="tb-pitch-wrap" class="tb-pitch-wrap">
+        <div id="tb-pitch-bg"></div>
+        <svg id="tb-arrow-layer" viewBox="0 0 320 480" preserveAspectRatio="none"></svg>
+        <div id="tb-players-layer"></div>
+        <div id="tb-notes-layer"></div>
+      </div>
+
+      <div class="tb-legend">
+        <span><span class="tb-legend-swatch" style="background:#4ade80;"></span>Run</span>
+        <span><span class="tb-legend-swatch" style="background:#f5a623;"></span>Pass</span>
+        <span><span class="tb-legend-swatch" style="background:#3b82f6;"></span>Kick</span>
+      </div>
+
+      <textarea id="tactic-notes-input" placeholder="Coaching notes (optional)" rows="3"
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#f0fdf4;font-size:13px;font-family:'Inter',sans-serif;margin:10px 0;resize:vertical;"></textarea>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-save-player" style="flex:1;" onclick="saveTactic()">Save Tactic</button>
+        <button id="tactic-delete-btn" style="display:none;padding:10px 16px;border-radius:8px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:#f87171;font-family:'Oswald',sans-serif;font-size:12px;cursor:pointer;" onclick="deleteTactic()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRESENTATION MODE ── -->
+<!-- Deliberately minimal: no toolbar, no library, nothing to tap by
+     accident mid-talk. Just the pitch, the tactic's name, and one exit
+     button. -->
+<div id="tactics-present-mode" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#050d08;z-index:99997;">
+  <button id="present-exit-btn" onclick="exitPresentMode()" aria-label="Exit presentation"
+    style="position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:2;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#f0fdf4;font-size:16px;width:36px;height:36px;border-radius:50%;cursor:pointer;">✕</button>
+  <div id="present-tactic-name" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:16px;right:60px;z-index:2;font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:#4ade80;letter-spacing:0.5px;"></div>
+  <div id="present-pitch-outer" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:56px 10px 20px;box-sizing:border-box;">
+    <div id="present-pitch-wrap" class="tb-pitch-wrap" style="width:auto;height:100%;max-width:100%;aspect-ratio:320/480;">
+      <div id="present-pitch-bg"></div>
+      <svg id="present-arrow-layer" viewBox="0 0 320 480" preserveAspectRatio="none"></svg>
+      <div id="present-players-layer"></div>
+      <div id="present-notes-layer"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ── ADD SQUAD MODAL ── -->
 <div id="add-squad-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:99997;align-items:flex-end;justify-content:center;">
   <div style="background:#1a0505;border:1px solid rgba(22,163,74,0.3);border-radius:20px 20px 0 0;width:100%;max-width:640px;padding:24px 20px calc(24px + var(--safe-bottom));">
@@ -2297,6 +2413,7 @@ input:not([type]), textarea, select {
     <div style="width:24px;height:24px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;" id="user-avatar">?</div>
     <span id="user-email-display" style="font-family:'Oswald',sans-serif;font-size:10px;color:rgba(245,232,232,0.6);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
     <button onclick="openClubDashboard()" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:6px;padding:3px 8px;color:#86efac;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Club" aria-label="Club dashboard">🏟</button>
+    <button onclick="openTacticsBoard()" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:6px;padding:3px 8px;color:#86efac;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;cursor:pointer;" title="Tactics" aria-label="Tactics board">🎯</button>
     <button onclick="openHelp()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Help" aria-label="Help">?</button>
     <button onclick="openEventSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Event Settings" aria-label="Event Settings">⚙️</button>
     <button onclick="signOut()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(245,232,232,0.7);font-size:11px;cursor:pointer;padding:5px 10px;border-radius:6px;font-family:'Oswald',sans-serif;letter-spacing:1px;line-height:1;" title="Sign out" aria-label="Sign out">⏻ Sign Out</button>
@@ -3174,6 +3291,16 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Injury log</span><span class="help-val">Training → Players → tap player → Injury Log → + Log Injury</span></div>
       <div class="help-row"><span class="help-key">Readiness</span><span class="help-val">Sessions → 💚 Readiness Dashboard — today's check-ins</span></div>
       <div class="help-row"><span class="help-key">Player link</span><span class="help-val">Readiness Dashboard → 📋 Copy → share via WhatsApp</span></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🎯 Tactics Board</div>
+      <div class="help-row"><span class="help-key">Open it</span><span class="help-val">🎯 button in the top bar, next to Club</span></div>
+      <div class="help-row"><span class="help-key">Categories</span><span class="help-val">Kickouts, Attacking, Defending, Set Pieces, Free Kicks, Sideline Balls</span></div>
+      <div class="help-row"><span class="help-key">Build a tactic</span><span class="help-val">+ New Tactic → drag players into position → draw Run/Pass/Kick arrows → drop notes → Save</span></div>
+      <div class="help-row"><span class="help-key">Tools</span><span class="help-val">Move drags a player. Run/Pass/Kick each need two taps — a start point, then an end point.</span></div>
+      <div class="help-row"><span class="help-key">Undo / Redo</span><span class="help-val">Every drag, arrow, note and erase can be undone — up to 50 steps back.</span></div>
+      <div class="help-row"><span class="help-key">Present</span><span class="help-val">▶ Present — a clean, distraction-free pitch with animated arrows for showing the team. ▶ on a library card presents that tactic directly, no editing needed.</span></div>
     </div>
 
     <div class="help-section">
@@ -7526,6 +7653,448 @@ function loadTrialsFromSupabase() {
 
 function getActiveTrial() {
   return trials.find(function(t) { return t.id === activeTrialId; });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TACTICS BOARD
+// ══════════════════════════════════════════════════════════════════
+// Phase 1: category library + an interactive pitch — drag players, draw
+// Run/Pass/Kick arrows, drop text notes, save/reload. Presentation Mode
+// and undo/redo are a deliberate fast-follow, not part of this pass.
+var TACTIC_CATEGORIES = [
+  { key: 'kickouts',   label: 'Kickouts',      icon: '🟦' },
+  { key: 'attacking',  label: 'Attacking',      icon: '🟩' },
+  { key: 'defending',  label: 'Defending',      icon: '🟥' },
+  { key: 'setpieces',  label: 'Set Pieces',     icon: '🎯' },
+  { key: 'freekicks',  label: 'Free Kicks',     icon: '🦵' },
+  { key: 'sideline',   label: 'Sideline Balls', icon: '↩️' }
+];
+
+var TACTICS_KEY = 'cs_tactics';
+var tactics = [];
+var activeTacticCategory = 'kickouts';
+var editingTacticId = null;
+var tacticTool = 'select'; // 'select' | 'run' | 'pass' | 'kick' | 'text' | 'erase'
+var tbWorking = null;      // { name, category, players:{home:[],away:[]}, arrows:[], notes:[], description }
+var tbDragPlayer = null;   // { side, num } currently being dragged
+var tbArrowStart = null;   // { x, y } first tap of an in-progress arrow
+var TB_ARROW_COLOURS = { run: '#4ade80', pass: '#f5a623', kick: '#3b82f6' };
+
+// Standard out-formation. drawPitch's own "ATTACK" labels are the source
+// of truth here: My Team attacks the BOTTOM of the pitch (high y%), so
+// home's own goal/defence sits near the top and the forward line near the
+// bottom.
+var TACTIC_DEFAULT_HOME = [
+  { num:1,  x:50, y:7 },
+  { num:2,  x:25, y:20 }, { num:3,  x:50, y:18 }, { num:4,  x:75, y:20 },
+  { num:5,  x:22, y:36 }, { num:6,  x:50, y:34 }, { num:7,  x:78, y:36 },
+  { num:8,  x:37, y:47 }, { num:9,  x:63, y:47 },
+  { num:10, x:22, y:64 }, { num:11, x:50, y:66 }, { num:12, x:78, y:64 },
+  { num:13, x:25, y:80 }, { num:14, x:50, y:82 }, { num:15, x:75, y:80 }
+];
+// A pure y-mirror isn't enough on its own: this formation's x-spacing is
+// itself symmetric about the pitch's centre line, so a home line and the
+// opposite away line can land on the exact same (x,y) after mirroring —
+// e.g. home's half-back line and away's half-forward line both use
+// {22,50,78} and would coincide exactly at the y each mirrors to. A fixed
+// x-offset, verified against every possible home/away pair (not just
+// matching indices), guarantees a minimum 9-point gap between any two
+// markers — see the "no two markers ever land on the same spot" test.
+function tacticDefaultAway() {
+  return TACTIC_DEFAULT_HOME.map(function(p) {
+    return { num: p.num, x: Math.min(97, p.x + 9), y: 100 - p.y };
+  });
+}
+
+function loadTactics() {
+  try { tactics = JSON.parse(localStorage.getItem(TACTICS_KEY) || '[]'); }
+  catch(e) { tactics = []; }
+}
+function saveTacticsToStorage() {
+  safeSetItem(TACTICS_KEY, JSON.stringify(tactics));
+  syncTacticsToSupabase();
+}
+function syncTacticsToSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('tactics_data?user_id=eq.' + currentUser.id, 'GET', null, currentToken)
+    .then(function(data) {
+      var method = (data && data.length) ? 'PATCH' : 'POST';
+      var path = method === 'PATCH' ? 'tactics_data?user_id=eq.' + currentUser.id : 'tactics_data';
+      return supaDB(path, method, { user_id: currentUser.id, tactics: tactics }, currentToken);
+    }).catch(function() {});
+}
+function loadTacticsFromSupabase() {
+  if (!currentUser || !currentToken) return;
+  supaDB('tactics_data?user_id=eq.' + currentUser.id + '&select=tactics', 'GET', null, currentToken)
+    .then(function(data) {
+      if (data && data.length && data[0].tactics) {
+        tactics = data[0].tactics;
+        safeSetItem(TACTICS_KEY, JSON.stringify(tactics));
+      }
+    }).catch(function() {});
+}
+
+// ── OPEN / CLOSE ─────────────────────────────────────
+function openTacticsBoard() {
+  loadTactics();
+  renderTacticCatTabs();
+  switchTacticCategory(activeTacticCategory);
+  document.getElementById('tactics-editor-view').style.display = 'none';
+  document.getElementById('tactics-library-view').style.display = '';
+  document.getElementById('tactics-board').style.display = 'block';
+}
+function closeTacticsBoard() {
+  document.getElementById('tactics-board').style.display = 'none';
+}
+
+// ── CATEGORY TABS + LIBRARY ──────────────────────────
+function renderTacticCatTabs() {
+  var el = document.getElementById('tactics-cat-tabs');
+  if (!el) return;
+  el.innerHTML = TACTIC_CATEGORIES.map(function(c) {
+    return '<button class="tb-cat-tab' + (c.key === activeTacticCategory ? ' active' : '') + '" onclick="switchTacticCategory(\'' + c.key + '\')">' + c.icon + ' ' + c.label + '</button>';
+  }).join('');
+}
+function switchTacticCategory(key) {
+  activeTacticCategory = key;
+  renderTacticCatTabs();
+  renderTacticsLibrary();
+}
+function renderTacticsLibrary() {
+  var el = document.getElementById('tactics-library-list');
+  if (!el) return;
+  var list = tactics.filter(function(t) { return t.category === activeTacticCategory; })
+    .sort(function(a,b) { return (b.updatedAt||0) - (a.updatedAt||0); });
+  if (!list.length) {
+    el.innerHTML = '<div class="trial-empty">No tactics saved yet for this category<br><span style="font-size:11px">Tap + New Tactic to build one</span></div>';
+    return;
+  }
+  el.innerHTML = list.map(function(t) {
+    var arrowCount = (t.arrows || []).length;
+    return '<div class="tb-lib-card" onclick="openTacticEditor(' + t.id + ')">' +
+      '<div><div class="tb-lib-name">' + escapeHtml(t.name || 'Untitled') + '</div>' +
+      '<div class="tb-lib-sub">' + arrowCount + ' arrow' + (arrowCount !== 1 ? 's' : '') + (t.description ? ' · has notes' : '') + '</div></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<button class="tb-lib-present-btn" aria-label="Present this tactic" onclick="event.stopPropagation(); enterPresentMode(' + t.id + ')">▶</button>' +
+      '<div class="tb-lib-chevron">›</div></div></div>';
+  }).join('');
+}
+
+// ── EDITOR ────────────────────────────────────────────
+// ── UNDO / REDO ───────────────────────────────────────
+// A snapshot-per-action history rather than tracking diffs — simpler to
+// get right, and a tactic board's state is small enough that this never
+// becomes a real memory concern even at the 50-step cap.
+var tbHistory = [];
+var tbHistoryIndex = -1;
+
+function tbPushHistory() {
+  if (!tbWorking) return;
+  tbHistory = tbHistory.slice(0, tbHistoryIndex + 1);
+  tbHistory.push(JSON.stringify(tbWorking));
+  if (tbHistory.length > 50) tbHistory.shift();
+  tbHistoryIndex = tbHistory.length - 1;
+  updateUndoRedoButtons();
+}
+function tbUndo() {
+  if (tbHistoryIndex <= 0) return;
+  tbHistoryIndex--;
+  tbWorking = JSON.parse(tbHistory[tbHistoryIndex]);
+  renderTacticBoard();
+  updateUndoRedoButtons();
+}
+function tbRedo() {
+  if (tbHistoryIndex >= tbHistory.length - 1) return;
+  tbHistoryIndex++;
+  tbWorking = JSON.parse(tbHistory[tbHistoryIndex]);
+  renderTacticBoard();
+  updateUndoRedoButtons();
+}
+function updateUndoRedoButtons() {
+  var undoBtn = document.getElementById('tb-undo-btn');
+  var redoBtn = document.getElementById('tb-redo-btn');
+  if (undoBtn) undoBtn.disabled = tbHistoryIndex <= 0;
+  if (redoBtn) redoBtn.disabled = tbHistoryIndex >= tbHistory.length - 1;
+}
+
+function openTacticEditor(tacticId) {
+  if (tacticId) {
+    var existing = tactics.find(function(t) { return t.id === tacticId; });
+    if (!existing) return;
+    editingTacticId = tacticId;
+    tbWorking = JSON.parse(JSON.stringify(existing)); // deep copy — don't mutate the saved one until Save
+    document.getElementById('tactic-delete-btn').style.display = '';
+  } else {
+    editingTacticId = null;
+    tbWorking = {
+      name: '', category: activeTacticCategory,
+      players: { home: TACTIC_DEFAULT_HOME.map(function(p){ return Object.assign({}, p); }), away: tacticDefaultAway() },
+      arrows: [], notes: [], description: ''
+    };
+    document.getElementById('tactic-delete-btn').style.display = 'none';
+  }
+  document.getElementById('tactic-name-input').value = tbWorking.name || '';
+  document.getElementById('tactic-notes-input').value = tbWorking.description || '';
+  setTacticTool('select');
+  renderTacticPitchBg();
+  renderTacticBoard();
+  tbHistory = [JSON.stringify(tbWorking)];
+  tbHistoryIndex = 0;
+  updateUndoRedoButtons();
+  document.getElementById('tactics-library-view').style.display = 'none';
+  document.getElementById('tactics-editor-view').style.display = '';
+}
+function closeTacticEditor() {
+  tbWorking = null;
+  editingTacticId = null;
+  document.getElementById('tactics-editor-view').style.display = 'none';
+  document.getElementById('tactics-library-view').style.display = '';
+  renderTacticsLibrary();
+}
+
+function renderTacticPitchBg() {
+  var bg = document.getElementById('tb-pitch-bg');
+  if (!bg) return;
+  bg.innerHTML = '<svg viewBox="0 0 320 480">' + drawPitch('MY TEAM', 'OPPOSITION') + '</svg>';
+}
+
+function renderTacticBoard() {
+  renderTacticPlayers();
+  renderTacticArrows();
+  renderTacticNotes();
+}
+
+function renderTacticPlayers() {
+  var layer = document.getElementById('tb-players-layer');
+  if (!layer || !tbWorking) return;
+  var html = '';
+  ['home','away'].forEach(function(side) {
+    (tbWorking.players[side] || []).forEach(function(p) {
+      html += '<div class="tb-player ' + side + '" data-side="' + side + '" data-num="' + p.num + '" ' +
+        'style="left:' + p.x + '%;top:' + p.y + '%;">' + p.num + '</div>';
+    });
+  });
+  layer.innerHTML = html;
+  layer.querySelectorAll('.tb-player').forEach(function(el) {
+    el.addEventListener('pointerdown', tbPlayerPointerDown);
+  });
+}
+
+function renderTacticArrows() {
+  var svg = document.getElementById('tb-arrow-layer');
+  if (!svg || !tbWorking) return;
+  var html = '<defs>' + ['run','pass','kick'].map(function(type) {
+    return '<marker id="tb-arrowhead-' + type + '" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="' + TB_ARROW_COLOURS[type] + '"/></marker>';
+  }).join('') + '</defs>';
+  (tbWorking.arrows || []).forEach(function(a, i) {
+    var dash = a.type === 'pass' ? '6,4' : a.type === 'kick' ? '2,4' : 'none';
+    var x1 = a.x1/100*320, y1 = a.y1/100*480, x2 = a.x2/100*320, y2 = a.y2/100*480;
+    html += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" ' +
+      'stroke="' + TB_ARROW_COLOURS[a.type] + '" stroke-width="2.5" ' +
+      (dash !== 'none' ? 'stroke-dasharray="' + dash + '" ' : '') +
+      'marker-end="url(#tb-arrowhead-' + a.type + ')" data-arrow-index="' + i + '" style="pointer-events:' + (tacticTool === 'erase' ? 'stroke' : 'none') + ';cursor:' + (tacticTool === 'erase' ? 'pointer' : 'default') + ';"/>';
+  });
+  svg.innerHTML = html;
+  if (tacticTool === 'erase') {
+    svg.querySelectorAll('line').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = parseInt(el.getAttribute('data-arrow-index'));
+        tbWorking.arrows.splice(idx, 1);
+        renderTacticArrows();
+        tbPushHistory();
+      });
+    });
+  }
+}
+
+function renderTacticNotes() {
+  var layer = document.getElementById('tb-notes-layer');
+  if (!layer || !tbWorking) return;
+  layer.innerHTML = (tbWorking.notes || []).map(function(n, i) {
+    return '<div class="tb-note" style="left:' + n.x + '%;top:' + n.y + '%;" data-note-index="' + i + '" onclick="tbNoteClick(' + i + ')">' + escapeHtml(n.text) + '</div>';
+  }).join('');
+}
+function tbNoteClick(i) {
+  if (tacticTool === 'erase') {
+    tbWorking.notes.splice(i, 1);
+    renderTacticNotes();
+    tbPushHistory();
+  }
+}
+
+// ── TOOLS ─────────────────────────────────────────────
+var TB_TOOL_HINTS = {
+  select: 'Drag a player to move them.',
+  run:    'Tap a start point, then an end point, to draw a run.',
+  pass:   'Tap a start point, then an end point, to draw a pass.',
+  kick:   'Tap a start point, then an end point, to draw a kick.',
+  text:   'Tap the pitch to drop a note.',
+  erase:  'Tap an arrow or note to remove it.'
+};
+function setTacticTool(tool) {
+  tacticTool = tool;
+  tbArrowStart = null;
+  ['select','run','pass','kick','text','erase'].forEach(function(t) {
+    var btn = document.getElementById('tb-tool-' + t);
+    if (btn) btn.classList.toggle('active', t === tool);
+  });
+  var hint = document.getElementById('tb-tool-hint');
+  if (hint) hint.textContent = TB_TOOL_HINTS[tool] || '';
+  var wrap = document.getElementById('tb-pitch-wrap');
+  if (wrap) {
+    wrap.onclick = (tool === 'run' || tool === 'pass' || tool === 'kick') ? tbArrowToolClick
+      : tool === 'text' ? tbTextToolClick : null;
+  }
+  renderTacticArrows(); // refresh pointer-events/cursor for erase mode
+}
+
+function tbPitchXY(evt) {
+  var wrap = document.getElementById('tb-pitch-wrap');
+  var rect = wrap.getBoundingClientRect();
+  var x = ((evt.clientX - rect.left) / rect.width) * 100;
+  var y = ((evt.clientY - rect.top) / rect.height) * 100;
+  return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+}
+
+function tbArrowToolClick(evt) {
+  if (evt.target.closest('.tb-player') || evt.target.closest('.tb-note')) return;
+  var pt = tbPitchXY(evt);
+  if (!tbArrowStart) {
+    tbArrowStart = pt;
+  } else {
+    tbWorking.arrows.push({ type: tacticTool, x1: tbArrowStart.x, y1: tbArrowStart.y, x2: pt.x, y2: pt.y });
+    tbArrowStart = null;
+    renderTacticArrows();
+    tbPushHistory();
+  }
+}
+function tbTextToolClick(evt) {
+  if (evt.target.closest('.tb-player')) return;
+  var pt = tbPitchXY(evt);
+  var text = prompt('Note text:');
+  if (text && text.trim()) {
+    tbWorking.notes.push({ x: pt.x, y: pt.y, text: text.trim() });
+    renderTacticNotes();
+    tbPushHistory();
+  }
+}
+
+// ── PLAYER DRAG ───────────────────────────────────────
+function tbPlayerPointerDown(evt) {
+  if (tacticTool !== 'select') return;
+  evt.preventDefault();
+  var el = evt.currentTarget;
+  tbDragPlayer = { side: el.dataset.side, num: parseInt(el.dataset.num), el: el };
+  el.classList.add('dragging');
+  el.setPointerCapture(evt.pointerId);
+  el.addEventListener('pointermove', tbPlayerPointerMove);
+  el.addEventListener('pointerup', tbPlayerPointerUp);
+}
+function tbPlayerPointerMove(evt) {
+  if (!tbDragPlayer) return;
+  var pt = tbPitchXY(evt);
+  var arr = tbWorking.players[tbDragPlayer.side];
+  var p = arr.find(function(pp) { return pp.num === tbDragPlayer.num; });
+  if (p) { p.x = pt.x; p.y = pt.y; }
+  tbDragPlayer.el.style.left = pt.x + '%';
+  tbDragPlayer.el.style.top = pt.y + '%';
+}
+function tbPlayerPointerUp(evt) {
+  if (!tbDragPlayer) return;
+  tbDragPlayer.el.classList.remove('dragging');
+  tbDragPlayer.el.removeEventListener('pointermove', tbPlayerPointerMove);
+  tbDragPlayer.el.removeEventListener('pointerup', tbPlayerPointerUp);
+  tbDragPlayer = null;
+  tbPushHistory();
+}
+
+// ── SAVE / DELETE ─────────────────────────────────────
+function saveTactic() {
+  var name = document.getElementById('tactic-name-input').value.trim();
+  if (!name) { showSync('Please name this tactic', 2000); return; }
+  tbWorking.name = name;
+  tbWorking.description = document.getElementById('tactic-notes-input').value.trim();
+  tbWorking.updatedAt = Date.now();
+
+  if (editingTacticId) {
+    var idx = tactics.findIndex(function(t) { return t.id === editingTacticId; });
+    if (idx >= 0) tactics[idx] = Object.assign({}, tbWorking, { id: editingTacticId });
+  } else {
+    tbWorking.id = Date.now();
+    tbWorking.createdAt = Date.now();
+    tactics.push(tbWorking);
+  }
+  saveTacticsToStorage();
+  showSync('✓ Tactic saved', 1500);
+  closeTacticEditor();
+}
+function deleteTactic() {
+  if (!editingTacticId) return;
+  tactics = tactics.filter(function(t) { return t.id !== editingTacticId; });
+  saveTacticsToStorage();
+  showSync('Tactic deleted', 1500);
+  closeTacticEditor();
+}
+
+// ── PRESENTATION MODE ─────────────────────────────────
+// Read-only, no tools, no library — the point is to have nothing tappable
+// by accident while a coach is mid-sentence in front of the team. Can be
+// entered either from the editor (shows whatever's currently on the board,
+// including unsaved changes) or directly from a library card (shows the
+// saved tactic without ever opening the editor).
+var presentData = null; // whichever tactic (or the live tbWorking) is on screen
+
+function enterPresentMode(tacticId) {
+  if (tacticId) {
+    var t = tactics.find(function(tt) { return tt.id === tacticId; });
+    if (!t) return;
+    presentData = t;
+  } else {
+    if (!tbWorking) return;
+    presentData = tbWorking;
+  }
+  document.getElementById('present-tactic-name').textContent = presentData.name || 'Untitled';
+  document.getElementById('present-pitch-bg').innerHTML = '<svg viewBox="0 0 320 480">' + drawPitch('MY TEAM', 'OPPOSITION') + '</svg>';
+  renderPresentPlayers();
+  renderPresentArrows();
+  renderPresentNotes();
+  document.getElementById('tactics-present-mode').style.display = 'block';
+}
+function exitPresentMode() {
+  document.getElementById('tactics-present-mode').style.display = 'none';
+  presentData = null;
+}
+function renderPresentPlayers() {
+  var layer = document.getElementById('present-players-layer');
+  if (!layer || !presentData) return;
+  var html = '';
+  ['home','away'].forEach(function(side) {
+    (presentData.players[side] || []).forEach(function(p) {
+      html += '<div class="tb-player ' + side + '" style="left:' + p.x + '%;top:' + p.y + '%;">' + p.num + '</div>';
+    });
+  });
+  layer.innerHTML = html;
+}
+function renderPresentArrows() {
+  var svg = document.getElementById('present-arrow-layer');
+  if (!svg || !presentData) return;
+  var html = '<defs>' + ['run','pass','kick'].map(function(type) {
+    return '<marker id="present-arrowhead-' + type + '" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="' + TB_ARROW_COLOURS[type] + '"/></marker>';
+  }).join('') + '</defs>';
+  (presentData.arrows || []).forEach(function(a) {
+    var x1 = a.x1/100*320, y1 = a.y1/100*480, x2 = a.x2/100*320, y2 = a.y2/100*480;
+    html += '<line class="present-arrow" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" ' +
+      'stroke="' + TB_ARROW_COLOURS[a.type] + '" stroke-width="3" ' +
+      'marker-end="url(#present-arrowhead-' + a.type + ')"/>';
+  });
+  svg.innerHTML = html;
+}
+function renderPresentNotes() {
+  var layer = document.getElementById('present-notes-layer');
+  if (!layer || !presentData) return;
+  layer.innerHTML = (presentData.notes || []).map(function(n) {
+    return '<div class="tb-note" style="left:' + n.x + '%;top:' + n.y + '%;">' + escapeHtml(n.text) + '</div>';
+  }).join('');
 }
 
 // ── TRIAL LIST ────────────────────────────────────
