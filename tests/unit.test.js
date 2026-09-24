@@ -1974,17 +1974,19 @@ ok('undo/redo history is capped at 50 entries', function(){
 });
 
 group('Tactics Board — presentation mode');
-ok('entering presentation mode from the editor shows the live (possibly unsaved) tbWorking', function(){
+ok('entering presentation mode from the editor shows the live (possibly unsaved) board, reading the name straight from the input', function(){
   tactics = [];
   openTacticEditor(null);
   document.getElementById('tactic-name-input').value = 'Unsaved Draft';
-  tbWorking.name = 'Unsaved Draft';
+  // Deliberately NOT setting tbWorking.name here — that field only gets
+  // written by saveTactic(), so this reproduces presenting before ever
+  // saving, which is the actual scenario the fallback needs to handle.
   setTacticTool('run');
   tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 10, clientY: 10 });
   tbArrowToolClick({ target: { closest: function(){ return null; } }, clientX: 60, clientY: 60 });
   enterPresentMode(null);
-  if (presentData !== tbWorking) throw new Error('presenting from the editor should show the live tbWorking object');
-  if (document.getElementById('present-tactic-name').textContent !== 'Unsaved Draft') throw new Error('expected the unsaved name to show in presentation mode');
+  if (presentData.arrows.length !== tbWorking.arrows.length) throw new Error('presenting from the editor should reflect the live board\u2019s arrows');
+  if (document.getElementById('present-tactic-name').textContent !== 'Unsaved Draft') throw new Error('expected the unsaved input value to show in presentation mode, not a stale tbWorking.name');
 });
 ok('entering presentation mode from a library card shows that saved tactic without touching tbWorking', function(){
   tactics = [{ id: 42, name: 'Saved One', category: 'kickouts', players: { home: TACTIC_DEFAULT_HOME, away: tacticDefaultAway() }, arrows: [], notes: [] }];
@@ -2011,6 +2013,52 @@ ok('exitPresentMode clears presentData and hides the overlay', function(){
   if (presentData !== null) throw new Error('expected presentData to be cleared on exit');
   var overlay = document.getElementById('tactics-present-mode');
   if (overlay.style.display !== 'none') throw new Error('expected the presentation overlay to be hidden after exit');
+});
+
+group('Tactics Board — export/share');
+ok('tbWrapSvgText keeps a short line as a single line', function(){
+  var lines = tbWrapSvgText('Hold width', 22);
+  if (lines.length !== 1 || lines[0] !== 'Hold width') throw new Error('expected one line, got ' + JSON.stringify(lines));
+});
+ok('tbWrapSvgText wraps at word boundaries once the max length is exceeded', function(){
+  var lines = tbWrapSvgText('Push up hard and squeeze the middle third', 15);
+  if (lines.length < 2) throw new Error('expected the text to wrap onto multiple lines, got ' + JSON.stringify(lines));
+  lines.forEach(function(l) { if (l.length > 15 && l.indexOf(' ') !== -1) throw new Error('a line with a space in it should have wrapped: "' + l + '"'); });
+  if (lines.join(' ') !== 'Push up hard and squeeze the middle third') throw new Error('wrapping should not lose or reorder any words, got ' + JSON.stringify(lines));
+});
+ok('tbWrapSvgText never drops a single word longer than the max, even unwrapped', function(){
+  var lines = tbWrapSvgText('Antidisestablishmentarianism', 10);
+  if (lines.length !== 1 || lines[0] !== 'Antidisestablishmentarianism') throw new Error('a lone long word should still appear whole on its own line, got ' + JSON.stringify(lines));
+});
+
+ok('buildTacticExportSVG includes the real pitch markings, not a placeholder', function(){
+  var svg = buildTacticExportSVG({ players: { home: [], away: [] }, arrows: [], notes: [] });
+  if (svg.indexOf('MY TEAM ATTACK') === -1) throw new Error('expected the actual drawPitch() output to be embedded');
+  if (svg.indexOf('<svg') !== 0) throw new Error('expected the export to be a single standalone <svg>, got: ' + svg.slice(0,30));
+});
+ok('buildTacticExportSVG draws every player with the correct team colour', function(){
+  var svg = buildTacticExportSVG({
+    players: { home: [{num:1,x:50,y:50}], away: [{num:2,x:60,y:60}] },
+    arrows: [], notes: []
+  });
+  if (svg.indexOf('fill="#16a34a"') === -1) throw new Error('expected a home player in the green fill colour');
+  if (svg.indexOf('fill="#334155"') === -1) throw new Error('expected an away player in the slate fill colour');
+});
+ok('buildTacticExportSVG draws arrows with the right colour per type', function(){
+  var svg = buildTacticExportSVG({
+    players: { home: [], away: [] },
+    arrows: [{ type:'kick', x1:10,y1:10,x2:50,y2:50 }],
+    notes: []
+  });
+  if (svg.indexOf(TB_ARROW_COLOURS.kick) === -1) throw new Error('expected the kick arrow colour to appear in the export');
+});
+ok('buildTacticExportSVG renders a note as wrapped, escaped text', function(){
+  var svg = buildTacticExportSVG({
+    players: { home: [], away: [] }, arrows: [],
+    notes: [{ x:50, y:50, text: '<script>alert(1)</script>' }]
+  });
+  if (svg.indexOf('<script>alert') !== -1) throw new Error('note text must be HTML-escaped in the exported SVG');
+  if (svg.indexOf('&lt;script&gt;') === -1) throw new Error('expected the escaped note text to appear');
 });
 
 resetMatch();
