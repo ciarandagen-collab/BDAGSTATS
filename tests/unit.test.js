@@ -1642,6 +1642,133 @@ ok('toggleGradingDetail opens and closes the panel, updating button text', funct
 });
 
 
+group('Trial: renamed positions');
+resetMatch();
+ok('the goalkeeper check uses the new position name, not the old GK code', function(){
+  trials = [{ id: 1, name: 'T', season: '2026', status: 'active',
+    trialists: [
+      { id: 1, name: 'Goalie Player', pos: 'Goalkeeper' },
+      { id: 2, name: 'Old Code Player', pos: 'GK' } // the old value some existing saved data might still have
+    ], sessions: [] }];
+  activeTrialId = 1;
+  renderTrialGradingList({});
+  var html = document.getElementById('trial-grading-list').__html || '';
+  var rows = html.split('data-trialist=');
+  var goalieRow = rows.find(function(r){ return r.indexOf('Goalie Player') !== -1; }) || '';
+  var oldCodeRow = rows.find(function(r){ return r.indexOf('Old Code Player') !== -1; }) || '';
+  if (goalieRow.indexOf('GK — Kickouts') === -1) throw new Error('a trialist listed as Goalkeeper should get the goalkeeping section');
+  if (oldCodeRow.indexOf('GK — Kickouts') !== -1) throw new Error('a stale "GK" position value should no longer trigger the goalkeeping section');
+});
+resetMatch();
+
+group('Trial: team assignment and By Match view');
+resetMatch();
+
+function setupByMatchTrial() {
+  trials = [{
+    id: 1, name: 'T', season: '2026', status: 'active',
+    trialists: [
+      { id: 1, name: 'Alice' }, { id: 2, name: 'Bob' },
+      { id: 3, name: 'Cara' }, { id: 4, name: 'Dan' }
+    ],
+    sessions: [
+      {
+        id: 100, date: '2026-01-05', label: 'Match 1', grades: {
+          1: { attended: true, overall: 6 }, 2: { attended: true, overall: 7 },
+          3: { attended: true, overall: 5 }, 4: { attended: true, overall: 8 }
+        },
+        teamAssignments: {
+          1: { team: 'A', number: 3 }, 2: { team: 'B', number: 7 },
+          3: { team: 'A', number: 9 }, 4: { team: 'C', number: 1 }
+        }
+      },
+      {
+        id: 200, date: '2026-01-12', label: 'Match 2', grades: {
+          1: { attended: true, overall: 8 }, 2: { attended: true, overall: 5 },
+          3: { attended: true, overall: 7 }, 4: { attended: false, overall: 0 }
+        },
+        // reshuffled — Alice is on Team B this time, not Team A
+        teamAssignments: {
+          1: { team: 'B', number: 4 }, 2: { team: 'A', number: 2 },
+          3: { team: 'A', number: 6 }, 4: { team: 'D', number: 10 }
+        }
+      }
+    ]
+  }];
+  activeTrialId = 1;
+  tbySelectedSessions = null;
+}
+
+ok('renderTeamAssignment initialises taWorking from an existing session', function(){
+  setupByMatchTrial();
+  renderTeamAssignment(trials[0].sessions[0].teamAssignments);
+  if (taWorking[1].team !== 'A' || taWorking[1].number !== 3) throw new Error('expected Alice on Team A #3, got ' + JSON.stringify(taWorking[1]));
+});
+ok('renderTeamAssignment with no existing data starts everyone unassigned', function(){
+  setupByMatchTrial();
+  renderTeamAssignment(null);
+  if (taWorking[1].team !== null) throw new Error('expected no team assigned yet');
+});
+ok('assignTrialistTeam sets a team, tapping the same letter again clears it', function(){
+  setupByMatchTrial();
+  renderTeamAssignment(null);
+  assignTrialistTeam(1, 'C');
+  if (taWorking[1].team !== 'C') throw new Error('expected Team C');
+  assignTrialistTeam(1, 'C');
+  if (taWorking[1].team !== null) throw new Error('tapping the same team again should clear it');
+});
+ok('setTrialistJersey stores a number, an empty value clears it', function(){
+  setupByMatchTrial();
+  renderTeamAssignment(null);
+  setTrialistJersey(2, '14');
+  if (taWorking[2].number !== 14) throw new Error('expected 14, got ' + JSON.stringify(taWorking[2]));
+  setTrialistJersey(2, '');
+  if (taWorking[2].number !== null) throw new Error('expected null after clearing');
+});
+
+ok('getTrialistAvgForSessions scopes the average to only the given sessions', function(){
+  setupByMatchTrial();
+  var onlyMatch1 = getTrialistAvgForSessions(1, new Set([100]));
+  var both = getTrialistAvgForSessions(1, new Set([100, 200]));
+  if (onlyMatch1 !== 6) throw new Error('match 1 only should be exactly 6, got ' + onlyMatch1);
+  if (Math.abs(both - 7) > 0.001) throw new Error('both matches should average to 7, got ' + both);
+});
+ok('getTrialistAvgForSessions ignores an unattended session', function(){
+  setupByMatchTrial();
+  var avg = getTrialistAvgForSessions(4, new Set([100, 200]));
+  if (avg !== 8) throw new Error('Dan was absent for match 2, average should just be match 1s 8, got ' + avg);
+});
+
+ok('renderTrialByMatch defaults to the most recent session selected', function(){
+  setupByMatchTrial();
+  renderTrialByMatch();
+  if (!tbySelectedSessions.has(200) || tbySelectedSessions.has(100)) {
+    throw new Error('expected only the most recent session (200) selected by default');
+  }
+});
+ok('team grouping reflects the most recently selected session, not an older one', function(){
+  setupByMatchTrial();
+  renderTrialByMatch(); // defaults to session 200, where Alice is Team B
+  var html = document.getElementById('trial-team-grid').__html || '';
+  var teamBSection = html.split('Team B')[1] || '';
+  if (teamBSection.indexOf('Alice') === -1) throw new Error('Alice should be grouped under Team B using the latest session');
+});
+ok('toggleTbySession never allows zero sessions selected', function(){
+  setupByMatchTrial();
+  renderTrialByMatch(); // selects {200}
+  toggleTbySession(200); // try to deselect the only one
+  if (tbySelectedSessions.size !== 1) throw new Error('at least one session must always remain selected');
+});
+ok('selecting both sessions shows an averaged score for a trialist on both', function(){
+  setupByMatchTrial();
+  renderTrialByMatch();
+  toggleTbySession(100); // now both 100 and 200 selected
+  var html = document.getElementById('trial-team-grid').__html || '';
+  if (html.indexOf('7.0') === -1) throw new Error('Alice averaged across both matches should show 7.0, got: ' + html);
+});
+resetMatch();
+
+
 group('Live share');
 ok('share codes avoid ambiguous characters', function(){
   for (var i=0;i<100;i++) {
