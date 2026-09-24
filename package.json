@@ -1,12 +1,10 @@
 {
-  "name": "coach-stats-tests",
+  "name": "coach-stats",
   "private": true,
-  "scripts": {
-    "test:unit": "node unit.test.cjs",
-    "test:e2e": "playwright test",
-    "test": "npm run test:unit && npm run test:e2e"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.48.0"
+  "version": "1.0.0",
+  "description": "Coach Stats — GAA match statistics PWA",
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
