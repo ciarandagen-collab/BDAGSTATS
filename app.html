@@ -2325,7 +2325,9 @@ input:not([type]), textarea, select {
       <div class="tb-toolbar">
         <button class="tb-tool-btn" id="tb-undo-btn" onclick="tbUndo()" disabled>↩ Undo</button>
         <button class="tb-tool-btn" id="tb-redo-btn" onclick="tbRedo()" disabled>↪ Redo</button>
-        <button class="tb-tool-btn" style="margin-left:auto;color:var(--green);border-color:var(--green);" onclick="enterPresentMode(null)">▶ Present</button>
+        <button class="tb-tool-btn" style="margin-left:auto;" onclick="exportTacticImage(null)" aria-label="Share image">📤 Share</button>
+        <button class="tb-tool-btn" onclick="exportTacticPDF(null)" aria-label="Print or save PDF">🖨️ PDF</button>
+        <button class="tb-tool-btn" style="color:var(--green);border-color:var(--green);" onclick="enterPresentMode(null)">▶ Present</button>
       </div>
       <div class="tb-sub" id="tb-tool-hint">Drag a player to move them.</div>
 
@@ -3301,6 +3303,7 @@ input:not([type]), textarea, select {
       <div class="help-row"><span class="help-key">Tools</span><span class="help-val">Move drags a player. Run/Pass/Kick each need two taps — a start point, then an end point.</span></div>
       <div class="help-row"><span class="help-key">Undo / Redo</span><span class="help-val">Every drag, arrow, note and erase can be undone — up to 50 steps back.</span></div>
       <div class="help-row"><span class="help-key">Present</span><span class="help-val">▶ Present — a clean, distraction-free pitch with animated arrows for showing the team. ▶ on a library card presents that tactic directly, no editing needed.</span></div>
+      <div class="help-row"><span class="help-key">Share / Export</span><span class="help-val">📤 Share — sends the board as an image via WhatsApp, Messages etc. (or saves it if sharing isn't available). 🖨️ PDF — a printable version, same as Match and Trial reports.</span></div>
     </div>
 
     <div class="help-section">
@@ -7775,6 +7778,7 @@ function renderTacticsLibrary() {
       '<div><div class="tb-lib-name">' + escapeHtml(t.name || 'Untitled') + '</div>' +
       '<div class="tb-lib-sub">' + arrowCount + ' arrow' + (arrowCount !== 1 ? 's' : '') + (t.description ? ' · has notes' : '') + '</div></div>' +
       '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<button class="tb-lib-present-btn" aria-label="Share as image" onclick="event.stopPropagation(); exportTacticImage(' + t.id + ')" style="border-color:var(--border);color:var(--muted);background:rgba(255,255,255,0.03);">📤</button>' +
       '<button class="tb-lib-present-btn" aria-label="Present this tactic" onclick="event.stopPropagation(); enterPresentMode(' + t.id + ')">▶</button>' +
       '<div class="tb-lib-chevron">›</div></div></div>';
   }).join('');
@@ -8044,15 +8048,27 @@ function deleteTactic() {
 // saved tactic without ever opening the editor).
 var presentData = null; // whichever tactic (or the live tbWorking) is on screen
 
+// Resolves which tactic a given action (Present/Share/PDF) should use, and
+// for the "live, unsaved" case specifically, pulls the current name/notes
+// straight from the input fields rather than trusting tbWorking.name —
+// that field only gets written by saveTactic(), so without this, exporting
+// or presenting before ever hitting Save would silently show/use whatever
+// name was there when the editor opened, not what's actually typed in.
+function tbResolveExportData(tacticId) {
+  if (tacticId) return tactics.find(function(t) { return t.id === tacticId; }) || null;
+  if (!tbWorking) return null;
+  var nameEl = document.getElementById('tactic-name-input');
+  var notesEl = document.getElementById('tactic-notes-input');
+  return Object.assign({}, tbWorking, {
+    name: (nameEl && nameEl.value.trim()) || tbWorking.name || '',
+    description: (notesEl && notesEl.value.trim()) || tbWorking.description || ''
+  });
+}
+
 function enterPresentMode(tacticId) {
-  if (tacticId) {
-    var t = tactics.find(function(tt) { return tt.id === tacticId; });
-    if (!t) return;
-    presentData = t;
-  } else {
-    if (!tbWorking) return;
-    presentData = tbWorking;
-  }
+  var data = tbResolveExportData(tacticId);
+  if (!data) return;
+  presentData = data;
   document.getElementById('present-tactic-name').textContent = presentData.name || 'Untitled';
   document.getElementById('present-pitch-bg').innerHTML = '<svg viewBox="0 0 320 480">' + drawPitch('MY TEAM', 'OPPOSITION') + '</svg>';
   renderPresentPlayers();
@@ -8095,6 +8111,138 @@ function renderPresentNotes() {
   layer.innerHTML = (presentData.notes || []).map(function(n) {
     return '<div class="tb-note" style="left:' + n.x + '%;top:' + n.y + '%;">' + escapeHtml(n.text) + '</div>';
   }).join('');
+}
+
+// ── EXPORT / SHARE ─────────────────────────────────────
+// The board is a mix of an SVG pitch and HTML player/note divs, which
+// can't be screenshotted directly — this builds ONE standalone SVG with
+// everything (pitch markings, players, arrows, notes) baked in as real
+// SVG shapes, which is what actually gets rasterised to PNG or dropped
+// into the printable PDF.
+function tbWrapSvgText(text, maxChars) {
+  var words = text.split(' ');
+  var lines = [], cur = '';
+  words.forEach(function(w) {
+    var next = cur ? cur + ' ' + w : w;
+    if (next.length > maxChars && cur) { lines.push(cur); cur = w; }
+    else { cur = next; }
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function buildTacticExportSVG(data) {
+  var parts = [];
+  parts.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 480" width="640" height="960">');
+  parts.push('<rect x="0" y="0" width="320" height="480" fill="#0d2015"/>');
+  parts.push(drawPitch('MY TEAM', 'OPPOSITION'));
+
+  // Arrows (drawn under players, matching the editor's own layering)
+  parts.push('<defs>' + ['run','pass','kick'].map(function(type) {
+    return '<marker id="export-arrowhead-' + type + '" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="' + TB_ARROW_COLOURS[type] + '"/></marker>';
+  }).join('') + '</defs>');
+  (data.arrows || []).forEach(function(a) {
+    var dash = a.type === 'pass' ? '6,4' : a.type === 'kick' ? '2,4' : 'none';
+    var x1 = a.x1/100*320, y1 = a.y1/100*480, x2 = a.x2/100*320, y2 = a.y2/100*480;
+    parts.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" ' +
+      'stroke="' + TB_ARROW_COLOURS[a.type] + '" stroke-width="2.5" ' +
+      (dash !== 'none' ? 'stroke-dasharray="' + dash + '" ' : '') +
+      'marker-end="url(#export-arrowhead-' + a.type + ')"/>');
+  });
+
+  // Players
+  ['home','away'].forEach(function(side) {
+    (data.players[side] || []).forEach(function(p) {
+      var cx = p.x/100*320, cy = p.y/100*480;
+      var fill = side === 'home' ? '#16a34a' : '#334155';
+      var stroke = side === 'home' ? '#4ade80' : '#94a3b8';
+      parts.push('<circle cx="' + cx + '" cy="' + cy + '" r="10.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"/>');
+      parts.push('<text x="' + cx + '" y="' + (cy+3.5) + '" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#fff">' + p.num + '</text>');
+    });
+  });
+
+  // Notes — plain SVG text with manual word-wrap, since a rasterised
+  // export can't rely on HTML/CSS wrapping the way the live editor does
+  (data.notes || []).forEach(function(n) {
+    var cx = n.x/100*320, cy = n.y/100*480;
+    var lines = tbWrapSvgText(n.text, 22);
+    var boxW = Math.min(120, Math.max.apply(null, lines.map(function(l){ return l.length; })) * 5.2 + 10);
+    var boxH = lines.length * 11 + 8;
+    parts.push('<rect x="' + (cx-boxW/2) + '" y="' + (cy-boxH/2) + '" width="' + boxW + '" height="' + boxH + '" rx="4" fill="rgba(8,15,11,0.92)" stroke="#f5a623" stroke-width="1"/>');
+    lines.forEach(function(line, i) {
+      var ly = cy - boxH/2 + 13 + i*11;
+      parts.push('<text x="' + cx + '" y="' + ly + '" text-anchor="middle" font-family="Arial" font-size="8" fill="#f0fdf4">' + escapeHtml(line) + '</text>');
+    });
+  });
+
+  parts.push('</svg>');
+  return parts.join('');
+}
+
+// Renders the export SVG onto a canvas and hands back a PNG blob — the
+// common step both share and download need before they diverge.
+function tacticSvgToPngBlob(svgString, callback) {
+  var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  var url = URL.createObjectURL(svgBlob);
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = 640; canvas.height = 960;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 640, 960);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(function(blob) { callback(blob); }, 'image/png');
+  };
+  img.onerror = function() {
+    URL.revokeObjectURL(url);
+    callback(null);
+  };
+  img.src = url;
+}
+
+function exportTacticImage(tacticId) {
+  var data = tbResolveExportData(tacticId);
+  if (!data) return;
+  var filename = (data.name || 'tactic').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+  var svgString = buildTacticExportSVG(data);
+
+  tacticSvgToPngBlob(svgString, function(blob) {
+    if (!blob) { showSync('Could not build the image — try again', 2500); return; }
+    var file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: data.name || 'Tactic' }).catch(function(){});
+      return;
+    }
+    // Fallback: same download pattern used for CSV/JSON export elsewhere
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    showSync('✓ Image saved', 1500);
+  });
+}
+
+function exportTacticPDF(tacticId) {
+  var data = tbResolveExportData(tacticId);
+  if (!data) return;
+  var svgString = buildTacticExportSVG(data);
+  var printWin = window.open('', '_blank');
+  if (!printWin) { showSync('Please allow pop-ups to export a PDF', 3000); return; }
+  var html = '<!DOCTYPE html><html><head><title>' + escapeHtml(data.name || 'Tactic') + '</title>' +
+    '<style>body{font-family:Arial,sans-serif;background:#fff;color:#111;text-align:center;padding:20px;}' +
+    'h1{font-size:20px;margin-bottom:4px;} p{font-size:13px;color:#444;max-width:500px;margin:8px auto;}' +
+    'svg{width:100%;max-width:420px;height:auto;}' +
+    'button{margin-top:16px;padding:10px 20px;background:#14532d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;}' +
+    '@media print{button{display:none;}}</style></head><body>' +
+    '<h1>' + escapeHtml(data.name || 'Untitled Tactic') + '</h1>' +
+    (data.description ? '<p>' + escapeHtml(data.description) + '</p>' : '') +
+    svgString +
+    '<div><button onclick="window.print()">🖨️ Print / Save PDF</button></div>' +
+    '</body></html>';
+  printWin.document.write(html);
+  printWin.document.close();
 }
 
 // ── TRIAL LIST ────────────────────────────────────
