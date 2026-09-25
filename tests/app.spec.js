@@ -124,7 +124,10 @@ test.describe('Substitutions', () => {
     await page.click('.ts-slot >> nth=0');
     await page.waitForSelector('#ts-player-modal.open');
     await page.click('.ts-player-row:has-text("P16")');
-    await page.click('button:has-text("Confirm Starting 15")');
+    // The button's label changes with context ("Next: Select Subs" pregame,
+    // "Confirm Matchday Squad" or "Confirm" mid-match) — its id is the one
+    // thing that's stable across all of them, so that's what this targets.
+    await page.click('#ts-confirm-btn');
 
     await expect(page.locator('#subs-list-record')).toContainText('P16');
   });
