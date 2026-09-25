@@ -1,0 +1,94 @@
+name: Coach Stats Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+
+  # ── Logic tests: run against app.html directly, no browser, no deployment ──
+  # These are the fast gate. If the scoring maths or an analysis helper breaks,
+  # this fails in seconds rather than after a deploy.
+  unit-tests:
+    name: Unit Tests (Logic)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Prints the tree if something is in the wrong place, so a path problem
+      # is obvious from the log instead of showing up as a bare "not found".
+      - name: Show repo layout
+        run: |
+          echo "--- repo root ---"
+          ls -la
+          echo "--- tests/ ---"
+          ls -la tests/ || echo "NO tests/ DIRECTORY"
+          echo "--- app.html present? ---"
+          test -f app.html && echo "yes" || echo "NO app.html AT ROOT"
+
+      - name: Run unit tests
+        run: node tests/unit.test.cjs
+
+  # ── Browser tests: run against the DEPLOYED site, so they need Netlify done ──
+  # Playwright and its config live under tests/ on purpose, kept separate from
+  # the root package.json (which exists only to install what the Netlify
+  # Functions need — stripe, @supabase/supabase-js — for production, not for
+  # test tooling). Every step below runs with working-directory: tests so it
+  # installs from and reads tests/package.json, not the root one.
+  browser-tests:
+    name: Browser Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Fails clearly if tests/package.json or its Playwright config is
+      # missing or named differently, rather than surfacing as a confusing
+      # "Cannot find module" a few steps later.
+      - name: Check required files
+        run: |
+          test -f tests/package.json || { echo "MISSING tests/package.json"; exit 1; }
+          test -f tests/playwright.config.js || { echo "MISSING tests/playwright.config.js"; exit 1; }
+          ls -la tests/
+
+      - name: Install dependencies
+        working-directory: tests
+        run: npm install
+
+      - name: Install Playwright browsers
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+
+      # The browser tests hit the live site, so give Netlify time to publish
+      # the commit that triggered this run.
+      - name: Wait for Netlify deployment
+        run: sleep 45
+
+      - name: Run browser tests
+        working-directory: tests
+        run: npx playwright test
+        env:
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+
+      - name: Upload test report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: tests/playwright-report/
+          retention-days: 7
